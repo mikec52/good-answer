@@ -1,0 +1,1374 @@
+[
+  {
+    "question": "Name the largest countries in the world by land area.",
+    "answers": [
+      {
+        "text": "Russia",
+        "points": 30
+      },
+      {
+        "text": "Canada",
+        "points": 25
+      },
+      {
+        "text": "China",
+        "points": 20
+      },
+      {
+        "text": "United States",
+        "points": 15
+      },
+      {
+        "text": "Brazil",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the smallest countries in the world by land area.",
+    "answers": [
+      {
+        "text": "Vatican City",
+        "points": 30
+      },
+      {
+        "text": "Monaco",
+        "points": 25
+      },
+      {
+        "text": "Nauru",
+        "points": 20
+      },
+      {
+        "text": "Tuvalu",
+        "points": 15
+      },
+      {
+        "text": "San Marino",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest islands in the world by area (excluding continents).",
+    "answers": [
+      {
+        "text": "Greenland",
+        "points": 30
+      },
+      {
+        "text": "New Guinea",
+        "points": 25
+      },
+      {
+        "text": "Borneo",
+        "points": 20
+      },
+      {
+        "text": "Madagascar",
+        "points": 15
+      },
+      {
+        "text": "Baffin Island",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest lakes in the world by surface area.",
+    "answers": [
+      {
+        "text": "Caspian Sea",
+        "points": 30
+      },
+      {
+        "text": "Lake Superior",
+        "points": 25
+      },
+      {
+        "text": "Lake Victoria",
+        "points": 20
+      },
+      {
+        "text": "Lake Huron",
+        "points": 15
+      },
+      {
+        "text": "Lake Michigan",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the deepest lakes in the world.",
+    "answers": [
+      {
+        "text": "Lake Baikal",
+        "points": 30
+      },
+      {
+        "text": "Lake Tanganyika",
+        "points": 25
+      },
+      {
+        "text": "Caspian Sea",
+        "points": 20
+      },
+      {
+        "text": "Lake Vostok",
+        "points": 15
+      },
+      {
+        "text": "O'Higgins/San Martín Lake",
+        "points": 10
+      }
+    ],
+    "category": "Geography (Depth)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the longest rivers in the world.",
+    "answers": [
+      {
+        "text": "Nile",
+        "points": 30
+      },
+      {
+        "text": "Amazon",
+        "points": 25
+      },
+      {
+        "text": "Yangtze",
+        "points": 20
+      },
+      {
+        "text": "Mississippi–Missouri",
+        "points": 15
+      },
+      {
+        "text": "Yenisei–Angara–Selenge–Ider",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the longest rivers in Africa.",
+    "answers": [
+      {
+        "text": "Nile",
+        "points": 30
+      },
+      {
+        "text": "Congo",
+        "points": 25
+      },
+      {
+        "text": "Niger",
+        "points": 20
+      },
+      {
+        "text": "Zambezi",
+        "points": 15
+      },
+      {
+        "text": "Ubangi–Uele",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the longest rivers in North America.",
+    "answers": [
+      {
+        "text": "Mississippi–Missouri",
+        "points": 30
+      },
+      {
+        "text": "Mackenzie–Slave–Peace–Finlay",
+        "points": 25
+      },
+      {
+        "text": "Yukon",
+        "points": 20
+      },
+      {
+        "text": "Rio Grande",
+        "points": 15
+      },
+      {
+        "text": "St. Lawrence",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the longest rivers in South America.",
+    "answers": [
+      {
+        "text": "Amazon",
+        "points": 30
+      },
+      {
+        "text": "Paraná",
+        "points": 25
+      },
+      {
+        "text": "Madeira",
+        "points": 20
+      },
+      {
+        "text": "Purus",
+        "points": 15
+      },
+      {
+        "text": "São Francisco",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest mountains in the world (by elevation).",
+    "answers": [
+      {
+        "text": "Mount Everest",
+        "points": 30
+      },
+      {
+        "text": "K2",
+        "points": 25
+      },
+      {
+        "text": "Kangchenjunga",
+        "points": 20
+      },
+      {
+        "text": "Lhotse",
+        "points": 15
+      },
+      {
+        "text": "Makalu",
+        "points": 10
+      }
+    ],
+    "category": "Geography (Elevation)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest mountains in North America.",
+    "answers": [
+      {
+        "text": "Denali",
+        "points": 30
+      },
+      {
+        "text": "Mount Saint Elias",
+        "points": 25
+      },
+      {
+        "text": "Mount Foraker",
+        "points": 20
+      },
+      {
+        "text": "Mount Bona",
+        "points": 15
+      },
+      {
+        "text": "Mount Blackburn",
+        "points": 10
+      }
+    ],
+    "category": "Geography (Elevation)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest mountains in South America.",
+    "answers": [
+      {
+        "text": "Aconcagua",
+        "points": 30
+      },
+      {
+        "text": "Ojos del Salado",
+        "points": 25
+      },
+      {
+        "text": "Monte Pissis",
+        "points": 20
+      },
+      {
+        "text": "Huascarán",
+        "points": 15
+      },
+      {
+        "text": "Cerro Bonete",
+        "points": 10
+      }
+    ],
+    "category": "Geography (Elevation)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest mountains in Europe.",
+    "answers": [
+      {
+        "text": "Mount Elbrus",
+        "points": 30
+      },
+      {
+        "text": "Dykh-Tau",
+        "points": 25
+      },
+      {
+        "text": "Shkhara",
+        "points": 20
+      },
+      {
+        "text": "Mont Blanc",
+        "points": 15
+      },
+      {
+        "text": "Kazbek",
+        "points": 10
+      }
+    ],
+    "category": "Geography (Elevation)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest mountains in Africa.",
+    "answers": [
+      {
+        "text": "Kilimanjaro",
+        "points": 30
+      },
+      {
+        "text": "Mount Kenya",
+        "points": 25
+      },
+      {
+        "text": "Mount Stanley (Rwenzori)",
+        "points": 20
+      },
+      {
+        "text": "Mount Meru",
+        "points": 15
+      },
+      {
+        "text": "Ras Dashen",
+        "points": 10
+      }
+    ],
+    "category": "Geography (Elevation)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest mountains in Asia (outside the top two).",
+    "answers": [
+      {
+        "text": "Kangchenjunga",
+        "points": 30
+      },
+      {
+        "text": "Lhotse",
+        "points": 25
+      },
+      {
+        "text": "Makalu",
+        "points": 20
+      },
+      {
+        "text": "Cho Oyu",
+        "points": 15
+      },
+      {
+        "text": "Dhaulagiri I",
+        "points": 10
+      }
+    ],
+    "category": "Geography (Elevation)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest hot deserts in the world by area.",
+    "answers": [
+      {
+        "text": "Sahara",
+        "points": 30
+      },
+      {
+        "text": "Arabian Desert",
+        "points": 25
+      },
+      {
+        "text": "Gobi Desert",
+        "points": 20
+      },
+      {
+        "text": "Kalahari Desert",
+        "points": 15
+      },
+      {
+        "text": "Great Victoria Desert",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest waterfalls in the world (by total height).",
+    "answers": [
+      {
+        "text": "Angel Falls",
+        "points": 30
+      },
+      {
+        "text": "Tugela Falls",
+        "points": 25
+      },
+      {
+        "text": "Tres Hermanas Falls",
+        "points": 20
+      },
+      {
+        "text": "Olo’upena Falls",
+        "points": 15
+      },
+      {
+        "text": "Yumbilla Falls",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name continental landmasses by area (largest first).",
+    "answers": [
+      {
+        "text": "Asia",
+        "points": 30
+      },
+      {
+        "text": "Africa",
+        "points": 25
+      },
+      {
+        "text": "North America",
+        "points": 20
+      },
+      {
+        "text": "South America",
+        "points": 15
+      },
+      {
+        "text": "Antarctica",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest U.S. states by land area.",
+    "answers": [
+      {
+        "text": "Alaska",
+        "points": 30
+      },
+      {
+        "text": "Texas",
+        "points": 25
+      },
+      {
+        "text": "California",
+        "points": 20
+      },
+      {
+        "text": "Montana",
+        "points": 15
+      },
+      {
+        "text": "New Mexico",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the smallest U.S. states by land area.",
+    "answers": [
+      {
+        "text": "Rhode Island",
+        "points": 30
+      },
+      {
+        "text": "Delaware",
+        "points": 25
+      },
+      {
+        "text": "Connecticut",
+        "points": 20
+      },
+      {
+        "text": "New Jersey",
+        "points": 15
+      },
+      {
+        "text": "New Hampshire",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest countries in Africa by land area.",
+    "answers": [
+      {
+        "text": "Algeria",
+        "points": 30
+      },
+      {
+        "text": "Democratic Republic of the Congo",
+        "points": 25
+      },
+      {
+        "text": "Sudan",
+        "points": 20
+      },
+      {
+        "text": "Libya",
+        "points": 15
+      },
+      {
+        "text": "Chad",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest countries in South America by land area.",
+    "answers": [
+      {
+        "text": "Brazil",
+        "points": 30
+      },
+      {
+        "text": "Argentina",
+        "points": 25
+      },
+      {
+        "text": "Peru",
+        "points": 20
+      },
+      {
+        "text": "Colombia",
+        "points": 15
+      },
+      {
+        "text": "Bolivia",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name Europe’s longest rivers.",
+    "answers": [
+      {
+        "text": "Volga",
+        "points": 30
+      },
+      {
+        "text": "Danube",
+        "points": 25
+      },
+      {
+        "text": "Ural",
+        "points": 20
+      },
+      {
+        "text": "Dnieper",
+        "points": 15
+      },
+      {
+        "text": "Don",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the Great Lakes by surface area (largest to smaller).",
+    "answers": [
+      {
+        "text": "Superior",
+        "points": 30
+      },
+      {
+        "text": "Huron",
+        "points": 25
+      },
+      {
+        "text": "Michigan",
+        "points": 20
+      },
+      {
+        "text": "Erie",
+        "points": 15
+      },
+      {
+        "text": "Ontario",
+        "points": 10
+      }
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest planets in our solar system by diameter.",
+    "answers": [
+      {
+        "text": "Jupiter",
+        "points": 30
+      },
+      {
+        "text": "Saturn",
+        "points": 25
+      },
+      {
+        "text": "Uranus",
+        "points": 20
+      },
+      {
+        "text": "Neptune",
+        "points": 15
+      },
+      {
+        "text": "Earth",
+        "points": 10
+      }
+    ],
+    "category": "Science (Astronomy)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the planets closest to the Sun (from nearest outward).",
+    "answers": [
+      {
+        "text": "Mercury",
+        "points": 30
+      },
+      {
+        "text": "Venus",
+        "points": 25
+      },
+      {
+        "text": "Earth",
+        "points": 20
+      },
+      {
+        "text": "Mars",
+        "points": 15
+      },
+      {
+        "text": "Jupiter",
+        "points": 10
+      }
+    ],
+    "category": "Science (Astronomy)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest moons in the Solar System by diameter.",
+    "answers": [
+      {
+        "text": "Ganymede",
+        "points": 30
+      },
+      {
+        "text": "Titan",
+        "points": 25
+      },
+      {
+        "text": "Callisto",
+        "points": 20
+      },
+      {
+        "text": "Io",
+        "points": 15
+      },
+      {
+        "text": "Moon",
+        "points": 10
+      }
+    ],
+    "category": "Science (Astronomy)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the noble gases.",
+    "answers": [
+      {
+        "text": "Helium",
+        "points": 30
+      },
+      {
+        "text": "Neon",
+        "points": 25
+      },
+      {
+        "text": "Argon",
+        "points": 20
+      },
+      {
+        "text": "Krypton",
+        "points": 15
+      },
+      {
+        "text": "Xenon",
+        "points": 10
+      }
+    ],
+    "category": "Science (Chemistry)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the halogens.",
+    "answers": [
+      {
+        "text": "Fluorine",
+        "points": 30
+      },
+      {
+        "text": "Chlorine",
+        "points": 25
+      },
+      {
+        "text": "Bromine",
+        "points": 20
+      },
+      {
+        "text": "Iodine",
+        "points": 15
+      },
+      {
+        "text": "Astatine",
+        "points": 10
+      }
+    ],
+    "category": "Science (Chemistry)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the first five elements in the periodic table.",
+    "answers": [
+      {
+        "text": "Hydrogen",
+        "points": 30
+      },
+      {
+        "text": "Helium",
+        "points": 25
+      },
+      {
+        "text": "Lithium",
+        "points": 20
+      },
+      {
+        "text": "Beryllium",
+        "points": 15
+      },
+      {
+        "text": "Boron",
+        "points": 10
+      }
+    ],
+    "category": "Science (Chemistry)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Arrange these electromagnetic spectrum regions from longest to shorter wavelengths.",
+    "answers": [
+      {
+        "text": "Radio",
+        "points": 30
+      },
+      {
+        "text": "Microwave",
+        "points": 25
+      },
+      {
+        "text": "Infrared",
+        "points": 20
+      },
+      {
+        "text": "Visible",
+        "points": 15
+      },
+      {
+        "text": "Ultraviolet",
+        "points": 10
+      }
+    ],
+    "category": "Science (Physics)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most abundant elements in Earth’s crust (by mass).",
+    "answers": [
+      {
+        "text": "Oxygen",
+        "points": 30
+      },
+      {
+        "text": "Silicon",
+        "points": 25
+      },
+      {
+        "text": "Aluminum",
+        "points": 20
+      },
+      {
+        "text": "Iron",
+        "points": 15
+      },
+      {
+        "text": "Calcium",
+        "points": 10
+      }
+    ],
+    "category": "Science (Geology)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most abundant gases in Earth’s atmosphere (by volume).",
+    "answers": [
+      {
+        "text": "Nitrogen",
+        "points": 30
+      },
+      {
+        "text": "Oxygen",
+        "points": 25
+      },
+      {
+        "text": "Argon",
+        "points": 20
+      },
+      {
+        "text": "Carbon dioxide",
+        "points": 15
+      },
+      {
+        "text": "Neon",
+        "points": 10
+      }
+    ],
+    "category": "Science (Atmosphere)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the layers of Earth’s atmosphere from lowest upward.",
+    "answers": [
+      {
+        "text": "Troposphere",
+        "points": 30
+      },
+      {
+        "text": "Stratosphere",
+        "points": 25
+      },
+      {
+        "text": "Mesosphere",
+        "points": 20
+      },
+      {
+        "text": "Thermosphere",
+        "points": 15
+      },
+      {
+        "text": "Exosphere",
+        "points": 10
+      }
+    ],
+    "category": "Science (Atmosphere)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the longest bones in the human body (by average length).",
+    "answers": [
+      {
+        "text": "Femur",
+        "points": 30
+      },
+      {
+        "text": "Tibia",
+        "points": 25
+      },
+      {
+        "text": "Fibula",
+        "points": 20
+      },
+      {
+        "text": "Humerus",
+        "points": 15
+      },
+      {
+        "text": "Radius",
+        "points": 10
+      }
+    ],
+    "category": "Science (Anatomy)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name primary organs of the human digestive system (path order).",
+    "answers": [
+      {
+        "text": "Mouth",
+        "points": 30
+      },
+      {
+        "text": "Esophagus",
+        "points": 25
+      },
+      {
+        "text": "Stomach",
+        "points": 20
+      },
+      {
+        "text": "Small intestine",
+        "points": 15
+      },
+      {
+        "text": "Large intestine",
+        "points": 10
+      }
+    ],
+    "category": "Science (Anatomy)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name eukaryotic cell organelles commonly taught in biology.",
+    "answers": [
+      {
+        "text": "Nucleus",
+        "points": 30
+      },
+      {
+        "text": "Mitochondria",
+        "points": 25
+      },
+      {
+        "text": "Ribosomes",
+        "points": 20
+      },
+      {
+        "text": "Endoplasmic reticulum",
+        "points": 15
+      },
+      {
+        "text": "Golgi apparatus",
+        "points": 10
+      }
+    ],
+    "category": "Science (Biology)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name stages of cell division (mitosis and after).",
+    "answers": [
+      {
+        "text": "Prophase",
+        "points": 30
+      },
+      {
+        "text": "Metaphase",
+        "points": 25
+      },
+      {
+        "text": "Anaphase",
+        "points": 20
+      },
+      {
+        "text": "Telophase",
+        "points": 15
+      },
+      {
+        "text": "Cytokinesis",
+        "points": 10
+      }
+    ],
+    "category": "Science (Biology)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the major blood vessels connected to the heart.",
+    "answers": [
+      {
+        "text": "Aorta",
+        "points": 30
+      },
+      {
+        "text": "Pulmonary artery",
+        "points": 25
+      },
+      {
+        "text": "Pulmonary vein",
+        "points": 20
+      },
+      {
+        "text": "Superior vena cava",
+        "points": 15
+      },
+      {
+        "text": "Inferior vena cava",
+        "points": 10
+      }
+    ],
+    "category": "Science (Anatomy)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the first five Presidents of the United States (chronological).",
+    "answers": [
+      {
+        "text": "George Washington",
+        "points": 30
+      },
+      {
+        "text": "John Adams",
+        "points": 25
+      },
+      {
+        "text": "Thomas Jefferson",
+        "points": 20
+      },
+      {
+        "text": "James Madison",
+        "points": 15
+      },
+      {
+        "text": "James Monroe",
+        "points": 10
+      }
+    ],
+    "category": "History (USA)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the principal Allied Powers of World War II.",
+    "answers": [
+      {
+        "text": "United States",
+        "points": 30
+      },
+      {
+        "text": "Soviet Union",
+        "points": 25
+      },
+      {
+        "text": "United Kingdom",
+        "points": 20
+      },
+      {
+        "text": "China",
+        "points": 15
+      },
+      {
+        "text": "France",
+        "points": 10
+      }
+    ],
+    "category": "History (WWII)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the principal Axis Powers of World War II.",
+    "answers": [
+      {
+        "text": "Germany",
+        "points": 30
+      },
+      {
+        "text": "Italy",
+        "points": 25
+      },
+      {
+        "text": "Japan",
+        "points": 20
+      },
+      {
+        "text": "Hungary",
+        "points": 15
+      },
+      {
+        "text": "Romania",
+        "points": 10
+      }
+    ],
+    "category": "History (WWII)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the Seven Wonders of the Ancient World (any five).",
+    "answers": [
+      {
+        "text": "Great Pyramid of Giza",
+        "points": 30
+      },
+      {
+        "text": "Hanging Gardens of Babylon",
+        "points": 25
+      },
+      {
+        "text": "Statue of Zeus at Olympia",
+        "points": 20
+      },
+      {
+        "text": "Temple of Artemis at Ephesus",
+        "points": 15
+      },
+      {
+        "text": "Mausoleum at Halicarnassus",
+        "points": 10
+      }
+    ],
+    "category": "History (Ancient)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the Julio-Claudian Roman emperors.",
+    "answers": [
+      {
+        "text": "Augustus",
+        "points": 30
+      },
+      {
+        "text": "Tiberius",
+        "points": 25
+      },
+      {
+        "text": "Caligula",
+        "points": 20
+      },
+      {
+        "text": "Claudius",
+        "points": 15
+      },
+      {
+        "text": "Nero",
+        "points": 10
+      }
+    ],
+    "category": "History (Rome)",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing films worldwide (unadjusted).",
+    "answers": [
+      {
+        "text": "Avatar",
+        "points": 30
+      },
+      {
+        "text": "Avengers: Endgame",
+        "points": 25
+      },
+      {
+        "text": "Titanic",
+        "points": 20
+      },
+      {
+        "text": "Star Wars: The Force Awakens",
+        "points": 15
+      },
+      {
+        "text": "Avengers: Infinity War",
+        "points": 10
+      }
+    ],
+    "category": "Pop Culture",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the best-selling video game franchises of all time.",
+    "answers": [
+      {
+        "text": "Mario",
+        "points": 30
+      },
+      {
+        "text": "Tetris",
+        "points": 25
+      },
+      {
+        "text": "Pokémon",
+        "points": 20
+      },
+      {
+        "text": "Call of Duty",
+        "points": 15
+      },
+      {
+        "text": "Grand Theft Auto",
+        "points": 10
+      }
+    ],
+    "category": "Pop Culture",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the best-selling fiction authors of all time.",
+    "answers": [
+      {
+        "text": "William Shakespeare",
+        "points": 30
+      },
+      {
+        "text": "Agatha Christie",
+        "points": 25
+      },
+      {
+        "text": "Barbara Cartland",
+        "points": 20
+      },
+      {
+        "text": "Danielle Steel",
+        "points": 15
+      },
+      {
+        "text": "J. K. Rowling",
+        "points": 10
+      }
+    ],
+    "category": "Literature",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the best-selling book series of all time.",
+    "answers": [
+      {
+        "text": "Harry Potter",
+        "points": 30
+      },
+      {
+        "text": "Goosebumps",
+        "points": 25
+      },
+      {
+        "text": "Perry Mason",
+        "points": 20
+      },
+      {
+        "text": "Berenstain Bears",
+        "points": 15
+      },
+      {
+        "text": "Choose Your Own Adventure",
+        "points": 10
+      }
+    ],
+    "category": "Literature",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing Broadway shows of all time.",
+    "answers": [
+      {
+        "text": "The Lion King",
+        "points": 30
+      },
+      {
+        "text": "Wicked",
+        "points": 25
+      },
+      {
+        "text": "The Phantom of the Opera",
+        "points": 20
+      },
+      {
+        "text": "Hamilton",
+        "points": 15
+      },
+      {
+        "text": "Chicago",
+        "points": 10
+      }
+    ],
+    "category": "Stage",
+    "removeQuestion": "",
+    "factCheck": ""
+  }
+]

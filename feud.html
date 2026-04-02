@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Coyne Feud</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #ffe6e6; /* red team default; will toggle */
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+      transition: background 0.3s ease;
+    }
+
+    /* Header title row with side images + center logo */
+    #title-row {
+      display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;
+    }
+    #title-row .center-img {width:28%;max-width:360px;height:auto}
+    #title-row .side-img {width:8%;max-width:100px;height:auto}
+
+    /* Setup screen */
+    #setup { margin-top: 10px; }
+    #setup input { padding: 6px; font-size: 1em; margin: 4px; }
+    #setup button {
+      padding: 8px 14px; font-size: 1em; margin: 6px; cursor: pointer;
+      border: none; border-radius: 5px; background: #ffcc00; color: #000;
+    }
+    #kendall-img { margin-top: 10px; width: 15%; max-width: 180px; }
+
+    /* Game area */
+    #game { display: none; }
+
+    #targetDisplay { font-size: 1.2em; margin: 8px 0; color: #000; }
+
+    #category { font-size: 1.1em; margin: 6px 0; color: #ffcc00; font-weight: bold; }
+
+    #question { font-size: 1.5em; margin: 12px 0; color: #000; }
+
+    #board {
+      display: flex; flex-direction: column; gap: 10px;
+      max-width: 560px; margin: 12px auto;
+    }
+    .answer { padding: 10px; border-radius: 8px; font-size: 1.2em;
+      display: flex; justify-content: space-between; align-items: center; }
+    .hidden { background: #222; color: #222; }
+    .correct { background: #228B22; color: #fff; }
+    .missed  { background: #B22222; color: #fff; }
+
+    /* Score/turn display */
+    #scores, #roundScore, #roundCounter, #strikes, #turn {
+      font-size: 1.1em; margin: 6px 0; color: #000;
+    }
+    .red  { color: #ff4c4c; font-weight: bold; }
+    .blue { color: #4c8cff; font-weight: bold; }
+
+    /* Input + buttons */
+    #input-area { margin-top: 10px; opacity: 1; transition: opacity 0.5s ease; }
+    #input-area.hidden { display: none; opacity: 0; }
+
+    input[type="text"] { padding: 8px; font-size: 1em; }
+    button {
+      padding: 8px 14px; font-size: 1em; margin: 5px; cursor: pointer;
+      border: none; border-radius: 5px; background: #ffcc00; color: #000;
+    }
+
+    /* History */
+    #history {
+      margin-top: 12px; max-width: 560px; margin-left: auto; margin-right: auto;
+      text-align: left; background: #111; padding: 10px; border-radius: 8px;
+      color: #fff; opacity: 1; transition: opacity 0.5s ease;
+    }
+    #history.hidden { display: none; opacity: 0; }
+
+    #message { margin-top: 8px; font-weight: bold; color: #ffcc00; }
+    #endRound { margin-top: 12px; color: #000; }
+
+    /* New: grouped control buttons under the question */
+    #questionActions { display: none; margin-top: 10px; }
+    #questionActions .row {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <!-- Title row with six side images and center logo -->
+  <div id="title-row">
+    <img src="leo16bit.png" alt="Leo" class="side-img">
+    <img src="mabel16bit.png" alt="Mabel" class="side-img">
+    <img src="appa16bit.png" alt="Appa" class="side-img">
+    <img src="coynefeud16bit.png" alt="Coyne Feud" class="center-img">
+    <img src="palmer16bit.png" alt="Palmer" class="side-img">
+    <img src="archie16bit.png" alt="Archie" class="side-img">
+    <img src="abby16bit.png" alt="Abby" class="side-img">
+  </div>
+
+  <!-- Setup screen -->
+  <div id="setup">
+    <h2>Set Target Score & Player Names</h2>
+    <label>Target Score: </label>
+    <input type="number" id="targetInput" value="300" min="50" step="50"><br><br>
+
+    <div>
+      <h3><span class="red">Red Team Players</span></h3>
+      <div id="redPlayers">
+        <input type="text" class="redPlayer" placeholder="Player name">
+        <input type="text" class="redPlayer" placeholder="Player name">
+        <input type="text" class="redPlayer" placeholder="Player name">
+        <input type="text" class="redPlayer" placeholder="Player name">
+        <input type="text" class="redPlayer" placeholder="Player name">
+      </div>
+    </div>
+
+    <div>
+      <h3><span class="blue">Blue Team Players</span></h3>
+      <div id="bluePlayers">
+        <input type="text" class="bluePlayer" placeholder="Player name">
+        <input type="text" class="bluePlayer" placeholder="Player name">
+        <input type="text" class="bluePlayer" placeholder="Player name">
+        <input type="text" class="bluePlayer" placeholder="Player name">
+        <input type="text" class="bluePlayer" placeholder="Player name">
+      </div>
+    </div>
+
+    <button onclick="startGame()">Start Game</button>
+
+    <div>
+      <img id="kendall-img" src="kendall16bit.png" alt="Kendall">
+    </div>
+  </div>
+
+  <!-- Game area -->
+  <div id="game">
+    <div id="targetDisplay"></div>
+
+    <div id="category"></div>
+    <div id="question"></div>
+
+    <div id="questionActions">
+      <div class="row">
+        <button onclick="getNewQuestion()">Get New Question</button>
+        <button onclick="removeQuestion()">Remove Question</button>
+        <button onclick="flagFactCheck()">Flag for Fact Check</button>
+      </div>
+    </div>
+
+    <div id="board"></div>
+
+    <div id="roundScore">Round Score: 0</div>
+    <div id="roundCounter">Round: 0</div>
+
+    <div id="scores"><span class="red">Red Team: 0</span> | <span class="blue">Blue Team: 0</span></div>
+    <div id="turn">Current Turn: <span class="red">Red Team</span></div>
+    <div id="strikes">Strikes: 0</div>
+
+    <div id="input-area">
+      <input type="text" id="guess" placeholder="Enter your guess" />
+      <button onclick="submitGuess()">Submit</button>
+    </div>
+
+    <div id="message"></div>
+
+    <div id="history">
+      <h3>Answer History</h3>
+      <ul id="historyList"></ul>
+    </div>
+
+    <div id="endRound"></div>
+  </div>
+
+  <script>
+    let questions = [];
+    let currentQuestion = null;
+    let revealed = [];
+    let roundScore = 0;
+    let teamScores = [0, 0];
+    let strikes = 0;
+    let teamTurn = 0; 
+    let usedQuestions = [];
+    let guessHistory = [];
+    let stealPhase = false;
+    let targetScore = 300;
+
+    let roundNumber = 0;
+    let startingTeam = 0; 
+    let teamPlayers = [[], []];
+    let playerIndex = [0, 0];
+
+    async function loadQuestions() {
+      try {
+        const res = await fetch("family_feud_trivia50_datadriven.json");
+        questions = await res.json();
+      } catch (e) {
+        console.error("Failed to load question bank", e);
+        document.getElementById("question").textContent = "⚠️ Error loading questions.";
+      }
+    }
+
+    function startGame() {
+      targetScore = parseInt(document.getElementById("targetInput").value) || 300;
+      teamScores = [0, 0]; usedQuestions = [];
+      roundNumber = 0; playerIndex = [0, 0];
+      startingTeam = Math.floor(Math.random() * 2);
+
+      teamPlayers[0] = Array.from(document.querySelectorAll(".redPlayer")).map(i=>i.value.trim()).filter(Boolean);
+      teamPlayers[1] = Array.from(document.querySelectorAll(".bluePlayer")).map(i=>i.value.trim()).filter(Boolean);
+      if (teamPlayers[0].length === 0) teamPlayers[0] = ["Red Player"];
+      if (teamPlayers[1].length === 0) teamPlayers[1] = ["Blue Player"];
+
+      document.getElementById("setup").style.display = "none";
+      document.getElementById("game").style.display = "block";
+      document.getElementById("input-area").classList.add("hidden");
+      document.getElementById("history").classList.add("hidden");
+      document.getElementById("targetDisplay").textContent = `🎯 First to ${targetScore} points wins!`;
+
+      advanceRound();
+    }
+
+    function initRoundState() {
+      currentQuestion = null;
+      revealed = [];
+      roundScore = 0;
+      strikes = 0;
+      guessHistory = [];
+      stealPhase = false;
+
+      document.getElementById("category").textContent = "";
+      document.getElementById("question").textContent = "";
+      document.getElementById("board").innerHTML = "";
+      document.getElementById("questionActions").style.display = "none";
+      document.getElementById("message").textContent = "";
+      document.getElementById("endRound").innerHTML = "";
+      updateScores(); updateStrikes(); updateHistory(); updateTurn();
+      document.getElementById("roundScore").textContent = `Round Score: ${roundScore}`;
+    }
+
+    function advanceRound() {
+      if (roundNumber === 0) teamTurn = startingTeam;
+      else { teamTurn = 1 - startingTeam; startingTeam = teamTurn; }
+      roundNumber++;
+      document.getElementById("roundCounter").textContent = `Round: ${roundNumber}`;
+      updateTurn();
+      initRoundState();
+      showCategorySelection();
+    }
+
+    function showCategorySelection() {
+      const remainingIdx = questions.map((q, idx) => !usedQuestions.includes(idx) ? idx : null).filter(i => i !== null);
+      const remainingCats = [...new Set(remainingIdx.map(i => questions[i].category))];
+      const picks = [];
+      const catsCopy = remainingCats.slice();
+      while (picks.length < 3 && catsCopy.length > 0) {
+        const r = Math.floor(Math.random() * catsCopy.length);
+        picks.push(catsCopy.splice(r,1)[0]);
+      }
+      if (picks.length === 0) { endGame("No more questions available."); return; }
+      const teamLabel = teamTurn===0? `<span class="red">Red Team</span>` : `<span class="blue">Blue Team</span>`;
+      document.getElementById("question").innerHTML =
+        `<h2>${teamLabel}, select a category:</h2>` +
+        picks.map(c => `<button onclick="pickCategory('${c.replace(/'/g,"\\'")}')">${c}</button>`).join(" ");
+      document.getElementById("input-area").classList.add("hidden");
+      document.getElementById("history").classList.add("hidden");
+    }
+
+    function pickCategory(category) {
+      const pool = questions.map((q, idx) => ({q, idx}))
+        .filter(obj => !usedQuestions.includes(obj.idx) && obj.q.category === category);
+      if (pool.length === 0) { document.getElementById("question").textContent = "No questions left in this category."; return; }
+      const choice = pool[Math.floor(Math.random() * pool.length)];
+      currentQuestion = choice.q; usedQuestions.push(choice.idx);
+      revealed = Array(currentQuestion.answers.length).fill(false);
+
+      document.getElementById("category").textContent = `Category: ${currentQuestion.category}`;
+      document.getElementById("question").textContent = currentQuestion.question;
+      updateBoard(); updateScores(); updateStrikes(); updateHistory(); updateTurn();
+      document.getElementById("questionActions").style.display = "block";
+      document.getElementById("input-area").classList.remove("hidden");
+      document.getElementById("history").classList.remove("hidden");
+    }
+
+    function getNewQuestion() {
+      if (!currentQuestion) return;
+      if (confirm("Are you sure you want a new question?")) { initRoundState(); showCategorySelection(); }
+    }
+    function removeQuestion(){ if (currentQuestion) console.log("Remove:", currentQuestion.question); }
+    function flagFactCheck(){ if (currentQuestion) console.log("FactCheck:", currentQuestion.question); }
+
+    function normalize(t){return t.toLowerCase().replace(/^(a |an |the )/,"").replace(/s$/,"");}
+    function levenshtein(a,b){const m=[];for(let i=0;i<=b.length;i++)m[i]=[i];for(let j=0;j<=a.length;j++)m[0][j]=j;
+      for(let i=1;i<=b.length;i++){for(let j=1;j<=a.length;j++){m[i][j]=b[i-1]===a[j-1]?m[i-1][j-1]:Math.min(m[i-1][j-1]+1,m[i][j-1]+1,m[i-1][j]+1);}}
+      return m[b.length][a.length];}
+    function isApproxMatch(g,a){return levenshtein(normalize(g),normalize(a))<=2;}
+
+    function updateBoard(showAll=false){const b=document.getElementById("board");b.innerHTML="";if(!currentQuestion)return;
+      currentQuestion.answers.forEach((ans,i)=>{const d=document.createElement("div");d.classList.add("answer");
+        if(revealed[i]){d.classList.add("correct");d.textContent=`${ans.text} (${ans.points})`;}
+        else if(showAll){d.classList.add("missed");d.textContent=`${ans.text} (${ans.points})`;}
+        else{d.classList.add("hidden");d.textContent="-----";}b.appendChild(d);});}
+    function updateScores(){document.getElementById("roundScore").textContent=`Round Score: ${roundScore}`;
+      document.getElementById("scores").innerHTML=`<span class="red">Red Team: ${teamScores[0]}</span> | <span class="blue">Blue Team: ${teamScores[1]}</span>`;}
+    function updateStrikes(){document.getElementById("strikes").textContent=`Strikes: ${strikes}`;}
+    function updateTurn(){const tn=teamTurn===0? `<span class="red">Red Team</span>`:`<span class="blue">Blue Team</span>`;
+      let player="";if(!stealPhase){const cur=teamPlayers[teamTurn][playerIndex[teamTurn] % teamPlayers[teamTurn].length];player=cur?` (${cur})`:"";}
+      document.getElementById("turn").innerHTML=`Current Turn: ${tn}${player}`;
+      document.body.style.background=teamTurn===0?"#ffe6e6":"#e6f2ff";}
+    function updateHistory(){const l=document.getElementById("historyList");l.innerHTML="";guessHistory.forEach(e=>{const li=document.createElement("li");li.textContent=`${e.guess} - ${e.result}`;l.appendChild(li);});}
+
+    function submitGuess(){const input=document.getElementById("guess");const guess=input.value.trim();input.value="";if(!guess||!currentQuestion)return;
+      if(guessHistory.some(e=>normalize(e.guess)===normalize(guess))){document.getElementById("message").textContent="⚠️ Already guessed!";return;}
+      if(stealPhase){const idx=currentQuestion.answers.findIndex((ans,i)=>!revealed[i]&&isApproxMatch(guess,ans.text));
+        if(idx!==-1){revealed[idx]=true;roundScore+=currentQuestion.answers[idx].points;guessHistory.push({guess:currentQuestion.answers[idx].text,result:`✔️ Steal (${currentQuestion.answers[idx].points} pts)`});
+          updateBoard();updateHistory();teamScores[teamTurn]+=roundScore;updateScores();if(!checkForWinner())endRound(`🎉 <span class="${teamTurn===0?"red":"blue"}">${teamTurn===0?"Red Team":"Blue Team"}</span> stole ${roundScore} points!`);}
+        else{guessHistory.push({guess:guess,result:"❌ Wrong (steal)"});teamScores[1-teamTurn]+=roundScore;updateScores();
+          if(!checkForWinner())endRound(`✅ <span class="${1-teamTurn===0?"red":"blue"}">${1-teamTurn===0?"Red Team":"Blue Team"}</span> keeps ${roundScore} points!`);}return;}
+      let found=false;currentQuestion.answers.forEach((ans,i)=>{if(isApproxMatch(guess,ans.text)&&!revealed[i]){revealed[i]=true;roundScore+=ans.points;
+        guessHistory.push({guess:ans.text,result:`✔️ Correct (${ans.points} pts)`});found=true;}});
+      if(!found){strikes++;guessHistory.push({guess:guess,result:"❌ Wrong"});}playerIndex[teamTurn]=(playerIndex[teamTurn]+1)%teamPlayers[teamTurn].length;
+      document.getElementById("message").textContent="";updateBoard();updateScores();updateStrikes();updateHistory();updateTurn();
+      if(!found&&strikes>=3){stealPhase=true;teamTurn=1-teamTurn;document.getElementById("endRound").innerHTML=`<h2 style="color:black"><span class="${teamTurn===0?"red":"blue"}">${teamTurn===0?"Red Team":"Blue Team"}</span> can steal! One guess...</h2>`;updateTurn();return;}
+      if(revealed.every(r=>r)&&!stealPhase){teamScores[teamTurn]+=roundScore;updateScores();if(!checkForWinner())endRound(`🎉 <span class="${teamTurn===0?"red":"blue"}">${teamTurn===0?"Red Team":"Blue Team"}</span> revealed all answers! They win ${roundScore} points.`);}}
+    function checkForWinner(){if(teamScores[0]>=targetScore||teamScores[1]>=targetScore){const w=teamScores[0]>=targetScore?`<span class="red">Red Team</span>`:`<span class="blue">Blue Team</span>`;
+        endGame(`${w} wins by reaching ${targetScore} points!`);return true;}return false;}
+    function endRound(msg){document.getElementById("endRound").innerHTML=`<h2>${msg}</h2><button onclick="updateBoard(true)">Reveal All Answers</button><button onclick="advanceRound()">Next Round</button>`;}
+    function endGame(msg){document.getElementById("endRound").innerHTML=`<h2>🏆 ${msg}</h2><button onclick="resetGame()">Play Again</button>`;document.getElementById("input-area").classList.add("hidden");document.getElementById("questionActions").style.display="none";}
+    function resetGame(){teamScores=[0,0];usedQuestions=[];roundNumber=0;playerIndex=[0,0];startingTeam=0;
+      document.getElementById("setup").style.display="block";document.getElementById("game").style.display="none";document.getElementById("endRound").innerHTML="";
+      document.getElementById("roundCounter").textContent="Round: 0";document.getElementById("roundScore").textContent="Round Score: 0";
+      document.getElementById("category").textContent="";document.getElementById("question").textContent="";
+      document.getElementById("questionActions").style.display="none";document.body.style.background="#ffe6e6";}
+    loadQuestions();
+  </script>
+</body>
+</html>

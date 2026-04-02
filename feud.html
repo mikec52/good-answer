@@ -330,7 +330,35 @@
       if(revealed.every(r=>r)&&!stealPhase){teamScores[teamTurn]+=roundScore;updateScores();if(!checkForWinner())endRound(`🎉 <span class="${teamTurn===0?"red":"blue"}">${teamTurn===0?"Red Team":"Blue Team"}</span> revealed all answers! They win ${roundScore} points.`);}}
     function checkForWinner(){if(teamScores[0]>=targetScore||teamScores[1]>=targetScore){const w=teamScores[0]>=targetScore?`<span class="red">Red Team</span>`:`<span class="blue">Blue Team</span>`;
         endGame(`${w} wins by reaching ${targetScore} points!`);return true;}return false;}
-    function endRound(msg){document.getElementById("endRound").innerHTML=`<h2>${msg}</h2><button onclick="updateBoard(true)">Reveal All Answers</button><button onclick="advanceRound()">Next Round</button>`;}
+    function endRound(msg){
+      document.getElementById("endRound").innerHTML=`
+        <h2>${msg}</h2>
+        <button onclick="updateBoard(true)">Reveal All Answers</button>
+        <button onclick="advanceRound()">Next Round</button>
+        <div style="margin-top:18px;">
+          <strong style="color:#000;">Score edits needed?</strong>
+          <div style="margin-top:10px;display:flex;gap:24px;justify-content:center;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="red">Red Team</span>
+              <button onclick="adjustEdit(0,-1)">−</button>
+              <input type="number" id="editRed" value="0" style="width:60px;text-align:center;font-size:1em;padding:4px;">
+              <button onclick="adjustEdit(0,1)">+</button>
+              <button onclick="submitEdit(0)">Submit</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="blue">Blue Team</span>
+              <button onclick="adjustEdit(1,-1)">−</button>
+              <input type="number" id="editBlue" value="0" style="width:60px;text-align:center;font-size:1em;padding:4px;">
+              <button onclick="adjustEdit(1,1)">+</button>
+              <button onclick="submitEdit(1)">Submit</button>
+            </div>
+          </div>
+        </div>`;
+    }
+    function adjustEdit(team,delta){const id=team===0?'editRed':'editBlue';const el=document.getElementById(id);el.value=(parseInt(el.value)||0)+delta;}
+    function submitEdit(team){const id=team===0?'editRed':'editBlue';const el=document.getElementById(id);const val=parseInt(el.value)||0;if(val===0)return;
+      const name=team===0?'Red Team':'Blue Team';const sign=val>0?'+':'';
+      if(confirm(`Apply ${sign}${val} points to ${name}?`)){teamScores[team]+=val;el.value=0;updateScores();checkForWinner();}}
     function endGame(msg){document.getElementById("endRound").innerHTML=`<h2>🏆 ${msg}</h2><button onclick="resetGame()">Play Again</button>`;document.getElementById("input-area").classList.add("hidden");document.getElementById("questionActions").style.display="none";}
     function resetGame(){teamScores=[0,0];usedQuestions=[];roundNumber=0;playerIndex=[0,0];startingTeam=0;
       document.getElementById("setup").style.display="block";document.getElementById("game").style.display="none";document.getElementById("endRound").innerHTML="";

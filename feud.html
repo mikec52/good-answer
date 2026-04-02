@@ -248,18 +248,26 @@
 
     function showCategorySelection() {
       const remainingIdx = questions.map((q, idx) => !usedQuestions.includes(idx) ? idx : null).filter(i => i !== null);
-      const remainingCats = [...new Set(remainingIdx.map(i => questions[i].category))];
+      const hasSurvey = remainingIdx.some(i => questions[i].category === 'Survey');
+      const objCats = [...new Set(remainingIdx.filter(i => questions[i].category !== 'Survey').map(i => questions[i].category))];
+      if (objCats.length === 0 && !hasSurvey) { endGame("No more questions available."); return; }
       const picks = [];
-      const catsCopy = remainingCats.slice();
+      const catsCopy = objCats.slice();
       while (picks.length < 3 && catsCopy.length > 0) {
         const r = Math.floor(Math.random() * catsCopy.length);
         picks.push(catsCopy.splice(r,1)[0]);
       }
-      if (picks.length === 0) { endGame("No more questions available."); return; }
       const teamLabel = teamTurn===0? `<span class="red">Red Team</span>` : `<span class="blue">Blue Team</span>`;
-      document.getElementById("question").innerHTML =
-        `<h2>${teamLabel}, select a category:</h2>` +
-        picks.map(c => `<button onclick="pickCategory('${c.replace(/'/g,"\\'")}')">${c}</button>`).join(" ");
+      let html = `<h2>${teamLabel}, select a category:</h2><div style="display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;margin-top:10px;">`;
+      if (picks.length > 0) {
+        html += `<div style="display:flex;flex-direction:column;gap:10px;">`;
+        html += picks.map(c => `<button onclick="pickCategory('${c.replace(/'/g,"\\'")}')">${c}</button>`).join('');
+        html += `</div>`;
+      }
+      if (picks.length > 0 && hasSurvey) html += `<div style="font-size:1.1em;font-weight:bold;color:#000;">— OR —</div>`;
+      if (hasSurvey) html += `<div><button onclick="pickCategory('Survey')">Feud-style Survey</button></div>`;
+      html += `</div>`;
+      document.getElementById("question").innerHTML = html;
       document.getElementById("input-area").classList.add("hidden");
       document.getElementById("history").classList.add("hidden");
     }

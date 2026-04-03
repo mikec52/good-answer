@@ -303,8 +303,8 @@
 
     function updateBoard(showAll=false){const b=document.getElementById("board");b.innerHTML="";if(!currentQuestion)return;
       currentQuestion.answers.forEach((ans,i)=>{const d=document.createElement("div");d.classList.add("answer");
-        if(revealed[i]){d.classList.add("correct");d.textContent=`${ans.text} (${ans.points})`;}
-        else if(showAll){d.classList.add("missed");d.textContent=`${ans.text} (${ans.points})`;}
+        if(revealed[i]){d.classList.add("correct");d.textContent=`${ans.display||ans.text} (${ans.points})`;}
+        else if(showAll){d.classList.add("missed");d.textContent=`${ans.display||ans.text} (${ans.points})`;}
         else{d.classList.add("hidden");d.textContent="-----";}b.appendChild(d);});}
     function updateScores(){document.getElementById("roundScore").textContent=`Round Score: ${roundScore}`;
       document.getElementById("scores").innerHTML=`<span class="red">Red Team: ${teamScores[0]}</span> | <span class="blue">Blue Team: ${teamScores[1]}</span>`;}

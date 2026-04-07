@@ -225,6 +225,14 @@
     }
     #setup-step-2 { display: none; }
 
+    /* Setup exit animations (when starting game) */
+    @keyframes exit-slide-down  { to { transform: translateY(800px);  opacity: 0; } }
+    @keyframes exit-slide-right { to { transform: translateX(1400px); opacity: 0; } }
+    @keyframes exit-slide-up    { to { transform: translateY(-800px); opacity: 0; } }
+    .exit-down  { animation: exit-slide-down  0.28s ease-in forwards; }
+    .exit-right { animation: exit-slide-right 0.28s ease-in forwards; }
+    .exit-up    { animation: exit-slide-up    0.28s ease-in forwards; }
+
     /* Setup step animations */
     @keyframes setup-fly-out {
       from { transform: translateX(0);     opacity: 1; }
@@ -1549,7 +1557,7 @@
 
   <!-- Setup screen -->
   <div id="setup">
-    <h1 class="setup-title-wave">Game Setup</h1>
+    <h1 id="setup-title" class="setup-title-wave">Game Setup</h1>
 
     <!-- Step 1: Game mode selection -->
     <div id="setup-step-1">
@@ -1630,7 +1638,7 @@
           </div>
         </div>
       </div>
-      <button class="btn" style="margin-top: 16px;" onclick="startGame()">Start Game</button>
+      <button id="start-game-btn" class="btn" style="margin-top: 16px;" onclick="beginStartGameExit()">Start Game</button>
     </div>
 
   </div>
@@ -2019,6 +2027,30 @@ document.addEventListener('keydown', e => {
       step1.classList.remove('setup-fly-out', 'setup-fly-in');
       step2.style.display = 'none';
       step2.classList.remove('setup-fly-out', 'setup-fly-in');
+      document.getElementById('start-game-btn').classList.remove('exit-down');
+      document.getElementById('player-columns').classList.remove('exit-right');
+      document.getElementById('setup-title').classList.remove('exit-up');
+    }
+
+    function beginStartGameExit() {
+      const btn     = document.getElementById('start-game-btn');
+      const columns = document.getElementById('player-columns');
+      const title   = document.getElementById('setup-title');
+
+      btn.classList.add('exit-down');
+      btn.addEventListener('animationend', () => {
+        setTimeout(() => {
+          columns.classList.add('exit-right');
+          columns.addEventListener('animationend', () => {
+            setTimeout(() => {
+              title.classList.add('exit-up');
+              title.addEventListener('animationend', () => {
+                startGame();
+              }, { once: true });
+            }, 100);
+          }, { once: true });
+        }, 100);
+      }, { once: true });
     }
 
     function selectRounds(n, btn) {

@@ -175,9 +175,17 @@
       gap: 32px;
       cursor: pointer;
     }
+    /* Adjust translateY to move content up or down — negative = up */
+    #start-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      transform: translateY(-10%);
+    }
     #start-screen img { width: 40%; }
     #start-screen h1 {
-      font-size: 6rem;
+      font-size: 4rem;
       margin: 0;
       animation: start-prompt-pulse 2s ease-in-out infinite;
     }
@@ -441,9 +449,10 @@
     /* CRT overlay */
     #crt-overlay {
       position: fixed; inset: 0; pointer-events: none; z-index: 9998;
-      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
     }
-    body.crt #crt-overlay { display: block; }
+    body.crt #crt-overlay { opacity: 1; }
     #crt-overlay::before {
       content: '';
       position: absolute; inset: 0;
@@ -1529,8 +1538,10 @@
 
   <!-- Start screen -->
   <div id="start-screen">
-    <img src="coynefeud1.png" alt="Coyne Feud">
-    <h1>Click anywhere to start</h1>
+    <div id="start-content">
+      <img src="coynefeud1.png" alt="Coyne Feud">
+      <h1>Click anywhere to start</h1>
+    </div>
   </div>
 
   <!-- Title row (reserved for in-game header content) -->
@@ -3151,6 +3162,14 @@ document.addEventListener('keydown', e => {
 
       startScreen.addEventListener('click', function() {
         startSetupTheme();
+
+        // Fade out CRT, then disable it
+        const crtOverlay = document.getElementById('crt-overlay');
+        crtOverlay.style.opacity = '0';
+        crtOverlay.addEventListener('transitionend', function() {
+          document.getElementById('crt-checkbox').checked = false;
+          toggleCRT();
+        }, { once: true });
 
         // Fade out start screen
         startScreen.classList.add('dismissing');

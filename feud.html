@@ -161,8 +161,38 @@
     #title-row .center-img { width: 28%; max-width: 250px; height: auto; }
 
     /* Setup screen */
-    #setup { flex: 1; overflow-y: auto; padding: 20px; }
+    #setup {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 20px;
+    }
     #setup input { padding: 6px; margin: 4px; }
+
+    /* Setup two-step containers */
+    #setup-step-1, #setup-step-2 {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 700px;
+    }
+    #setup-step-2 { display: none; }
+
+    /* Setup step animations */
+    @keyframes setup-fly-out {
+      from { transform: translateX(0);     opacity: 1; }
+      to   { transform: translateX(120%);  opacity: 0; }
+    }
+    @keyframes setup-fly-in {
+      from { transform: translateX(-120%); opacity: 0; }
+      to   { transform: translateX(0);     opacity: 1; }
+    }
+    .setup-fly-out { animation: setup-fly-out 0.28s cubic-bezier(0.4, 0, 1, 1) forwards; }
+    .setup-fly-in  { animation: setup-fly-in  0.30s cubic-bezier(0, 0, 0.3, 1) forwards; }
     /* Win condition two-column layout */
     #win-condition { display: flex; align-items: stretch; justify-content: center; margin: 16px auto; background: #f2ebdf; border-radius: 20px; max-width: 640px; }
     .win-option { flex: 1; max-width: 280px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; }
@@ -238,8 +268,8 @@
       gap: 6px;
     }
     #ribbon-scroller {
-      position: fixed; bottom: 0; left: 0; width: 100%;
-      overflow: hidden; z-index: -1;
+      position: absolute; bottom: 0; left: 0; width: 100%;
+      overflow: hidden; z-index: 5;
       height: 130px; pointer-events: none;
     }
     #ribbon-track {
@@ -1471,82 +1501,89 @@
   <!-- Setup screen -->
   <div id="setup">
     <h1 class="setup-title-wave">Game Setup</h1>
-    <div id="win-condition">
-      <div class="win-option" id="score-option">
-        <p class="win-option-desc">Play up to a target score. First team to reach that score wins when the round ends.</p>
-        <div class="mode-button-row">
-          <div class="btn-with-arrow">
-            <span class="mode-arrow" id="score-arrow">►</span>
-            <button class="btn mode-btn" onclick="setGameMode('score')">Target Score</button>
+
+    <!-- Step 1: Game mode selection -->
+    <div id="setup-step-1">
+      <div id="win-condition">
+        <div class="win-option" id="score-option">
+          <p class="win-option-desc">Play up to a target score. First team to reach that score wins when the round ends.</p>
+          <div class="mode-button-row">
+            <div class="btn-with-arrow">
+              <span class="mode-arrow" id="score-arrow">►</span>
+              <button class="btn mode-btn" onclick="setGameMode('score')">Target Score</button>
+            </div>
+          </div>
+          <div class="win-option-sub">
+            <label>Target Score:</label>
+            <input type="number" id="targetInput" value="300" min="50" step="50">
           </div>
         </div>
-        <div class="win-option-sub">
-          <label>Target Score:</label>
-          <input type="number" id="targetInput" value="300" min="50" step="50">
+        <div class="or-divider">
+          <div class="or-line"></div>
+          <span class="or-text">OR</span>
+          <div class="or-line"></div>
         </div>
-      </div>
-      <div class="or-divider">
-        <div class="or-line"></div>
-        <span class="or-text">OR</span>
-        <div class="or-line"></div>
-      </div>
-      <div class="win-option" id="rounds-option">
-        <p class="win-option-desc">Play a defined number of rounds. High score at the end of the final round wins.</p>
-        <div class="mode-button-row">
-          <div class="btn-with-arrow">
-            <button class="btn mode-btn" onclick="setGameMode('rounds')">Rounds</button>
-            <span class="mode-arrow" id="rounds-arrow">►</span>
+        <div class="win-option" id="rounds-option">
+          <p class="win-option-desc">Play a defined number of rounds. High score at the end of the final round wins.</p>
+          <div class="mode-button-row">
+            <div class="btn-with-arrow">
+              <button class="btn mode-btn" onclick="setGameMode('rounds')">Rounds</button>
+              <span class="mode-arrow" id="rounds-arrow">►</span>
+            </div>
+          </div>
+          <div class="win-option-sub">
+            <label>Number of Rounds:</label>
+            <div class="rounds-btns">
+              <button class="btn rounds-btn selected" onclick="selectRounds(2, this)">2</button>
+              <button class="btn rounds-btn" onclick="selectRounds(4, this)">4</button>
+              <button class="btn rounds-btn" onclick="selectRounds(6, this)">6</button>
+            </div>
+            <input type="hidden" id="roundsInput" value="2">
           </div>
         </div>
-        <div class="win-option-sub">
-          <label>Number of Rounds:</label>
-          <div class="rounds-btns">
-            <button class="btn rounds-btn selected" onclick="selectRounds(2, this)">2</button>
-            <button class="btn rounds-btn" onclick="selectRounds(4, this)">4</button>
-            <button class="btn rounds-btn" onclick="selectRounds(6, this)">6</button>
-          </div>
-          <input type="hidden" id="roundsInput" value="2">
-        </div>
       </div>
+      <button class="btn" style="margin-top: 16px;" onclick="proceedToTeamSetup()">Proceed to Team Setup ►</button>
     </div>
 
-    <div id="player-columns">
-      <div class="player-col red-col">
-        <div class="player-col-header">
-          <h3><span class="red">Red Team</span></h3>
-          <input type="text" id="redTeamName" placeholder="Team name">
+    <!-- Step 2: Team setup -->
+    <div id="setup-step-2">
+      <div id="player-columns">
+        <div class="player-col red-col">
+          <div class="player-col-header">
+            <h3><span class="red">Red Team</span></h3>
+            <input type="text" id="redTeamName" placeholder="Team name">
+          </div>
+          <div class="player-col-body">
+            <div class="players-label">Players</div>
+            <div id="redPlayers">
+              <input type="text" class="redPlayer" placeholder="Player name">
+              <input type="text" class="redPlayer" placeholder="Player name">
+              <input type="text" class="redPlayer" placeholder="Player name">
+              <input type="text" class="redPlayer" placeholder="Player name">
+              <input type="text" class="redPlayer" placeholder="Player name">
+            </div>
+          </div>
         </div>
-        <div class="player-col-body">
-          <div class="players-label">Players</div>
-          <div id="redPlayers">
-            <input type="text" class="redPlayer" placeholder="Player name">
-            <input type="text" class="redPlayer" placeholder="Player name">
-            <input type="text" class="redPlayer" placeholder="Player name">
-            <input type="text" class="redPlayer" placeholder="Player name">
-            <input type="text" class="redPlayer" placeholder="Player name">
+        <div class="player-col blue-col">
+          <div class="player-col-header">
+            <h3><span class="blue">Blue Team</span></h3>
+            <input type="text" id="blueTeamName" placeholder="Team name">
+          </div>
+          <div class="player-col-body">
+            <div class="players-label">Players</div>
+            <div id="bluePlayers">
+              <input type="text" class="bluePlayer" placeholder="Player name">
+              <input type="text" class="bluePlayer" placeholder="Player name">
+              <input type="text" class="bluePlayer" placeholder="Player name">
+              <input type="text" class="bluePlayer" placeholder="Player name">
+              <input type="text" class="bluePlayer" placeholder="Player name">
+            </div>
           </div>
         </div>
       </div>
-
-      <div class="player-col blue-col">
-        <div class="player-col-header">
-          <h3><span class="blue">Blue Team</span></h3>
-          <input type="text" id="blueTeamName" placeholder="Team name">
-        </div>
-        <div class="player-col-body">
-          <div class="players-label">Players</div>
-          <div id="bluePlayers">
-            <input type="text" class="bluePlayer" placeholder="Player name">
-            <input type="text" class="bluePlayer" placeholder="Player name">
-            <input type="text" class="bluePlayer" placeholder="Player name">
-            <input type="text" class="bluePlayer" placeholder="Player name">
-            <input type="text" class="bluePlayer" placeholder="Player name">
-          </div>
-        </div>
-      </div>
+      <button class="btn" style="margin-top: 16px;" onclick="startGame()">Start Game</button>
     </div>
 
-    <button class="btn" onclick="startGame()">Start Game</button>
   </div>
 
   <!-- Ribbon scroller -->
@@ -1908,6 +1945,31 @@ document.addEventListener('keydown', e => {
       document.getElementById('rounds-option').classList.toggle('selected', mode === 'rounds');
       document.getElementById('score-arrow').classList.toggle('visible',    mode === 'score');
       document.getElementById('rounds-arrow').classList.toggle('visible',   mode === 'rounds');
+    }
+
+    function proceedToTeamSetup() {
+      if (!document.getElementById('score-option').classList.contains('selected') &&
+          !document.getElementById('rounds-option').classList.contains('selected')) {
+        alert('Please select a game mode first.');
+        return;
+      }
+      const step1 = document.getElementById('setup-step-1');
+      const step2 = document.getElementById('setup-step-2');
+      step1.classList.add('setup-fly-out');
+      step1.addEventListener('animationend', () => {
+        step1.style.display = 'none';
+        step2.style.display = 'flex';
+        step2.classList.add('setup-fly-in');
+      }, { once: true });
+    }
+
+    function resetSetupSteps() {
+      const step1 = document.getElementById('setup-step-1');
+      const step2 = document.getElementById('setup-step-2');
+      step1.style.display = '';
+      step1.classList.remove('setup-fly-out', 'setup-fly-in');
+      step2.style.display = 'none';
+      step2.classList.remove('setup-fly-out', 'setup-fly-in');
     }
 
     function selectRounds(n, btn) {
@@ -2384,6 +2446,7 @@ document.addEventListener('keydown', e => {
       document.getElementById('rounds-option').classList.remove('selected');
       document.getElementById('score-arrow').classList.remove('visible');
       document.getElementById('rounds-arrow').classList.remove('visible');
+      resetSetupSteps();
       clearInterval(fm.timerInterval);
       document.getElementById("setup").style.display="block";
       document.getElementById("game").style.display="none";

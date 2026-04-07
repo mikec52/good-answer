@@ -38,8 +38,10 @@
     }
 
     #game-root {
-      width: min(100vw, calc(100vh * (16 / 9)));
-      height: min(100vh, calc(100vw * (9 / 16)));
+      width: 1280px;
+      height: 720px;
+      flex-shrink: 0;
+      transform-origin: center center;
       background: radial-gradient(ellipse at center, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 60%),
   radial-gradient(ellipse at center, #6fb3e6 0%, #3f8fd1 40%, #1e5fa8 75%, #0c3d73 100%);
       display: flex;
@@ -178,7 +180,7 @@
       flex-direction: column;
       align-items: center;
       width: 100%;
-      max-width: 700px;
+      max-width: 80%;
     }
     #setup-step-2 { display: none; }
 
@@ -194,8 +196,8 @@
     .setup-fly-out { animation: setup-fly-out 0.28s cubic-bezier(0.4, 0, 1, 1) forwards; }
     .setup-fly-in  { animation: setup-fly-in  0.30s cubic-bezier(0, 0, 0.3, 1) forwards; }
     /* Win condition two-column layout */
-    #win-condition { display: flex; align-items: stretch; justify-content: center; margin: 16px auto; background: #f2ebdf; border-radius: 20px; max-width: 640px; }
-    .win-option { flex: 1; max-width: 280px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; }
+    #win-condition { display: flex; align-items: stretch; justify-content: center; margin: 16px auto; background: #f2ebdf; border-radius: 20px; max-width: 100%; }
+    .win-option { flex: 1; max-width: 45%; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; }
     .win-option-desc { color: #333; margin-bottom: 12px; line-height: 1.5; }
     .or-divider { display: flex; flex-direction: column; align-items: center; padding: 0 2px; }
     .or-divider .or-line { width: 1px; flex: 1; background: #aaa; margin: 15px;}
@@ -453,7 +455,7 @@
       margin: 0 auto;
       color: #fff;
       font-weight: bold;
-      max-width: 400px;
+      max-width: 40%;
       background: #fba300;
       border-radius: 16px 16px 0 0;
       padding: 5px; }
@@ -466,7 +468,7 @@
       border: ;
       border-radius: 14px;
       padding: 16px 24px;
-      max-width: 640px;
+      max-width: 88%;
       margin: 0 auto 10px auto;
     }
     #category {
@@ -491,7 +493,7 @@
     }
 
     /* Question actions */
-    #questionActions { display: none; margin: 10px auto; max-width: 640px; }
+    #questionActions { display: none; margin: 10px auto; max-width: 88%; }
     .question-options {
       display: inline-block;
       vertical-align: top;
@@ -518,7 +520,7 @@
     #scoreboard {
       display: flex;
       align-items: stretch;
-      max-width: 800px;
+      max-width: 92%;
       margin: 0 auto;
     }
     #scoreboard .team-score-box { flex: 0 0 20%; }
@@ -575,7 +577,7 @@
       display: flex;
       justify-content: center;
       align-items: stretch;
-      max-width: 800px;
+      max-width: 92%;
       margin: 0 auto;
     }
     #game-area {
@@ -670,7 +672,6 @@
       border-radius: ;
       padding: 14px;
       flex: 1;
-      max-width: 640px;
     }
 
     /* Answer board — 2-column, 4-row grid, filled column-first */
@@ -776,7 +777,7 @@
     }
 
     /* Input */
-    #input-area { max-width: 640px; margin: 0 auto; border-radius: 10px; border: 3px solid transparent; overflow: hidden; }
+    #input-area { max-width: 88%; margin: 0 auto; border-radius: 10px; border: 3px solid transparent; overflow: hidden; }
     #input-area.team-red  { border-color: var(--red-bg);  background: color-mix(in srgb, var(--red-bg)  80%, black); }
     #input-area.team-blue { border-color: var(--blue-bg); background: color-mix(in srgb, var(--blue-bg) 80%, black); }
     #input-area.hidden { display: none; }
@@ -846,7 +847,7 @@
     #message { margin-top: 8px; font-weight: bold; color: #cc0000; transition: opacity 0.5s ease; }
 
     /* History tray */
-    #history { max-width: 640px; margin: 8px auto 0; color: #fff; }
+    #history { max-width: 88%; margin: 8px auto 0; color: #fff; }
     #history.hidden { display: none; }
     #history-tray-handle {
       background: #111;
@@ -896,7 +897,7 @@
       border: 4px solid #f0c040;
       border-radius: 14px;
       padding: 14px 24px;
-      max-width: 700px;
+      max-width: 88%;
       margin: 10px auto;
       color: #f0c040;
       font-family: "Boldonse";
@@ -964,7 +965,7 @@
 
     /* Question + answer grid */
     #fm-board {
-      max-width: 700px;
+      max-width: 88%;
       margin: 14px auto;
       display: flex;
       flex-direction: column;
@@ -1049,7 +1050,7 @@
 
     /* Input area during FM — matches #input-area styling */
     #fm-input-area {
-      max-width: 640px;
+      max-width: 88%;
       margin: 10px auto;
       border-radius: 10px;
       border: 3px solid transparent;
@@ -1100,7 +1101,7 @@
 
     /* FM question actions — below fm-board */
     #fm-question-actions {
-      max-width: 700px;
+      max-width: 88%;
       margin: 4px auto;
       text-align: center;
       font-size: .6rem;
@@ -1114,7 +1115,7 @@
     /* FM history */
     #fm-history {
       margin: 4px auto;
-      max-width: 640px;
+      max-width: 88%;
       text-align: center;
       background: #111;
       padding: 10px;
@@ -3086,6 +3087,18 @@ document.addEventListener('keydown', e => {
         letterIndex++;
         return span;
       }).join('');
+    });
+
+    // ── Canvas scaling ────────────────────────────────────────────
+    (function scaleCanvas() {
+      const root = document.getElementById('game-root');
+      const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+      root.style.transform = `scale(${scale})`;
+    })();
+    window.addEventListener('resize', function() {
+      const root = document.getElementById('game-root');
+      const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+      root.style.transform = `scale(${scale})`;
     });
 
     loadQuestions();

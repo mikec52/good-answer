@@ -21,6 +21,8 @@
 
     * { box-sizing: border-box; }
 
+    p { font-size: 1.2rem; }
+
 
     body {
       font-family: "embarcadero-mvb-pro-condense", sans-serif;
@@ -67,7 +69,7 @@
     .setup-title-shadowdance {
       font-family: "Bungee", sans-serif;
       font-weight: 400;
-      font-size: calc(2rem + 3vw);
+      font-size: 3rem;
       text-transform: uppercase;
       letter-spacing: 0.4rem;
       color: #fba300;
@@ -82,7 +84,7 @@
 
     /* ── Setup screen title — wave animation ─────────────────────── */
     .setup-title-wave {
-      font-size: calc(2rem + 3vw);
+      font-size: 3rem;
       letter-spacing: 0.4rem;
       color: #fba300;
       text-align: center;
@@ -106,7 +108,7 @@
     .setup-title {
       font-family: "Bungee", sans-serif;
       font-weight: 400;
-      font-size: calc(2rem + 3vw);
+      font-size: 3rem;
       text-transform: uppercase;
       letter-spacing: 0.4rem;
       color: #fba300;
@@ -159,7 +161,7 @@
     }
 
     /* Header */
-    #title-row { display: flex; justify-content: center; margin-bottom: 10px; }
+    #title-row { display: flex; justify-content: center; margin-bottom: 10px; position: relative; z-index: 2; }
     #title-row .center-img { width: 28%; max-width: 250px; height: auto; }
 
     /* Setup screen */
@@ -171,6 +173,8 @@
       justify-content: center;
       overflow: hidden;
       padding: 20px;
+      position: relative;
+      z-index: 2;
     }
     #setup input { padding: 6px; margin: 4px; }
 
@@ -271,7 +275,7 @@
     }
     #ribbon-scroller {
       position: absolute; bottom: 0; left: 0; width: 100%;
-      overflow: hidden; z-index: 5;
+      overflow: hidden; z-index: 1;
       height: 130px; pointer-events: none;
     }
     #ribbon-track {
@@ -436,7 +440,7 @@
     .blue { color: var(--blue-text); }
 
     /* Game area */
-    #game { display: none; flex-direction: column; overflow: hidden; flex: 1; }
+    #game { display: none; flex-direction: column; overflow: hidden; flex: 1; position: relative; z-index: 2; }
 
     /* Game zones */
     #zone-board {
@@ -890,7 +894,7 @@
     }
 
     /* ── Fast Money Round ── */
-    #fast-money { display: none; flex: 1; overflow-y: auto; padding: 20px; }
+    #fast-money { display: none; flex: 1; overflow-y: auto; padding: 20px; position: relative; z-index: 2; }
 
     #fm-header {
       background: #0d1b6e;

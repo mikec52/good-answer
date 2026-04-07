@@ -161,8 +161,37 @@
     }
 
     /* Header */
-    #title-row { display: flex; justify-content: center; margin-bottom: 10px; position: relative; z-index: 2; }
-    #title-row .center-img { width: 28%; max-width: 250px; height: auto; }
+    #title-row { position: relative; z-index: 2; }
+
+    /* ── Start screen ─────────────────────────────────────────────── */
+    #start-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      cursor: pointer;
+    }
+    #start-screen img { width: 40%; }
+    #start-screen h1 {
+      font-size: 6rem;
+      margin: 0;
+      animation: start-prompt-pulse 2s ease-in-out infinite;
+    }
+    @keyframes start-prompt-pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.5; }
+    }
+    @keyframes start-screen-fade-out {
+      to { opacity: 0; }
+    }
+    #start-screen.dismissing {
+      animation: start-screen-fade-out 0.4s ease forwards;
+      pointer-events: none;
+    }
 
     /* Setup screen */
     #setup {
@@ -1498,10 +1527,14 @@
   <!-- 16:9 letterbox canvas -->
   <div id="game-root">
 
-  <!-- Title row -->
-  <div id="title-row">
-    <img src="coynefeud1.png" alt="Coyne Feud" class="center-img">
+  <!-- Start screen -->
+  <div id="start-screen">
+    <img src="coynefeud1.png" alt="Coyne Feud">
+    <h1>Click anywhere to start</h1>
   </div>
+
+  <!-- Title row (reserved for in-game header content) -->
+  <div id="title-row"></div>
 
   <!-- Setup screen -->
   <div id="setup">
@@ -3107,12 +3140,32 @@ document.addEventListener('keydown', e => {
 
     loadQuestions();
     loadFMQuestions();
-    document.addEventListener("click", function startOnInteraction(e) {
-      if (!e.target.closest("button[onclick='startGame()']")) {
+
+    // ── Start screen dismiss ───────────────────────────────────────
+    (function() {
+      const startScreen = document.getElementById('start-screen');
+      const setup       = document.getElementById('setup');
+
+      // Setup starts off-screen right; start screen covers it
+      setup.style.transform = 'translateX(110%)';
+
+      startScreen.addEventListener('click', function() {
         startSetupTheme();
-      }
-      document.removeEventListener("click", startOnInteraction);
-    }, { once: true });
+
+        // Fade out start screen
+        startScreen.classList.add('dismissing');
+
+        // Simultaneously slide setup in from the right
+        setup.style.transition = 'transform 0.5s cubic-bezier(0.2, 0, 0.3, 1)';
+        setup.style.transform  = 'translateX(0)';
+
+        startScreen.addEventListener('animationend', function() {
+          startScreen.style.display = 'none';
+          setup.style.transition    = '';
+        }, { once: true });
+
+      }, { once: true });
+    })();
   </script>
 </body>
 </html>

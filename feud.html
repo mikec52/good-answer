@@ -229,9 +229,9 @@
     @keyframes exit-slide-down  { to { transform: translateY(800px);  opacity: 0; } }
     @keyframes exit-slide-right { to { transform: translateX(1400px); opacity: 0; } }
     @keyframes exit-slide-up    { to { transform: translateY(-800px); opacity: 0; } }
-    .exit-down  { animation: exit-slide-down  0.28s ease-in forwards; }
-    .exit-right { animation: exit-slide-right 0.28s ease-in forwards; }
-    .exit-up    { animation: exit-slide-up    0.28s ease-in forwards; }
+    .exit-down  { animation: exit-slide-down  0.14s ease-in forwards; }
+    .exit-right { animation: exit-slide-right 0.14s ease-in forwards; }
+    .exit-up    { animation: exit-slide-up    0.14s ease-in forwards; }
 
     /* Setup step animations */
     @keyframes setup-fly-out {
@@ -2047,9 +2047,9 @@ document.addEventListener('keydown', e => {
               title.addEventListener('animationend', () => {
                 startGame();
               }, { once: true });
-            }, 100);
+            }, 50);
           }, { once: true });
-        }, 100);
+        }, 50);
       }, { once: true });
     }
 

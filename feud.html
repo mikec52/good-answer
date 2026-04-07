@@ -17,6 +17,8 @@
       --blue-text: #4c8cff;
     }
 
+    html { height: 100%; }
+
     * { box-sizing: border-box; }
 
 
@@ -26,10 +28,14 @@
   radial-gradient(ellipse at center, #6fb3e6 0%, #3f8fd1 40%, #1e5fa8 75%, #0c3d73 100%);
       color: black;
       margin: 0;
-      padding: 20px;
+      padding: 0;
       text-align: center;
       transition: background 0.3s ease;
       font-weight: 400;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     input, button, select, textarea {
@@ -144,7 +150,7 @@
     #title-row .center-img { width: 28%; max-width: 250px; height: auto; }
 
     /* Setup screen */
-    #setup { margin-top: 10px; margin-bottom: 150px;}
+    #setup { flex: 1; overflow-y: auto; padding: 20px; }
     #setup input { padding: 6px; margin: 4px; }
     /* Win condition two-column layout */
     #win-condition { display: flex; align-items: stretch; justify-content: center; margin: 16px auto; background: #f2ebdf; border-radius: 20px; max-width: 640px; }
@@ -387,7 +393,20 @@
     .blue { color: var(--blue-text); }
 
     /* Game area */
-    #game { display: none; }
+    #game { display: none; flex-direction: column; overflow: hidden; flex: 1; }
+
+    /* Game zones */
+    #zone-board {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 4px 20px 0;
+    }
+    #zone-input {
+      flex: 0 0 auto;
+      padding: 0 20px 12px;
+    }
     #targetDisplay { 
       font-size: 1rem;
       margin: 0 auto;
@@ -716,7 +735,7 @@
     }
 
     /* Input */
-    #input-area { margin-top: 14px; max-width: 640px; margin-left: auto; margin-right: auto; border-radius: 10px; border: 3px solid transparent; overflow: hidden; }
+    #input-area { max-width: 640px; margin: 0 auto; border-radius: 10px; border: 3px solid transparent; overflow: hidden; }
     #input-area.team-red  { border-color: var(--red-bg);  background: color-mix(in srgb, var(--red-bg)  80%, black); }
     #input-area.team-blue { border-color: var(--blue-bg); background: color-mix(in srgb, var(--blue-bg) 80%, black); }
     #input-area.hidden { display: none; }
@@ -785,13 +804,39 @@
     /* Message */
     #message { margin-top: 8px; font-weight: bold; color: #cc0000; transition: opacity 0.5s ease; }
 
-    /* History */
-    #history {
-      margin-top: 12px; max-width: 640px; margin-left: auto; margin-right: auto;
-      text-align: center; background: #111; padding: 10px; border-radius: 8px; color: #fff;
-    }
-    #historyList { list-style: none; padding: 0; margin: 0; }
+    /* History tray */
+    #history { max-width: 640px; margin: 8px auto 0; color: #fff; }
     #history.hidden { display: none; }
+    #history-tray-handle {
+      background: #111;
+      border-radius: 8px 8px 0 0;
+      padding: 8px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      user-select: none;
+    }
+    #history-tray-handle .tray-arrow {
+      font-family: "Helvetica", sans-serif;
+      transition: transform 0.25s ease;
+    }
+    #history.open #history-tray-handle .tray-arrow { transform: rotate(180deg); }
+    #history-tray-panel {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: #111;
+      border-radius: 0 0 8px 8px;
+    }
+    #history.open #history-tray-panel {
+      max-height: 240px;
+      overflow-y: auto;
+    }
+    #historyList { list-style: none; padding: 8px 12px 12px; margin: 0; }
 
     /* End round */
     #endRound { padding: 10px; }
@@ -803,7 +848,7 @@
     }
 
     /* ── Fast Money Round ── */
-    #fast-money { display: none; }
+    #fast-money { display: none; flex: 1; overflow-y: auto; padding: 20px; }
 
     #fm-header {
       background: #0d1b6e;
@@ -1501,92 +1546,106 @@
 
   <!-- Game area -->
   <div id="game">
-    <div id="targetDisplay"></div>
 
-    <!-- Category + Question box -->
-    <div id="question-box">
-      <div id="category"></div>
-      <div id="question"></div>
-      <div id="accuracy-note">Factual information should be accurate through August, 2025</div>
-    </div>
+    <!-- Zone: Board -->
+    <div id="zone-board">
+      <div id="targetDisplay"></div>
 
-    <!-- Question actions -->
-    <div id="questionActions">
-      <details class="question-options">
-        <summary>Advanced question options</summary>
-        <div class="flag-links">
-          <a onclick="getNewQuestion()">Get new question (resets the round)</a>
-          &nbsp;|&nbsp;
-          <a onclick="removeQuestion()">Flag question for removal</a>
-          &nbsp;|&nbsp;
-          <a onclick="flagFactCheck()">Flag question for fact check</a>
-          &nbsp;|&nbsp;
-          <a onclick="copyAnswersToClipboard()">Copy answers for judge</a>
-          <span id="copyConfirm" style="margin-left:6px;color:#2e7d32;opacity:0;transition:opacity 0.4s;font-size:0.95em;">Copied!</span>
+      <!-- Category + Question box -->
+      <div id="question-box">
+        <div id="category"></div>
+        <div id="question"></div>
+        <div id="accuracy-note">Factual information should be accurate through August, 2025</div>
+      </div>
+
+      <!-- Question actions -->
+      <div id="questionActions">
+        <details class="question-options">
+          <summary>Advanced question options</summary>
+          <div class="flag-links">
+            <a onclick="getNewQuestion()">Get new question (resets the round)</a>
+            &nbsp;|&nbsp;
+            <a onclick="removeQuestion()">Flag question for removal</a>
+            &nbsp;|&nbsp;
+            <a onclick="flagFactCheck()">Flag question for fact check</a>
+            &nbsp;|&nbsp;
+            <a onclick="copyAnswersToClipboard()">Copy answers for judge</a>
+            <span id="copyConfirm" style="margin-left:6px;color:#2e7d32;opacity:0;transition:opacity 0.4s;font-size:0.95em;">Copied!</span>
+          </div>
+        </details>
+      </div>
+
+      <!-- Scoreboard: red score | round display | blue score -->
+      <div id="scoreboard">
+        <div class="team-score-box" id="red-score-box">
+          <div class="team-label"><h4>Red Team</h4></div>
+          <div class="team-points" id="red-score">0</div>
         </div>
-      </details>
-    </div>
-
-    <!-- Scoreboard: red score | round display | blue score -->
-    <div id="scoreboard">
-      <div class="team-score-box" id="red-score-box">
-        <div class="team-label"><h4>Red Team</h4></div>
-        <div class="team-points" id="red-score">0</div>
-      </div>
-      <div id="round-display">
-        <div id="round-label">CURRENT ROUND</div>
-        <div id="round-info">
-          <div id="roundCounter">0</div>
-          <div id="roundScore">0</div>
-        </div>
-      </div>
-      <div class="team-score-box" id="blue-score-box">
-        <div class="team-label"><h4>Blue Team</h4></div>
-        <div class="team-points" id="blue-score">0</div>
-      </div>
-    </div>
-
-    <!-- Board section: player panels + board -->
-    <div id="board-section">
-      <div id="red-players-panel" class="players-panel">
-        <div class="players-panel-header">Players</div>
-        <ul id="red-players-list" class="players-list"></ul>
-      </div>
-      <div id="game-area">
-        <div id="board-wrapper">
-          <div id="board"></div>
-        </div>
-      </div>
-      <div id="blue-players-panel" class="players-panel">
-        <div class="players-panel-header">Players</div>
-        <ul id="blue-players-list" class="players-list"></ul>
-      </div>
-    </div>
-
-    <!-- Strikes -->
-    <div id="strikes"></div>
-
-    <!-- Turn + Input unified box -->
-    <div id="input-area">
-      <div id="turn-input-box" class="team-red">
-        <div id="turn-header">Red Team has the board</div>
-        <div id="turn-body">
-          <div id="turn-subtext">Player is up</div>
-          <div class="turn-input-row">
-            <input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" />
-            <button class="btn" onclick="submitGuess()">Submit</button>
+        <div id="round-display">
+          <div id="round-label">CURRENT ROUND</div>
+          <div id="round-info">
+            <div id="roundCounter">0</div>
+            <div id="roundScore">0</div>
           </div>
         </div>
+        <div class="team-score-box" id="blue-score-box">
+          <div class="team-label"><h4>Blue Team</h4></div>
+          <div class="team-points" id="blue-score">0</div>
+        </div>
       </div>
-      <div id="endRound"></div>
+
+      <!-- Board section: player panels + board -->
+      <div id="board-section">
+        <div id="red-players-panel" class="players-panel">
+          <div class="players-panel-header">Players</div>
+          <ul id="red-players-list" class="players-list"></ul>
+        </div>
+        <div id="game-area">
+          <div id="board-wrapper">
+            <div id="board"></div>
+          </div>
+        </div>
+        <div id="blue-players-panel" class="players-panel">
+          <div class="players-panel-header">Players</div>
+          <ul id="blue-players-list" class="players-list"></ul>
+        </div>
+      </div>
+
+      <!-- Strikes -->
+      <div id="strikes"></div>
     </div>
 
-    <div id="message"></div>
+    <!-- Zone: Input -->
+    <div id="zone-input">
+      <!-- Turn + Input unified box -->
+      <div id="input-area">
+        <div id="turn-input-box" class="team-red">
+          <div id="turn-header">Red Team has the board</div>
+          <div id="turn-body">
+            <div id="turn-subtext">Player is up</div>
+            <div class="turn-input-row">
+              <input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" />
+              <button class="btn" onclick="submitGuess()">Submit</button>
+            </div>
+          </div>
+        </div>
+        <div id="endRound"></div>
+      </div>
 
-    <div id="history" class="hidden">
-      <h3>Answer History</h3>
-      <ul id="historyList"></ul>
+      <div id="message"></div>
+
+      <!-- Answer history tray -->
+      <div id="history" class="hidden">
+        <div id="history-tray-handle" onclick="toggleHistoryTray()">
+          <span>Answer History</span>
+          <span class="tray-arrow">▲</span>
+        </div>
+        <div id="history-tray-panel">
+          <ul id="historyList"></ul>
+        </div>
+      </div>
     </div>
+
   </div>
 
   <!-- Fast Money Round -->
@@ -1713,6 +1772,10 @@ document.addEventListener('keydown', e => {
       document.getElementById('menu-backdrop').classList.toggle('active', open);
     }
     function toggleMenu() { setMenuState(!menuOpen); }
+
+    function toggleHistoryTray() {
+      document.getElementById("history").classList.toggle("open");
+    }
     document.addEventListener('click', e => {
       if (menuOpen &&
           !document.getElementById('menu-container').contains(e.target) &&
@@ -1869,7 +1932,7 @@ document.addEventListener('keydown', e => {
       if (teamPlayers[1].length === 0) teamPlayers[1] = [teamNames[1]];
 
       document.getElementById("setup").style.display = "none";
-      document.getElementById("game").style.display = "block";
+      document.getElementById("game").style.display = "flex";
       document.getElementById("ribbon-scroller").style.display = "none";
       document.getElementById("input-area").classList.add("hidden");
       document.getElementById("history").classList.add("hidden");

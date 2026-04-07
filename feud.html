@@ -24,18 +24,29 @@
 
     body {
       font-family: "embarcadero-mvb-pro-condense", sans-serif;
-      background:  radial-gradient(ellipse at center, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 60%),
-  radial-gradient(ellipse at center, #6fb3e6 0%, #3f8fd1 40%, #1e5fa8 75%, #0c3d73 100%);
+      background: #0a0a0a;
       color: black;
       margin: 0;
       padding: 0;
       text-align: center;
-      transition: background 0.3s ease;
       font-weight: 400;
       height: 100vh;
       overflow: hidden;
       display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #game-root {
+      width: min(100vw, calc(100vh * (16 / 9)));
+      height: min(100vh, calc(100vw * (9 / 16)));
+      background: radial-gradient(ellipse at center, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 60%),
+  radial-gradient(ellipse at center, #6fb3e6 0%, #3f8fd1 40%, #1e5fa8 75%, #0c3d73 100%);
+      display: flex;
       flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      transition: background 0.3s ease;
     }
 
     input, button, select, textarea {
@@ -1449,6 +1460,9 @@
     <button class="dev-btn" onclick="playWrong()">▶ Strike X</button>
     <button class="dev-btn" onclick="playWrong(); showStealOverlay();">▶ Steal sequence</button>
   </div>
+  <!-- 16:9 letterbox canvas -->
+  <div id="game-root">
+
   <!-- Title row -->
   <div id="title-row">
     <img src="coynefeud1.png" alt="Coyne Feud" class="center-img">
@@ -1723,6 +1737,8 @@
       <ul id="fm-historyList"></ul>
     </div>
   </div>
+
+  </div><!-- /game-root -->
 
   <script>
     const sfxCorrect     = new Audio("correct.mp3");

@@ -15,11 +15,49 @@
       --red-text: #ff5555;
       --blue-bg:  #053977;
       --blue-text: #4c8cff;
+
+      /* Background blob base — change this one value to shift all four blob shades */
+      --bg-blob-base: #513f6d;
+
+      /* Category color palette */
+      --cat-science:    #03a9f4;
+      --cat-geography:  #43a047;
+      --cat-popculture: #e91e8c;
+      --cat-survey:     #fb8c00;
+      --cat-sports:     #fdd835;
     }
 
     html { height: 100%; }
 
     * { box-sizing: border-box; }
+
+    /* ── Utility: multiply-blended background ─────────────────────
+       Apply .blend-multiply to any container. Set the desired
+       background color via --blend-bg (defaults to white).
+       The ::before carries the blend; children render normally.
+
+       Usage:
+         <div class="blend-multiply" style="--blend-bg: #ff0000;">
+           <button>I'm not affected</button>
+         </div>
+    ────────────────────────────────────────────────────────────── */
+    .blend-multiply {
+      position: relative;
+    }
+    .blend-multiply > * {
+      position: relative;
+      z-index: 1;
+    }
+    .blend-multiply::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--blend-bg, black);
+      mix-blend-mode: multiply;
+      border-radius: inherit;
+      pointer-events: none;
+      z-index: 0;
+    }
 
     p { font-size: 1.2rem; }
 
@@ -44,13 +82,57 @@
       height: 720px;
       flex-shrink: 0;
       transform-origin: center center;
-      background: radial-gradient(ellipse at center, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 60%),
-  radial-gradient(ellipse at center, #6fb3e6 0%, #3f8fd1 40%, #1e5fa8 75%, #0c3d73 100%);
+      background: color-mix(in srgb, var(--bg-blob-base) 80%, white);
       display: flex;
       flex-direction: column;
       overflow: hidden;
       position: relative;
       transition: background 0.3s ease;
+    }
+
+    /* CSS-only animated blob background — replaces SVG blobs.
+       Uses pseudo-elements with animated radial gradients so that
+       mix-blend-mode on foreground elements can interact with the blobs.
+       To revert to SVG: remove .css-bg-active from #game-root */
+    #game-root.css-bg-active::before,
+    #game-root.css-bg-active::after {
+      content: '';
+      position: absolute;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      z-index: 0;
+      pointer-events: none;
+    }
+    #game-root.css-bg-active::before {
+      background:
+        radial-gradient(ellipse 40% 50% at 25% 30%,
+          var(--bg-blob-base) 0%, transparent 70%),
+        radial-gradient(ellipse 35% 40% at 70% 65%,
+          color-mix(in srgb, var(--bg-blob-base) 80%, black) 0%, transparent 70%);
+      opacity: 0.7;
+      animation: css-blob-drift-1 29s ease-in-out infinite alternate;
+    }
+    #game-root.css-bg-active::after {
+      background:
+        radial-gradient(ellipse 30% 45% at 60% 25%,
+          color-mix(in srgb, var(--bg-blob-base) 60%, black) 0%, transparent 65%),
+        radial-gradient(ellipse 45% 35% at 35% 75%,
+          var(--bg-blob-base) 0%, transparent 60%);
+      opacity: 0.5;
+      animation: css-blob-drift-2 21s ease-in-out infinite alternate;
+    }
+    @keyframes css-blob-drift-1 {
+      0%   { transform: translate(0%, 0%) rotate(0deg); }
+      33%  { transform: translate(5%, -3%) rotate(8deg); }
+      66%  { transform: translate(-3%, 4%) rotate(-5deg); }
+      100% { transform: translate(2%, -2%) rotate(12deg); }
+    }
+    @keyframes css-blob-drift-2 {
+      0%   { transform: translate(0%, 0%) rotate(0deg); }
+      33%  { transform: translate(-4%, 3%) rotate(-10deg); }
+      66%  { transform: translate(3%, -5%) rotate(6deg); }
+      100% { transform: translate(-2%, 2%) rotate(-8deg); }
     }
 
     input, button, select, textarea {
@@ -67,7 +149,7 @@
 
     /* ── Setup screen title — shadow dance animation ─────────────── */
     .setup-title-shadowdance {
-      font-family: "Bungee", sans-serif;
+      font-family: "Futura-Bold", sans-serif;
       font-weight: 400;
       font-size: 3rem;
       text-transform: uppercase;
@@ -106,7 +188,7 @@
 
     /* ── Setup screen title — 3D raised animation ────────────────── */
     .setup-title {
-      font-family: "Bungee", sans-serif;
+      font-family: "Futura-Bold", sans-serif;
       font-weight: 400;
       font-size: 3rem;
       text-transform: uppercase;
@@ -211,7 +293,6 @@
       overflow: hidden;
       padding: 20px;
       position: relative;
-      z-index: 2;
     }
     #setup input { padding: 6px; margin: 4px; }
 
@@ -249,8 +330,8 @@
     .win-option { flex: 1; max-width: 45%; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; }
     .win-option-desc { color: #333; margin-bottom: 12px; line-height: 1.5; }
     .or-divider { display: flex; flex-direction: column; align-items: center; padding: 0 2px; }
-    .or-divider .or-line { width: 1px; flex: 1; background: #aaa; margin: 15px;}
-    .or-divider .or-text { font-size: 1.2rem; font-weight: bold; color: #555; padding: 0; }
+    .or-divider .or-line { width: 1px; flex: 1; background: white; margin: 15px;}
+    .or-divider .or-text { font-size: 2.5rem; font-weight: bold; color: white; padding: 0; }
     .mode-button-row { display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
     .win-option-sub { opacity: 0.35; transition: opacity 0.3s; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
     .win-option.selected .win-option-sub { opacity: 1; }
@@ -318,6 +399,15 @@
       flex-direction: column;
       gap: 6px;
     }
+    #bg-animation {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+    }
+    /* SVG blobs hidden while CSS-only background is active.
+       To revert: remove .css-bg-active from #game-root */
+    #game-root.css-bg-active #bg-animation { display: none; }
     #ribbon-scroller {
       position: absolute; bottom: 0; left: 0; width: 100%;
       overflow: hidden; z-index: 1;
@@ -486,41 +576,324 @@
     .blue { color: var(--blue-text); }
 
     /* Game area */
-    #game { display: none; flex-direction: column; overflow: hidden; flex: 1; position: relative; z-index: 2; }
+    #game { display: none; flex-direction: column; overflow: hidden; flex: 1; position: relative; }
 
     /* Game zones */
     #zone-board {
       flex: 1;
-      overflow: hidden;
+      overflow: visible;
+      display: flex;
+      flex-direction: row;
+      padding: 0 20px;
+      gap: 0;
+    }
+    /* Sidebar zone (25%) — always visible, content toggled per screen */
+    #sidebar-zone {
+      flex: 0 0 25%;
       display: flex;
       flex-direction: column;
-      padding: 4px 20px 0;
+      overflow: visible;
+      padding: 0 8px 0 0;
     }
-    #zone-input {
+    #sidebar-category-select { display: flex; flex-direction: column; flex: 1; }
+    #sidebar-question-answer { display: none; flex-direction: column; }
+
+    /* Right column (75%) */
+    #zone-board-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: visible;
+      min-width: 0;
+    }
+    /* Header zone: scoreboard row — bleeds off top of canvas */
+    #header-zone {
       flex: 0 0 auto;
-      padding: 0 20px 12px;
     }
-    #targetDisplay { 
-      font-size: 1rem;
-      margin: 0 auto;
+    /* Game board zone: board + strikes + input */
+    #game-board-zone {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      overflow: visible;
+      min-width: 0;
+    }
+
+    /* Category prompt + pills — stacked in sidebar */
+    #category-prompt {
+      display: flex;
+      align-items: center;
+      padding: 20px 16px 16px;
+      background: color-mix(in srgb, var(--red-bg) 90%, black);
       color: #fff;
-      font-weight: bold;
-      max-width: 40%;
-      background: #fba300;
-      border-radius: 16px 16px 0 0;
-      padding: 5px; }
+      font-family: "Futura-Bold", sans-serif;
+      font-size: 2.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      line-height: 1.3;
+      width: 100%;
+      border-radius: 0px 0px 30px 30px;
+    }
+    #category-prompt.team-red  { background: color-mix(in srgb, var(--red-bg)  90%, black); }
+    #category-prompt.team-blue { background: color-mix(in srgb, var(--blue-bg) 90%, black); }
+    #category-pills-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 0;
+      border-radius: 20px;
+      margin: 10px 0px;
+      --blend-bg: #efefef;
+    }
+    /* Category select buttons — .btn base + width constraint */
+    .cat-select-btn { width: 100%; }
+    .cat-row .cat-select-btn { width: 100%; }
+
+    /* 3D tilting button */
+    @keyframes btn3d-tilt {
+      0%   { transform: perspective(1000px) rotateX(0deg); }
+      25%  { transform: perspective(1000px) rotateX(50deg); }
+      75%  { transform: perspective(1000px) rotateX(-50deg); }
+      100% { transform: perspective(1000px) rotateX(0deg); }
+    }
+    .btn-3d {
+      position: relative;
+      height: 50px;
+      transform-style: preserve-3d;
+      animation: btn3d-tilt 25s ease-in-out infinite;
+      /* container is invisible — visual lives on the spans */
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin: 15px 0;
+      overflow: visible;
+    }
+    /* Stagger each button to a different phase */
+    .trivia-categories .btn-3d:nth-child(1) { animation-delay:  0s; }
+    .trivia-categories .btn-3d:nth-child(2) { animation-delay: -1.6s; }
+    .trivia-categories .btn-3d:nth-child(3) { animation-delay: -3.2s; }
+    .survey-categories .btn-3d:nth-child(1) { animation-delay: -0.8s; }
+    .btn-3d span {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--cat-face, rgba(255, 255, 255, 0.9));
+      color: var(--cat-text, #000);
+      font-family: 'Bitcount Single', sans-serif;
+      font-weight: 300;
+      text-transform: uppercase;
+      font-size: 22px;
+      letter-spacing: 2px;
+      transition: background 0.5s, color 0.5s;
+      border: 2px solid #000;
+      box-sizing: border-box;
+      box-shadow: inset 0 20px 50px rgba(0, 0, 0, 0.2);
+      border-radius: 0;
+      cursor: pointer;
+    }
+    .btn-3d:hover span {
+      background: var(--cat-solid, rgba(3, 169, 244, 1));
+      color: var(--cat-text-hover, #fff);
+    }
+    .btn-3d span:nth-child(1) { transform: rotateX(0deg)   translateZ(25px); }
+    .btn-3d span:nth-child(2) { transform: rotateX(270deg) translateZ(25px); }
+    .btn-3d span:nth-child(3) { transform: rotateX(180deg) translateZ(25px); }
+    .btn-3d span:nth-child(4) { transform: rotateX(90deg)  translateZ(25px); }
+    /* Category color classes — sets CSS vars that span inherits */
+    .cat-science    { --cat-face: rgba(3,   169, 244, 0.9); --cat-solid: rgba(3,   169, 244, 1); --cat-text: #fff; --cat-text-hover: #fff; }
+    .cat-geography  { --cat-face: rgba(67,  160,  71, 0.9); --cat-solid: rgba(67,  160,  71, 1); --cat-text: #fff; --cat-text-hover: #fff; }
+    .cat-popculture { --cat-face: rgba(233,  30, 140, 0.9); --cat-solid: rgba(233,  30, 140, 1); --cat-text: #fff; --cat-text-hover: #fff; }
+    .cat-survey     { --cat-face: rgba(251, 140,   0, 0.9); --cat-solid: rgba(251, 140,   0, 1); --cat-text: #fff; --cat-text-hover: #fff; }
+    .cat-sports     { --cat-face: rgba(253, 216,  53, 0.9); --cat-solid: rgba(253, 216,  53, 1); --cat-text: #000; --cat-text-hover: #000; }
+    /* Category row — wraps button + optional badge */
+    .cat-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 70%;
+      animation: cat-slide-in 0.4s ease-out backwards;
+    }
+    /* Slide-in keyframes */
+    @keyframes cat-slide-in {
+      from { transform: translateX(-120%); opacity: 0; }
+      to   { transform: translateX(0);     opacity: 1; }
+    }
+    /* Bronze (1.5x): slide + 1 bounce + settle — 3 spins over full duration */
+    @keyframes badge-slide-1 {
+      0%   { transform: translateX(-60px) translateY(0)     rotateY(0deg);    opacity: 0; }
+      10%  { transform: translateX(-42px) translateY(0)     rotateY(127deg);  opacity: 1; }
+      40%  { transform: translateX(0)     translateY(0)     rotateY(509deg); }
+      55%  { transform: translateX(0)     translateY(-20px) rotateY(700deg); }
+      70%  { transform: translateX(0)     translateY(2px)   rotateY(890deg); }
+      85%  { transform: translateX(0)     translateY(-2px)  rotateY(1080deg); }
+      100% { transform: translateX(0)     translateY(0)     rotateY(1080deg); opacity: 1; }
+    }
+    /* Silver (2x): slide + 2 bounces + settle — 4 spins over full duration */
+    @keyframes badge-slide-2 {
+      0%   { transform: translateX(-60px) translateY(0)     rotateY(0deg);    opacity: 0; }
+      8%   { transform: translateX(-42px) translateY(0)     rotateY(115deg);  opacity: 1; }
+      30%  { transform: translateX(0)     translateY(0)     rotateY(432deg); }
+      /* Bounce 1 */
+      40%  { transform: translateX(0)     translateY(-20px) rotateY(576deg); }
+      50%  { transform: translateX(0)     translateY(0)     rotateY(720deg); }
+      /* Bounce 2 */
+      60%  { transform: translateX(0)     translateY(-20px) rotateY(864deg); }
+      70%  { transform: translateX(0)     translateY(2px)   rotateY(1008deg); }
+      /* Settle */
+      85%  { transform: translateX(0)     translateY(-2px)  rotateY(1440deg); }
+      100% { transform: translateX(0)     translateY(0)     rotateY(1440deg); opacity: 1; }
+    }
+    /* Gold (3x): slide + 3 bounces + settle — 5 spins over full duration */
+    @keyframes badge-slide-3 {
+      0%   { transform: translateX(-60px) translateY(0)     rotateY(0deg);    opacity: 0; }
+      7%   { transform: translateX(-42px) translateY(0)     rotateY(106deg);  opacity: 1; }
+      25%  { transform: translateX(0)     translateY(0)     rotateY(378deg); }
+      /* Bounce 1 */
+      33%  { transform: translateX(0)     translateY(-20px) rotateY(500deg); }
+      41%  { transform: translateX(0)     translateY(0)     rotateY(620deg); }
+      /* Bounce 2 */
+      49%  { transform: translateX(0)     translateY(-20px) rotateY(740deg); }
+      57%  { transform: translateX(0)     translateY(0)     rotateY(864deg); }
+      /* Bounce 3 */
+      65%  { transform: translateX(0)     translateY(-20px) rotateY(985deg); }
+      73%  { transform: translateX(0)     translateY(2px)   rotateY(1105deg); }
+      /* Settle */
+      86%  { transform: translateX(0)     translateY(-2px)  rotateY(1800deg); }
+      100% { transform: translateX(0)     translateY(0)     rotateY(1800deg); opacity: 1; }
+    }
+    /* Category multiplier badge — coin/token, hangs off right edge */
+    .cat-mult-badge {
+      position: absolute;
+      right: -70px;
+      top: 40%;
+      margin-top: -21px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--coin-bg);
+      color: white;
+      font-family: 'Bitcount Single', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--coin-border, #333);
+      box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.4);
+      cursor: default;
+      animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-1 2s ease-out backwards;
+      transition: transform 0.3s ease;
+    }
+    .cat-mult-badge:hover {
+      transform: perspective(500px) rotateY(15deg) rotateX(-5deg);
+    }
+    /* Bronze — 1.5x */
+    .coin-bronze {
+      --coin-bg: radial-gradient(circle at 35% 35%, #d4a574, #cd7f32 40%, #8c5a2a);
+      --coin-border: #5c3a1a;
+      --coin-text: #2a1a0a;
+      --coin-glow: rgba(205, 127, 50, 0.6);
+    }
+    /* Silver — 2x: 2 bounces, proportionally longer */
+    .coin-silver {
+      --coin-bg: radial-gradient(circle at 35% 35%, #f0f0f0, #c0c0c0 40%, #888);
+      --coin-border: #555;
+      --coin-text: #111;
+      --coin-glow: rgba(192, 192, 192, 0.6);
+      animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-2 2.8s ease-out backwards;
+    }
+    /* Gold — 3x: 3 bounces, proportionally longer */
+    .coin-gold {
+      --coin-bg: radial-gradient(circle at 35% 35%, #f0d060, #d4a830 40%, #9a7a1a);
+      --coin-border: #6b5210;
+      --coin-text: #2a1f00;
+      --coin-glow: rgba(212, 168, 48, 0.6);
+      animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-3 3.6s ease-out backwards;
+    }
+    @keyframes coin-pulse {
+      0%, 100% { box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.4), 0 0 6px var(--coin-glow, rgba(200,200,200,0.4)); }
+      50%      { box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.4), 0 0 16px var(--coin-glow, rgba(200,200,200,0.9)); }
+    }
+    /* Category multiplier indicator during round */
+    .cat-mult-indicator {
+      position: absolute;
+      bottom: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      background: #ffd700;
+      color: #000;
+      font-family: 'Bitcount Single', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 2px 14px;
+      border-radius: 10px;
+      border: 2px solid #000;
+      animation: mult-badge-pulse 1.5s ease-in-out infinite;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .cat-mult-indicator.mult-activate {
+      animation: mult-activate-flash 0.8s ease-in-out;
+      transform: translateX(-50%) scale(1.3);
+    }
+    @keyframes mult-activate-flash {
+      0%   { transform: translateX(-50%) scale(1); box-shadow: 0 0 6px rgba(255, 215, 0, 0.4); }
+      50%  { transform: translateX(-50%) scale(1.5); box-shadow: 0 0 30px rgba(255, 215, 0, 1); background: #fff; }
+      100% { transform: translateX(-50%) scale(1.3); box-shadow: 0 0 16px rgba(255, 215, 0, 0.9); }
+    }
+    /* parent containers need to allow 3D overflow */
+    .trivia-categories, .survey-categories { overflow: visible; }
+    .pills-divider {
+      width: 100%;
+      padding: 4px 0;
+      margin: 0;
+      font-size: 1.8rem;
+      font-family: 'Bitcount Single';
+      font-weight: 300;
+      color: #111;
+      text-align: center;
+    }
+    .trivia-categories {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 20px 16px 16px;
+    }
+    .survey-categories {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 20px 16px 16px;
+    }
+    .pills-desc {
+      font-size: 0.68rem;
+      color: #888;
+      font-style: italic;
+      margin-top: 2px;
+    }
 
     /* Category + Question box */
     #question-box.team-red  { background: color-mix(in srgb, var(--red-bg)  80%, black); }
     #question-box.team-blue { background: color-mix(in srgb, var(--blue-bg) 80%, black); }
     #question-box {
       background: #111111;
-      border: ;
       border-radius: 14px;
       padding: 16px 24px;
-      max-width: 88%;
-      margin: 0 auto 10px auto;
+      margin: 0 0 10px 0;
     }
+
     #category {
       font-size: 1rem;
       font-weight: bold;
@@ -566,99 +939,90 @@
     }
     #questionActions .flag-links a:hover { color: #000; }
 
-    /* Scoreboard row: red score | round display | blue score */
+    /* Scoreboard: 5-col grid — #222 frame with #111 value fields */
     #scoreboard {
-      display: flex;
-      align-items: stretch;
-      max-width: 92%;
-      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      background: #222;
+      color: white;
+      font-family: 'Bitcount Single', sans-serif;
+      font-weight: 300;
+      text-transform: uppercase;
+      border-radius: 0 0 10px 10px;
+      padding: 20px;
     }
-    #scoreboard .team-score-box { flex: 0 0 20%; }
-    #scoreboard #round-display  { flex: 0 0 60%; }
 
-    /* Round display */
+    /* Game area: board container */
+    #game-area {
+      width: 100%;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    /* Round display — label on #222 frame, value in #111 field */
     #round-display {
       display: flex;
       flex-direction: column;
-      border-bottom: solid 2px #b7b7b7;
+      align-items: center;
     }
     #round-label {
-      background: #1565c0;
-      color: #fff;
-      font-weight: bold;
-      font-size: 0.8rem;
-      letter-spacing: 2px;
       padding: 4px 0;
-      border-radius: 0;
+      line-height: 1;
+      height: 1.2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     #round-info {
-      background: #111111;
       display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 1% 10%;
-      gap: 14px;
-      flex: 1;
+      align-items: baseline;
+      justify-content: center;
+      gap: 6px;
+      font-size: 4rem;
+      background: #111;
+      border-radius: 6px;
+      width: 100%;
+      height: 80px;
+      padding: 6px 8px;
+      box-sizing: border-box;
     }
     #roundCounter {
-      background: #fff;
-      color: #111;
-      font-weight: bold;
-      font-size: 1.4rem;
-      width: 38px;
-      height: 38px;
+      color: #fff;
+    }
+    .round-of {
+      font-size: 2rem;
+    }
+    #roundTarget {
+    }
+
+    /* Player panels — label on #222 frame, list in #111 field */
+    .players-panel {
+      display: flex;
+      flex-direction: column;
+    }
+    #red-players-panel  { border-left: none; }
+    #blue-players-panel { border-right: none; }
+    .players-panel-header {
+      padding: 4px 8px;
+      line-height: 1;
+      height: 1.2em;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 4px;
-      flex-shrink: 0;
-    }
-    #roundScore {
-      color: #fff;
-      font-size: 4rem;
-      font-family: "Bitcount Single", sans-serif;
-      font-weight: 200;
-      font-variation-settings: "ROND" 0;
-      margin: auto;
-    }
-
-    /* Board section: player panels flank the board */
-    #board-section {
-      display: flex;
-      justify-content: center;
-      align-items: stretch;
-      max-width: 92%;
-      margin: 0 auto;
-    }
-    #game-area {
-      flex: 1;
-      min-width: 0;
-    }
-
-    /* Player panels */
-    .players-panel {
-      flex: 0 0 20%;
-      min-width: 0;
-      padding: 8px 8px;
-      color: white;
-      font-size: 1rem;
-    }
-    #red-players-panel  { background: var(--red-bg);  border-radius: 0 0 0 8px; }
-    #blue-players-panel { background: var(--blue-bg); border-radius: 0 0 8px 0; }
-    .players-panel-header {
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-size: 0.7rem;
-      margin-bottom: 8px;
     }
     .players-list {
       list-style: none;
       margin: 0;
-      padding: 0;
+      padding: 6px 8px;
       display: flex;
       flex-direction: column;
       gap: 4px;
+      background: #111;
+      border-radius: 6px;
+      height: 80px;
+      overflow: hidden;
     }
     .players-list li {
       opacity: 0.5;
@@ -666,22 +1030,52 @@
       overflow: hidden;
       text-overflow: ellipsis;
       padding: 2px 0;
+      text-align: center;
+      position: relative;
     }
     .players-list li.player-next          { opacity: 1; }
     .players-list li.player-active        { opacity: 1; }
     .players-list li.player-active .player-name { text-decoration: underline; }
-    .player-arrow      { display: inline-block; font-family: "Helvetica", sans-serif; padding: 5px;}
-    .player-arrow.flip { transform: scaleX(-1); }
+    .player-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: "Helvetica", sans-serif;
+      font-size: 0.6rem;
+    }
+    #red-players-panel .player-arrow  { left: 0; }
+    #blue-players-panel .player-arrow { right: 0; transform: translateY(-50%) scaleX(-1); }
 
-    /* Team score boxes */
+    /* Team score boxes — label on #222 frame, points in team-colored field */
     .team-score-box {
-      padding: 14px 16px;
       text-align: center;
-      flex-shrink: 0;
       color: white;
       text-transform: uppercase;
-      font-weight: normal;
+      display: flex;
+      flex-direction: column;
     }
+    .team-score-box .team-label {
+      padding: 4px 0;
+      line-height: 1;
+      height: 1.2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .team-score-box .team-label h4 { margin: 0; font-family: "Bitcount Single"}
+    .team-score-box .team-points {
+      position: relative;
+      font-size: 3rem;
+      font-family: "Bitcount Single", sans-serif;
+      font-variation-settings: "ROND" 0;
+      border-radius: 6px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #red-score-box  .team-points { background: var(--red-bg); }
+    #blue-score-box .team-points { background: var(--blue-bg); }
     @keyframes score-arrow-float-red {
       0%, 100% { transform: translateY(-50%) translateX(0px); }
       50%       { transform: translateY(-50%) translateX(3px);  }
@@ -693,127 +1087,351 @@
     #red-score-box.active-team .team-points::after {
       content: '►';
       position: absolute;
-      left: 1px;
+      left: 10px;
       top: 50%;
       color: white;
-      font-size: 2rem;
+      font-size: 1.6rem;
       font-family: "Helvetica", sans-serif;
       animation: score-arrow-float-red 1.5s ease-in-out infinite;
     }
     #blue-score-box.active-team .team-points::after {
       content: '►';
       position: absolute;
-      right: 1px;
+      right: 10px;
       top: 50%;
       color: white;
-      font-size: 2rem;
+      font-size: 1.6rem;
       font-family: "Helvetica", sans-serif;
       animation: score-arrow-float-blue 1.5s ease-in-out infinite;
     }
-    #red-score-box  { background: var(--red-bg);  border-radius: 8px 0 0 0; }
-    #blue-score-box { background: var(--blue-bg); border-radius: 0 8px 0 0; }
-    .team-score-box .team-label  { margin-bottom: 6px; }
-    .team-score-box .team-points { position: relative; font-size: 4rem; font-family: "Bitcount Single", sans-serif; font-weight: 200; font-variation-settings: "ROND" 0; }
 
-    /* Board wrapper */
+    /* Board wrapper — #222 frame, bleeds off bottom of canvas */
     #board-wrapper {
-      background: #111111;
-      border: ;
-      border-radius: ;
-      padding: 14px;
-      flex: 1;
+      background: rgba(34, 34, 34, 0.95);
+      font-family: 'Bitcount Single';
+      font-weight: 300;
+      padding: 20px 20px 40px;
+      border-radius: 10px 10px 0 0;
+      text-transform: uppercase;
+      overflow: visible;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: -20px;
+      transition: transform 0.5s ease;
+    }
+    #board-wrapper.offscreen {
+      transform: translateY(120%);
+    }
+    @keyframes board-slide-in {
+      from { transform: translateY(120%); }
+      to   { transform: translateY(0); }
+    }
+    #board-wrapper.slide-in {
+      animation: board-slide-in 0.5s ease forwards;
     }
 
-    /* Answer board — 2-column, 4-row grid, filled column-first */
-    #board {
+    /* Board header row — labels on the frame */
+    .board-header {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: repeat(4, auto);
-      grid-auto-flow: column;
-      gap: 8px;
+      grid-template-columns: 2rem 1fr 3.5rem 3.5rem 3.5rem;
+      gap: 6px;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: white;
     }
-    .blank {
-      background: rgba(13, 27, 110, 0.25);
-      border: 2px solid rgba(91, 155, 213, 0.2);
-      min-height: 42px;
+    .board-header span {
+      text-align: center;
     }
 
-    /* Tile flip container */
+    /* Answer board — single column, 6px row gaps */
+    #board {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* Each answer row — fixed 40px height */
     .answer {
-      border-radius: 6px;
-      perspective: 600px;
-      font-size: 0.9rem;
-      font-weight: bold;
+      height: 40px;
+      font-size: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Tile cover — glossy black overlay until revealed */
+    .tile-cover {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      background: linear-gradient(
+        165deg,
+        #2a2a2a 0%,
+        #111 25%,
+        #000 45%,
+        #111 55%,
+        #1a1a1a 70%,
+        #0a0a0a 100%
+      );
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: top center;
+      /* glossy sheen overlay */
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.15),
+        inset 0 -1px 0 rgba(0,0,0,0.3);
+    }
+    .tile-cover::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 4px;
+      background: linear-gradient(
+        135deg,
+        rgba(255,255,255,0.08) 0%,
+        transparent 40%,
+        transparent 60%,
+        rgba(255,255,255,0.03) 100%
+      );
+      pointer-events: none;
+    }
+
+    /* Pixelated circle — 8-bit style using clip-path, glossy finish */
+    .tile-cover-circle {
+      width: 30px;
+      height: 30px;
+      background: linear-gradient(
+        160deg,
+        #ffffff 0%,
+        #f0f0f0 30%,
+        #d8d8d8 50%,
+        #e8e8e8 70%,
+        #ffffff 100%
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      clip-path: polygon(
+        /* top edge */
+        30% 0%, 70% 0%,
+        /* top-right steps */
+        70% 5%, 80% 5%,
+        80% 10%, 85% 10%,
+        85% 15%, 90% 15%,
+        90% 20%, 95% 20%,
+        95% 30%, 100% 30%,
+        /* right edge */
+        100% 70%,
+        /* bottom-right steps */
+        95% 70%, 95% 80%,
+        90% 80%, 90% 85%,
+        85% 85%, 85% 90%,
+        80% 90%, 80% 95%,
+        70% 95%, 70% 100%,
+        /* bottom edge */
+        30% 100%,
+        /* bottom-left steps */
+        30% 95%, 20% 95%,
+        20% 90%, 15% 90%,
+        15% 85%, 10% 85%,
+        10% 80%, 5% 80%,
+        5% 70%, 0% 70%,
+        /* left edge */
+        0% 30%,
+        /* top-left steps */
+        5% 30%, 5% 20%,
+        10% 20%, 10% 15%,
+        15% 15%, 15% 10%,
+        20% 10%, 20% 5%,
+        30% 5%
+      );
+    }
+    .tile-cover-circle .tile-num {
+      background: transparent;
+      color: #111;
+      font-size: 1.3rem;
+      font-weight: 500;
+      text-shadow: 2px 2px .5px #aaa;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    /* Slide-right reveal animation */
+    @keyframes tile-cover-slide-right {
+      0%   { transform: translateX(0); opacity: 1; }
+      70%  { opacity: 1; }
+      100% { transform: translateX(105%); opacity: 0; }
+    }
+    .tile-cover.revealed {
+      animation: tile-cover-slide-right 0.4s ease-in forwards;
+      pointer-events: none;
     }
     .tile-inner {
       display: grid;
       width: 100%;
-      transform-style: preserve-3d;
-      transition: transform 0.5s ease;
-      border-radius: 6px;
+      height: 100%;
     }
-    .tile-inner.flipped { transform: rotateY(180deg); }
-    .tile-inner.no-transition { transition: none; }
+    .tile-inner.revealed .tile-front { display: none; }
+
     .tile-front, .tile-back {
       grid-area: 1 / 1;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      border-radius: 6px;
-      min-height: 42px;
+      display: grid;
+      grid-template-columns: 2rem 1fr 3.5rem 3.5rem 3.5rem;
+      gap: 6px;
+      align-items: stretch;
     }
-    .tile-num {
-      background: #fff;
-      color: #0d1b6e;
-      border-radius: 50%;
-      width: 26px;
-      height: 26px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 0.85rem;
-      flex-shrink: 0;
-    }
-    .tile-front {
-      background: linear-gradient(135deg, #1565c0, #0d47a1);
-      color: #fff;
-      border: 2px solid #5b9bd5;
-      justify-content: center;
-    }
-    .tile-back { transform: rotateY(180deg); }
-    .tile-back.correct {
-      background: #1b5e20;
-      color: #fff;
-      border: 2px solid #66bb6a;
-    }
-    .tile-back.correct .tile-num { background: #66bb6a; color: #fff; }
-    .tile-back.missed {
-      background: #7b0000;
-      color: #fff;
-      border: 2px solid #ef9a9a;
-    }
-    .tile-back.missed .tile-num { background: #ef9a9a; color: #7b0000; }
+    .tile-back { display: none; }
+    .tile-inner.revealed .tile-back { display: grid; }
 
-    /* Strikes */
+    /* Tile cells — all stretch to fill row height, no padding */
+    .tile-num {
+      background: #111;
+      color: #aaa;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      font-size: 0.75rem;
+    }
+    .tile-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      background: #111;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+    }
+    .tile-pts, .tile-mult, .tile-total {
+      text-align: center;
+      background: #111;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Unrevealed front — purple-tinted cells */
+    .tile-front {
+      background: transparent;
+      color: #aaa;
+    }
+    .tile-front .tile-num {
+      background: #1a1a2e;
+      color: #7a7aaa;
+    }
+    .tile-front .tile-text {
+      background: #1a1a2e;
+      color: #555;
+      font-style: italic;
+    }
+    .tile-front .tile-pts,
+    .tile-front .tile-mult,
+    .tile-front .tile-total {
+      background: #1a1a2e;
+      color: #555;
+    }
+
+    /* Revealed back — correct (green) / missed (red) */
+    .tile-back.correct { color: #fff; }
+    .tile-back.correct .tile-num { background: #66bb6a; color: #fff; }
+    .tile-back.correct .tile-text,
+    .tile-back.correct .tile-pts,
+    .tile-back.correct .tile-mult,
+    .tile-back.correct .tile-total { background: #1b5e20; color: #fff; }
+    .tile-back.correct .tile-pts { color: #a5d6a7; }
+    .tile-back.missed { color: #fff; }
+    .tile-back.missed .tile-num { background: #ef9a9a; color: #7b0000; }
+    .tile-back.missed .tile-text,
+    .tile-back.missed .tile-pts,
+    .tile-back.missed .tile-mult,
+    .tile-back.missed .tile-total { background: #7b0000; color: #fff; }
+    .tile-back.missed .tile-pts { color: #ef9a9a; }
+
+    /* Board footer — round total */
+    .board-footer {
+      display: grid;
+      grid-template-columns: 2rem 1fr 3.5rem 3.5rem 3.5rem;
+      gap: 6px;
+    }
+    .board-footer .footer-label {
+      grid-column: 1 / 5;
+      text-align: right;
+      font-size: 1rem;
+      color: #888;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      align-self: center;
+    }
+    .board-footer .footer-value {
+      text-align: center;
+      font-size: 1.5rem;
+      color: #fff;
+      font-weight: 400;
+      background-color: #111;
+      border-radius: 6px;
+    }
+
+    /* Board stats — streak, mult, category mult */
+    .board-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 2fr;
+      gap: 6px;
+      min-height: 100px;
+    }
+    .board-stat {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+    }
+    .board-stat-label {
+      font-size: 1rem;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .board-stat-value {
+      font-size: 0.9rem;
+      color: #aaa;
+      background-color: #111;
+      border-radius: 6px;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Strikes — housed inside board-stat-value */
     #strikes {
       display: flex;
       gap: 16px;
       justify-content: center;
-      margin-top: 10px;
+      align-items: center;
+      height: 100%;
     }
     .strike-x {
-      font-size: 2.6rem;
+      font-size: 2.2rem;
       font-weight: 900;
       color: #fff;
-      opacity: .3;
+      opacity: .05;
       line-height: 1;
       font-family: 'Arial Black', Arial, sans-serif;
-      width: 58px;
-      height: 58px;
+      width: 50px;
+      height: 50px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -940,7 +1558,7 @@
     }
 
     /* ── Fast Money Round ── */
-    #fast-money { display: none; flex: 1; overflow-y: auto; padding: 20px; position: relative; z-index: 2; }
+    #fast-money { display: none; flex: 1; overflow-y: auto; padding: 20px; position: relative; }
 
     #fm-header {
       background: #0d1b6e;
@@ -1393,7 +2011,7 @@
 
     #steal-text {
       --steal-color: #ff6600;
-      font-family: "Bungee", sans-serif;
+      font-family: "Futura-Bold", sans-serif;
       font-size: clamp(2rem, 6.5vw, 4.8rem);
       color: var(--steal-color);
       position: relative;
@@ -1517,7 +2135,7 @@
       <div class="tray-row">
         <label>CRT Effect</label>
         <label class="toggle-switch">
-          <input type="checkbox" id="crt-checkbox" onchange="toggleCRT()" checked>
+          <input type="checkbox" id="crt-checkbox" onchange="toggleCRT()">
           <span class="toggle-track"></span>
         </label>
       </div>
@@ -1543,6 +2161,23 @@
   </div>
   <!-- 16:9 letterbox canvas -->
   <div id="game-root">
+
+  <!-- Animated background -->
+  <svg id="bg-animation" preserveAspectRatio="xMidYMid slice" viewBox="10 10 80 80" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <style>
+        @keyframes bg-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .bg-out-top    { animation: bg-rotate 29s linear infinite; transform-origin: 13px 25px; fill: var(--bg-blob-base); opacity: 0.6; }
+        .bg-in-top     { animation: bg-rotate 14s linear infinite; transform-origin: 13px 25px; fill: var(--bg-blob-base); opacity: 1.0; }
+        .bg-out-bottom { animation: bg-rotate 36s linear infinite; transform-origin: 84px 93px; fill: var(--bg-blob-base); opacity: 0.40; }
+        .bg-in-bottom  { animation: bg-rotate 21s linear infinite; transform-origin: 84px 93px; fill: var(--bg-blob-base); opacity: 0.80; }
+      </style>
+    </defs>
+    <path class="bg-out-top"    d="M37-5C25.1-14.7,5.7-19.1-9.2-10-28.5,1.8-32.7,31.1-19.8,49c15.5,21.5,52.6,22,67.2,2.3C59.4,35,53.7,8.5,37-5Z"/>
+    <path class="bg-in-top"     d="M20.6,4.1C11.6,1.5-1.9,2.5-8,11.2-16.3,23.1-8.2,45.6,7.4,50S42.1,38.9,41,24.5C40.2,14.1,29.4,6.6,20.6,4.1Z"/>
+    <path class="bg-out-bottom"  d="M105.9,48.6c-12.4-8.2-29.3-4.8-39.4.8-23.4,12.8-37.7,51.9-19.1,74.1s63.9,15.3,76-5.6c7.6-13.3,1.8-31.1-2.3-43.8C117.6,63.3,114.7,54.3,105.9,48.6Z"/>
+    <path class="bg-in-bottom"   d="M102,67.1c-9.6-6.1-22-3.1-29.5,2-15.4,10.7-19.6,37.5-7.6,47.8s35.9,3.9,44.5-12.5C115.5,92.6,113.9,74.6,102,67.1Z"/>
+  </svg>
 
   <!-- Start screen -->
   <div id="start-screen">
@@ -1655,104 +2290,148 @@
   <!-- Game area -->
   <div id="game">
 
-    <!-- Zone: Board -->
+    <!-- Zone: Board (flex row: sidebar 25% | main 75%) -->
     <div id="zone-board">
-      <div id="targetDisplay"></div>
 
-      <!-- Category + Question box -->
-      <div id="question-box">
-        <div id="category"></div>
-        <div id="question"></div>
-        <div id="accuracy-note">Factual information should be accurate through August, 2025</div>
-      </div>
+      <!-- Sidebar zone (25%) — content switches per screen -->
+      <div id="sidebar-zone">
 
-      <!-- Question actions -->
-      <div id="questionActions">
-        <details class="question-options">
-          <summary>Advanced question options</summary>
-          <div class="flag-links">
-            <a onclick="getNewQuestion()">Get new question (resets the round)</a>
-            &nbsp;|&nbsp;
-            <a onclick="removeQuestion()">Flag question for removal</a>
-            &nbsp;|&nbsp;
-            <a onclick="flagFactCheck()">Flag question for fact check</a>
-            &nbsp;|&nbsp;
-            <a onclick="copyAnswersToClipboard()">Copy answers for judge</a>
-            <span id="copyConfirm" style="margin-left:6px;color:#2e7d32;opacity:0;transition:opacity 0.4s;font-size:0.95em;">Copied!</span>
+        <!-- Panel A: Category select -->
+        <div id="sidebar-category-select">
+          <div id="category-prompt"></div>
+          <div id="category-pills-area" class="blend-multiply"></div>
+        </div>
+
+        <!-- Panel B: Question answer -->
+        <div id="sidebar-question-answer">
+          <div id="question-box">
+            <div id="category"></div>
+            <div id="question"></div>
+            <div id="accuracy-note">Factual information should be accurate through August, 2025</div>
           </div>
-        </details>
-      </div>
-
-      <!-- Scoreboard: red score | round display | blue score -->
-      <div id="scoreboard">
-        <div class="team-score-box" id="red-score-box">
-          <div class="team-label"><h4>Red Team</h4></div>
-          <div class="team-points" id="red-score">0</div>
-        </div>
-        <div id="round-display">
-          <div id="round-label">CURRENT ROUND</div>
-          <div id="round-info">
-            <div id="roundCounter">0</div>
-            <div id="roundScore">0</div>
+          <div id="questionActions">
+            <details class="question-options">
+              <summary>Advanced question options</summary>
+              <div class="flag-links">
+                <a onclick="getNewQuestion()">Get new question (resets the round)</a>
+                &nbsp;|&nbsp;
+                <a onclick="removeQuestion()">Flag question for removal</a>
+                &nbsp;|&nbsp;
+                <a onclick="flagFactCheck()">Flag question for fact check</a>
+                &nbsp;|&nbsp;
+                <a onclick="copyAnswersToClipboard()">Copy answers for judge</a>
+                <span id="copyConfirm" style="margin-left:6px;color:#2e7d32;opacity:0;transition:opacity 0.4s;font-size:0.95em;">Copied!</span>
+              </div>
+            </details>
           </div>
-        </div>
-        <div class="team-score-box" id="blue-score-box">
-          <div class="team-label"><h4>Blue Team</h4></div>
-          <div class="team-points" id="blue-score">0</div>
-        </div>
-      </div>
 
-      <!-- Board section: player panels + board -->
-      <div id="board-section">
-        <div id="red-players-panel" class="players-panel">
-          <div class="players-panel-header">Players</div>
-          <ul id="red-players-list" class="players-list"></ul>
-        </div>
-        <div id="game-area">
-          <div id="board-wrapper">
-            <div id="board"></div>
+          <!-- Turn + Input -->
+          <div id="input-area">
+            <div id="turn-input-box" class="team-red">
+              <div id="turn-header">Red Team has the board</div>
+              <div id="turn-body">
+                <div id="turn-subtext">Player is up</div>
+                <div class="turn-input-row">
+                  <input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" />
+                  <button class="btn" onclick="submitGuess()">Submit</button>
+                </div>
+              </div>
+            </div>
+            <div id="endRound"></div>
           </div>
-        </div>
-        <div id="blue-players-panel" class="players-panel">
-          <div class="players-panel-header">Players</div>
-          <ul id="blue-players-list" class="players-list"></ul>
-        </div>
-      </div>
 
-      <!-- Strikes -->
-      <div id="strikes"></div>
-    </div>
+          <div id="message"></div>
 
-    <!-- Zone: Input -->
-    <div id="zone-input">
-      <!-- Turn + Input unified box -->
-      <div id="input-area">
-        <div id="turn-input-box" class="team-red">
-          <div id="turn-header">Red Team has the board</div>
-          <div id="turn-body">
-            <div id="turn-subtext">Player is up</div>
-            <div class="turn-input-row">
-              <input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" />
-              <button class="btn" onclick="submitGuess()">Submit</button>
+          <!-- Answer history tray -->
+          <div id="history" class="hidden">
+            <div id="history-tray-handle" onclick="toggleHistoryTray()">
+              <span>Answer History</span>
+              <span class="tray-arrow">▲</span>
+            </div>
+            <div id="history-tray-panel">
+              <ul id="historyList"></ul>
             </div>
           </div>
-        </div>
-        <div id="endRound"></div>
-      </div>
 
-      <div id="message"></div>
+        </div>
 
-      <!-- Answer history tray -->
-      <div id="history" class="hidden">
-        <div id="history-tray-handle" onclick="toggleHistoryTray()">
-          <span>Answer History</span>
-          <span class="tray-arrow">▲</span>
-        </div>
-        <div id="history-tray-panel">
-          <ul id="historyList"></ul>
-        </div>
-      </div>
-    </div>
+      </div><!-- end #sidebar-zone -->
+
+      <!-- Right main column (75%) -->
+      <div id="zone-board-main">
+
+        <!-- Header zone: scoreboard row -->
+        <div id="header-zone">
+          <div id="scoreboard">
+            <div id="red-players-panel" class="players-panel">
+              <div class="players-panel-header">Turn Order</div>
+              <ul id="red-players-list" class="players-list"></ul>
+            </div>
+            <div class="team-score-box" id="red-score-box">
+              <div class="team-label"><h4>Red Team</h4></div>
+              <div class="team-points" id="red-score">0</div>
+            </div>
+            <div id="round-display">
+              <div id="round-label">Round</div>
+              <div id="round-info">
+                <span id="roundCounter">0</span>
+                <span class="round-of">of</span>
+                <span id="roundTarget">—</span>
+              </div>
+            </div>
+            <div class="team-score-box" id="blue-score-box">
+              <div class="team-label"><h4>Blue Team</h4></div>
+              <div class="team-points" id="blue-score">0</div>
+            </div>
+            <div id="blue-players-panel" class="players-panel">
+              <div class="players-panel-header">Turn Order</div>
+              <ul id="blue-players-list" class="players-list"></ul>
+            </div>
+          </div>
+        </div><!-- end #header-zone -->
+
+        <!-- Game board zone: board + strikes + input -->
+        <div id="game-board-zone">
+
+          <!-- Board: fm-style grid -->
+          <div id="game-area">
+            <div id="board-wrapper">
+              <div class="board-header">
+                <span></span>
+                <span>Answers</span>
+                <span>Pts</span>
+                <span>Mult</span>
+                <span>Total</span>
+              </div>
+              <div id="board"></div>
+              <div class="board-footer" style="position: relative;">
+                <span class="footer-label">Round Total</span>
+                <span class="footer-value" id="board-round-total">0</span>
+                <span class="cat-mult-indicator" id="cat-mult-indicator" style="display:none;"></span>
+              </div>
+              <div class="board-stats">
+                <div class="board-stat">
+                  <div class="board-stat-label">Streak</div>
+                  <div class="board-stat-value" id="board-streak">—</div>
+                </div>
+                <div class="board-stat">
+                  <div class="board-stat-label">Multiplier</div>
+                  <div class="board-stat-value" id="board-mult">—</div>
+                </div>
+                <div class="board-stat">
+                  <div class="board-stat-label">Strikes</div>
+                  <div class="board-stat-value">
+                    <div id="strikes"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- end #game-board-zone -->
+
+      </div><!-- end #zone-board-main -->
+    </div><!-- end #zone-board -->
 
   </div>
 
@@ -1838,22 +2517,111 @@
     const sfxCorrect     = new Audio("correct.mp3");
     const sfxWrong       = new Audio("wrong.mp3");
     const sfxGoodAnswer  = new Audio("goodanswer.mp3");
-    const sfxOpenTheme   = new Audio("opentheme.mp3");
-    const sfxEndTheme    = new Audio("endtheme.mp3");
-    const sfxSetupTheme  = new Audio("feudtheme8bit.mp3");
     const sfxSurveySays  = new Audio("surveysays.mp3");
-    sfxSetupTheme.loop = true;
 
-    const musicTracks = [sfxOpenTheme, sfxEndTheme, sfxSetupTheme];
-    const sfxTracks   = [sfxCorrect, sfxWrong, sfxGoodAnswer, sfxSurveySays];
+    // ── Background music — crossfade loop ──────────────────────
+    const bgA = new Audio("bgtheme.m4a");
+    const bgB = new Audio("bgtheme.m4a");
+    const BG_FADE_OUT_AT = 283;   // song's own fade starts here (~-22 dBFS → silence)
+    const BG_FADE = 17;           // crossfade spans the song's built-in fade-out
+    const BG_INTRO_SKIP = 10;     // skip 10s of silence/buildup on first play
+    const BG_FADE_IN = 3;         // fade-in duration on first play (seconds)
+    let bgActive = bgA;           // currently audible track
+    let bgNext   = bgB;           // next track (fades in)
+    let bgFadeInterval = null;
+    let bgCrossfadeTimer = null;
+    let bgPlaying = false;
+    let bgFirstPlay = true;
+
+    function getMusicGain() {
+      return (soundEnabled ? volumeMaster : 0) * volumeMusic;
+    }
+
+    function startBgMusic() {
+      if (bgPlaying) return;
+      bgPlaying = true;
+      const gain = getMusicGain();
+      if (bgFirstPlay) {
+        bgFirstPlay = false;
+        bgActive.currentTime = BG_INTRO_SKIP;
+        bgActive.volume = 0;
+        bgActive.play();
+        // Fade in over BG_FADE_IN seconds
+        const steps = 30;
+        const stepMs = (BG_FADE_IN * 1000) / steps;
+        let step = 0;
+        const fadeIn = setInterval(() => {
+          step++;
+          bgActive.volume = gain * (step / steps);
+          if (step >= steps) clearInterval(fadeIn);
+        }, stepMs);
+      } else {
+        bgActive.currentTime = BG_INTRO_SKIP;
+        bgActive.volume = gain;
+        bgActive.play();
+      }
+      scheduleBgCrossfade();
+    }
+
+    function scheduleBgCrossfade() {
+      if (bgFadeInterval) clearInterval(bgFadeInterval);
+      bgFadeInterval = setInterval(() => {
+        if (!bgPlaying) return;
+        const ct = bgActive.currentTime;
+        if (isNaN(ct)) return;
+        if (ct >= BG_FADE_OUT_AT) {
+          beginCrossfade();
+        }
+      }, 250);
+    }
+
+    function beginCrossfade() {
+      clearInterval(bgFadeInterval);
+      const gain = getMusicGain();
+      bgNext.currentTime = BG_INTRO_SKIP;
+      bgNext.volume = 0;
+      bgNext.play();
+      const steps = 50;
+      const stepMs = (BG_FADE * 1000) / steps;
+      let step = 0;
+      bgCrossfadeTimer = setInterval(() => {
+        step++;
+        const t = step / steps;               // 0→1
+        bgActive.volume = gain * (1 - t);
+        bgNext.volume   = gain * t;
+        if (step >= steps) {
+          clearInterval(bgCrossfadeTimer);
+          bgCrossfadeTimer = null;
+          bgActive.pause();
+          bgActive.currentTime = 0;
+          // swap roles
+          const tmp = bgActive;
+          bgActive = bgNext;
+          bgNext   = tmp;
+          scheduleBgCrossfade();
+        }
+      }, stepMs);
+    }
+
+    function stopBgMusic() {
+      bgPlaying = false;
+      if (bgFadeInterval) { clearInterval(bgFadeInterval); bgFadeInterval = null; }
+      if (bgCrossfadeTimer) { clearInterval(bgCrossfadeTimer); bgCrossfadeTimer = null; }
+      bgA.pause(); bgA.currentTime = 0;
+      bgB.pause(); bgB.currentTime = 0;
+    }
+
+    const bgTracks = [bgA, bgB];
+    const sfxTracks = [sfxCorrect, sfxWrong, sfxGoodAnswer, sfxSurveySays];
 
     let soundEnabled = true;
     let volumeMaster = 1, volumeMusic = 1, volumeSfx = 1;
 
     function applyVolumes() {
       const gain = soundEnabled ? volumeMaster : 0;
-      musicTracks.forEach(t => t.volume = gain * volumeMusic);
-      sfxTracks.forEach(t   => t.volume = gain * volumeSfx);
+      // Only set the active bg track volume (avoid overriding crossfade ratios)
+      if (bgPlaying) bgActive.volume = gain * volumeMusic;
+      sfxTracks.forEach(t => t.volume = gain * volumeSfx);
     }
     applyVolumes();
 
@@ -1862,8 +2630,7 @@
       sfx.currentTime = 0;
       sfx.play();
     }
-    let crtEnabled = true;
-    document.body.classList.add("crt");
+    let crtEnabled = false;
     // ── Dev panel ────────────────────────────────────────────────
     function toggleDevPanel() {
       document.getElementById('dev-panel').classList.toggle('visible');
@@ -1903,24 +2670,10 @@ document.addEventListener('keydown', e => {
       soundEnabled = !document.getElementById('mute-toggle').checked;
       applyVolumes();
       if (!soundEnabled) {
-        sfxOpenTheme.pause(); sfxOpenTheme.currentTime = 0;
-        sfxEndTheme.pause();  sfxEndTheme.currentTime = 0;
-        sfxSetupTheme.pause();
-      } else {
-        if (document.getElementById("setup").style.display !== "none") {
-          sfxSetupTheme.play();
-        }
+        stopBgMusic();
+      } else if (bgPlaying === false) {
+        startBgMusic();
       }
-    }
-
-    function startSetupTheme() {
-      if (!soundEnabled) return;
-      sfxSetupTheme.currentTime = 0;
-      sfxSetupTheme.play();
-    }
-    function stopSetupTheme() {
-      sfxSetupTheme.pause();
-      sfxSetupTheme.currentTime = 0;
     }
 
     function playCorrect(isTopAnswer) {
@@ -1980,6 +2733,11 @@ document.addEventListener('keydown', e => {
     let gameMode = 'score';   // 'score' | 'rounds'
     let maxRounds = 0;
     let lastRoundWinner = -1;
+
+    let currentStreak = 0;
+    let answerMultiplier = 1.0;
+    let categoryMultiplier = 1;
+    let categoryMultipliers = {};
 
     let roundNumber = 0;
     let teamNames = ["Red Team", "Blue Team"];
@@ -2060,8 +2818,6 @@ document.addEventListener('keydown', e => {
     }
 
     function startGame() {
-      stopSetupTheme();
-      playSound(sfxEndTheme);
       if (!document.getElementById('score-option').classList.contains('selected') &&
           !document.getElementById('rounds-option').classList.contains('selected')) {
         alert('Please select a game mode — Target Score or Rounds — before starting.');
@@ -2095,9 +2851,7 @@ document.addEventListener('keydown', e => {
       document.getElementById("ribbon-scroller").style.display = "none";
       document.getElementById("input-area").classList.add("hidden");
       document.getElementById("history").classList.add("hidden");
-      document.getElementById("targetDisplay").textContent = gameMode === 'rounds'
-        ? `🎯 Playing ${maxRounds} rounds — highest score wins!`
-        : `🎯 First to ${targetScore} points wins!`;
+      document.getElementById("roundTarget").textContent = maxRounds || '—';
 
       advanceRound();
     }
@@ -2109,6 +2863,11 @@ document.addEventListener('keydown', e => {
       strikes = 0;
       guessHistory = [];
       stealPhase = false;
+      currentStreak = 0;
+      answerMultiplier = 1.0;
+      categoryMultiplier = 1;
+      const catMultEl = document.getElementById("cat-mult-indicator");
+      if (catMultEl) catMultEl.style.display = "none";
 
       document.getElementById("category").textContent = "";
       document.getElementById("question").textContent = "";
@@ -2123,7 +2882,7 @@ document.addEventListener('keydown', e => {
           <input type="text" id="guess" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" />
           <button class="btn" onclick="submitGuess()">Submit</button>
         </div>`;
-      updateBoard(); updateScores(); updateStrikes(); updateHistory(); updateTurn();
+      updateBoard(); updateScores(); updateStrikes(); updateStreakDisplay(); updateHistory(); updateTurn();
     }
 
     function advanceRound() {
@@ -2134,6 +2893,29 @@ document.addEventListener('keydown', e => {
       updateTurn();
       initRoundState();
       showCategorySelection();
+    }
+
+    function setup3dBtns() {
+      document.querySelectorAll('.btn-3d').forEach(btn => {
+        btn.addEventListener('mouseenter', function() {
+          const snapshot = window.getComputedStyle(this).transform;
+          this.style.animation = 'none';
+          this.style.transform = snapshot;
+          void this.offsetHeight; // force reflow so transition sees the snapshot
+          this.style.transition = 'transform 0.7s ease';
+          this.style.transform = 'perspective(1000px) rotateX(0deg)';
+        });
+        btn.addEventListener('mouseleave', function() {
+          this.style.transition = 'none';
+          this.style.transform = '';
+          // Restart animation explicitly with 0s delay so it begins at 0deg (front-facing),
+          // regardless of the CSS stagger offset. Using the full shorthand prevents the
+          // stylesheet's animation-delay from reasserting via the cascade.
+          this.style.animation = 'none';
+          void this.offsetHeight;
+          this.style.animation = 'btn3d-tilt 25s ease-in-out 0s infinite';
+        });
+      });
     }
 
     function showCategorySelection() {
@@ -2147,19 +2929,73 @@ document.addEventListener('keydown', e => {
         const r = Math.floor(Math.random() * catsCopy.length);
         picks.push(catsCopy.splice(r,1)[0]);
       }
-      const teamLabel = teamTurn===0? `<span class="red">${teamNames[0]}</span>` : `<span class="blue">${teamNames[1]}</span>`;
-      let html = `<h2>${teamLabel}, select a category:</h2><div style="display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;margin-top:10px;">`;
-      if (picks.length > 0) {
-        html += `<div style="display:flex;flex-direction:column;gap:10px;">`;
-        html += picks.map(c => `<button class="btn" onclick="pickCategory('${c.replace(/'/g,"\\'")}')">${c}</button>`).join('');
-        html += `</div>`;
+
+      // Roll category multipliers for each option
+      categoryMultipliers = {};
+      const allPicks = picks.slice();
+      if (hasSurvey) allPicks.push('Survey');
+      allPicks.forEach(cat => { categoryMultipliers[cat] = rollCategoryMultiplier(); });
+
+      // Populate team prompt
+      const teamName = teamNames[teamTurn];
+      document.getElementById("category-prompt").textContent = `${teamName}, select a category:`;
+
+      // Populate pills — trivia group, divider, survey group
+      const getCategoryClass = (cat) => {
+        const c = cat.toLowerCase();
+        if (c === 'survey')                          return 'cat-survey';
+        if (c.includes('science'))                   return 'cat-science';
+        if (c.includes('geo'))                       return 'cat-geography';
+        if (c.includes('pop') || c.includes('cult')) return 'cat-popculture';
+        if (c.includes('sport'))                     return 'cat-sports';
+        return '';
+      };
+      const makeBtn = (label, cat) => {
+        const s = `<span>${label}</span>`.repeat(4);
+        const cc = getCategoryClass(cat);
+        const cm = categoryMultipliers[cat] || 1;
+        const coinClass = cm >= 3 ? 'coin-gold' : cm >= 2 ? 'coin-silver' : cm > 1 ? 'coin-bronze' : '';
+        const badge = cm > 1 ? `<div class="cat-mult-badge ${coinClass}" title="Points multiplied by ${cm}x this round">${cm}x</div>` : '';
+        return `<div class="cat-row"><button class="cat-select-btn btn-3d${cc ? ' ' + cc : ''}" onclick="pickCategory('${cat.replace(/'/g,"\\'")}')">${s}</button>${badge}</div>`;
+      };
+      let pillsHtml = '<div class="trivia-categories">';
+      picks.forEach(c => { pillsHtml += makeBtn(c, c); });
+      pillsHtml += '</div>';
+      if (picks.length > 0 && hasSurvey) {
+        pillsHtml += `<div class="pills-divider">— or —</div>`;
       }
-      if (picks.length > 0 && hasSurvey) html += `<div style="font-size:1.1em;font-weight:bold;color:#fff;">— OR —</div>`;
-      if (hasSurvey) html += `<div><button class="btn" onclick="pickCategory('Survey')">Feud-style Survey</button></div>`;
-      html += `</div>`;
-      document.getElementById("question").innerHTML = html;
+      if (hasSurvey) {
+        pillsHtml += '<div class="survey-categories">';
+        pillsHtml += makeBtn('Survey', 'Survey');
+        pillsHtml += '</div>';
+      }
+      document.getElementById("category-pills-area").innerHTML = pillsHtml;
+      setup3dBtns();
+
+      // Stagger slide-in animations: rows first, then badges
+      const rows = document.querySelectorAll("#category-pills-area .cat-row");
+      rows.forEach((row, i) => { row.style.animationDelay = (i * 0.15) + "s"; });
+      const badges = document.querySelectorAll("#category-pills-area .cat-mult-badge");
+      let badgeDelay = rows.length * 0.15 + 0.2;
+      badges.forEach((badge) => {
+        badge.style.animationDelay = badgeDelay + "s";
+        // Read this badge's slide duration from computed style (varies by tier)
+        const dur = parseFloat(getComputedStyle(badge).animationDuration.split(', ')[1] || '2');
+        badgeDelay += dur;
+      });
+
+      // Show category-select panel, hide question-answer panel
+      document.getElementById("sidebar-category-select").style.display = "flex";
+      document.getElementById("sidebar-question-answer").style.display = "none";
       document.getElementById("input-area").classList.add("hidden");
       document.getElementById("history").classList.add("hidden");
+
+      // Hide board wrapper during category selection
+      const bw = document.getElementById("board-wrapper");
+      if (bw) {
+        bw.classList.remove("slide-in");
+        bw.classList.add("offscreen");
+      }
     }
 
     function pickCategory(category) {
@@ -2169,14 +3005,34 @@ document.addEventListener('keydown', e => {
       const choice = pool[Math.floor(Math.random() * pool.length)];
       currentQuestion = choice.q; usedQuestions.push(choice.idx);
       revealed = Array(currentQuestion.answers.length).fill(false);
+      categoryMultiplier = categoryMultipliers[category] || 1;
+      const catMultEl = document.getElementById("cat-mult-indicator");
+      if (catMultEl) {
+        if (categoryMultiplier > 1) {
+          catMultEl.textContent = categoryMultiplier + "x Round";
+          catMultEl.style.display = "";
+        } else {
+          catMultEl.style.display = "none";
+        }
+      }
 
+      // Show question-answer panel, hide category-select panel
+      document.getElementById("sidebar-category-select").style.display = "none";
+      document.getElementById("sidebar-question-answer").style.display = "flex";
       document.getElementById("category").textContent = `Category: ${currentQuestion.category}`;
       document.getElementById("question").textContent = currentQuestion.question;
-      updateBoard(); updateScores(); updateStrikes(); updateHistory(); updateTurn();
+      updateBoard(); updateScores(); updateStrikes(); updateStreakDisplay(); updateHistory(); updateTurn();
       document.getElementById("questionActions").style.display = "block";
       document.getElementById("input-area").classList.remove("hidden");
       document.getElementById("history").classList.remove("hidden");
       document.getElementById("guess")?.focus();
+
+      // Slide board wrapper in from below
+      const bw = document.getElementById("board-wrapper");
+      if (bw) {
+        bw.classList.remove("offscreen");
+        bw.classList.add("slide-in");
+      }
     }
 
     function getNewQuestion() {
@@ -2208,44 +3064,135 @@ document.addEventListener('keydown', e => {
     function updateBoard() {
       const b = document.getElementById("board");
       b.innerHTML = "";
-      for (let i = 0; i < 8; i++) {
-        const ans = currentQuestion ? currentQuestion.answers[i] : null;
+      const answerCount = currentQuestion ? currentQuestion.answers.length : 0;
+      for (let i = 0; i < answerCount; i++) {
+        const ans = currentQuestion.answers[i];
         const d = document.createElement("div");
         d.classList.add("answer");
         d.dataset.tileIndex = i;
-        if (!ans) {
-          d.classList.add("blank");
-        } else {
+        {
           const inner = document.createElement("div");
           inner.classList.add("tile-inner");
+
+          // Front (unrevealed)
           const front = document.createElement("div");
           front.classList.add("tile-front");
           const frontNum = document.createElement("span");
           frontNum.classList.add("tile-num");
           frontNum.textContent = i + 1;
-          front.appendChild(frontNum);
+          const frontText = document.createElement("span");
+          frontText.classList.add("tile-text");
+          frontText.textContent = "—";
+          const frontPts = document.createElement("span");
+          frontPts.classList.add("tile-pts");
+          frontPts.textContent = "—";
+          const frontMult = document.createElement("span");
+          frontMult.classList.add("tile-mult");
+          frontMult.textContent = "—";
+          const frontTotal = document.createElement("span");
+          frontTotal.classList.add("tile-total");
+          frontTotal.textContent = "—";
+          front.append(frontNum, frontText, frontPts, frontMult, frontTotal);
+
+          // Back (revealed)
           const back = document.createElement("div");
           back.classList.add("tile-back");
           if (revealed[i]) {
             back.classList.add("correct");
-            const backNum = document.createElement("span");
-            backNum.classList.add("tile-num");
-            backNum.textContent = i + 1;
-            const backTxt = document.createElement("span");
-            backTxt.textContent = `${ans.display||ans.text} (${ans.points})`;
-            back.appendChild(backNum);
-            back.appendChild(backTxt);
-            inner.classList.add("no-transition", "flipped");
+            buildTileBack(back, i, ans);
+            inner.classList.add("revealed");
           }
-          inner.appendChild(front);
-          inner.appendChild(back);
+
+          inner.append(front, back);
           d.appendChild(inner);
+
+          // Tile cover — glossy overlay with pixelated circle
+          if (!revealed[i]) {
+            const cover = document.createElement("div");
+            cover.classList.add("tile-cover");
+            const circle = document.createElement("div");
+            circle.classList.add("tile-cover-circle");
+            const coverNum = document.createElement("span");
+            coverNum.classList.add("tile-num");
+            coverNum.textContent = i + 1;
+            circle.appendChild(coverNum);
+            cover.appendChild(circle);
+            d.appendChild(cover);
+          }
         }
         b.appendChild(d);
       }
+      updateBoardRoundTotal();
     }
 
-    function flipTile(index, type) {
+    function buildTileBack(back, i, ans, opts) {
+      // opts: { mult, earnedTotal, missed } — passed for revealed tiles
+      back.innerHTML = "";
+      const num = document.createElement("span");
+      num.classList.add("tile-num");
+      num.textContent = i + 1;
+      const txt = document.createElement("span");
+      txt.classList.add("tile-text");
+      txt.textContent = ans.display || ans.text;
+      const pts = document.createElement("span");
+      pts.classList.add("tile-pts");
+      pts.textContent = ans.points;
+      const mult = document.createElement("span");
+      mult.classList.add("tile-mult");
+      const total = document.createElement("span");
+      total.classList.add("tile-total");
+      if (opts && opts.missed) {
+        mult.textContent = "—";
+        total.textContent = "—";
+      } else if (opts && opts.mult != null) {
+        mult.textContent = opts.mult > 1 ? opts.mult.toFixed(1) + "x" : "—";
+        total.textContent = opts.earnedTotal;
+      } else {
+        mult.textContent = "—";
+        total.textContent = ans.points;
+      }
+      back.append(num, txt, pts, mult, total);
+    }
+
+    function updateBoardRoundTotal() {
+      const el = document.getElementById("board-round-total");
+      if (el) el.textContent = roundScore;
+    }
+
+    function awardRoundScore(team, callback) {
+      const finalScore = Math.round(roundScore * categoryMultiplier);
+      if (categoryMultiplier > 1) {
+        // Interstitial animation: pulse the indicator, count up the total
+        const indicator = document.getElementById("cat-mult-indicator");
+        const totalEl = document.getElementById("board-round-total");
+        if (indicator) indicator.classList.add("mult-activate");
+        const startVal = roundScore;
+        const steps = 20;
+        const stepTime = 40;
+        let step = 0;
+        const countUp = setInterval(() => {
+          step++;
+          const progress = step / steps;
+          const current = Math.round(startVal + (finalScore - startVal) * progress);
+          if (totalEl) totalEl.textContent = current;
+          if (step >= steps) {
+            clearInterval(countUp);
+            roundScore = finalScore;
+            if (totalEl) totalEl.textContent = finalScore;
+            teamScores[team] += finalScore;
+            updateScores();
+            if (indicator) indicator.classList.remove("mult-activate");
+            setTimeout(() => callback(finalScore), 400);
+          }
+        }, stepTime);
+      } else {
+        teamScores[team] += finalScore;
+        updateScores();
+        callback(finalScore);
+      }
+    }
+
+    function flipTile(index, type, earnedTotal, appliedMult) {
       const tile = document.querySelector(`[data-tile-index="${index}"]`);
       if (!tile) return;
       const inner = tile.querySelector('.tile-inner');
@@ -2253,22 +3200,25 @@ document.addEventListener('keydown', e => {
       if (!inner || !back) return;
       const ans = currentQuestion.answers[index];
       back.classList.add(type);
-      back.innerHTML = '';
-      const num = document.createElement('span');
-      num.classList.add('tile-num');
-      num.textContent = index + 1;
-      const txt = document.createElement('span');
-      txt.textContent = `${ans.display||ans.text} (${ans.points})`;
-      back.appendChild(num);
-      back.appendChild(txt);
-      inner.classList.remove('no-transition');
-      inner.classList.add('flipped');
+      const opts = type === 'missed' ? { missed: true }
+        : earnedTotal != null ? { mult: appliedMult || 1, earnedTotal } : null;
+      buildTileBack(back, index, ans, opts);
+
+      // Show the answer (green/red) immediately under the cover, then slide cover away
+      inner.classList.add('revealed');
+      const cover = tile.querySelector('.tile-cover');
+      if (cover) {
+        cover.classList.add('revealed');
+        setTimeout(() => { cover.remove(); }, 400);
+      }
+      updateBoardRoundTotal();
     }
 
     function revealAll() {
       const toReveal = [];
-      for (let i = 0; i < 8; i++) {
-        if (currentQuestion && currentQuestion.answers[i] && !revealed[i]) {
+      if (!currentQuestion) return;
+      for (let i = 0; i < currentQuestion.answers.length; i++) {
+        if (!revealed[i]) {
           toReveal.push(i);
         }
       }
@@ -2278,9 +3228,9 @@ document.addEventListener('keydown', e => {
     }
 
     function updateScores() {
-      document.getElementById("roundScore").textContent = roundScore;
       document.getElementById("red-score").textContent = teamScores[0];
       document.getElementById("blue-score").textContent = teamScores[1];
+      updateBoardRoundTotal();
     }
 
     function updateStrikes() {
@@ -2293,6 +3243,21 @@ document.addEventListener('keydown', e => {
         x.textContent = "X";
         s.appendChild(x);
       }
+    }
+
+    function rollCategoryMultiplier() {
+      const roll = Math.random();
+      if (roll < 0.02) return 3;
+      if (roll < 0.07) return 2;
+      if (roll < 0.27) return 1.5;
+      return 1;
+    }
+
+    function updateStreakDisplay() {
+      const streakEl = document.getElementById("board-streak");
+      const multEl = document.getElementById("board-mult");
+      if (streakEl) streakEl.textContent = currentStreak > 0 ? currentStreak : "—";
+      if (multEl) multEl.textContent = answerMultiplier > 1 ? answerMultiplier.toFixed(1) + "x" : "—";
     }
 
     function updateTurn() {
@@ -2312,6 +3277,8 @@ document.addEventListener('keydown', e => {
       if (inputArea) { inputArea.classList.remove("team-red","team-blue"); inputArea.classList.add(teamClass); }
       const qbox = document.getElementById("question-box");
       if (qbox) { qbox.classList.remove("team-red","team-blue"); qbox.classList.add(teamClass); }
+      const catPrompt = document.getElementById("category-prompt");
+      if (catPrompt) { catPrompt.classList.remove("team-red","team-blue"); catPrompt.classList.add(teamClass); }
 
       if (stealPhase) {
         if (header)  header.textContent  = `${teamName} can STEAL!`;
@@ -2336,9 +3303,7 @@ document.addEventListener('keydown', e => {
         const isActiveTeam = team === teamTurn;
         listEl.innerHTML = players.map((name, i) => {
           if (i === curIdx && isActiveTeam) {
-            const content = team === 0
-              ? `<span class="player-arrow">► </span><span class="player-name">${name}</span>`
-              : `<span class="player-name">${name}</span> <span class="player-arrow flip">►</span>`;
+            const content = `<span class="player-arrow">►</span><span class="player-name">${name}</span>`;
             return `<li class="player-active">${content}</li>`;
           }
           if (i === curIdx) return `<li class="player-next">${name}</li>`;
@@ -2376,25 +3341,36 @@ document.addEventListener('keydown', e => {
           if(submitBtn) submitBtn.disabled=false;
           if(guessInput) { guessInput.disabled=false; guessInput.focus(); }
           if(idx!==-1){
-            playCorrect(idx===0);revealed[idx]=true;roundScore+=currentQuestion.answers[idx].points;
-            guessHistory.push({player:playerName,team:stealingTeam,guess:guess,result:`✓ Steal (${currentQuestion.answers[idx].points} pts)`});
-            flipTile(idx,'correct');updateHistory();teamScores[stealingTeam]+=roundScore;updateScores();
-            if(!checkForWinner())endRound(`🎉 <span class="${stealingTeam===0?"red":"blue"}">${teamNames[stealingTeam]}</span> stole ${roundScore} points!`,stealingTeam);
+            const stealAns=currentQuestion.answers[idx];
+            const stealMult=answerMultiplier;
+            const stealTotal=Math.round(stealAns.points*stealMult);
+            playCorrect(idx===0);revealed[idx]=true;roundScore+=stealTotal;
+            const stealResult=stealMult>1?`✓ Steal (${stealTotal} pts) [${stealMult.toFixed(1)}x]`:`✓ Steal (${stealTotal} pts)`;
+            guessHistory.push({player:playerName,team:stealingTeam,guess:guess,result:stealResult});
+            currentStreak++;answerMultiplier=1+(currentStreak*0.2);
+            flipTile(idx,'correct',stealTotal,stealMult);updateStreakDisplay();updateHistory();
+            awardRoundScore(stealingTeam, (final) => {
+              if(!checkForWinner())endRound(`🎉 <span class="${stealingTeam===0?"red":"blue"}">${teamNames[stealingTeam]}</span> stole ${final} points!`,stealingTeam);
+            });
           } else {
             playWrong();
             guessHistory.push({player:playerName,team:stealingTeam,guess:guess,result:"✗ Wrong (steal)"});
-            updateHistory();teamScores[1-stealingTeam]+=roundScore;updateScores();
-            if(!checkForWinner())endRound(`✅ <span class="${1-stealingTeam===0?"red":"blue"}">${teamNames[1-stealingTeam]}</span> keeps ${roundScore} points!`,1-stealingTeam);
+            updateHistory();
+            awardRoundScore(1-stealingTeam, (final) => {
+              if(!checkForWinner())endRound(`✅ <span class="${1-stealingTeam===0?"red":"blue"}">${teamNames[1-stealingTeam]}</span> keeps ${final} points!`,1-stealingTeam);
+            });
           }
         },1500);
         return;}
-      let foundIdx=-1;currentQuestion.answers.forEach((ans,i)=>{if(answerMatches(guess,ans)&&!revealed[i]){revealed[i]=true;roundScore+=ans.points;
-        guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:`✓ Correct (${ans.points} pts)`});foundIdx=i;}});
+      let foundIdx=-1;let foundTotal=0;let foundMult=answerMultiplier;currentQuestion.answers.forEach((ans,i)=>{if(answerMatches(guess,ans)&&!revealed[i]){revealed[i]=true;
+        foundMult=answerMultiplier;foundTotal=Math.round(ans.points*foundMult);roundScore+=foundTotal;
+        const resultTxt=foundMult>1?`✓ Correct (${foundTotal} pts) [${foundMult.toFixed(1)}x]`:`✓ Correct (${foundTotal} pts)`;
+        guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:resultTxt});foundIdx=i;}});
       const found=foundIdx!==-1;
-      if(found){playCorrect(foundIdx===0);}else{playWrong();strikes++;guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:"✗ Wrong"});}playerIndex[teamTurn]=(playerIndex[teamTurn]+1)%teamPlayers[teamTurn].length;
-      document.getElementById("message").textContent="";if(found){flipTile(foundIdx,'correct');}else{updateBoard();}updateScores();updateStrikes();updateHistory();updateTurn();document.getElementById("guess")?.focus();
+      if(found){currentStreak++;answerMultiplier=1+(currentStreak*0.2);playCorrect(foundIdx===0);}else{currentStreak=0;answerMultiplier=1.0;playWrong();strikes++;guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:"✗ Wrong"});}playerIndex[teamTurn]=(playerIndex[teamTurn]+1)%teamPlayers[teamTurn].length;
+      document.getElementById("message").textContent="";if(found){flipTile(foundIdx,'correct',foundTotal,foundMult);}else{updateBoard();}updateScores();updateStrikes();updateStreakDisplay();updateHistory();updateTurn();document.getElementById("guess")?.focus();
       if(!found&&strikes>=3){stealPhase=true;teamTurn=1-teamTurn;updateTurn();showStealOverlay();return;}
-      if(revealed.every(r=>r)&&!stealPhase){teamScores[teamTurn]+=roundScore;updateScores();if(!checkForWinner())endRound(`🎉 <span class="${teamTurn===0?"red":"blue"}">${teamNames[teamTurn]}</span> revealed all answers! They win ${roundScore} points.`,teamTurn);}}
+      if(revealed.every(r=>r)&&!stealPhase){awardRoundScore(teamTurn, (final) => {if(!checkForWinner())endRound(`🎉 <span class="${teamTurn===0?"red":"blue"}">${teamNames[teamTurn]}</span> revealed all answers! They win ${final} points.`,teamTurn);});}}
 
     function checkForWinner() {
       if (gameMode === 'rounds') return false;
@@ -2474,7 +3450,6 @@ document.addEventListener('keydown', e => {
       if(confirm(`Apply ${sign}${val} points to ${name}?`)){teamScores[team]+=val;el.value=0;updateScores();checkForWinner();}}
 
     function endGame(msg, winnerOverride = null) {
-      playSound(sfxEndTheme);
       const winner = winnerOverride !== null ? winnerOverride : (teamScores[0] >= teamScores[1] ? 0 : 1);
       document.getElementById("endRound").innerHTML=`
         <h2>🏆 ${msg}</h2>
@@ -2535,7 +3510,6 @@ document.addEventListener('keydown', e => {
       document.getElementById("fast-money").style.display="none";
       document.getElementById("endRound").innerHTML="";
       document.getElementById("roundCounter").textContent="0";
-      document.getElementById("roundScore").textContent="0";
       document.getElementById("red-score").textContent="0";
       document.getElementById("blue-score").textContent="0";
       document.getElementById("category").textContent="";
@@ -2545,7 +3519,6 @@ document.addEventListener('keydown', e => {
       document.getElementById('fm-tally-score-b').textContent = '0';
       document.getElementById('fm-tally-name-a').textContent  = 'Player A';
       document.getElementById('fm-tally-name-b').textContent  = 'Player B';
-      startSetupTheme();
     }
 
     // ── Fast Money ─────────────────────────────────────────────────
@@ -3193,15 +4166,7 @@ document.addEventListener('keydown', e => {
       setup.style.transform = 'translateX(110%)';
 
       startScreen.addEventListener('click', function() {
-        startSetupTheme();
-
-        // Fade out CRT, then disable it
-        const crtOverlay = document.getElementById('crt-overlay');
-        crtOverlay.style.opacity = '0';
-        crtOverlay.addEventListener('transitionend', function() {
-          document.getElementById('crt-checkbox').checked = false;
-          toggleCRT();
-        }, { once: true });
+        startBgMusic();
 
         // Fade out start screen
         startScreen.classList.add('dismissing');

@@ -10,6 +10,21 @@
 
   <link rel="stylesheet" href="https://use.typekit.net/lps4irc.css">
   <style>
+    @font-face {
+      src: url("https://www.axis-praxis.org/fonts/webfonts/MetaVariableDemo-Set.woff2")
+        format("woff2");
+      font-family: "Meta";
+      font-style: normal;
+      font-weight: normal;
+    }
+
+    /* Register --bg-blob-base as a color so it can be transitioned */
+    @property --bg-blob-base {
+      syntax: '<color>';
+      inherits: true;
+      initial-value: #513f6d;
+    }
+
     :root {
       --red-bg:   #990b0b;
       --red-text: #ff5555;
@@ -87,7 +102,7 @@
       flex-direction: column;
       overflow: hidden;
       position: relative;
-      transition: background 0.3s ease;
+      transition: --bg-blob-base 1.5s ease, background 1.5s ease;
     }
 
     /* CSS-only animated blob background — replaces SVG blobs.
@@ -140,10 +155,11 @@
     }
 
     h1 {
-      text-transform: none;
+      text-transform: uppercase;
       color: #fba300;
       font-weight: normal;
-      font-family: "Dazzle Unicase";
+      font-family: "Futura";
+      font-weight: 700;
       font-size: 2.5rem;
     }
 
@@ -265,7 +281,25 @@
       gap: 32px;
       transform: translateY(-10%);
     }
-    #start-screen img { width: 40%; }
+    #start-logo {
+      -webkit-text-stroke: 4px #d6f4f4;
+      font-variation-settings: "wght" 900, "ital" 1;
+      font-size: 10rem;
+      text-align: center;
+      color: transparent;
+      font-family: "Meta", sans-serif;
+      line-height: 0.9;
+      text-shadow: 10px 10px 0px #07bccc,
+        15px 15px 0px #e601c0,
+        20px 20px 0px #e9019a,
+        25px 25px 0px #f40468,
+        45px 45px 10px #482896;
+      transition: all 0.5s;
+    }
+    #start-logo:hover {
+      font-variation-settings: "wght" 100, "ital" 0;
+      text-shadow: none;
+    }
     #start-screen h1 {
       font-size: 4rem;
       margin: 0;
@@ -281,6 +315,25 @@
     #start-screen.dismissing {
       animation: start-screen-fade-out 0.4s ease forwards;
       pointer-events: none;
+    }
+    #dev-mode-btn {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 1;
+      padding: 6px 14px;
+      font-family: 'Bitcount Mono Single', monospace;
+      font-size: 1rem;
+      color: rgba(255,255,255,0.5);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    #dev-mode-btn:hover {
+      background: rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.85);
     }
 
     /* Setup screen */
@@ -412,6 +465,7 @@
       position: absolute; bottom: 0; left: 0; width: 100%;
       overflow: hidden; z-index: 1;
       height: 130px; pointer-events: none;
+      display: none;
     }
     #ribbon-track {
       display: flex; width: max-content;
@@ -596,7 +650,143 @@
       padding: 0 8px 0 0;
     }
     #sidebar-category-select { display: flex; flex-direction: column; flex: 1; }
-    #sidebar-question-answer { display: none; flex-direction: column; }
+    #sidebar-question-answer { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+    /* Sidebar question-screen zones */
+    #sq-zone-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding: 0; }
+    #sq-zone-input   { flex-shrink: 0; }
+    /* Category label header on question screen */
+    #cat-label {
+      width: 100%;
+      height: 80px;
+      font-family: 'Bitcount Single', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 300;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0;
+      box-sizing: border-box;
+      background: var(--cat-face, #333);
+      flex-shrink: 0;
+      margin-top: 30px;
+    }
+    #cat-label.cat-science    { background: var(--cat-science); }
+    #cat-label.cat-geography  { background: var(--cat-geography); }
+    #cat-label.cat-popculture { background: var(--cat-popculture); }
+    #cat-label.cat-survey     { background: var(--cat-survey); }
+    #cat-label.cat-sports     { background: var(--cat-sports); color: #000; }
+    /* Cat-label text pop-through animation */
+    @keyframes text-pop-through {
+      0%   { transform: scale(0) rotate(-3deg); opacity: 0; text-shadow: none; }
+      50%  { transform: scale(1.4) rotate(1deg); opacity: 1; text-shadow: 0 0 20px rgba(255,255,255,0.8); }
+      70%  { transform: scale(0.9) rotate(-0.5deg); }
+      85%  { transform: scale(1.08); }
+      100% { transform: scale(1) rotate(0deg); text-shadow: none; }
+    }
+    #cat-label span {
+      display: inline-block;
+      animation: text-pop-through 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.9s backwards;
+    }
+    /* Phase indicator — persistent sidebar header. The container stays put
+       once it slides in at game start; phase spans inside swap based on
+       data-phase. Background transitions smoothly on team color change. */
+    #phase-indicator {
+      position: relative;
+      display: block;
+      padding: 0 16px;
+      height: 140px;
+      box-sizing: border-box;
+      color: #fff;
+      font-family: "Futura-Bold", sans-serif;
+      font-size: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      line-height: 1.3;
+      width: 100%;
+      border-radius: 0px 0px 30px 30px;
+      overflow: hidden;
+      background: color-mix(in srgb, var(--red-bg) 90%, black);
+      transition: background 0.3s ease;
+      /* Initial off-canvas state — JS removes .offscreen to slide in */
+    }
+    #phase-indicator.offscreen { transform: translateY(-160%); }
+    #phase-indicator.slide-in  { animation: phase-slide-in  0.45s cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
+    #phase-indicator.slide-out { animation: phase-slide-out 0.4s  cubic-bezier(0.4, 0, 1, 1) forwards; }
+    @keyframes phase-slide-in {
+      from { transform: translateY(-160%); }
+      to   { transform: translateY(0); }
+    }
+    @keyframes phase-slide-out {
+      from { transform: translateY(0); }
+      to   { transform: translateY(-160%); }
+    }
+    #phase-indicator.team-red  { background: color-mix(in srgb, var(--red-bg)  90%, black); }
+    #phase-indicator.team-blue { background: color-mix(in srgb, var(--blue-bg) 90%, black); }
+
+    /* Phase spans — each sits flush with the container, only one visible at a
+       time (driven by data-phase). Absolute positioning allows the "knock"
+       collision during steal transitions. */
+    #phase-indicator .ph-span {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      padding: 0 16px;
+      box-sizing: border-box;
+      opacity: 0;
+    }
+    #phase-indicator[data-phase="category-select"] .ph-category-select,
+    #phase-indicator[data-phase="gameplay"]        .ph-gameplay,
+    #phase-indicator[data-phase="steal-chance"]    .ph-steal-chance,
+    #phase-indicator[data-phase="round-result"]    .ph-round-result {
+      display: flex;
+      opacity: 1;
+      animation: ph-text-slide-in 0.35s cubic-bezier(0.2, 0.8, 0.25, 1) backwards;
+    }
+    /* Exit state — JS adds .ph-exiting to the outgoing span to animate it out.
+       Uses display:flex so it stays visible during exit. */
+    #phase-indicator .ph-span.ph-exiting {
+      display: flex;
+      animation: ph-text-slide-out 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+    }
+    /* Steal "knock" — the outgoing span falls past the container bottom */
+    #phase-indicator .ph-span.ph-knocked {
+      display: flex;
+      animation: ph-text-knock-out 0.5s cubic-bezier(0.55, 0, 0.85, 0.2) forwards;
+    }
+    @keyframes ph-text-slide-in {
+      /* Drops DOWN from above the container into its resting spot */
+      from { transform: translateY(-140px); opacity: 0; }
+      to   { transform: translateY(0);      opacity: 1; }
+    }
+    @keyframes ph-text-slide-out {
+      from { transform: translateY(0);     opacity: 1; }
+      to   { transform: translateY(-140px); opacity: 0; }
+    }
+    @keyframes ph-text-knock-out {
+      0%   { transform: translateY(0)     rotate(0);   opacity: 1; }
+      40%  { transform: translateY(60px)  rotate(-4deg); opacity: 0.9; }
+      100% { transform: translateY(220px) rotate(-8deg); opacity: 0; }
+    }
+    /* Question slide-down */
+    @keyframes question-slide-down {
+      from { transform: translateY(-100%); opacity: 0; }
+      to   { transform: translateY(0);     opacity: 1; }
+    }
+    .question-enter {
+      animation: question-slide-down 0.4s ease-out 0.3s backwards;
+    }
+    /* Input slide-up */
+    @keyframes input-slide-up {
+      from { transform: translateY(120%); }
+      to   { transform: translateY(0); }
+    }
+    .input-enter {
+      animation: input-slide-up 0.4s ease-out backwards;
+    }
 
     /* Right column (75%) */
     #zone-board-main {
@@ -615,28 +805,11 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
-      overflow: visible;
+      justify-content: flex-start;
+      overflow: hidden;
       min-width: 0;
     }
 
-    /* Category prompt + pills — stacked in sidebar */
-    #category-prompt {
-      display: flex;
-      align-items: center;
-      padding: 20px 16px 16px;
-      background: color-mix(in srgb, var(--red-bg) 90%, black);
-      color: #fff;
-      font-family: "Futura-Bold", sans-serif;
-      font-size: 2.35rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      line-height: 1.3;
-      width: 100%;
-      border-radius: 0px 0px 30px 30px;
-    }
-    #category-prompt.team-red  { background: color-mix(in srgb, var(--red-bg)  90%, black); }
-    #category-prompt.team-blue { background: color-mix(in srgb, var(--blue-bg) 90%, black); }
     #category-pills-area {
       display: flex;
       flex-direction: column;
@@ -645,7 +818,21 @@
       border-radius: 20px;
       margin: 10px 0px;
       --blend-bg: #efefef;
+      /* Locked height — prevents the pills area from shrinking when the
+         selected cat-row goes `position: absolute` during the exit tumble.
+         Without this the whole area visibly collapses and the phase
+         indicator below it jumps up. Sized to fit the full contents:
+         12px top pad + trivia group (292px) + divider (~41px) +
+         survey group (116px) + 12px bottom pad = 473px, rounded up. */
+      min-height: 480px;
+      box-sizing: border-box;
     }
+    /* NOTE: do not animate opacity or transform on #category-pills-area.
+       It uses .blend-multiply, and changing its opacity creates a new
+       stacking context that blocks mix-blend-mode from reaching the
+       #game-root backdrop (see CLAUDE.md "Blend-Multiply Utility" caveats).
+       The cat-rows inside stagger in individually, which gives a gradual
+       reveal without touching the parent. */
     /* Category select buttons — .btn base + width constraint */
     .cat-select-btn { width: 100%; }
     .cat-row .cat-select-btn { width: 100%; }
@@ -711,19 +898,186 @@
     .cat-popculture { --cat-face: rgba(233,  30, 140, 0.9); --cat-solid: rgba(233,  30, 140, 1); --cat-text: #fff; --cat-text-hover: #fff; }
     .cat-survey     { --cat-face: rgba(251, 140,   0, 0.9); --cat-solid: rgba(251, 140,   0, 1); --cat-text: #fff; --cat-text-hover: #fff; }
     .cat-sports     { --cat-face: rgba(253, 216,  53, 0.9); --cat-solid: rgba(253, 216,  53, 1); --cat-text: #000; --cat-text-hover: #000; }
-    /* Category row — wraps button + optional badge */
+    /* Category row — wraps button + optional badge.
+       Fixed 80px height so the row occupies a known slot regardless of
+       the button's margin contribution, and so the row can go
+       `position: absolute` during the exit tumble without collapsing
+       the surrounding layout. Siblings stay pinned via the grid layout
+       on `.trivia-categories` / `.survey-categories` (see below). */
     .cat-row {
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
       width: 70%;
+      height: 80px;
+      box-sizing: border-box;
       animation: cat-slide-in 0.4s ease-out backwards;
     }
     /* Slide-in keyframes */
     @keyframes cat-slide-in {
       from { transform: translateX(-120%); opacity: 0; }
       to   { transform: translateX(0);     opacity: 1; }
+    }
+    /* Category exit animations.
+       Explicit `from` state is important: the pills-divider has a base
+       `opacity: 0` rule (it starts hidden, then a delayed fade-in takes
+       it to 1 via forwards fill). When we replace its animation with
+       this one, the fade-in's forwards fill is discarded and the divider
+       falls back to opacity: 0 — which would mean this animation runs
+       from 0 to 0 and the element "just disappears" instead of sliding.
+       Pinning `from { opacity: 1 }` keeps the slide visible for every
+       element regardless of its base-rule opacity. */
+    @keyframes cat-slide-out-left {
+      from { transform: translateX(0);     opacity: 1; }
+      to   { transform: translateX(-120%); opacity: 0; }
+    }
+    @keyframes badge-spin-out {
+      to { transform: rotateY(360deg); opacity: 0; }
+    }
+    @keyframes divider-fade-out {
+      to { opacity: 0; }
+    }
+    .cat-exit {
+      animation: cat-slide-out-left 0.3s ease-in forwards;
+    }
+    .badge-exit {
+      animation: badge-spin-out 0.4s ease-in forwards !important;
+    }
+    .divider-exit {
+      animation: divider-fade-out 0.25s ease-out forwards;
+    }
+    /* ─── Path B: Selected category — glow ramp + CRT power-off ───
+       Two-phase no-movement exit for the clicked category.
+
+       Phase 1 (`.selected-glow`): The row freezes its 3D tilt flat-
+       facing the camera and begins to emit an intense glow in its own
+       category color, ramping up over the duration of the Path A exit
+       sequence (~700ms). Uses `filter: drop-shadow` so the glow hugs
+       the composite rendered shape of the row + its (absolutely
+       positioned) coin badge.
+
+       Phase 2 (`.crt-off`): Classic cathode-ray-tube shutdown. The
+       image briefly surges, collapses vertically to a bright thin
+       horizontal line, the line holds and flashes white, then
+       collapses horizontally to a center dot, the dot persists for an
+       instant, and finally fades to nothing. Total ~490ms.
+
+       Both animations use fill-mode `both` (see "divider disappear"
+       fix note on cat-slide-out-left) so their start/end states
+       persist cleanly across the handoff. The CRT's 0% keyframe is
+       intentionally identical to the glow's 100% keyframe so there's
+       no visual jump when the second animation replaces the first. */
+
+    /* Phase 1 — freeze tilt + glow ramp */
+    .cat-row.selected-glow {
+      /* Glow duration = Path A total duration. If TIMING.catRowExitStagger
+         or cat-slide-out-left duration changes, update here too. */
+      animation: cat-glow-ramp 700ms ease-in both;
+      /* Sit above siblings so the glow halo isn't clipped by them */
+      z-index: 5;
+    }
+    .cat-row.selected-glow > .btn-3d {
+      /* Stop the infinite btn3d-tilt rotation and snap to flat-facing
+         so the glow "reads" as a stable TV screen surface. */
+      animation: none !important;
+      transform: perspective(1000px) rotateX(0deg);
+    }
+    @keyframes cat-glow-ramp {
+      from {
+        filter:
+          drop-shadow(0 0  0px transparent)
+          drop-shadow(0 0  0px transparent)
+          brightness(1)
+          saturate(1);
+      }
+      to {
+        filter:
+          drop-shadow(0 0 22px var(--cat-solid, white))
+          drop-shadow(0 0 44px var(--cat-solid, white))
+          brightness(1.45)
+          saturate(1.35);
+      }
+    }
+
+    /* Phase 2 — CRT power-off sequence.
+       Timing (in % of 490ms total):
+         0–10%  : Brightness surge (residual charge dump)
+         10–40% : Vertical collapse to a thin horizontal line (scaleY)
+         40–55% : Line flashes wider and goes pure white
+         55–70% : Line holds
+         70–85% : Horizontal collapse to a center dot (scaleX)
+         85–92% : Dot persists
+         92–100%: Dot fades to black/nothing
+
+       The 0% keyframe intentionally mirrors cat-glow-ramp's end state. */
+    .cat-row.crt-off {
+      animation: crt-power-off 490ms cubic-bezier(0.55, 0, 0.9, 0.6) both;
+      /* Transform origin at the row's geometric center so the collapse
+         implodes inward from all sides, like a real tube TV. */
+      transform-origin: center center;
+    }
+    @keyframes crt-power-off {
+      /* Match glow end state */
+      0% {
+        transform: scale(1, 1);
+        filter:
+          drop-shadow(0 0 22px var(--cat-solid, white))
+          drop-shadow(0 0 44px var(--cat-solid, white))
+          brightness(1.45) saturate(1.35);
+      }
+      /* Surge peak */
+      10% {
+        transform: scale(1, 1);
+        filter:
+          drop-shadow(0 0 30px var(--cat-solid, white))
+          drop-shadow(0 0 60px var(--cat-solid, white))
+          brightness(2.4) saturate(1.5);
+      }
+      /* Vertical collapse complete — thin horizontal line */
+      40% {
+        transform: scale(1, 0.02);
+        filter:
+          drop-shadow(0 0 24px var(--cat-solid, white))
+          brightness(3.2) saturate(0.4);
+      }
+      /* Line flashes wider and goes pure white */
+      55% {
+        transform: scale(1.06, 0.02);
+        filter:
+          drop-shadow(0 0 18px white)
+          brightness(5) saturate(0);
+      }
+      /* Line holds briefly */
+      70% {
+        transform: scale(1, 0.02);
+        filter:
+          drop-shadow(0 0 14px white)
+          brightness(4.5) saturate(0);
+      }
+      /* Horizontal collapse to a center dot */
+      85% {
+        transform: scale(0.015, 0.02);
+        filter:
+          drop-shadow(0 0 10px white)
+          brightness(5) saturate(0);
+      }
+      /* Dot persists momentarily */
+      92% {
+        transform: scale(0.015, 0.02);
+        filter:
+          drop-shadow(0 0 10px white)
+          brightness(5) saturate(0);
+        opacity: 1;
+      }
+      /* Dot fades to nothing */
+      100% {
+        transform: scale(0, 0);
+        filter:
+          drop-shadow(0 0 0 transparent)
+          brightness(0) saturate(0);
+        opacity: 0;
+      }
     }
     /* Bronze (1.5x): slide + 1 bounce + settle — 3 spins over full duration */
     @keyframes badge-slide-1 {
@@ -788,7 +1142,7 @@
       border: 2px solid var(--coin-border, #333);
       box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.4);
       cursor: default;
-      animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-1 2s ease-out backwards;
+      animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-1 1.6s ease-out backwards;
       transition: transform 0.3s ease;
     }
     .cat-mult-badge:hover {
@@ -807,7 +1161,7 @@
       --coin-border: #555;
       --coin-text: #111;
       --coin-glow: rgba(192, 192, 192, 0.6);
-      animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-2 2.8s ease-out backwards;
+      animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-2 2.24s ease-out backwards;
     }
     /* Gold — 3x: 3 bounces, proportionally longer */
     .coin-gold {
@@ -815,7 +1169,7 @@
       --coin-border: #6b5210;
       --coin-text: #2a1f00;
       --coin-glow: rgba(212, 168, 48, 0.6);
-      animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-3 3.6s ease-out backwards;
+      animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-3 2.88s ease-out backwards;
     }
     @keyframes coin-pulse {
       0%, 100% { box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.4), 0 0 6px var(--coin-glow, rgba(200,200,200,0.4)); }
@@ -860,23 +1214,49 @@
       font-weight: 300;
       color: #111;
       text-align: center;
+      opacity: 0; /* starts hidden; fade-in class triggers a delayed reveal
+                     once all cat-rows have slid into position */
     }
+    .pills-divider.fade-in {
+      animation: pills-divider-fade-in 0.35s ease-out forwards;
+    }
+    @keyframes pills-divider-fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    /* Category groups — CSS grid with explicit, fixed-size row tracks.
+       Grid (not flex) is critical: when the selected cat-row goes
+       `position: absolute` during the exit tumble, the remaining rows
+       MUST stay pinned to their original vertical positions. Flex would
+       reflow the survivors upward into the gap; grid keeps them pinned
+       because each child is assigned to a specific grid-row via
+       :nth-child below. */
     .trivia-categories {
       width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      display: grid;
+      grid-template-rows: repeat(3, 80px);
+      justify-items: center;
       gap: 8px;
       padding: 20px 16px 16px;
+      box-sizing: border-box;
     }
     .survey-categories {
       width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      display: grid;
+      grid-template-rows: 80px;
+      justify-items: center;
       gap: 8px;
       padding: 20px 16px 16px;
+      box-sizing: border-box;
     }
+    /* Pin each cat-row to its grid track. :nth-child counts DOM order
+       regardless of position/display, so a row that goes absolute still
+       "owns" its track — it just doesn't occupy it visually. Survivors
+       keep their assigned tracks and don't slide into the gap. */
+    .trivia-categories > .cat-row:nth-child(1) { grid-row: 1; }
+    .trivia-categories > .cat-row:nth-child(2) { grid-row: 2; }
+    .trivia-categories > .cat-row:nth-child(3) { grid-row: 3; }
+    .survey-categories > .cat-row:nth-child(1) { grid-row: 1; }
     .pills-desc {
       font-size: 0.68rem;
       color: #888;
@@ -885,13 +1265,17 @@
     }
 
     /* Category + Question box */
-    #question-box.team-red  { background: color-mix(in srgb, var(--red-bg)  80%, black); }
-    #question-box.team-blue { background: color-mix(in srgb, var(--blue-bg) 80%, black); }
     #question-box {
-      background: #111111;
-      border-radius: 14px;
+      background: #f9f9e8;
+      border-radius: 0 0 14px 14px;
       padding: 16px 24px;
-      margin: 0 0 10px 0;
+      margin: 0 auto 10px auto;
+      width: 95%;
+      max-height: 180px;
+      overflow: hidden;
+      color: #111;
+      font-family: "Bitcount Single", sans-serif;
+      font-weight: 300;
     }
 
     #category {
@@ -903,9 +1287,10 @@
       letter-spacing: 1px;
     }
     #question {
-      font-size: 1.25rem;
       font-weight: normal;
-      color: #fff;
+      /* Shrink-to-fit by char count: fitByCharCount() sets --fit-scale when text is set. */
+      --fit-base: 1.8rem;
+      font-size: calc(var(--fit-base) * var(--fit-scale, 1));
     }
     #accuracy-note {
       font-size: .7rem;
@@ -942,7 +1327,8 @@
     /* Scoreboard: 5-col grid — #222 frame with #111 value fields */
     #scoreboard {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+      align-items: end; /* bottom-justify all columns so their bottom edges align */
       gap: 10px;
       width: 100%;
       background: #222;
@@ -952,6 +1338,13 @@
       text-transform: uppercase;
       border-radius: 0 0 10px 10px;
       padding: 20px;
+    }
+    /* Scoreboard entry — starts above canvas, slides down at game start */
+    #scoreboard.offscreen { transform: translateY(-110%); }
+    #scoreboard.slide-in  { animation: scoreboard-slide-down 0.5s cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
+    @keyframes scoreboard-slide-down {
+      from { transform: translateY(-110%); }
+      to   { transform: translateY(0); }
     }
 
     /* Game area: board container */
@@ -1012,24 +1405,37 @@
       align-items: center;
       justify-content: center;
     }
+    /* Outer clip container (div). Fixed height, overflow hidden for marquee. */
     .players-list {
-      list-style: none;
-      margin: 0;
-      padding: 6px 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
       background: #111;
       border-radius: 6px;
       height: 80px;
       overflow: hidden;
+    }
+    /* Inner scroll track (ul). Holds the li items in a flex column. */
+    .players-list-track {
+      list-style: none;
+      margin: 0;
+      padding: 4px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    /* Marquee mode: activated for 4+ players. Translate distance is set inline
+       by updatePlayerPanels() via --marquee-distance after measuring items. */
+    .players-list-track.marquee {
+      animation: players-marquee-scroll var(--marquee-duration, 6s) linear infinite;
+    }
+    @keyframes players-marquee-scroll {
+      from { transform: translateY(0); }
+      to   { transform: translateY(var(--marquee-distance, -50%)); }
     }
     .players-list li {
       opacity: 0.5;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      padding: 2px 0;
+      padding: 1.5px 0;
       text-align: center;
       position: relative;
     }
@@ -1057,12 +1463,22 @@
     .team-score-box .team-label {
       padding: 4px 0;
       line-height: 1;
-      height: 1.2em;
+      height: 2.4rem;
+      width: 100%;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    .team-score-box .team-label h4 { margin: 0; font-family: "Bitcount Single"}
+    .team-score-box .team-label h4 {
+      margin: 0;
+      font-family: "Bitcount Single";
+      white-space: nowrap;
+      /* Shrink-to-fit by char count: fitByCharCount() sets --fit-scale.
+         Base tuned so 10 chars ("Turbo Team") fits at scale 1. */
+      --fit-base: 1.5rem;
+      font-size: calc(var(--fit-base) * var(--fit-scale, 1));
+    }
     .team-score-box .team-points {
       position: relative;
       font-size: 3rem;
@@ -1110,25 +1526,27 @@
       background: rgba(34, 34, 34, 0.95);
       font-family: 'Bitcount Single';
       font-weight: 300;
-      padding: 20px 20px 40px;
-      border-radius: 10px 10px 0 0;
+      padding: 20px;
+      border-radius: 0 0 10px 10px;
       text-transform: uppercase;
       overflow: visible;
       display: flex;
       flex-direction: column;
       gap: 6px;
-      margin-bottom: -20px;
+      width: 70%;
+      margin: 0 auto;
+      box-sizing: border-box;
       transition: transform 0.5s ease;
     }
     #board-wrapper.offscreen {
-      transform: translateY(120%);
+      transform: translateY(-120%);
     }
-    @keyframes board-slide-in {
-      from { transform: translateY(120%); }
+    @keyframes board-slide-in-top {
+      from { transform: translateY(-120%); }
       to   { transform: translateY(0); }
     }
     #board-wrapper.slide-in {
-      animation: board-slide-in 0.5s ease forwards;
+      animation: board-slide-in-top 0.5s ease forwards;
     }
 
     /* Board header row — labels on the frame */
@@ -1445,7 +1863,7 @@
     }
 
     /* Input */
-    #input-area { max-width: 88%; margin: 0 auto; border-radius: 10px; border: 3px solid transparent; overflow: hidden; }
+    #input-area { width: 100%; border-radius: 10px; border: 3px solid transparent; overflow: hidden; box-sizing: border-box; }
     #input-area.team-red  { border-color: var(--red-bg);  background: color-mix(in srgb, var(--red-bg)  80%, black); }
     #input-area.team-blue { border-color: var(--blue-bg); background: color-mix(in srgb, var(--blue-bg) 80%, black); }
     #input-area.hidden { display: none; }
@@ -1477,15 +1895,8 @@
     }
 
     #turn-header {
-      padding: 10px 16px;
-      font-size: 1.15rem;
-      font-weight: bold;
-      color: #fff;
-      text-align: center;
-      letter-spacing: 0.5px;
+      display: none;
     }
-    #input-area.team-red #turn-header  { background: var(--red-bg); }
-    #input-area.team-blue #turn-header { background: var(--blue-bg); }
 
     #turn-body {
       background: transparent;
@@ -1505,10 +1916,18 @@
 
     .turn-input-row {
       display: flex;
+      flex-direction: column;
       gap: 8px;
-      align-items: center;
       width: 100%;
-      justify-content: center;
+    }
+    .turn-input-row input[type="text"] {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .turn-input-row .btn {
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0;
     }
 
     /* Message */
@@ -2181,8 +2600,9 @@
 
   <!-- Start screen -->
   <div id="start-screen">
+    <button id="dev-mode-btn" onclick="event.stopPropagation(); activateDevMode();">Dev Mode</button>
     <div id="start-content">
-      <img src="coynefeud1.png" alt="Coyne Feud">
+      <div id="start-logo">GOOD<br>ANSWER</div>
       <h1>Click anywhere to start</h1>
     </div>
   </div>
@@ -2296,61 +2716,71 @@
       <!-- Sidebar zone (25%) — content switches per screen -->
       <div id="sidebar-zone">
 
+        <!-- Persistent phase-indicator header (sits above panel-swap area).
+             Slides in once at game start, out only at resetGame. Content is
+             driven by phase spans inside; the container stays put. -->
+        <div id="phase-indicator" class="team-red">
+          <span class="ph-span ph-category-select"></span>
+          <span class="ph-span ph-gameplay"></span>
+          <span class="ph-span ph-steal-chance"></span>
+          <span class="ph-span ph-round-result"></span>
+        </div>
+
         <!-- Panel A: Category select -->
         <div id="sidebar-category-select">
-          <div id="category-prompt"></div>
           <div id="category-pills-area" class="blend-multiply"></div>
         </div>
 
-        <!-- Panel B: Question answer -->
+        <!-- Panel B: Question answer (3-row grid) -->
         <div id="sidebar-question-answer">
-          <div id="question-box">
-            <div id="category"></div>
-            <div id="question"></div>
-            <div id="accuracy-note">Factual information should be accurate through August, 2025</div>
-          </div>
-          <div id="questionActions">
-            <details class="question-options">
-              <summary>Advanced question options</summary>
-              <div class="flag-links">
-                <a onclick="getNewQuestion()">Get new question (resets the round)</a>
-                &nbsp;|&nbsp;
-                <a onclick="removeQuestion()">Flag question for removal</a>
-                &nbsp;|&nbsp;
-                <a onclick="flagFactCheck()">Flag question for fact check</a>
-                &nbsp;|&nbsp;
-                <a onclick="copyAnswersToClipboard()">Copy answers for judge</a>
-                <span id="copyConfirm" style="margin-left:6px;color:#2e7d32;opacity:0;transition:opacity 0.4s;font-size:0.95em;">Copied!</span>
+          <!-- Row 2: Category + Question -->
+          <div id="sq-zone-content">
+            <div id="question-box">
+              <div id="category"></div>
+              <div id="question"></div>
+              <div id="questionActions">
+                <details class="question-options">
+                  <summary>Advanced question options</summary>
+                  <div class="flag-links">
+                    <a onclick="getNewQuestion()">Get new question (resets the round)</a>
+                    &nbsp;|&nbsp;
+                    <a onclick="removeQuestion()">Flag question for removal</a>
+                    &nbsp;|&nbsp;
+                    <a onclick="flagFactCheck()">Flag question for fact check</a>
+                    &nbsp;|&nbsp;
+                    <a onclick="copyAnswersToClipboard()">Copy answers for judge</a>
+                    <span id="copyConfirm" style="margin-left:6px;color:#2e7d32;opacity:0;transition:opacity 0.4s;font-size:0.95em;">Copied!</span>
+                  </div>
+                </details>
               </div>
-            </details>
+            </div>
           </div>
-
-          <!-- Turn + Input -->
-          <div id="input-area">
-            <div id="turn-input-box" class="team-red">
-              <div id="turn-header">Red Team has the board</div>
-              <div id="turn-body">
-                <div id="turn-subtext">Player is up</div>
-                <div class="turn-input-row">
-                  <input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" />
-                  <button class="btn" onclick="submitGuess()">Submit</button>
+          <!-- Row 3: Input area -->
+          <div id="sq-zone-input">
+            <!-- Answer history tray -->
+            <div id="history" class="hidden">
+              <div id="history-tray-handle" onclick="toggleHistoryTray()">
+                <span>Answer History</span>
+                <span class="tray-arrow">&#9650;</span>
+              </div>
+              <div id="history-tray-panel">
+                <ul id="historyList"></ul>
+              </div>
+            </div>
+            <div id="input-area">
+              <div id="turn-input-box" class="team-red">
+                <div id="turn-header">Red Team has the board</div>
+                <div id="turn-body">
+                  <div id="turn-subtext">Player is up</div>
+                  <div class="turn-input-row">
+                    <input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" />
+                    <button class="btn" onclick="submitGuess()">Submit</button>
+                  </div>
                 </div>
               </div>
+              <div id="endRound"></div>
             </div>
-            <div id="endRound"></div>
-          </div>
-
-          <div id="message"></div>
-
-          <!-- Answer history tray -->
-          <div id="history" class="hidden">
-            <div id="history-tray-handle" onclick="toggleHistoryTray()">
-              <span>Answer History</span>
-              <span class="tray-arrow">▲</span>
-            </div>
-            <div id="history-tray-panel">
-              <ul id="historyList"></ul>
-            </div>
+            <div id="message"></div>
           </div>
 
         </div>
@@ -2362,10 +2792,10 @@
 
         <!-- Header zone: scoreboard row -->
         <div id="header-zone">
-          <div id="scoreboard">
+          <div id="scoreboard" class="offscreen">
             <div id="red-players-panel" class="players-panel">
               <div class="players-panel-header">Turn Order</div>
-              <ul id="red-players-list" class="players-list"></ul>
+              <div id="red-players-list" class="players-list"></div>
             </div>
             <div class="team-score-box" id="red-score-box">
               <div class="team-label"><h4>Red Team</h4></div>
@@ -2385,7 +2815,7 @@
             </div>
             <div id="blue-players-panel" class="players-panel">
               <div class="players-panel-header">Turn Order</div>
-              <ul id="blue-players-list" class="players-list"></ul>
+              <div id="blue-players-list" class="players-list"></div>
             </div>
           </div>
         </div><!-- end #header-zone -->
@@ -2395,7 +2825,7 @@
 
           <!-- Board: fm-style grid -->
           <div id="game-area">
-            <div id="board-wrapper">
+            <div id="board-wrapper" class="offscreen">
               <div class="board-header">
                 <span></span>
                 <span>Answers</span>
@@ -2514,6 +2944,147 @@
   </div><!-- /game-root -->
 
   <script>
+    /* ═══════════════════════════════════════════════════════════════
+       anim — small animation orchestration helper
+       ═══════════════════════════════════════════════════════════════
+       Wraps the patterns we kept re-inventing by hand:
+
+         anim.play(el, "slide-in")     ← add class, await animationend
+         anim.replay(el, "slide-in")   ← replay a keyframe from the start
+         anim.done(el)                 ← await the next animationend
+         anim.stagger(els, {gap:150})  ← set animation-delay per element
+         anim.sequence([...fns])       ← run async fns one after another
+         anim.parallel([...fns])       ← run async fns concurrently
+         anim.wait(ms)                 ← Promise-wrapped setTimeout
+         anim.setDelay(el, ms)         ← inline animation-delay
+
+       All times in MILLISECONDS. The helper converts to seconds
+       internally when writing CSS `animation-delay`.
+
+       The helper does NOT replace @keyframes or CSS state classes.
+       It replaces the JS boilerplate around them (animationend
+       listeners, void-offsetWidth replay hacks, setTimeout chains).
+    ─────────────────────────────────────────────────────────────── */
+    const anim = (() => {
+      const resolveEl = (t) => typeof t === "string" ? document.querySelector(t) : t;
+
+      // Resolve when the currently-running animation(s) on `el` finish.
+      // Uses only the Web Animations API's Animation.finished promise
+      // (not the `animationend` event) because events can be queued
+      // across animation boundaries: a just-finished animation's
+      // animationend can dispatch *after* a new animation has replaced
+      // it, and a fresh listener added between the two would catch the
+      // stale event and resolve prematurely. WAAPI's per-animation
+      // `.finished` promise is tied to the specific Animation object,
+      // so there's no cross-animation confusion.
+      //
+      // Robust against:
+      //   - the element having no current animation at all (resolves immediately)
+      //   - the animation being canceled mid-flight (.finished rejects,
+      //     we catch it and resolve anyway)
+      //   - two consecutive done() calls on the same element — each
+      //     await is scoped to the animations running at the time of
+      //     that call, via the rAF snapshot.
+      //   - playback-rate slowdown (DevTools) — .finished is driven by
+      //     the animation's internal timeline, not wall-clock, so it
+      //     correctly waits for the visible end.
+      function done(el) {
+        el = resolveEl(el);
+        if (!el || !el.getAnimations) return Promise.resolve();
+        return new Promise(resolve => {
+          // Wait one frame so any just-added CSS class has had its
+          // animation registered before we snapshot.
+          requestAnimationFrame(() => {
+            const anims = el.getAnimations({ subtree: false });
+            if (anims.length === 0) { resolve(); return; }
+            Promise.all(anims.map(a => a.finished.catch(() => {}))).then(() => resolve());
+          });
+        });
+      }
+
+      // Add a class and return a Promise that resolves when the
+      // animation it triggers finishes.
+      function play(el, className) {
+        el = resolveEl(el);
+        if (!el) return Promise.resolve();
+        const p = done(el);
+        el.classList.add(className);
+        return p;
+      }
+
+      // Force a keyframe restart: remove class, force reflow, re-add.
+      // Replaces the `void el.offsetWidth` dance we kept copy-pasting.
+      function replay(el, className) {
+        el = resolveEl(el);
+        if (!el) return Promise.resolve();
+        el.classList.remove(className);
+        void el.offsetWidth;
+        return play(el, className);
+      }
+
+      // Stagger `animation-delay` across a list of elements.
+      //   els:  NodeList / Array / array-like of elements or selectors
+      //   opts: { gap: ms between starts, baseDelay: ms before first,
+      //           className: optional class to add to each }
+      // Resolves when the LAST element's animation finishes. Assumes
+      // each element already has (or will have, via className) a CSS
+      // `animation` property — stagger only controls the delay.
+      function stagger(els, opts = {}) {
+        const { gap = 150, baseDelay = 0, className } = opts;
+        els = Array.from(els).map(resolveEl).filter(Boolean);
+        if (els.length === 0) return Promise.resolve();
+        els.forEach((el, i) => {
+          el.style.animationDelay = ((baseDelay + i * gap) / 1000) + "s";
+        });
+        if (className) els.forEach(el => el.classList.add(className));
+        return done(els[els.length - 1]);
+      }
+
+      // Run async functions one after another. Each receives no args;
+      // each should return a Promise.
+      async function sequence(fns) {
+        for (const fn of fns) { await fn(); }
+      }
+
+      // Run async functions concurrently. Resolves when all finish.
+      function parallel(fns) {
+        return Promise.all(fns.map(fn => fn()));
+      }
+
+      // Promise-wrapped setTimeout. Use inside sequences for pure
+      // time-based waits.
+      function wait(ms) {
+        return new Promise(r => setTimeout(r, ms));
+      }
+
+      // Set inline animation-delay on an element, in ms.
+      function setDelay(el, ms) {
+        el = resolveEl(el);
+        if (el) el.style.animationDelay = (ms / 1000) + "s";
+      }
+
+      return { done, play, replay, stagger, sequence, parallel, wait, setDelay };
+    })();
+
+    /* Central timing constants — tune animation feel in one place.
+       All values in milliseconds. CSS @keyframes still own their own
+       durations; this object holds JS-driven delays and the canonical
+       values we reference from multiple places. */
+    const TIMING = {
+      // Phase indicator (sidebar header)
+      phaseTextEnterDelay:   400,  // delay before phase text drops in at game start
+      phaseKnockOverlap:     120,  // overlap window before phase swap during steal knock
+
+      // Category pills
+      catRowStagger:         150,  // ms between successive cat-row slide-ins
+      catRowSlideDuration:   400,  // must match cat-slide-in duration in CSS
+      catRowExitStagger:     100,  // ms between successive cat-row exits
+      pillsDividerBuffer:     50,  // extra ms after last cat-row settles before divider fades in
+
+      // Setup → game transition
+      setupExitBeatGap:       50,  // pause between the 3 setup exit beats
+    };
+
     const sfxCorrect     = new Audio("correct.mp3");
     const sfxWrong       = new Audio("wrong.mp3");
     const sfxGoodAnswer  = new Audio("goodanswer.mp3");
@@ -2739,6 +3310,9 @@ document.addEventListener('keydown', e => {
     let categoryMultiplier = 1;
     let categoryMultipliers = {};
 
+    let devMode = false;
+    let devModeAllowedQuestions = null;
+
     let roundNumber = 0;
     let teamNames = ["Red Team", "Blue Team"];
     let startingTeam = 0;
@@ -2749,10 +3323,61 @@ document.addEventListener('keydown', e => {
       try {
         const res = await fetch("master_question_bank.json");
         questions = await res.json();
+        if (devMode) computeDevModeQuestions();
       } catch (e) {
         console.error("Failed to load question bank", e);
         document.getElementById("question").textContent = "⚠️ Error loading questions.";
       }
+    }
+
+    function computeDevModeQuestions() {
+      const catCount = {};
+      devModeAllowedQuestions = new Set();
+      for (let i = 0; i < questions.length; i++) {
+        const cat = questions[i].category;
+        catCount[cat] = (catCount[cat] || 0) + 1;
+        if (catCount[cat] <= 3) devModeAllowedQuestions.add(i);
+      }
+    }
+
+    function activateDevMode() {
+      devMode = true;
+      if (questions.length > 0) computeDevModeQuestions();
+
+      // Mute music before starting bg music so the fade-in captures gain=0
+      volumeMusic = 0;
+      document.getElementById('vol-music').value = 0;
+      applyVolumes();
+
+      // Dismiss start screen (mirrors the normal click handler)
+      const startScreen = document.getElementById('start-screen');
+      const setup = document.getElementById('setup');
+      startBgMusic();
+      startScreen.classList.add('dismissing');
+      setup.style.transition = 'transform 0.5s cubic-bezier(0.2, 0, 0.3, 1)';
+      setup.style.transform = 'translateX(0)';
+      startScreen.addEventListener('animationend', () => {
+        startScreen.style.display = 'none';
+        setup.style.transition = '';
+      }, { once: true });
+
+      // Pre-select Rounds mode with 2 rounds
+      setGameMode('rounds');
+      document.getElementById('roundsInput').value = 2;
+      document.querySelectorAll('.rounds-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelector('.rounds-btn').classList.add('selected'); // first btn is "2"
+
+      // Pre-fill team names
+      document.getElementById('redTeamName').value = 'Turbo Team';
+      document.getElementById('blueTeamName').value = 'Chubby Buddies';
+
+      // Pre-fill player names
+      const redPlayers = document.querySelectorAll('.redPlayer');
+      const bluePlayers = document.querySelectorAll('.bluePlayer');
+      const redNames = ['Roy Donk', 'Paul Buffano'];
+      const blueNames = ['Jamie Taco', 'Wagoo'];
+      redNames.forEach((name, i) => { if (redPlayers[i]) redPlayers[i].value = name; });
+      blueNames.forEach((name, i) => { if (bluePlayers[i]) bluePlayers[i].value = name; });
     }
 
     function setGameMode(mode) {
@@ -2794,27 +3419,72 @@ document.addEventListener('keydown', e => {
       const btn     = document.getElementById('start-game-btn');
       const columns = document.getElementById('player-columns');
       const title   = document.getElementById('setup-title');
+      const gap = TIMING.setupExitBeatGap;
 
-      btn.classList.add('exit-down');
-      btn.addEventListener('animationend', () => {
-        setTimeout(() => {
-          columns.classList.add('exit-right');
-          columns.addEventListener('animationend', () => {
-            setTimeout(() => {
-              title.classList.add('exit-up');
-              title.addEventListener('animationend', () => {
-                startGame();
-              }, { once: true });
-            }, 50);
-          }, { once: true });
-        }, 50);
-      }, { once: true });
+      anim.sequence([
+        () => anim.play(btn, 'exit-down'),
+        () => anim.wait(gap),
+        () => anim.play(columns, 'exit-right'),
+        () => anim.wait(gap),
+        () => anim.play(title, 'exit-up'),
+        () => startGame(),
+      ]);
     }
 
     function selectRounds(n, btn) {
       document.getElementById('roundsInput').value = n;
       document.querySelectorAll('.rounds-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
+    }
+
+    /* Phase indicator helpers — one persistent container, four phase spans.
+       setPhase() transitions between phases: outgoing span animates out,
+       incoming span animates in. Optional "knock" mode overlaps the two
+       briefly so a collision is visible (used for strike-3 → steal-chance). */
+    function setPhaseText(phase, text) {
+      const span = document.querySelector(`#phase-indicator .ph-${phase}`);
+      if (span) span.textContent = text;
+    }
+    function setPhaseTeamColor(teamIdx) {
+      const pi = document.getElementById("phase-indicator");
+      if (!pi) return;
+      pi.classList.remove("team-red", "team-blue");
+      pi.classList.add(teamIdx === 0 ? "team-red" : "team-blue");
+    }
+    async function setPhase(newPhase, opts = {}) {
+      const pi = document.getElementById("phase-indicator");
+      if (!pi) return;
+      const current = pi.getAttribute("data-phase");
+      if (current === newPhase) return;
+      const outgoing = current ? pi.querySelector(`.ph-${current}`) : null;
+
+      // Clean up any stale exit classes on all spans
+      pi.querySelectorAll(".ph-span").forEach(s => s.classList.remove("ph-exiting", "ph-knocked"));
+
+      if (outgoing) {
+        const exitClass = opts.knock ? "ph-knocked" : "ph-exiting";
+        // Fire-and-forget: clean up the class when the exit animation ends
+        anim.play(outgoing, exitClass).then(() => outgoing.classList.remove(exitClass));
+      }
+      // Knock mode: brief overlap window before phase swap so the two spans collide
+      if (opts.knock) await anim.wait(TIMING.phaseKnockOverlap);
+      pi.setAttribute("data-phase", newPhase);
+    }
+    function showPhaseIndicator() {
+      const pi = document.getElementById("phase-indicator");
+      if (!pi) return;
+      pi.classList.remove("offscreen", "slide-out");
+      return anim.replay(pi, "slide-in");
+    }
+    function hidePhaseIndicator() {
+      const pi = document.getElementById("phase-indicator");
+      if (!pi) return;
+      pi.classList.remove("slide-in");
+      return anim.play(pi, "slide-out").then(() => {
+        pi.classList.add("offscreen");
+        pi.classList.remove("slide-out");
+        pi.removeAttribute("data-phase");
+      });
     }
 
     function startGame() {
@@ -2838,8 +3508,12 @@ document.addEventListener('keydown', e => {
 
       teamNames[0] = document.getElementById("redTeamName").value.trim() || "Red Team";
       teamNames[1] = document.getElementById("blueTeamName").value.trim() || "Blue Team";
-      document.querySelector("#red-score-box .team-label h4").textContent = teamNames[0];
-      document.querySelector("#blue-score-box .team-label h4").textContent = teamNames[1];
+      const redLabelH4 = document.querySelector("#red-score-box .team-label h4");
+      const blueLabelH4 = document.querySelector("#blue-score-box .team-label h4");
+      redLabelH4.textContent = teamNames[0];
+      blueLabelH4.textContent = teamNames[1];
+      fitByCharCount(redLabelH4, 10);
+      fitByCharCount(blueLabelH4, 10);
 
       teamPlayers[0] = Array.from(document.querySelectorAll(".redPlayer")).map(i=>i.value.trim()).filter(Boolean);
       teamPlayers[1] = Array.from(document.querySelectorAll(".bluePlayer")).map(i=>i.value.trim()).filter(Boolean);
@@ -2852,6 +3526,27 @@ document.addEventListener('keydown', e => {
       document.getElementById("input-area").classList.add("hidden");
       document.getElementById("history").classList.add("hidden");
       document.getElementById("roundTarget").textContent = maxRounds || '—';
+
+      // Phase indicator: start offscreen, slide in empty, then advanceRound()
+      // will assign the category-select phase as a second beat.
+      const pi = document.getElementById("phase-indicator");
+      if (pi) {
+        pi.classList.add("offscreen");
+        pi.removeAttribute("data-phase");
+      }
+      showPhaseIndicator();
+
+      // Scoreboard: slides down from above the canvas into place
+      const sb = document.getElementById("scoreboard");
+      if (sb) {
+        sb.classList.remove("slide-in");
+        sb.classList.add("offscreen");
+        // Next frame: remove offscreen + trigger slide-in animation
+        requestAnimationFrame(() => {
+          sb.classList.remove("offscreen");
+          sb.classList.add("slide-in");
+        });
+      }
 
       advanceRound();
     }
@@ -2869,7 +3564,17 @@ document.addEventListener('keydown', e => {
       const catMultEl = document.getElementById("cat-mult-indicator");
       if (catMultEl) catMultEl.style.display = "none";
 
+      // Clean up category header elements from previous round
+      document.querySelectorAll("#sq-zone-content > .cat-row").forEach(el => el.remove());
+      const oldCatLabel = document.getElementById("cat-label");
+      if (oldCatLabel) oldCatLabel.remove();
+      document.querySelectorAll(".board-footer .cat-mult-badge").forEach(el => el.remove());
+      // Remove entrance animation classes so they replay next round
+      document.getElementById("question")?.classList.remove("question-enter");
+      document.getElementById("sq-zone-input")?.classList.remove("input-enter");
+
       document.getElementById("category").textContent = "";
+      document.getElementById("category").style.display = "";
       document.getElementById("question").textContent = "";
       document.getElementById("questionActions").style.display = "none";
       document.querySelector(".question-options").removeAttribute("open");
@@ -2919,7 +3624,7 @@ document.addEventListener('keydown', e => {
     }
 
     function showCategorySelection() {
-      const remainingIdx = questions.map((q, idx) => !usedQuestions.includes(idx) ? idx : null).filter(i => i !== null);
+      const remainingIdx = questions.map((q, idx) => !usedQuestions.includes(idx) && (!devModeAllowedQuestions || devModeAllowedQuestions.has(idx)) ? idx : null).filter(i => i !== null);
       const hasSurvey = remainingIdx.some(i => questions[i].category === 'Survey');
       const objCats = [...new Set(remainingIdx.filter(i => questions[i].category !== 'Survey').map(i => questions[i].category))];
       if (objCats.length === 0 && !hasSurvey) { endGame("No more questions available."); return; }
@@ -2936,9 +3641,15 @@ document.addEventListener('keydown', e => {
       if (hasSurvey) allPicks.push('Survey');
       allPicks.forEach(cat => { categoryMultipliers[cat] = rollCategoryMultiplier(); });
 
-      // Populate team prompt
+      // Populate team prompt via phase indicator
       const teamName = teamNames[teamTurn];
-      document.getElementById("category-prompt").textContent = `${teamName}, select a category:`;
+      setPhaseText("category-select", `${teamName}, select a category:`);
+      setPhaseTeamColor(teamTurn);
+      // Delay the phase assignment a beat after container slide-in at game
+      // start so the container arrives empty and text slides in second.
+      // For subsequent rounds the container is already in place so this
+      // just drives the normal text swap.
+      anim.wait(TIMING.phaseTextEnterDelay).then(() => setPhase("category-select"));
 
       // Populate pills — trivia group, divider, survey group
       const getCategoryClass = (cat) => {
@@ -2956,7 +3667,10 @@ document.addEventListener('keydown', e => {
         const cm = categoryMultipliers[cat] || 1;
         const coinClass = cm >= 3 ? 'coin-gold' : cm >= 2 ? 'coin-silver' : cm > 1 ? 'coin-bronze' : '';
         const badge = cm > 1 ? `<div class="cat-mult-badge ${coinClass}" title="Points multiplied by ${cm}x this round">${cm}x</div>` : '';
-        return `<div class="cat-row"><button class="cat-select-btn btn-3d${cc ? ' ' + cc : ''}" onclick="pickCategory('${cat.replace(/'/g,"\\'")}')">${s}</button>${badge}</div>`;
+        // Category class on BOTH the row and the button so the row
+        // inherits the `--cat-face` / `--cat-solid` CSS variables for
+        // its own glow/CRT animations during Path B exit.
+        return `<div class="cat-row${cc ? ' ' + cc : ''}"><button class="cat-select-btn btn-3d${cc ? ' ' + cc : ''}" onclick="pickCategory('${cat.replace(/'/g,"\\'")}')">${s}</button>${badge}</div>`;
       };
       let pillsHtml = '<div class="trivia-categories">';
       picks.forEach(c => { pillsHtml += makeBtn(c, c); });
@@ -2969,20 +3683,37 @@ document.addEventListener('keydown', e => {
         pillsHtml += makeBtn('Survey', 'Survey');
         pillsHtml += '</div>';
       }
-      document.getElementById("category-pills-area").innerHTML = pillsHtml;
+      // Populate pills area. The container itself has no entry animation
+      // (see CSS note — opacity would break its mix-blend-mode background).
+      // The cat-rows inside stagger in to give a gradual reveal.
+      const pillsArea = document.getElementById("category-pills-area");
+      pillsArea.innerHTML = pillsHtml;
       setup3dBtns();
 
-      // Stagger slide-in animations: rows first, then badges
+      // Stagger cat-row slide-ins (rows have cat-slide-in animation in CSS)
       const rows = document.querySelectorAll("#category-pills-area .cat-row");
-      rows.forEach((row, i) => { row.style.animationDelay = (i * 0.15) + "s"; });
+      anim.stagger(rows, { gap: TIMING.catRowStagger });
+
+      // Stagger coin badge slide-ins: start after the last row lands, then
+      // space subsequent badges 1s apart so each plays out visibly.
       const badges = document.querySelectorAll("#category-pills-area .cat-mult-badge");
-      let badgeDelay = rows.length * 0.15 + 0.2;
-      badges.forEach((badge) => {
-        badge.style.animationDelay = badgeDelay + "s";
-        // Read this badge's slide duration from computed style (varies by tier)
-        const dur = parseFloat(getComputedStyle(badge).animationDuration.split(', ')[1] || '2');
-        badgeDelay += dur;
+      const badgeBaseDelay = rows.length * TIMING.catRowStagger + 200;
+      badges.forEach((badge, i) => {
+        anim.setDelay(badge, badgeBaseDelay + i * 1000);
       });
+
+      // Pills divider: fade in after all cat-rows settle.
+      // Last row starts at (rows.length - 1) * catRowStagger and each row
+      // takes catRowSlideDuration to finish its slide-in animation.
+      const divider = pillsArea.querySelector(".pills-divider");
+      if (divider) {
+        const lastRowSettleTime = (rows.length - 1) * TIMING.catRowStagger + TIMING.catRowSlideDuration;
+        divider.classList.remove("fade-in");
+        anim.setDelay(divider, lastRowSettleTime + TIMING.pillsDividerBuffer);
+        // Next frame: apply fade-in so the animation starts fresh
+        requestAnimationFrame(() => divider.classList.add("fade-in"));
+      }
+
 
       // Show category-select panel, hide question-answer panel
       document.getElementById("sidebar-category-select").style.display = "flex";
@@ -2998,9 +3729,108 @@ document.addEventListener('keydown', e => {
       }
     }
 
-    function pickCategory(category) {
+    async function animateCategoryTransition(category) {
+      const pillsArea = document.getElementById("category-pills-area");
+      const allRows = Array.from(pillsArea.querySelectorAll(".cat-row"));
+      const divider = pillsArea.querySelector(".pills-divider");
+
+      // Identify the selected row. Everything else participates in
+      // Path A (slide left with stagger).
+      const selectedRow = allRows.find(row => {
+        const btn = row.querySelector(".cat-select-btn");
+        return btn && btn.getAttribute("onclick")?.includes(category.replace(/'/g, "\\'"));
+      });
+
+      // Disable all buttons immediately so nothing else can be clicked
+      allRows.forEach(r => { r.style.pointerEvents = "none"; });
+
+      // CRITICAL: Clear the residual inline `animationDelay` longhand that
+      // `anim.stagger` set during entry. If we don't clear it here:
+      //   - Path A rows reassign `animation` shorthand inline, which *does*
+      //     clear the longhand — so they were fine.
+      //   - Path B's selected row only gets a class (.selected-glow) whose
+      //     shorthand rule's default delay (0s) is SHADOWED by the inline
+      //     longhand, so the glow animation inherits the residual stagger
+      //     delay (0.15s, 0.3s, or 0.45s depending on click position).
+      //     The glow ramp then never actually runs before the JS hands off
+      //     to `.crt-off`, which inherits the same broken delay.
+      // Clearing the longhand here lets both paths start their exit
+      // animations from a clean baseline.
+      allRows.forEach(r => { r.style.animationDelay = ""; });
+      if (divider) divider.style.animationDelay = "";
+
+      // ═════ Path A — Unselected items slide out to the left ═════
+      // Build the exit sequence in DOM order: trivia rows → divider →
+      // survey rows. This matches the "5 rows" mental model where the
+      // divider is just item 4 of 5 that happens to not be a category.
+      // The selected row is filtered out; the divider is never
+      // selectable, so it always participates in the slide-out.
+      const exitSequence = [];
+      pillsArea.querySelectorAll(".trivia-categories > .cat-row").forEach(r => exitSequence.push(r));
+      if (divider) exitSequence.push(divider);
+      pillsArea.querySelectorAll(".survey-categories > .cat-row").forEach(r => exitSequence.push(r));
+      const exitItems = exitSequence.filter(el => el !== selectedRow);
+
+      // Leading pause (100ms) before any item starts exiting
+      let delay = 0.1;
+
+      // Stagger each item sliding out to the left. Fill mode `both` is
+      // critical for the divider (see cat-slide-out-left keyframe notes).
+      const stepSeconds = TIMING.catRowExitStagger / 1000;
+      exitItems.forEach(el => {
+        el.style.animation = `cat-slide-out-left 0.3s ease-in ${delay}s both`;
+        const badge = el.querySelector(".cat-mult-badge");
+        if (badge) {
+          badge.style.animation = `badge-spin-out 0.4s ease-in ${delay}s forwards`;
+        }
+        delay += stepSeconds;
+      });
+
+      // ═════ Path B — Selected category: glow ramp → CRT power-off ═════
+      if (!selectedRow) {
+        // Edge case: no selected row found. Just wait for Path A to finish.
+        await anim.wait(700);
+        return null;
+      }
+
+      // Phase 1: Start the glow ramp simultaneously with Path A.
+      // The `.selected-glow` class also freezes the button's 3D tilt at
+      // flat-facing so the glow reads as a stable TV screen.
+      selectedRow.classList.add("selected-glow");
+
+      // Wait for the glow animation to complete by listening to the
+      // animation itself (NOT setTimeout). This matters because Chrome
+      // DevTools' animation playback-rate slowdown affects CSS animation
+      // progression but NOT setTimeout. If we used `anim.wait(700)`:
+      //   - At 10% speed, setTimeout fires at wall-clock 700ms, but the
+      //     glow has only visually progressed 10% of its timeline.
+      //   - We'd add .crt-off too early, cancel the half-played glow,
+      //     start CRT, and pickCategory would eventually hide the pills
+      //     area while everything was still mid-animation.
+      // `anim.done` waits on animationend events + Animation.finished,
+      // both of which DO track the animation's internal timeline, so the
+      // JS sequencing stays synchronized with the actual visual
+      // progression at any playback rate.
+      //
+      // The glow animation's CSS duration (700ms) is still tuned to match
+      // Path A's total duration at 100% speed — this just ensures the
+      // tuning holds up when the user is inspecting at slower speeds.
+      await anim.done(selectedRow);
+
+      // Phase 2: Classic CRT power-off. The glow's forwards fill is
+      // discarded when `.crt-off` is added (it replaces the animation
+      // property), but the crt-power-off keyframe 0% state is
+      // intentionally identical to the glow's 100% state, so the handoff
+      // is seamless thanks to fill-mode `both`.
+      selectedRow.classList.add("crt-off");
+      await anim.done(selectedRow);
+
+      return selectedRow;
+    }
+
+    async function pickCategory(category) {
       const pool = questions.map((q, idx) => ({q, idx}))
-        .filter(obj => !usedQuestions.includes(obj.idx) && obj.q.category === category);
+        .filter(obj => !usedQuestions.includes(obj.idx) && obj.q.category === category && (!devModeAllowedQuestions || devModeAllowedQuestions.has(obj.idx)));
       if (pool.length === 0) { document.getElementById("question").textContent = "No questions left in this category."; return; }
       const choice = pool[Math.floor(Math.random() * pool.length)];
       currentQuestion = choice.q; usedQuestions.push(choice.idx);
@@ -3016,11 +3846,61 @@ document.addEventListener('keydown', e => {
         }
       }
 
+      // Animate the category transition
+      const selectedRow = await animateCategoryTransition(category);
+
+      // Build a flat category label header
+      const contentZone = document.getElementById("sq-zone-content");
+      const questionBox = document.getElementById("question-box");
+      const oldCategory = document.getElementById("category");
+      if (contentZone) {
+        const catName = currentQuestion.category;
+        const cc = catName.toLowerCase();
+        const colorClass = cc === 'survey' ? 'cat-survey' : cc.includes('science') ? 'cat-science'
+          : cc.includes('geo') ? 'cat-geography' : (cc.includes('pop') || cc.includes('cult')) ? 'cat-popculture'
+          : cc.includes('sport') ? 'cat-sports' : '';
+        const label = document.createElement("div");
+        label.id = "cat-label";
+        if (colorClass) label.classList.add(colorClass);
+        label.innerHTML = `<span>${catName}</span>`;
+        contentZone.insertBefore(label, questionBox);
+      }
+
+      // Place coin badge in board footer if category has a multiplier
+      if (categoryMultiplier > 1) {
+        const boardFooter = document.querySelector(".board-footer");
+        if (boardFooter) {
+          const coinClass = categoryMultiplier >= 3 ? 'coin-gold' : categoryMultiplier >= 2 ? 'coin-silver' : 'coin-bronze';
+          const badge = document.createElement("div");
+          badge.className = `cat-mult-badge ${coinClass}`;
+          badge.textContent = categoryMultiplier + "x";
+          badge.style.cssText = "position:absolute; bottom:-28px; left:50%; transform:translateX(-50%); animation:coin-pulse 1.5s ease-in-out infinite;";
+          boardFooter.appendChild(badge);
+          // Hide the old text indicator
+          const oldIndicator = document.getElementById("cat-mult-indicator");
+          if (oldIndicator) oldIndicator.style.display = "none";
+        }
+      }
+
       // Show question-answer panel, hide category-select panel
       document.getElementById("sidebar-category-select").style.display = "none";
       document.getElementById("sidebar-question-answer").style.display = "flex";
-      document.getElementById("category").textContent = `Category: ${currentQuestion.category}`;
-      document.getElementById("question").textContent = currentQuestion.question;
+
+      // Swap phase indicator: category-select → gameplay.
+      // Container stays put; only text slides out/in.
+      setPhaseText("gameplay", `${teamNames[teamTurn]} has the board`);
+      setPhaseTeamColor(teamTurn);
+      setPhase("gameplay");
+
+      // Hide old #category text — the 3D header replaces it
+      if (oldCategory) oldCategory.style.display = "none";
+      const questionEl = document.getElementById("question");
+      questionEl.textContent = currentQuestion.question;
+      fitByCharCount(questionEl, 45);
+      // Add entrance animations
+      document.getElementById("question")?.classList.add("question-enter");
+      document.getElementById("sq-zone-input")?.classList.add("input-enter");
+
       updateBoard(); updateScores(); updateStrikes(); updateStreakDisplay(); updateHistory(); updateTurn();
       document.getElementById("questionActions").style.display = "block";
       document.getElementById("input-area").classList.remove("hidden");
@@ -3246,6 +4126,12 @@ document.addEventListener('keydown', e => {
     }
 
     function rollCategoryMultiplier() {
+      if (devMode) {
+        if (Math.random() < 0.5) return 3;
+        if (Math.random() < 0.5) return 2;
+        if (Math.random() < 0.5) return 1.5;
+        return 1;
+      }
       const roll = Math.random();
       if (roll < 0.02) return 3;
       if (roll < 0.07) return 2;
@@ -3260,10 +4146,23 @@ document.addEventListener('keydown', e => {
       if (multEl) multEl.textContent = answerMultiplier > 1 ? answerMultiplier.toFixed(1) + "x" : "—";
     }
 
+    const BG_BLOB_DEFAULT = '#513f6d';
+    function updateBlobColor(team) {
+      const root = document.getElementById('game-root');
+      let color = BG_BLOB_DEFAULT;
+      if (team === 'red' || team === 'blue') {
+        const cssVar = team === 'red' ? '--red-bg' : '--blue-bg';
+        color = getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim() || color;
+      }
+      root.style.setProperty('--bg-blob-base', color);
+    }
+
     function updateTurn() {
       const isRed = teamTurn === 0;
       const teamName = isRed ? teamNames[0] : teamNames[1];
       const teamClass = isRed ? "team-red" : "team-blue";
+
+      updateBlobColor(isRed ? 'red' : 'blue');
 
       const box     = document.getElementById("turn-input-box");
       const header  = document.getElementById("turn-header");
@@ -3277,8 +4176,8 @@ document.addEventListener('keydown', e => {
       if (inputArea) { inputArea.classList.remove("team-red","team-blue"); inputArea.classList.add(teamClass); }
       const qbox = document.getElementById("question-box");
       if (qbox) { qbox.classList.remove("team-red","team-blue"); qbox.classList.add(teamClass); }
-      const catPrompt = document.getElementById("category-prompt");
-      if (catPrompt) { catPrompt.classList.remove("team-red","team-blue"); catPrompt.classList.add(teamClass); }
+      // Phase indicator follows team color (smooth CSS transition)
+      setPhaseTeamColor(teamTurn);
 
       if (stealPhase) {
         if (header)  header.textContent  = `${teamName} can STEAL!`;
@@ -3294,21 +4193,61 @@ document.addEventListener('keydown', e => {
       updatePlayerPanels();
     }
 
+    /* Shrink-to-fit by character count. No layout measurement — just arithmetic.
+       Sets --fit-scale on `el`. Tuned to `maxChars`: text <= maxChars renders at
+       base size, longer text scales proportionally. Works because our fonts are
+       roughly monospace and the canvas is a fixed design coordinate space. */
+    function fitByCharCount(el, maxChars, text) {
+      if (!el) return;
+      const len = (text ?? el.textContent).trim().length;
+      const scale = len <= maxChars ? 1 : maxChars / len;
+      el.style.setProperty("--fit-scale", scale);
+    }
+
     function updatePlayerPanels() {
+      // Marquee kicks in when there are more players than fit statically.
+      const MARQUEE_MIN_PLAYERS = 4;
+      // Animation duration scales with player count — each player gets this much time on screen.
+      const MARQUEE_MS_PER_ITEM = 2000;
       [0, 1].forEach(team => {
         const listEl = document.getElementById(team === 0 ? "red-players-list" : "blue-players-list");
         if (!listEl) return;
         const players = teamPlayers[team];
         const curIdx = playerIndex[team] % players.length;
         const isActiveTeam = team === teamTurn;
-        listEl.innerHTML = players.map((name, i) => {
+        const itemHtml = (name, i) => {
           if (i === curIdx && isActiveTeam) {
             const content = `<span class="player-arrow">►</span><span class="player-name">${name}</span>`;
             return `<li class="player-active">${content}</li>`;
           }
           if (i === curIdx) return `<li class="player-next">${name}</li>`;
           return `<li>${name}</li>`;
-        }).join("");
+        };
+        const singleCopy = players.map(itemHtml).join("");
+        const needsMarquee = players.length >= MARQUEE_MIN_PLAYERS;
+        const trackClass = needsMarquee ? "players-list-track marquee" : "players-list-track";
+        const trackContent = needsMarquee ? singleCopy + singleCopy : singleCopy;
+        listEl.innerHTML = `<ul class="${trackClass}">${trackContent}</ul>`;
+
+        if (needsMarquee) {
+          const track = listEl.querySelector(".players-list-track");
+          track.style.setProperty("--marquee-duration", `${players.length * MARQUEE_MS_PER_ITEM / 1000}s`);
+          // Distance between first-copy start and second-copy start — the exact loop distance.
+          // Using offsetTop auto-accounts for padding and gap math, so the loop is seamless.
+          const setMarqueeDistance = () => {
+            const items = track.querySelectorAll("li");
+            if (items.length >= players.length + 1) {
+              const distance = items[players.length].offsetTop - items[0].offsetTop;
+              track.style.setProperty("--marquee-distance", `-${distance}px`);
+            }
+          };
+          setMarqueeDistance();
+          // Re-measure after web fonts load (initial measurement can be off by a few px
+          // if fonts hadn't arrived yet, producing a visible jump at each loop boundary).
+          if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(setMarqueeDistance);
+          }
+        }
       });
     }
 
@@ -3350,6 +4289,10 @@ document.addEventListener('keydown', e => {
             currentStreak++;answerMultiplier=1+(currentStreak*0.2);
             flipTile(idx,'correct',stealTotal,stealMult);updateStreakDisplay();updateHistory();
             awardRoundScore(stealingTeam, (final) => {
+              // Phase indicator: steal-chance → round-result
+              setPhaseText("round-result", `${teamNames[stealingTeam]} stole ${final} points!`);
+              setPhaseTeamColor(stealingTeam);
+              setPhase("round-result");
               if(!checkForWinner())endRound(`🎉 <span class="${stealingTeam===0?"red":"blue"}">${teamNames[stealingTeam]}</span> stole ${final} points!`,stealingTeam);
             });
           } else {
@@ -3357,7 +4300,13 @@ document.addEventListener('keydown', e => {
             guessHistory.push({player:playerName,team:stealingTeam,guess:guess,result:"✗ Wrong (steal)"});
             updateHistory();
             awardRoundScore(1-stealingTeam, (final) => {
-              if(!checkForWinner())endRound(`✅ <span class="${1-stealingTeam===0?"red":"blue"}">${teamNames[1-stealingTeam]}</span> keeps ${final} points!`,1-stealingTeam);
+              // Phase indicator: steal-chance → round-result, revert to
+              // scoring team's color (the team that kept the points)
+              const keepTeam = 1 - stealingTeam;
+              setPhaseText("round-result", `${teamNames[keepTeam]} wins the round and keeps ${final} points!`);
+              setPhaseTeamColor(keepTeam);
+              setPhase("round-result");
+              if(!checkForWinner())endRound(`✅ <span class="${keepTeam===0?"red":"blue"}">${teamNames[keepTeam]}</span> keeps ${final} points!`,keepTeam);
             });
           }
         },1500);
@@ -3369,8 +4318,18 @@ document.addEventListener('keydown', e => {
       const found=foundIdx!==-1;
       if(found){currentStreak++;answerMultiplier=1+(currentStreak*0.2);playCorrect(foundIdx===0);}else{currentStreak=0;answerMultiplier=1.0;playWrong();strikes++;guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:"✗ Wrong"});}playerIndex[teamTurn]=(playerIndex[teamTurn]+1)%teamPlayers[teamTurn].length;
       document.getElementById("message").textContent="";if(found){flipTile(foundIdx,'correct',foundTotal,foundMult);}else{updateBoard();}updateScores();updateStrikes();updateStreakDisplay();updateHistory();updateTurn();document.getElementById("guess")?.focus();
-      if(!found&&strikes>=3){stealPhase=true;teamTurn=1-teamTurn;updateTurn();showStealOverlay();return;}
-      if(revealed.every(r=>r)&&!stealPhase){awardRoundScore(teamTurn, (final) => {if(!checkForWinner())endRound(`🎉 <span class="${teamTurn===0?"red":"blue"}">${teamNames[teamTurn]}</span> revealed all answers! They win ${final} points.`,teamTurn);});}}
+      if(!found&&strikes>=3){stealPhase=true;teamTurn=1-teamTurn;updateTurn();
+        // Phase indicator: gameplay → steal-chance with "knock" collision
+        setPhaseText("steal-chance", `${teamNames[teamTurn]} can steal!`);
+        setPhaseTeamColor(teamTurn);
+        setPhase("steal-chance", { knock: true });
+        showStealOverlay();return;}
+      if(revealed.every(r=>r)&&!stealPhase){awardRoundScore(teamTurn, (final) => {
+        // Phase indicator: gameplay → round-result
+        setPhaseText("round-result", `${teamNames[teamTurn]} won the round with ${final} points!`);
+        setPhaseTeamColor(teamTurn);
+        setPhase("round-result");
+        if(!checkForWinner())endRound(`🎉 <span class="${teamTurn===0?"red":"blue"}">${teamNames[teamTurn]}</span> revealed all answers! They win ${final} points.`,teamTurn);});}}
 
     function checkForWinner() {
       if (gameMode === 'rounds') return false;
@@ -3496,6 +4455,9 @@ document.addEventListener('keydown', e => {
     }
 
     function resetGame(){
+      updateBlobColor();
+      // Slide phase indicator out of view — stays hidden until next startGame
+      hidePhaseIndicator();
       teamScores=[0,0];usedQuestions=[];roundNumber=0;playerIndex=[0,0];startingTeam=0;
       gameMode='score';maxRounds=0;lastRoundWinner=-1;
       document.getElementById('score-option').classList.remove('selected');

@@ -11,11 +11,28 @@ Family Feud-inspired game with original features and styling. Working title: **G
 - **`main`** — active development (formerly `viewport-redesign`)
 - **`coyne-feud-classic`** — the original Coyne Feud family game night tool (formerly `main`). Finished product, not under active development. Do not merge between branches — they are effectively different games.
 
+### Hosting & Deployment
+- **GitHub Pages** serves the game at **https://mikec52.github.io/good-answer/feud.html**
+- Source repo: `mikec52/good-answer` (public), `main` branch → auto-deploys on push
+- **Deploy workflow**: `git push origin main` = live in ~60 seconds. No build step, no config files.
+- GitHub CLI (`gh`) is installed and authenticated for Mike's account (`mikec52`). Git credentials are wired through `gh auth setup-git`.
+- This is a temporary static hosting solution for playtesting. When Phase 2A (Firebase shared state) arrives, the hosting may migrate to Netlify/Vercel/Cloudflare Pages for serverless function support — or Firebase Hosting itself. The migration is trivial since all these platforms point at the same GitHub repo.
+
 ### File organization
 - **`drafts/`** — design mockups, PSD source files, Excel layouts (git-ignored)
 - **`outdated/`** — deprecated questions and assets (git-ignored)
 - **`.gitignore`** excludes: `drafts/`, `outdated/`, `*.psd`, `*.xlsx`, `*.rtfd`, `.DS_Store`, `.variants_batch_id`
 - Audio and image files used by the game **are tracked** in git — include them in commits
+
+### Filename conventions
+- **All lowercase** — macOS is case-insensitive but Linux servers (GitHub Pages) are case-sensitive. Mismatched casing works locally but breaks in production.
+- **No spaces** — use hyphens or underscores. Spaces require URL-encoding (`%20`) and quoting in shell commands.
+- **No special characters** beyond hyphens, underscores, and dots.
+
+### Web font rules
+- **Never reference local font names** (e.g. `"Futura"`, `"Dazzle Unicase"`). macOS has fonts installed locally that mask loading failures on other platforms.
+- **Always use the Typekit/Google Fonts identifier** — check the hosted CSS for the exact `font-family` string. Current Typekit kit: `lps4irc`.
+- Key mappings: `"futura-100"` (not `"Futura"`), `"dazzle-unicase"` (not `"Dazzle Unicase"`), `"embarcadero-mvb-pro-condense"`, `"video"`.
 
 ---
 

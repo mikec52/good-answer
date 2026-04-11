@@ -1,11 +1,21 @@
-# Coyne Feud — Project Reference
+# Good Answer — Project Reference
 
 ## Project Overview
-Single-file Family Feud-style game. Stack: vanilla HTML/CSS/JS, no frameworks.
+Family Feud-inspired game with original features and styling. Working title: **Good Answer**. Stack: vanilla HTML/CSS/JS, no frameworks.
 - Main game file: `feud.html`
 - Question bank: `master_question_bank.json` (active file, includes variants — see below)
 - Pre-variants backup: `question_bank_pre-variants.json`
 - Sound files alongside feud.html: `correct.mp3`, `wrong.mp3`, `goodanswer.mp3`, `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`
+
+### Branch structure
+- **`main`** — active development (formerly `viewport-redesign`)
+- **`coyne-feud-classic`** — the original Coyne Feud family game night tool (formerly `main`). Finished product, not under active development. Do not merge between branches — they are effectively different games.
+
+### File organization
+- **`drafts/`** — design mockups, PSD source files, Excel layouts (git-ignored)
+- **`outdated/`** — deprecated questions and assets (git-ignored)
+- **`.gitignore`** excludes: `drafts/`, `outdated/`, `*.psd`, `*.xlsx`, `*.rtfd`, `.DS_Store`, `.variants_batch_id`
+- Audio and image files used by the game **are tracked** in git — include them in commits
 
 ---
 
@@ -13,7 +23,7 @@ Single-file Family Feud-style game. Stack: vanilla HTML/CSS/JS, no frameworks.
 
 The goal is a polished, distributable game app without migrating away from the current HTML/JS stack. Three additive phases:
 
-1. **HTML/JS game (current)** — continue developing `feud.html` as a single-file vanilla build. Same-room play (one device, one host, players submit guesses at the keyboard) is largely functional. Currently undergoing a major **UI overhaul** on the `viewport-redesign` branch — Balatro-inspired contained viewport, zone-based layout, animation-rich transitions (see "Viewport Redesign" section below). This phase is "done" when the game is feature-complete and visually polished for single-session use.
+1. **HTML/JS game (current)** — continue developing `feud.html` as a single-file vanilla build. Same-room play (one device, one host, players submit guesses at the keyboard) is largely functional. Balatro-inspired contained viewport, zone-based layout, animation-rich transitions (see "Viewport Redesign" section below). This phase is "done" when the game is feature-complete and visually polished for single-session use.
 
 2. **Server layer — Remote Play** — add a real-time backend so multiple devices share game state. Preferred implementation: Firebase (managed, no self-hosted server). Two sub-phases:
    - **Phase A — Shared state, no authentication**: All users connect to a unique game URL and see/interact with the same instance. The game does not track individual identity — players coordinate externally (e.g. over a Discord call). Any connected user can submit a guess at any time.
@@ -82,7 +92,7 @@ Cost reference: ~$0.001 per question with Haiku via Batches API (50% batch disco
 
 ---
 
-## Viewport Redesign (branch: `viewport-redesign`)
+## Viewport Redesign
 
 Active UI overhaul inspired by **Balatro's** contained, zone-based, animation-rich design. The goal is a game that feels like a native app, not a browser page — no scrollbars, everything always visible, all transitions animated.
 

@@ -510,31 +510,60 @@
       color: #fba300;
       letter-spacing: 0.1em;
     }
-    #setup-back-btn {
+    /* Shared transport-button style (back, next, start) */
+    .transport-btn {
+      --tp-glyph-size: 1.8rem;
+      --tp-label-size: 0.8rem;
       background: none; border: none; cursor: pointer;
       padding: 10px 0 0; margin: 12px auto 0;
       display: flex; flex-direction: column; align-items: center; gap: 4px;
     }
-    .rewind-glyphs {
+    .transport-glyphs {
       display: flex; align-items: center;
-      font-size: 1.8rem; line-height: 1; color: #fba300;
+      font-size: var(--tp-glyph-size); line-height: 1; color: #fba300;
     }
-    .rewind-glyphs .rw-arrow {
+    .transport-glyphs .tp-arrow {
       display: inline-block;
     }
-    .rewind-glyphs .rw-arrow:nth-child(1) { animation: rw-grow 2s ease-in-out infinite; }
-    .rewind-glyphs .rw-arrow:nth-child(2) { margin-left: -0.45em; animation: rw-grow 2s ease-in-out 0.4s infinite; }
-    @keyframes rw-grow {
+    /* Rewind (◀◀) — back button */
+    .transport-glyphs.tp-rewind .tp-arrow:nth-child(1) { animation: tp-grow 2s ease-in-out infinite; }
+    .transport-glyphs.tp-rewind .tp-arrow:nth-child(2) { margin-left: -0.45em; animation: tp-grow 2s ease-in-out 0.4s infinite; }
+    /* Fast-forward (▶▶) — next button */
+    .transport-glyphs.tp-ffwd .tp-arrow:nth-child(1) { animation: tp-grow 2s ease-in-out infinite; }
+    .transport-glyphs.tp-ffwd .tp-arrow:nth-child(2) { margin-left: -0.45em; animation: tp-grow 2s ease-in-out 0.4s infinite; }
+    /* Play (▶) — start button */
+    .transport-glyphs.tp-play .tp-arrow { animation: tp-grow 2s ease-in-out infinite; }
+    @keyframes tp-grow {
       0%, 100% { transform: scale(1); }
       50%      { transform: scale(1.2); }
     }
-    .rewind-label {
+    .transport-label {
       font-family: 'Futura', sans-serif;
       font-weight: 100;
-      font-size: 0.8rem;
+      font-size: var(--tp-label-size);
       text-transform: uppercase;
       color: #fba300;
       letter-spacing: 0.1em;
+    }
+    /* Per-button size overrides */
+    #setup-back-btn  { --tp-glyph-size: 2.5rem; --tp-label-size: 1.2rem; }
+    #setup-next-btn  { --tp-glyph-size: 1.8rem; --tp-label-size: 0.8rem; }
+    #start-game-btn  { --tp-glyph-size: 5.8rem; --tp-label-size: 1.5rem; }
+
+    /* Start-game container — mirrors #selected-rounds on the right */
+    #start-game-container {
+      position: absolute;
+      right: 0%;
+      top: 50%;
+      transform: translateY(-50%);
+      text-align: center;
+      opacity: 0;
+    }
+    #start-game-container.fade-in {
+      animation: selected-rounds-fade-in 2s ease forwards;
+    }
+    #start-game-container.fade-out {
+      animation: selected-rounds-fade-out 1s ease forwards;
     }
 
     /* Setup exit animations (when starting game) */
@@ -671,7 +700,7 @@
     }
     /* ── Hamburger menu ─────────────────────────────────────────── */
     #menu-container {
-      position: fixed; top: 30px; right: 30px; z-index: 1000;
+      position: absolute; top: 10px; right: 20px; z-index: 1000;
       display: flex; flex-direction: column; align-items: flex-end;
       transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
     }
@@ -685,8 +714,8 @@
     #menu-backdrop.active { opacity: 1; pointer-events: all; }
     #menu-btn {
       width: 44px; height: 44px; border-radius: 50%;
-      background: linear-gradient(180deg,#ffd24d 0%,#ffb000 50%,#d94a00 100%);
-      border: 3px solid #fe5815;
+      background: none;
+      border: none;
       cursor: pointer; flex-shrink: 0;
       position: relative;
     }
@@ -2926,11 +2955,6 @@
   </style>
 </head>
 <body>
-  <div id="menu-container">
-    <button id="menu-btn" onclick="toggleMenu()" title="Settings">
-      <span></span><span></span><span></span><span></span>
-    </button>
-  </div>
   <div id="menu-backdrop"></div>
   <div id="settings-tray">
     <div class="tray-section">
@@ -2984,6 +3008,12 @@
   </div>
   <!-- 16:9 letterbox canvas -->
   <div id="game-root">
+
+  <div id="menu-container">
+    <button id="menu-btn" onclick="toggleMenu()" title="Settings">
+      <span></span><span></span><span></span><span></span>
+    </button>
+  </div>
 
   <!-- Animated background -->
   <svg id="bg-animation" preserveAspectRatio="xMidYMid slice" viewBox="10 10 80 80" xmlns="http://www.w3.org/2000/svg">
@@ -3074,7 +3104,10 @@
           </div>
         </div>
       </div>
-      <button class="btn" style="margin-top: 16px;" onclick="proceedToTeamSetup()">Proceed to Team Setup ►</button>
+      <button id="setup-next-btn" class="transport-btn" onclick="proceedToTeamSetup()">
+        <span class="transport-glyphs tp-ffwd"><span class="tp-arrow">▶</span><span class="tp-arrow">▶</span></span>
+        <span class="transport-label">Next</span>
+      </button>
     </div>
 
     <!-- Step 2: Team setup -->
@@ -3083,9 +3116,9 @@
         <div class="game-length">GAME LENGTH</div>
         <div class="rounds-number"></div>
         <div class="rounds-label">Rounds</div>
-        <button id="setup-back-btn" onclick="backToRoundSelect()">
-          <span class="rewind-glyphs"><span class="rw-arrow">◀</span><span class="rw-arrow">◀</span></span>
-          <span class="rewind-label">Back</span>
+        <button id="setup-back-btn" class="transport-btn" onclick="backToRoundSelect()">
+          <span class="transport-glyphs tp-rewind"><span class="tp-arrow">◀</span><span class="tp-arrow">◀</span></span>
+          <span class="transport-label">Back</span>
         </button>
       </div>
       <div id="player-columns">
@@ -3122,7 +3155,12 @@
           </div>
         </div>
       </div>
-      <button id="start-game-btn" class="btn" style="margin-top: 16px;" onclick="beginStartGameExit()">Start Game</button>
+      <div id="start-game-container">
+        <button id="start-game-btn" class="transport-btn" onclick="beginStartGameExit()">
+          <span class="transport-glyphs tp-play"><span class="tp-arrow">▶</span></span>
+          <span class="transport-label">Start Game</span>
+        </button>
+      </div>
     </div>
 
   </div>
@@ -3809,32 +3847,39 @@ document.addEventListener('keydown', e => {
       if (roundsOpt) roundsOpt.classList.toggle('selected', mode === 'rounds');
     }
 
-    // Step 1 → Step 2: fly out right → fly in left → fade in selected-rounds
+    // Step 1 → Step 2: fly out right → fly in left → fade in flanking elements
     async function proceedToTeamSetup() {
       const step1 = document.getElementById('setup-step-1');
       const step2 = document.getElementById('setup-step-2');
       const sr = document.getElementById('selected-rounds');
+      const sgc = document.getElementById('start-game-container');
       // Populate round count
       sr.querySelector('.rounds-number').textContent = document.getElementById('roundsInput').value;
       sr.classList.remove('fade-in', 'fade-out');
+      sgc.classList.remove('fade-in', 'fade-out');
 
       await anim.play(step1, 'setup-fly-out');
       step1.style.display = 'none';
       step2.style.display = 'flex';
       await anim.play(step2, 'setup-fly-in');
       sr.classList.add('fade-in');
+      sgc.classList.add('fade-in');
     }
 
-    // Step 2 → Step 1: fade out selected-rounds → fly out left → fly in right
+    // Step 2 → Step 1: fade out flanking elements → fly out left → fly in right
     async function backToRoundSelect() {
       const step1 = document.getElementById('setup-step-1');
       const step2 = document.getElementById('setup-step-2');
       const sr = document.getElementById('selected-rounds');
+      const sgc = document.getElementById('start-game-container');
 
       sr.classList.remove('fade-in');
       sr.classList.add('fade-out');
-      await anim.done(sr);
+      sgc.classList.remove('fade-in');
+      sgc.classList.add('fade-out');
+      await anim.parallel([() => anim.done(sr), () => anim.done(sgc)]);
       sr.classList.remove('fade-out');
+      sgc.classList.remove('fade-out');
 
       await anim.play(step2, 'setup-fly-out-left');
       step2.style.display = 'none';
@@ -3854,29 +3899,29 @@ document.addEventListener('keydown', e => {
       step2.style.display = 'none';
       step2.classList.remove('setup-fly-out', 'setup-fly-in', 'setup-fly-out-left');
       document.getElementById('selected-rounds').classList.remove('fade-in', 'fade-out');
-      document.getElementById('start-game-btn').classList.remove('exit-down');
+      document.getElementById('start-game-container').classList.remove('fade-in', 'fade-out');
       document.getElementById('player-columns').classList.remove('exit-right');
       document.getElementById('setup-title').classList.remove('exit-up');
     }
 
     function beginStartGameExit() {
-      const btn     = document.getElementById('start-game-btn');
       const columns = document.getElementById('player-columns');
       const title   = document.getElementById('setup-title');
       const sr      = document.getElementById('selected-rounds');
+      const sgc     = document.getElementById('start-game-container');
       const gap = TIMING.setupExitBeatGap;
 
-      // Fade out selected-rounds in parallel with the beat sequence.
-      // Both must finish before startGame — use anim.parallel so the
-      // slower one (1s fade-out) gates the transition.
+      // Fade out both flanking containers in parallel with the beat sequence.
+      // The 1s fade-outs gate the transition (slower than the beat sequence).
       sr.classList.remove('fade-in');
       sr.classList.add('fade-out');
+      sgc.classList.remove('fade-in');
+      sgc.classList.add('fade-out');
 
       anim.parallel([
         () => anim.done(sr),
+        () => anim.done(sgc),
         () => anim.sequence([
-          () => anim.play(btn, 'exit-down'),
-          () => anim.wait(gap),
           () => anim.play(columns, 'exit-right'),
           () => anim.wait(gap),
           () => anim.play(title, 'exit-up'),

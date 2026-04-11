@@ -1,0 +1,405 @@
+[
+  {
+    "question": "Name the programs with the most NCAA Men's Basketball championships.",
+    "answers": [
+      {"text": "UCLA", "display": "UCLA — 11 championships", "points": 30},
+      {"text": "Kentucky", "display": "Kentucky — 8 championships", "points": 25},
+      {"text": "North Carolina", "display": "North Carolina — 6 championships", "points": 20},
+      {"text": "Duke", "display": "Duke — 5 championships", "points": 15},
+      {"text": "Indiana", "display": "Indiana — 5 championships", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the coaches with the most NCAA Men's Basketball championship titles.",
+    "answers": [
+      {"text": "John Wooden", "display": "John Wooden — 10 titles (UCLA)", "points": 30},
+      {"text": "Adolph Rupp", "display": "Adolph Rupp — 4 titles (Kentucky)", "points": 25},
+      {"text": "Mike Krzyzewski", "display": "Mike Krzyzewski — 5 titles (Duke)", "points": 20},
+      {"text": "Bob Knight", "display": "Bob Knight — 3 titles (Indiana)", "points": 15},
+      {"text": "Roy Williams", "display": "Roy Williams — 3 titles (Kansas/UNC)", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the coaches with the most all-time wins in NCAA Men's Basketball.",
+    "answers": [
+      {"text": "Mike Krzyzewski", "display": "Mike Krzyzewski — 1,202 wins", "points": 30},
+      {"text": "Jim Boeheim", "display": "Jim Boeheim — 1,015 wins", "points": 25},
+      {"text": "Bob Knight", "display": "Bob Knight — 902 wins", "points": 20},
+      {"text": "Roy Williams", "display": "Roy Williams — 903 wins", "points": 15},
+      {"text": "Adolph Rupp", "display": "Adolph Rupp — 876 wins", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players who scored the most points in a single NCAA Tournament game.",
+    "answers": [
+      {"text": "Austin Carr", "display": "Austin Carr (Notre Dame) — 61 pts vs. Ohio (1970)", "points": 30},
+      {"text": "Bill Bradley", "display": "Bill Bradley (Princeton) — 58 pts vs. Wichita St. (1965)", "points": 25},
+      {"text": "Oscar Robertson", "display": "Oscar Robertson (Cincinnati) — 56 pts vs. Seton Hall (1958)", "points": 20},
+      {"text": "Danny Manning", "display": "Danny Manning (Kansas) — 42 pts (1988)", "points": 15},
+      {"text": "Elvin Hayes", "display": "Elvin Hayes (Houston) — 49 pts vs. Loyola (1968)", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the programs that have appeared in the most NCAA Men's Basketball championship games (Final Four title games).",
+    "answers": [
+      {"text": "UCLA", "display": "UCLA — 12 title game appearances", "points": 30},
+      {"text": "North Carolina", "display": "North Carolina — 11 title game appearances", "points": 25},
+      {"text": "Kentucky", "display": "Kentucky — 12 title game appearances", "points": 20},
+      {"text": "Duke", "display": "Duke — 11 title game appearances", "points": 15},
+      {"text": "Kansas", "display": "Kansas — 10 title game appearances", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players who won the most NCAA Tournament Most Outstanding Player awards.",
+    "answers": [
+      {"text": "Lew Alcindor", "display": "Lew Alcindor (UCLA) — 3 MOP awards (1967, 1968, 1969)", "points": 30},
+      {"text": "Bill Walton", "display": "Bill Walton (UCLA) — 2 MOP awards (1972, 1973)", "points": 25},
+      {"text": "Pervis Ellison", "display": "Pervis Ellison (Louisville) — 1 MOP award (1986)", "points": 20},
+      {"text": "Carmelo Anthony", "display": "Carmelo Anthony (Syracuse) — 1 MOP award (2003)", "points": 15},
+      {"text": "Kemba Walker", "display": "Kemba Walker (UConn) — 1 MOP award (2011)", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — After Alcindor (3) and Walton (2), the list becomes a large tie at 1 award each, making it unsuitable for a ranked top-5 format.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the programs with the most Final Four appearances in NCAA Men's Basketball.",
+    "answers": [
+      {"text": "North Carolina", "display": "North Carolina — 21 Final Four appearances", "points": 30},
+      {"text": "UCLA", "display": "UCLA — 18 Final Four appearances", "points": 25},
+      {"text": "Kansas", "display": "Kansas — 16 Final Four appearances", "points": 20},
+      {"text": "Kentucky", "display": "Kentucky — 17 Final Four appearances", "points": 15},
+      {"text": "Duke", "display": "Duke — 16 Final Four appearances", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most points scored in a single NCAA Men's Basketball season.",
+    "answers": [
+      {"text": "Pete Maravich", "display": "Pete Maravich (LSU) — 1,381 pts (1969–70)", "points": 30},
+      {"text": "Pete Maravich", "display": "Pete Maravich (LSU) — 1,168 pts (1968–69)", "points": 25},
+      {"text": "Frank Selvy", "display": "Frank Selvy (Furman) — 1,209 pts (1953–54)", "points": 20},
+      {"text": "Pete Maravich", "display": "Pete Maravich (LSU) — 1,138 pts (1967–68)", "points": 15},
+      {"text": "Johnny Neumann", "display": "Johnny Neumann (Ole Miss) — 923 pts (1970–71)", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — Pete Maravich would occupy three of the top five spots, violating the one-answer-per-entity rule.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the highest single-season scoring average in NCAA Men's Basketball history.",
+    "answers": [
+      {"text": "Pete Maravich", "display": "Pete Maravich (LSU) — 44.5 ppg (1969–70)", "points": 30},
+      {"text": "Pete Maravich", "display": "Pete Maravich (LSU) — 43.8 ppg (1967–68)", "points": 25},
+      {"text": "Frank Selvy", "display": "Frank Selvy (Furman) — 41.7 ppg (1953–54)", "points": 20},
+      {"text": "Pete Maravich", "display": "Pete Maravich (LSU) — 44.2 ppg (1968–69)", "points": 15},
+      {"text": "Johnny Neumann", "display": "Johnny Neumann (Ole Miss) — 40.1 ppg (1970–71)", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — Pete Maravich occupies three of the top five spots, violating the one-answer-per-entity rule.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the all-time leading scorers in NCAA Men's Basketball history.",
+    "answers": [
+      {"text": "Pete Maravich", "display": "Pete Maravich (LSU) — 3,667 pts", "points": 30},
+      {"text": "Kezia Freeman", "display": "Kezia Freeman — 3,638 pts", "points": 25},
+      {"text": "Harry Kelly", "display": "Harry Kelly (Texas Southern) — 3,066 pts", "points": 20},
+      {"text": "Lionel Simmons", "display": "Lionel Simmons (La Salle) — 3,217 pts", "points": 15},
+      {"text": "Oscar Robertson", "display": "Oscar Robertson (Cincinnati) — 2,973 pts", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — Insufficient confidence in exact ordering of #2–#5 all-time Division I scorers. Replaced with a cleaner question.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the NCAA Men's Basketball players with the most career points in Division I history.",
+    "answers": [
+      {"text": "Pete Maravich", "display": "Pete Maravich (LSU) — 3,667 pts", "points": 30},
+      {"text": "Lionel Simmons", "display": "Lionel Simmons (La Salle) — 3,217 pts", "points": 25},
+      {"text": "Alphonso Ford", "display": "Alphonso Ford (Miss. Valley St.) — 3,165 pts", "points": 20},
+      {"text": "Harry Kelly", "display": "Harry Kelly (Texas Southern) — 3,066 pts", "points": 15},
+      {"text": "Hersey Hawkins", "display": "Hersey Hawkins (Bradley) — 3,008 pts", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the schools that have produced the most NBA draft lottery picks.",
+    "answers": [
+      {"text": "Duke", "display": "Duke — most lottery picks all-time", "points": 30},
+      {"text": "Kentucky", "display": "Kentucky — among top lottery pick producers", "points": 25},
+      {"text": "UCLA", "display": "UCLA — among top lottery pick producers", "points": 20},
+      {"text": "North Carolina", "display": "North Carolina — among top lottery pick producers", "points": 15},
+      {"text": "Kansas", "display": "Kansas — among top lottery pick producers", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — Exact lottery pick rankings by school are inconsistently tracked and not well-suited to a precise ranked answer format.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the programs that won the most consecutive NCAA Men's Basketball championships.",
+    "answers": [
+      {"text": "UCLA", "display": "UCLA — 7 consecutive titles (1967–1973)", "points": 30},
+      {"text": "UCLA", "display": "UCLA — 2 consecutive titles (1964–1965)", "points": 25},
+      {"text": "Oklahoma A&M", "display": "Oklahoma A&M — 2 consecutive titles (1945–1946)", "points": 20},
+      {"text": "Kentucky", "display": "Kentucky — 2 consecutive titles (1948–1949)", "points": 15},
+      {"text": "San Francisco", "display": "San Francisco — 2 consecutive titles (1955–1956)", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — UCLA appears twice in the top 5, violating the one-answer-per-entity rule.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the conferences with the most NCAA Men's Basketball championships.",
+    "answers": [
+      {"text": "ACC", "display": "ACC — most championships among active conferences", "points": 30},
+      {"text": "Big Ten", "display": "Big Ten — multiple championships", "points": 25},
+      {"text": "Big Eight / Big 12", "display": "Big Eight / Big 12 — multiple championships", "points": 20},
+      {"text": "SEC", "display": "SEC — multiple championships", "points": 15},
+      {"text": "Pac-10 / Pac-12", "display": "Pac-10 / Pac-12 — multiple championships", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — Conference championship totals involve historical realignment complexity and are not cleanly rankable for game use.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the NCAA Men's Basketball players who were consensus National Player of the Year the most times.",
+    "answers": [
+      {"text": "Oscar Robertson", "display": "Oscar Robertson (Cincinnati) — 3x consensus POY (1958–60)", "points": 30},
+      {"text": "Ralph Beard", "display": "Ralph Beard (Kentucky) — 1x consensus POY", "points": 25},
+      {"text": "David Thompson", "display": "David Thompson (NC State) — 1x consensus POY (1975)", "points": 20},
+      {"text": "Bill Walton", "display": "Bill Walton (UCLA) — 2x consensus POY (1972–73)", "points": 15},
+      {"text": "Lew Alcindor", "display": "Lew Alcindor (UCLA) — 2x consensus POY (1967–69)", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — The definition of \"consensus\" national POY varies by era and awards body; difficult to rank cleanly.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the programs with the most wins in NCAA Men's Basketball history.",
+    "answers": [
+      {"text": "Kentucky", "display": "Kentucky — most all-time wins in Division I", "points": 30},
+      {"text": "Kansas", "display": "Kansas — 2nd most all-time wins", "points": 25},
+      {"text": "North Carolina", "display": "North Carolina — among top all-time win leaders", "points": 20},
+      {"text": "Duke", "display": "Duke — among top all-time win leaders", "points": 15},
+      {"text": "Syracuse", "display": "Syracuse — among top all-time win leaders", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — All-time win totals shift continuously and the display values lack specific numbers for game use.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players who averaged the most points per game in a single NCAA Tournament (minimum 4 games).",
+    "answers": [
+      {"text": "Austin Carr", "display": "Austin Carr (Notre Dame) — 41.3 ppg (1970 Tournament)", "points": 30},
+      {"text": "Bill Bradley", "display": "Bill Bradley (Princeton) — 33.0 ppg (1965 Tournament)", "points": 25},
+      {"text": "Oscar Robertson", "display": "Oscar Robertson (Cincinnati) — 32.0 ppg (1958 Tournament)", "points": 20},
+      {"text": "Jerry West", "display": "Jerry West (West Virginia) — 30.6 ppg (1959 Tournament)", "points": 15},
+      {"text": "Danny Manning", "display": "Danny Manning (Kansas) — 24.8 ppg (1988 Tournament)", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the coaches who have taken the most different programs to the NCAA Tournament Final Four.",
+    "answers": [
+      {"text": "Rick Pitino", "display": "Rick Pitino — Final Fours with Providence, Kentucky, Louisville", "points": 30},
+      {"text": "Larry Brown", "display": "Larry Brown — Final Fours with UCLA and Kansas", "points": 25},
+      {"text": "John Calipari", "display": "John Calipari — Final Fours with UMass, Memphis, Kentucky", "points": 20},
+      {"text": "Billy Donovan", "display": "Billy Donovan — 2 Final Fours with Florida", "points": 15},
+      {"text": "Tom Izzo", "display": "Tom Izzo — 8 Final Fours with Michigan State", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — This question requires verifying exact multi-program Final Four histories and is inconsistently defined. Better asked as a different format.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the coaches with the most NCAA Tournament appearances.",
+    "answers": [
+      {"text": "Mike Krzyzewski", "display": "Mike Krzyzewski (Duke) — 36 NCAA Tournament appearances", "points": 30},
+      {"text": "Roy Williams", "display": "Roy Williams (Kansas/UNC) — 33 NCAA Tournament appearances", "points": 25},
+      {"text": "Jim Boeheim", "display": "Jim Boeheim (Syracuse) — 35 NCAA Tournament appearances", "points": 20},
+      {"text": "Bob Knight", "display": "Bob Knight — 28 NCAA Tournament appearances", "points": 15},
+      {"text": "Lute Olson", "display": "Lute Olson (Arizona) — 23 NCAA Tournament appearances", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the schools that have had the most players selected in the first round of the NBA Draft.",
+    "answers": [
+      {"text": "Kentucky", "display": "Kentucky — most first-round NBA Draft picks all-time", "points": 30},
+      {"text": "Duke", "display": "Duke — among the top first-round pick producers", "points": 25},
+      {"text": "UCLA", "display": "UCLA — among the top first-round pick producers", "points": 20},
+      {"text": "North Carolina", "display": "North Carolina — among the top first-round pick producers", "points": 15},
+      {"text": "Kansas", "display": "Kansas — among the top first-round pick producers", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — Without reliable specific numbers per school, this question cannot generate the precise display values expected by the game format.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the NCAA Men's Basketball coaches with the most Final Four appearances.",
+    "answers": [
+      {"text": "Mike Krzyzewski", "display": "Mike Krzyzewski (Duke) — 13 Final Four appearances", "points": 30},
+      {"text": "John Wooden", "display": "John Wooden (UCLA) — 12 Final Four appearances", "points": 25},
+      {"text": "Tom Izzo", "display": "Tom Izzo (Michigan State) — 9 Final Four appearances", "points": 20},
+      {"text": "Roy Williams", "display": "Roy Williams — 9 Final Four appearances", "points": 15},
+      {"text": "Dean Smith", "display": "Dean Smith (North Carolina) — 11 Final Four appearances", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career rebounds in NCAA Men's Basketball Division I history.",
+    "answers": [
+      {"text": "Tom Gola", "display": "Tom Gola (La Salle) — 2,201 career rebounds", "points": 30},
+      {"text": "Joe Holup", "display": "Joe Holup (George Washington) — 2,030 career rebounds", "points": 25},
+      {"text": "Charlie Slack", "display": "Charlie Slack (Marshall) — 1,916 career rebounds", "points": 20},
+      {"text": "Ed Conlin", "display": "Ed Conlin (Fordham) — 1,884 career rebounds", "points": 15},
+      {"text": "Dickie Hemric", "display": "Dickie Hemric (Wake Forest) — 1,802 career rebounds", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the teams that have gone undefeated en route to winning the NCAA Men's Basketball championship.",
+    "answers": [
+      {"text": "UCLA 1964", "display": "UCLA — 30-0 (1964)", "points": 30},
+      {"text": "UCLA 1967", "display": "UCLA — 30-0 (1967)", "points": 25},
+      {"text": "UCLA 1972", "display": "UCLA — 30-0 (1972)", "points": 20},
+      {"text": "UCLA 1973", "display": "UCLA — 30-0 (1973)", "points": 15},
+      {"text": "Indiana 1976", "display": "Indiana — 32-0 (1976)", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — UCLA occupies four of the five spots, violating the one-answer-per-entity rule.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the NCAA Men's Basketball programs with the highest all-time winning percentage.",
+    "answers": [
+      {"text": "Kentucky", "display": "Kentucky — .763 all-time winning pct.", "points": 30},
+      {"text": "Kansas", "display": "Kansas — .757 all-time winning pct.", "points": 25},
+      {"text": "UNLV", "display": "UNLV — .742 all-time winning pct.", "points": 20},
+      {"text": "Duke", "display": "Duke — .739 all-time winning pct.", "points": 15},
+      {"text": "North Carolina", "display": "North Carolina — .733 all-time winning pct.", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the Naismith College Player of the Year award winners who went on to be the #1 NBA Draft pick that same year.",
+    "answers": [
+      {"text": "Lew Alcindor", "display": "Lew Alcindor (UCLA) — Naismith POY & #1 pick (1969)", "points": 30},
+      {"text": "Bill Walton", "display": "Bill Walton (UCLA) — Naismith POY & #1 pick (1974)", "points": 25},
+      {"text": "Magic Johnson", "display": "Magic Johnson (Michigan State) — AP POY & #1 pick (1979)", "points": 20},
+      {"text": "Patrick Ewing", "display": "Patrick Ewing (Georgetown) — Naismith POY & #1 pick (1985)", "points": 15},
+      {"text": "Pervis Ellison", "display": "Pervis Ellison (Louisville) — Tournament MOP & #1 pick (1989)", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — The intersection of college POY and #1 pick is inconsistently defined across eras and award bodies.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players who scored the most points in a single NCAA championship game.",
+    "answers": [
+      {"text": "Bill Walton", "display": "Bill Walton (UCLA) — 44 pts vs. Memphis State (1973)", "points": 30},
+      {"text": "Gail Goodrich", "display": "Gail Goodrich (UCLA) — 42 pts vs. Michigan (1965)", "points": 25},
+      {"text": "Jack Givens", "display": "Jack Givens (Kentucky) — 41 pts vs. Duke (1978)", "points": 20},
+      {"text": "Carmelo Anthony", "display": "Carmelo Anthony (Syracuse) — 20 pts vs. Kansas (2003)", "points": 15},
+      {"text": "Sherron Collins", "display": "Sherron Collins (Kansas) — 20 pts vs. Memphis (2008)", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the coaches who led teams to perfect regular seasons in NCAA Men's Basketball.",
+    "answers": [
+      {"text": "John Wooden", "display": "John Wooden (UCLA) — multiple undefeated regular seasons", "points": 30},
+      {"text": "Bob Knight", "display": "Bob Knight (Indiana) — 32-0 in 1975–76", "points": 25},
+      {"text": "Bill Guthridge", "display": "Bill Guthridge (UNC) — undefeated regular season", "points": 20},
+      {"text": "Frank Martin", "display": "Frank Martin (Kansas State) — undefeated Big 12 slate", "points": 15},
+      {"text": "Brad Stevens", "display": "Brad Stevens (Butler) — deep tournament runs with perfect stretches", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — Perfect regular season records are difficult to define consistently and the list is not well-suited to a ranked format.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the NCAA Men's Basketball players who won the Wooden Award the most times.",
+    "answers": [
+      {"text": "Ralph Sampson", "display": "Ralph Sampson (Virginia) — 3 Wooden Awards (1981, 1982, 1983)", "points": 30},
+      {"text": "Tim Duncan", "display": "Tim Duncan (Wake Forest) — 2 Wooden Awards (1996, 1997)", "points": 25},
+      {"text": "Lew Alcindor", "display": "Lew Alcindor (UCLA) — Naismith Award precursor, 3-time POY", "points": 20},
+      {"text": "Bill Walton", "display": "Bill Walton (UCLA) — 2-time Naismith POY (1972, 1973)", "points": 15},
+      {"text": "Zion Williamson", "display": "Zion Williamson (Duke) — 2019 Wooden Award", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — Mixing Wooden Award (started 1977) with Naismith POY creates inconsistency. Better to pick one award.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players who won the Wooden Award (NCAA Player of the Year) multiple times.",
+    "answers": [
+      {"text": "Ralph Sampson", "display": "Ralph Sampson (Virginia) — 3 Wooden Awards (1981–83)", "points": 30},
+      {"text": "Tim Duncan", "display": "Tim Duncan (Wake Forest) — 2 Wooden Awards (1996–97)", "points": 25},
+      {"text": "Wayman Tisdale", "display": "Wayman Tisdale (Oklahoma) — 1 Wooden Award (1984)", "points": 20},
+      {"text": "Patrick Ewing", "display": "Patrick Ewing (Georgetown) — 1 Wooden Award (1985)", "points": 15},
+      {"text": "Kenny Walker", "display": "Kenny Walker (Kentucky) — 1 Wooden Award (1986)", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — After Sampson (3) and Duncan (2), all remaining winners have exactly 1 award. Not suitable for a meaningful ranked list.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the NCAA Men's Basketball programs with the most tournament wins all-time.",
+    "answers": [
+      {"text": "Kentucky", "display": "Kentucky — most all-time NCAA Tournament wins", "points": 30},
+      {"text": "North Carolina", "display": "North Carolina — 2nd most all-time NCAA Tournament wins", "points": 25},
+      {"text": "Duke", "display": "Duke — among top tournament win leaders", "points": 20},
+      {"text": "UCLA", "display": "UCLA — among top tournament win leaders", "points": 15},
+      {"text": "Kansas", "display": "Kansas — among top tournament win leaders", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "DISCARDED — Without reliable specific win totals in the display fields, this question does not meet the game's format standards.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the teams that have made the most NCAA Tournament appearances.",
+    "answers": [
+      {"text": "Kentucky", "display": "Kentucky — 61 NCAA Tournament appearances", "points": 30},
+      {"text": "Kansas", "display": "Kansas — 50 NCAA Tournament appearances", "points": 25},
+      {"text": "North Carolina", "display": "North Carolina — 52 NCAA Tournament appearances", "points": 20},
+      {"text": "Duke", "display": "Duke — 45 NCAA Tournament appearances", "points": 15},
+      {"text": "Indiana", "display": "Indiana — 42 NCAA Tournament appearances", "points": 10}
+    ],
+    "category": "NCAA Basketball",
+    "removeQuestion": "",
+    "factCheck": ""
+  }
+]

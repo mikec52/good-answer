@@ -1,0 +1,348 @@
+[
+  {
+    "question": "On A Scale From 1-10, How Good Are You At Keeping A Secret?",
+    "answers": [
+      {
+        "text": "10",
+        "points": 31
+      },
+      {
+        "text": "5",
+        "points": 28
+      },
+      {
+        "text": "8",
+        "points": 21
+      },
+      {
+        "text": "9",
+        "points": 18
+      }
+    ],
+    "category": "Survey",
+    "subCategory": "",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name The Time Of Night When It\u2019s Too Late To Call Someone\u2019s House.",
+    "answers": [
+      {
+        "text": "10",
+        "points": 46
+      },
+      {
+        "text": "12",
+        "points": 22
+      },
+      {
+        "text": "11",
+        "points": 18
+      },
+      {
+        "text": "9",
+        "points": 6
+      }
+    ],
+    "category": "Survey",
+    "subCategory": "",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name An Age That People Worry About Turning",
+    "answers": [
+      {
+        "text": "40",
+        "points": 42
+      },
+      {
+        "text": "50",
+        "points": 31
+      },
+      {
+        "text": "30",
+        "points": 23
+      },
+      {
+        "text": "60",
+        "points": 3
+      }
+    ],
+    "category": "Survey",
+    "subCategory": "",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Tell Me A Good Score When Playing 18 Holes Of Golf.",
+    "answers": [
+      {
+        "text": "72",
+        "points": 40
+      },
+      {
+        "text": "65",
+        "points": 27
+      },
+      {
+        "text": "80",
+        "points": 20
+      },
+      {
+        "text": "66",
+        "points": 9
+      }
+    ],
+    "category": "Survey",
+    "subCategory": "",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name Something That Can Be Spoiled",
+    "answers": [
+      {
+        "text": "Milk",
+        "points": 56,
+        "variants": [
+          "Dairy"
+        ]
+      },
+      {
+        "text": "Food",
+        "points": 17,
+        "variants": [
+          "Meat",
+          "Fish",
+          "Produce",
+          "Fruit",
+          "Vegetables"
+        ]
+      },
+      {
+        "text": "Kids",
+        "points": 13,
+        "variants": [
+          "Children",
+          "A child"
+        ]
+      },
+      {
+        "text": "A Surprise",
+        "points": 5
+      }
+    ],
+    "category": "Survey",
+    "subCategory": "",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "What Reason Would Most People Give For Why They Drink Coffee?",
+    "answers": [
+      {
+        "text": "Stay Awake",
+        "points": 45,
+        "variants": [
+          "Wake Up",
+          "Keep Awake",
+          "Not Fall Asleep"
+        ]
+      },
+      {
+        "text": "Like The Taste",
+        "points": 24,
+        "variants": [
+          "Tastes Good",
+          "Like It",
+          "Good Taste"
+        ]
+      },
+      {
+        "text": "Energy",
+        "points": 12,
+        "variants": [
+          "Energize",
+          "Get Energy",
+          "Boost",
+          "Energy Boost"
+        ]
+      },
+      {
+        "text": "Addicted",
+        "points": 9,
+        "variants": [
+          "Addiction",
+          "Habit",
+          "Need It"
+        ]
+      }
+    ],
+    "category": "Survey",
+    "subCategory": "",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name A Profession Where You May Receive Lots Of Mail From Strangers.",
+    "answers": [
+      {
+        "text": "Celebrity",
+        "points": 51,
+        "variants": [
+          "Famous Person",
+          "Actor",
+          "Star"
+        ]
+      },
+      {
+        "text": "Politician",
+        "points": 36
+      },
+      {
+        "text": "Customer Service",
+        "points": 7,
+        "variants": [
+          "Customer Service Rep",
+          "Customer Service Representative"
+        ]
+      },
+      {
+        "text": "Advice Columnist",
+        "points": 5,
+        "variants": [
+          "Advice Column",
+          "Advice Columnist Writer"
+        ]
+      }
+    ],
+    "category": "Survey",
+    "subCategory": "",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name Something You Hope To Have Your Seat Near While Riding In A Plane",
+    "answers": [
+      {
+        "text": "Window",
+        "points": 61,
+        "variants": [
+          "Window seat"
+        ]
+      },
+      {
+        "text": "Bathroom",
+        "points": 20,
+        "variants": [
+          "Restroom",
+          "Toilet"
+        ]
+      },
+      {
+        "text": "Exit",
+        "points": 12,
+        "variants": [
+          "Emergency exit",
+          "Exit door"
+        ]
+      },
+      {
+        "text": "Aisle",
+        "points": 6,
+        "variants": [
+          "Aisle seat"
+        ]
+      }
+    ],
+    "category": "Survey",
+    "subCategory": "",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Tell Me Something You Avoid When You Are Sick",
+    "answers": [
+      {
+        "text": "Other People",
+        "points": 34,
+        "variants": [
+          "People",
+          "Contact with others",
+          "Social contact"
+        ]
+      },
+      {
+        "text": "Work/ School",
+        "points": 29,
+        "variants": [
+          "Work",
+          "School",
+          "Working",
+          "Going to school"
+        ]
+      },
+      {
+        "text": "Eating",
+        "points": 25,
+        "variants": [
+          "Food",
+          "Meals"
+        ]
+      },
+      {
+        "text": "Alcohol",
+        "points": 5
+      }
+    ],
+    "category": "Survey",
+    "subCategory": "",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "What\u2019s Something You Drink To Make You Warmer?",
+    "answers": [
+      {
+        "text": "Coffee",
+        "points": 41,
+        "variants": [
+          "Espresso",
+          "Latte",
+          "Cappuccino"
+        ]
+      },
+      {
+        "text": "Hot Chocolate",
+        "points": 36,
+        "variants": [
+          "Hot cocoa",
+          "Cocoa",
+          "Chocolate"
+        ]
+      },
+      {
+        "text": "Tea",
+        "points": 16,
+        "variants": [
+          "Hot tea"
+        ]
+      },
+      {
+        "text": "Alcohol",
+        "points": 5,
+        "variants": [
+          "Wine",
+          "Beer",
+          "Whiskey",
+          "Brandy"
+        ]
+      }
+    ],
+    "category": "Survey",
+    "subCategory": "",
+    "removeQuestion": "",
+    "factCheck": ""
+  }
+]

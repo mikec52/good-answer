@@ -1,0 +1,392 @@
+[
+  {
+    "question": "Name the most-watched television broadcasts in American history by total viewers.",
+    "answers": [
+      {"text": "Super Bowl LVIII", "display": "Super Bowl LVIII (2024, Chiefs vs. 49ers) — 123.7 million viewers (most-watched US broadcast ever)", "points": 30},
+      {"text": "Super Bowl XLIX", "display": "Super Bowl XLIX (2015, Patriots vs. Seahawks) — 114.4 million viewers", "points": 25},
+      {"text": "Super Bowl 50", "display": "Super Bowl 50 (2016, Broncos vs. Panthers) — 111.9 million viewers", "points": 20},
+      {"text": "Super Bowl XLVIII", "display": "Super Bowl XLVIII (2014, Seahawks vs. Broncos) — 111.5 million viewers", "points": 15},
+      {"text": "Super Bowl XLVI", "display": "Super Bowl XLVI (2012, Giants vs. Patriots) — 111.3 million viewers", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most-watched non-sports TV finales in American history by total viewers.",
+    "answers": [
+      {"text": "M*A*S*H", "display": "M*A*S*H finale (1983) — 106 million viewers (most-watched non-sports broadcast ever)", "points": 30},
+      {"text": "Cheers", "display": "Cheers finale (1993) — 80.4 million viewers", "points": 25},
+      {"text": "The Fugitive", "display": "The Fugitive finale (1967) — 72.0 million viewers", "points": 20},
+      {"text": "Seinfeld", "display": "Seinfeld finale (1998) — 76.3 million viewers", "points": 15},
+      {"text": "Who Wants to Be a Millionaire", "display": "Who Wants to Be a Millionaire (Nov. 1999 week) — 71.0 million viewers", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American TV dramas with the most Emmy Award wins.",
+    "answers": [
+      {"text": "Game of Thrones", "display": "Game of Thrones — 59 Emmy wins (most by any drama series)", "points": 30},
+      {"text": "The West Wing", "display": "The West Wing — 26 Emmy wins", "points": 25},
+      {"text": "Mad Men", "display": "Mad Men — 16 Emmy wins", "points": 20},
+      {"text": "Breaking Bad", "display": "Breaking Bad — 16 Emmy wins", "points": 15},
+      {"text": "The Sopranos", "display": "The Sopranos — 21 Emmy wins", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American TV series with the most Emmy Award wins all-time.",
+    "answers": [
+      {"text": "Game of Thrones", "display": "Game of Thrones — 59 Emmy wins", "points": 30},
+      {"text": "Saturday Night Live", "display": "Saturday Night Live — 88 Emmy wins (most of any series ever)", "points": 25},
+      {"text": "Frasier", "display": "Frasier — 37 Emmy wins", "points": 20},
+      {"text": "The West Wing", "display": "The West Wing — 26 Emmy wins", "points": 15},
+      {"text": "Cheers", "display": "Cheers — 28 Emmy wins", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American sitcoms with the most Emmy Award wins.",
+    "answers": [
+      {"text": "Frasier", "display": "Frasier — 37 Emmy wins", "points": 30},
+      {"text": "Cheers", "display": "Cheers — 28 Emmy wins", "points": 25},
+      {"text": "30 Rock", "display": "30 Rock — 16 Emmy wins", "points": 20},
+      {"text": "Will & Grace", "display": "Will & Grace — 16 Emmy wins", "points": 15},
+      {"text": "Modern Family", "display": "Modern Family — 22 Emmy wins", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the TV series that won the most consecutive Emmy Awards for Outstanding Drama Series.",
+    "answers": [
+      {"text": "The West Wing", "display": "The West Wing — 4 consecutive wins (1999–2002)", "points": 30},
+      {"text": "Game of Thrones", "display": "Game of Thrones — 4 consecutive wins (2015–2016, 2018–2019)", "points": 25},
+      {"text": "Hill Street Blues", "display": "Hill Street Blues — 4 consecutive wins (1981–1984)", "points": 20},
+      {"text": "L.A. Law", "display": "L.A. Law — 4 wins total (not all consecutive)", "points": 15},
+      {"text": "Mad Men", "display": "Mad Men — 4 consecutive wins (2008–2011)", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the sitcoms that won the most consecutive Emmy Awards for Outstanding Comedy Series.",
+    "answers": [
+      {"text": "Frasier", "display": "Frasier — 5 consecutive wins (1994–1998, all-time record)", "points": 30},
+      {"text": "Modern Family", "display": "Modern Family — 5 consecutive wins (2010–2014)", "points": 25},
+      {"text": "The Phil Silvers Show", "display": "The Phil Silvers Show — 4 consecutive wins (1955–1958)", "points": 20},
+      {"text": "All in the Family", "display": "All in the Family — 4 consecutive wins (1971–1974)", "points": 15},
+      {"text": "30 Rock", "display": "30 Rock — 3 consecutive wins (2007–2009)", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American TV shows with the most total episodes.",
+    "answers": [
+      {"text": "Gunsmoke", "display": "Gunsmoke — 635 episodes (1955–1975)", "points": 30},
+      {"text": "Law & Order", "display": "Law & Order — 500+ episodes (1990–present)", "points": 25},
+      {"text": "The Simpsons", "display": "The Simpsons — 750+ episodes (1989–present)", "points": 20},
+      {"text": "Lassie", "display": "Lassie — 591 episodes (1954–1973)", "points": 15},
+      {"text": "NCIS", "display": "NCIS — 500+ episodes (2003–present)", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American animated TV shows with the most total episodes.",
+    "answers": [
+      {"text": "The Simpsons", "display": "The Simpsons — 750+ episodes (1989–present, longest-running animated primetime series)", "points": 30},
+      {"text": "South Park", "display": "South Park — 330+ episodes (1997–present)", "points": 25},
+      {"text": "Family Guy", "display": "Family Guy — 420+ episodes (1999–present)", "points": 20},
+      {"text": "Bob's Burgers", "display": "Bob's Burgers — 280+ episodes (2011–present)", "points": 15},
+      {"text": "Futurama", "display": "Futurama — 170+ episodes across all runs (1999–present)", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the actors with the most Primetime Emmy wins.",
+    "answers": [
+      {"text": "Cloris Leachman", "display": "Cloris Leachman — 8 Primetime Emmy wins (most by any performer)", "points": 30},
+      {"text": "Julia Louis-Dreyfus", "display": "Julia Louis-Dreyfus — 8 Primetime Emmy wins", "points": 25},
+      {"text": "Ed Asner", "display": "Ed Asner — 7 Primetime Emmy wins", "points": 20},
+      {"text": "Don Knotts", "display": "Don Knotts — 5 Primetime Emmy wins", "points": 15},
+      {"text": "Mary Tyler Moore", "display": "Mary Tyler Moore — 7 Primetime Emmy wins", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-rated American TV series premieres of all time by viewership.",
+    "answers": [
+      {"text": "Roots", "display": "Roots (1977) — 130 million total viewers over 8 nights; finale drew 100 million", "points": 30},
+      {"text": "Dallas", "display": "Dallas 'Who Shot J.R.' episode (1980) — 83 million viewers", "points": 25},
+      {"text": "The Fugitive", "display": "The Fugitive finale (1967) — 72 million viewers", "points": 20},
+      {"text": "M*A*S*H", "display": "M*A*S*H finale (1983) — 106 million viewers", "points": 15},
+      {"text": "Seinfeld", "display": "Seinfeld finale (1998) — 76 million viewers", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the late-night talk shows with the longest runs on American television.",
+    "answers": [
+      {"text": "The Tonight Show", "display": "The Tonight Show — on air since 1954 (70+ years, multiple hosts)", "points": 30},
+      {"text": "Late Night", "display": "Late Night (NBC) — on air since 1982 (40+ years, multiple hosts)", "points": 25},
+      {"text": "Late Show", "display": "Late Show (CBS) — on air since 1993", "points": 20},
+      {"text": "Saturday Night Live", "display": "Saturday Night Live — on air since 1975 (50 seasons)", "points": 15},
+      {"text": "The Late Late Show", "display": "The Late Late Show (CBS) — on air 1995–2023", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the longest-running American primetime scripted dramas.",
+    "answers": [
+      {"text": "Gunsmoke", "display": "Gunsmoke — 20 seasons (1955–1975)", "points": 30},
+      {"text": "Law & Order", "display": "Law & Order — 24+ seasons (1990–present, with a gap)", "points": 25},
+      {"text": "Grey's Anatomy", "display": "Grey's Anatomy — 20+ seasons (2005–present)", "points": 20},
+      {"text": "NCIS", "display": "NCIS — 21+ seasons (2003–present)", "points": 15},
+      {"text": "Criminal Minds", "display": "Criminal Minds — 15 seasons (2005–2020)", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American TV shows with the highest average viewership in their peak seasons.",
+    "answers": [
+      {"text": "Cheers", "display": "Cheers — 30+ million average viewers in peak seasons", "points": 30},
+      {"text": "Seinfeld", "display": "Seinfeld — 38 million average viewers in season 9 (1997–98)", "points": 25},
+      {"text": "ER", "display": "ER — 33 million average viewers in peak seasons (mid-1990s)", "points": 20},
+      {"text": "NCIS", "display": "NCIS — 22 million average viewers in peak seasons (2011–2014)", "points": 15},
+      {"text": "The Big Bang Theory", "display": "The Big Bang Theory — 20 million average viewers in peak seasons", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American TV series with the most Golden Globe wins.",
+    "answers": [
+      {"text": "Downton Abbey", "display": "Downton Abbey — 4 Golden Globe wins (Best Drama Series)", "points": 30},
+      {"text": "24", "display": "24 — 2 Golden Globe wins", "points": 25},
+      {"text": "The Crown", "display": "The Crown — 4 Golden Globe wins", "points": 20},
+      {"text": "Succession", "display": "Succession — 3 Golden Globe wins", "points": 15},
+      {"text": "Schitt's Creek", "display": "Schitt's Creek — 2 Golden Globe wins", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most-watched cable TV series finales in American history.",
+    "answers": [
+      {"text": "Breaking Bad", "display": "Breaking Bad finale (2013) — 10.3 million viewers (most-watched cable drama finale at the time)", "points": 30},
+      {"text": "The Sopranos", "display": "The Sopranos finale (2007) — 11.9 million viewers", "points": 25},
+      {"text": "Dexter", "display": "Dexter finale (2013) — 2.8 million viewers", "points": 20},
+      {"text": "Mad Men", "display": "Mad Men finale (2015) — 3.3 million viewers", "points": 15},
+      {"text": "Sons of Anarchy", "display": "Sons of Anarchy finale (2014) — 6.2 million viewers", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American TV shows that have won the most Screen Actors Guild Awards.",
+    "answers": [
+      {"text": "The Sopranos", "display": "The Sopranos — 8 SAG wins for Best Ensemble (Drama)", "points": 30},
+      {"text": "Modern Family", "display": "Modern Family — 5 SAG wins for Best Ensemble (Comedy)", "points": 25},
+      {"text": "Succession", "display": "Succession — 3 SAG wins for Best Ensemble (Drama)", "points": 20},
+      {"text": "Orange Is the New Black", "display": "Orange Is the New Black — 3 SAG wins for Best Ensemble (Comedy/Drama)", "points": 15},
+      {"text": "Friends", "display": "Friends — 2 SAG wins for Best Ensemble (Comedy)", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American TV shows with the most Primetime Emmy nominations all-time.",
+    "answers": [
+      {"text": "Saturday Night Live", "display": "Saturday Night Live — 300+ Emmy nominations (most of any series)", "points": 30},
+      {"text": "Game of Thrones", "display": "Game of Thrones — 161 Emmy nominations", "points": 25},
+      {"text": "Cheers", "display": "Cheers — 111 Emmy nominations", "points": 20},
+      {"text": "NYPD Blue", "display": "NYPD Blue — 84 Emmy nominations", "points": 15},
+      {"text": "ER", "display": "ER — 124 Emmy nominations", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-paid American TV actors per episode at their peak.",
+    "answers": [
+      {"text": "The Big Bang Theory cast", "display": "The Big Bang Theory (Parsons, Galecki, Cuoco) — $1 million per episode each (2017–2019)", "points": 30},
+      {"text": "Friends cast", "display": "Friends (all six leads) — $1 million per episode each (seasons 9–10)", "points": 25},
+      {"text": "Tim Allen", "display": "Tim Allen (Home Improvement) — $1.25 million per episode at peak", "points": 20},
+      {"text": "Charlie Sheen", "display": "Charlie Sheen (Two and a Half Men) — $1.8 million per episode at peak", "points": 15},
+      {"text": "Jerry Seinfeld", "display": "Jerry Seinfeld (Seinfeld) — turned down $5 million per episode to end the show", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American TV series that ran for the most seasons.",
+    "answers": [
+      {"text": "The Simpsons", "display": "The Simpsons — 36+ seasons (1989–present)", "points": 30},
+      {"text": "Law & Order", "display": "Law & Order — 24+ seasons (1990–present, with a gap)", "points": 25},
+      {"text": "Gunsmoke", "display": "Gunsmoke — 20 seasons (1955–1975)", "points": 20},
+      {"text": "NCIS", "display": "NCIS — 21+ seasons (2003–present)", "points": 15},
+      {"text": "Grey's Anatomy", "display": "Grey's Anatomy — 20+ seasons (2005–present)", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most-watched American TV shows of all time by average weekly viewership in their run.",
+    "answers": [
+      {"text": "I Love Lucy", "display": "I Love Lucy — averaged 50+ million viewers per week in peak years (1951–1957)", "points": 30},
+      {"text": "The Ed Sullivan Show", "display": "The Ed Sullivan Show — regularly drew 50+ million viewers at peak (1948–1971)", "points": 25},
+      {"text": "All in the Family", "display": "All in the Family — #1 rated show for 5 consecutive seasons, averaging 40+ million viewers", "points": 20},
+      {"text": "60 Minutes", "display": "60 Minutes — #1 rated show for 5 consecutive seasons (1977–1982)", "points": 15},
+      {"text": "Seinfeld", "display": "Seinfeld — averaged 30–38 million viewers in final seasons", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the Netflix original series with the most Emmy Award wins.",
+    "answers": [
+      {"text": "The Crown", "display": "The Crown — 21 Emmy wins", "points": 30},
+      {"text": "Ozark", "display": "Ozark — 4 Emmy wins", "points": 25},
+      {"text": "Orange Is the New Black", "display": "Orange Is the New Black — 6 Emmy wins", "points": 20},
+      {"text": "Squid Game", "display": "Squid Game — 6 Emmy wins (first non-English language series to win Outstanding Drama)", "points": 15},
+      {"text": "House of Cards", "display": "House of Cards — 4 Emmy wins (first streaming series nominated for Best Drama)", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most-streamed TV series on Netflix in their debut week.",
+    "answers": [
+      {"text": "Squid Game", "display": "Squid Game (Season 1, 2021) — 111 million households in first 28 days (Netflix record at the time)", "points": 30},
+      {"text": "Wednesday", "display": "Wednesday (2022) — 150.9 million households in first 28 days (English-series record)", "points": 25},
+      {"text": "Stranger Things 4", "display": "Stranger Things Season 4 (2022) — 335 million hours viewed in first weekend", "points": 20},
+      {"text": "Bridgerton Season 2", "display": "Bridgerton Season 2 (2022) — 193 million hours viewed in first weekend", "points": 15},
+      {"text": "The Night Agent", "display": "The Night Agent (2023) — 168 million views in first 28 days", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American reality TV competition shows with the most seasons.",
+    "answers": [
+      {"text": "Survivor", "display": "Survivor — 48+ seasons (2000–present)", "points": 30},
+      {"text": "The Amazing Race", "display": "The Amazing Race — 35+ seasons (2001–present)", "points": 25},
+      {"text": "America's Next Top Model", "display": "America's Next Top Model — 24 seasons (2003–2018)", "points": 20},
+      {"text": "American Idol", "display": "American Idol — 22+ seasons (2002–present, with a hiatus)", "points": 15},
+      {"text": "The Bachelor", "display": "The Bachelor — 28+ seasons (2002–present)", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American TV series with the most Writers Guild of America Award wins.",
+    "answers": [
+      {"text": "The West Wing", "display": "The West Wing — 8 WGA wins for Television Drama", "points": 30},
+      {"text": "The Simpsons", "display": "The Simpsons — 11 WGA wins for Television Animation (most ever)", "points": 25},
+      {"text": "Succession", "display": "Succession — 4 WGA wins for Television Drama", "points": 20},
+      {"text": "30 Rock", "display": "30 Rock — 5 WGA wins for Television Comedy", "points": 15},
+      {"text": "Breaking Bad", "display": "Breaking Bad — 3 WGA wins for Television Drama", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American TV shows with the highest series finale viewership in the last 30 years.",
+    "answers": [
+      {"text": "Seinfeld", "display": "Seinfeld finale (1998) — 76.3 million viewers", "points": 30},
+      {"text": "Friends", "display": "Friends finale (2004) — 52.5 million viewers", "points": 25},
+      {"text": "Frasier", "display": "Frasier finale (2004) — 33.4 million viewers", "points": 20},
+      {"text": "Lost", "display": "Lost finale (2010) — 13.5 million viewers", "points": 15},
+      {"text": "Breaking Bad", "display": "Breaking Bad finale (2013) — 10.3 million viewers", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American TV shows that have won the most consecutive Primetime Emmy Awards for Outstanding Drama.",
+    "answers": [
+      {"text": "The West Wing", "display": "The West Wing — 4 consecutive wins (1999–2002)", "points": 30},
+      {"text": "Hill Street Blues", "display": "Hill Street Blues — 4 consecutive wins (1981–1984)", "points": 25},
+      {"text": "L.A. Law", "display": "L.A. Law — 4 wins (1987, 1989, 1990, 1991)", "points": 20},
+      {"text": "Mad Men", "display": "Mad Men — 4 consecutive wins (2008–2011)", "points": 15},
+      {"text": "Game of Thrones", "display": "Game of Thrones — 4 wins (2015, 2016, 2018, 2019)", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American TV hosts who have hosted the most Emmy Award ceremonies.",
+    "answers": [
+      {"text": "Billy Crystal", "display": "Billy Crystal — hosted the Emmys 4 times", "points": 30},
+      {"text": "Conan O'Brien", "display": "Conan O'Brien — hosted the Emmys 3 times", "points": 25},
+      {"text": "Jimmy Kimmel", "display": "Jimmy Kimmel — hosted the Emmys 3 times", "points": 20},
+      {"text": "Garry Moore", "display": "Garry Moore — hosted the Emmys 3 times (early era)", "points": 15},
+      {"text": "Ellen DeGeneres", "display": "Ellen DeGeneres — hosted the Emmys 2 times", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American soap operas with the most total episodes.",
+    "answers": [
+      {"text": "General Hospital", "display": "General Hospital — 15,000+ episodes (1963–present, longest-running US soap)", "points": 30},
+      {"text": "The Young and the Restless", "display": "The Young and the Restless — 13,000+ episodes (1973–present)", "points": 25},
+      {"text": "Days of Our Lives", "display": "Days of Our Lives — 14,000+ episodes (1965–present)", "points": 20},
+      {"text": "The Bold and the Beautiful", "display": "The Bold and the Beautiful — 9,000+ episodes (1987–present)", "points": 15},
+      {"text": "As the World Turns", "display": "As the World Turns — 13,763 episodes (1956–2010)", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the American TV game shows with the longest runs.",
+    "answers": [
+      {"text": "The Price Is Right", "display": "The Price Is Right — 50+ seasons (1972–present, longest-running US game show)", "points": 30},
+      {"text": "Wheel of Fortune", "display": "Wheel of Fortune — 42+ seasons (1983–present)", "points": 25},
+      {"text": "Jeopardy!", "display": "Jeopardy! — 40+ seasons in syndication (1984–present)", "points": 20},
+      {"text": "What's My Line?", "display": "What's My Line? — 25 seasons (1950–1975)", "points": 15},
+      {"text": "To Tell the Truth", "display": "To Tell the Truth — multiple runs from 1956 to present", "points": 10}
+    ],
+    "category": "TV",
+    "removeQuestion": "",
+    "factCheck": ""
+  }
+]

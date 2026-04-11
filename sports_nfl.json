@@ -1,0 +1,386 @@
+[
+  {
+    "question": "Name the all-time career passing yards leaders in NFL history.",
+    "answers": [
+      {"text": "Tom Brady", "display": "Tom Brady — 89,214 yds", "points": 30},
+      {"text": "Drew Brees", "display": "Drew Brees — 80,358 yds", "points": 25},
+      {"text": "Peyton Manning", "display": "Peyton Manning — 71,940 yds", "points": 20},
+      {"text": "Brett Favre", "display": "Brett Favre — 71,838 yds", "points": 15},
+      {"text": "Philip Rivers", "display": "Philip Rivers — 63,440 yds", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Verify Philip Rivers' total and whether Aaron Rodgers or Ben Roethlisberger have surpassed him."
+  },
+  {
+    "question": "Name the all-time career passing touchdown leaders in NFL history.",
+    "answers": [
+      {"text": "Tom Brady", "display": "Tom Brady — 649 TDs", "points": 30},
+      {"text": "Drew Brees", "display": "Drew Brees — 571 TDs", "points": 25},
+      {"text": "Peyton Manning", "display": "Peyton Manning — 539 TDs", "points": 20},
+      {"text": "Brett Favre", "display": "Brett Favre — 508 TDs", "points": 15},
+      {"text": "Dan Marino", "display": "Dan Marino — 420 TDs", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Verify whether Aaron Rodgers (~475 TDs through 2024) has passed Favre or Marino on this list."
+  },
+  {
+    "question": "Name the all-time career rushing yards leaders in NFL history.",
+    "answers": [
+      {"text": "Emmitt Smith", "display": "Emmitt Smith — 18,355 yds", "points": 30},
+      {"text": "Walter Payton", "display": "Walter Payton — 16,726 yds", "points": 25},
+      {"text": "Frank Gore", "display": "Frank Gore — 16,106 yds", "points": 20},
+      {"text": "Barry Sanders", "display": "Barry Sanders — 15,269 yds", "points": 15},
+      {"text": "Adrian Peterson", "display": "Adrian Peterson — 14,820 yds", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Verify Frank Gore's final career total and confirm the ranking order for #2-#5."
+  },
+  {
+    "question": "Name the all-time career receiving yards leaders in NFL history.",
+    "answers": [
+      {"text": "Jerry Rice", "display": "Jerry Rice — 22,895 yds", "points": 30},
+      {"text": "Larry Fitzgerald", "display": "Larry Fitzgerald — 17,492 yds", "points": 25},
+      {"text": "Terrell Owens", "display": "Terrell Owens — 15,934 yds", "points": 20},
+      {"text": "Randy Moss", "display": "Randy Moss — 15,292 yds", "points": 15},
+      {"text": "Isaac Bruce", "display": "Isaac Bruce — 15,208 yds", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Verify whether Tim Brown (~14,934) or Tony Gonzalez (~15,127) displaced Isaac Bruce from the top 5. Check if any active player (e.g., Davante Adams, Stefon Diggs) has entered the top 5."
+  },
+  {
+    "question": "Name the all-time career receiving touchdown leaders in NFL history.",
+    "answers": [
+      {"text": "Jerry Rice", "display": "Jerry Rice — 197 TDs", "points": 30},
+      {"text": "Randy Moss", "display": "Randy Moss — 156 TDs", "points": 25},
+      {"text": "Terrell Owens", "display": "Terrell Owens — 153 TDs", "points": 20},
+      {"text": "Cris Carter", "display": "Cris Carter — 130 TDs", "points": 15},
+      {"text": "Marvin Harrison", "display": "Marvin Harrison — 128 TDs", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Verify Cris Carter and Marvin Harrison totals; confirm Larry Fitzgerald's total (~121 TDs) keeps him out of top 5."
+  },
+  {
+    "question": "Name the all-time career rushing touchdown leaders in NFL history.",
+    "answers": [
+      {"text": "Emmitt Smith", "display": "Emmitt Smith — 164 TDs", "points": 30},
+      {"text": "LaDainian Tomlinson", "display": "LaDainian Tomlinson — 145 TDs", "points": 25},
+      {"text": "Marcus Allen", "display": "Marcus Allen — 123 TDs", "points": 20},
+      {"text": "Walter Payton", "display": "Walter Payton — 110 TDs", "points": 15},
+      {"text": "Jim Brown", "display": "Jim Brown — 106 TDs", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Verify Jim Brown's rushing TD total vs. Adrian Peterson (~99) or Jerome Bettis (~91). Confirm Marcus Allen at 123."
+  },
+  {
+    "question": "Name the all-time career sack leaders in NFL history.",
+    "answers": [
+      {"text": "Bruce Smith", "display": "Bruce Smith — 200.0 sacks", "points": 30},
+      {"text": "Reggie White", "display": "Reggie White — 198.0 sacks", "points": 25},
+      {"text": "Kevin Greene", "display": "Kevin Greene — 160.0 sacks", "points": 20},
+      {"text": "Chris Doleman", "display": "Chris Doleman — 150.5 sacks", "points": 15},
+      {"text": "Michael Strahan", "display": "Michael Strahan — 141.5 sacks", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Sacks are officially tracked since 1982. Verify whether any active players (e.g., DeMarcus Ware ~138.5, Dwight Freeney ~125.5) have displaced Strahan from the top 5."
+  },
+  {
+    "question": "Name the all-time career interception leaders in NFL history (defensive players).",
+    "answers": [
+      {"text": "Paul Krause", "display": "Paul Krause — 81 INTs", "points": 30},
+      {"text": "Emlen Tunnell", "display": "Emlen Tunnell — 79 INTs", "points": 25},
+      {"text": "Rod Woodson", "display": "Rod Woodson — 71 INTs", "points": 20},
+      {"text": "Dick Lane", "display": "Dick \"Night Train\" Lane — 68 INTs", "points": 15},
+      {"text": "Ken Riley", "display": "Ken Riley — 65 INTs", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Verify Ken Riley at 65 INTs; check if Dave Brown (62) or others fall between him and Lane."
+  },
+  {
+    "question": "Name the NFL franchises with the most Super Bowl wins.",
+    "answers": [
+      {"text": "New England Patriots", "display": "New England Patriots — 6 Super Bowl wins", "points": 30},
+      {"text": "Pittsburgh Steelers", "display": "Pittsburgh Steelers — 6 Super Bowl wins", "points": 25},
+      {"text": "Dallas Cowboys", "display": "Dallas Cowboys — 5 Super Bowl wins", "points": 20},
+      {"text": "San Francisco 49ers", "display": "San Francisco 49ers — 5 Super Bowl wins", "points": 15},
+      {"text": "Green Bay Packers", "display": "Green Bay Packers — 4 Super Bowl wins", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "New England Patriots and Pittsburgh Steelers tied at 6 wins — ranked alphabetically by city (New England before Pittsburgh). Dallas Cowboys and San Francisco 49ers tied at 5 — ranked alphabetically (Dallas before San Francisco). Green Bay Packers at 4 wins (I, II, XXXI, XLV). Confirm NY Giants (4 wins) total to ensure Packers-Giants ordering."
+  },
+  {
+    "question": "Name the NFL franchises with the most Super Bowl appearances.",
+    "answers": [
+      {"text": "New England Patriots", "display": "New England Patriots — 11 appearances", "points": 30},
+      {"text": "Dallas Cowboys", "display": "Dallas Cowboys — 8 appearances", "points": 25},
+      {"text": "Denver Broncos", "display": "Denver Broncos — 8 appearances", "points": 20},
+      {"text": "Pittsburgh Steelers", "display": "Pittsburgh Steelers — 8 appearances", "points": 15},
+      {"text": "San Francisco 49ers", "display": "San Francisco 49ers — 7 appearances", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Verify NE at 11 (SB XX through LIII). Dallas, Denver, and Pittsburgh all at 8 — ranked alphabetically by city: Dallas, Denver, Pittsburgh. Confirm SF 49ers have 7 appearances including SB LVIII (2024)."
+  },
+  {
+    "question": "Name the quarterbacks with the most Super Bowl wins.",
+    "answers": [
+      {"text": "Tom Brady", "display": "Tom Brady — 7 Super Bowl wins", "points": 30},
+      {"text": "Joe Montana", "display": "Joe Montana — 4 Super Bowl wins", "points": 25},
+      {"text": "Terry Bradshaw", "display": "Terry Bradshaw — 4 Super Bowl wins", "points": 20},
+      {"text": "Troy Aikman", "display": "Troy Aikman — 3 Super Bowl wins", "points": 15},
+      {"text": "Bart Starr", "display": "Bart Starr — 2 Super Bowl wins", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Montana and Bradshaw tied at 4 — ranked alphabetically by first name (Joe before Terry). Aikman at 3 is alone in that tier. Many QBs tied at 2 wins — Bart Starr is first alphabetically by first name among: Bart Starr, Bob Griese, Eli Manning, John Elway, Roger Staubach."
+  },
+  {
+    "question": "Name the head coaches with the most Super Bowl wins.",
+    "answers": [
+      {"text": "Bill Belichick", "display": "Bill Belichick — 6 Super Bowl wins", "points": 30},
+      {"text": "Chuck Noll", "display": "Chuck Noll — 4 Super Bowl wins", "points": 25},
+      {"text": "Bill Walsh", "display": "Bill Walsh — 3 Super Bowl wins", "points": 20},
+      {"text": "Joe Gibbs", "display": "Joe Gibbs — 3 Super Bowl wins", "points": 15},
+      {"text": "Don Shula", "display": "Don Shula — 2 Super Bowl wins", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Walsh and Gibbs tied at 3 Super Bowl wins — ranked alphabetically by first name (Bill before Joe). Many coaches at 2 wins; Don Shula is first alphabetically by first name among: Don Shula, George Seifert, Jimmy Johnson, Tom Flores."
+  },
+  {
+    "question": "Name the head coaches with the most career regular season wins in NFL history.",
+    "answers": [
+      {"text": "Bill Belichick", "display": "Bill Belichick — 333 wins", "points": 30},
+      {"text": "Don Shula", "display": "Don Shula — 328 wins", "points": 25},
+      {"text": "George Halas", "display": "George Halas — 318 wins", "points": 20},
+      {"text": "Andy Reid", "display": "Andy Reid — ~289 wins (through 2024)", "points": 15},
+      {"text": "Tom Landry", "display": "Tom Landry — 250 wins", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Verify Andy Reid's exact win total through 2024 season and whether he has surpassed Tom Landry (250) or is approaching Don Shula (328). Belichick retired after 2023. Confirm Halas total."
+  },
+  {
+    "question": "Name the quarterbacks with the most career regular season wins in NFL history.",
+    "answers": [
+      {"text": "Tom Brady", "display": "Tom Brady — 251 wins", "points": 30},
+      {"text": "Brett Favre", "display": "Brett Favre — 186 wins", "points": 25},
+      {"text": "Peyton Manning", "display": "Peyton Manning — 186 wins", "points": 20},
+      {"text": "Aaron Rodgers", "display": "Aaron Rodgers — ~171 wins (through 2024)", "points": 15},
+      {"text": "Ben Roethlisberger", "display": "Ben Roethlisberger — 165 wins", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Favre and Manning tied at 186 — ranked alphabetically by first name (Brett before Peyton). Verify Aaron Rodgers' exact win total through 2024 and whether Patrick Mahomes is approaching this tier."
+  },
+  {
+    "question": "Name the players with the most NFL MVP awards.",
+    "answers": [
+      {"text": "Peyton Manning", "display": "Peyton Manning — 5 AP MVP awards (2003, 2004, 2008, 2009, 2013)", "points": 30},
+      {"text": "Aaron Rodgers", "display": "Aaron Rodgers — 3 AP MVP awards (2011, 2020, 2021)", "points": 25},
+      {"text": "Brett Favre", "display": "Brett Favre — 3 AP MVP awards (1995, 1996, 1997)", "points": 20},
+      {"text": "Patrick Mahomes", "display": "Patrick Mahomes — 3 AP MVP awards (2018, 2022, 2024)", "points": 15},
+      {"text": "Jim Brown", "display": "Jim Brown — 2 AP MVP awards (1957, 1965)", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Rodgers, Favre, and Mahomes all tied at 3 MVP awards — ranked alphabetically by first name: Aaron (Rodgers), Brett (Favre), Patrick (Mahomes). Verify Mahomes won his 3rd AP MVP for the 2024 season. For 5th place (2 MVPs), Jim Brown is first alphabetically among Jim Brown, Johnny Unitas, Kurt Warner, Steve Young."
+  },
+  {
+    "question": "Name the players with the most rushing yards in a single NFL season.",
+    "answers": [
+      {"text": "Eric Dickerson", "display": "Eric Dickerson — 2,105 yds (1984)", "points": 30},
+      {"text": "Adrian Peterson", "display": "Adrian Peterson — 2,097 yds (2012)", "points": 25},
+      {"text": "Jamal Lewis", "display": "Jamal Lewis — 2,066 yds (2003)", "points": 20},
+      {"text": "Barry Sanders", "display": "Barry Sanders — 2,053 yds (1997)", "points": 15},
+      {"text": "Chris Johnson", "display": "Chris Johnson — 2,006 yds (2009)", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Confirmed all-time list: Dickerson 2,105 (1984), Peterson 2,097 (2012), Lewis 2,066 (2003), Sanders 2,053 (1997), Johnson 2,006 (2009). All different players — no discard needed."
+  },
+  {
+    "question": "Name the quarterbacks with the most passing yards in a single NFL season.",
+    "answers": [
+      {"text": "Peyton Manning", "display": "Peyton Manning — 5,477 yds (2013)", "points": 30},
+      {"text": "Drew Brees", "display": "Drew Brees — 5,476 yds (2011)", "points": 25},
+      {"text": "Patrick Mahomes", "display": "Patrick Mahomes — 5,250 yds (2022)", "points": 20},
+      {"text": "Tom Brady", "display": "Tom Brady — 5,235 yds (2011)", "points": 15},
+      {"text": "Ben Roethlisberger", "display": "Ben Roethlisberger — 5,129 yds (2014)", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Verify the exact order of Brady (5,235 in 2011) vs. Mahomes (5,250 in 2022) and Roethlisberger (5,129 in 2014). Also check if Drew Brees had multiple seasons near 5,000+ that could displace this list."
+  },
+  {
+    "question": "Name the quarterbacks with the most passing touchdowns in a single NFL season.",
+    "answers": [
+      {"text": "Peyton Manning", "display": "Peyton Manning — 55 TDs (2013)", "points": 30},
+      {"text": "Patrick Mahomes", "display": "Patrick Mahomes — 50 TDs (2022)", "points": 25},
+      {"text": "Tom Brady", "display": "Tom Brady — 50 TDs (2007)", "points": 20},
+      {"text": "Dan Marino", "display": "Dan Marino — 48 TDs (1984)", "points": 15},
+      {"text": "Drew Brees", "display": "Drew Brees — 46 TDs (2011)", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Mahomes and Brady tied at 50 TDs — ranked alphabetically by first name (Patrick before Tom). Verify Brees at 46 (2011) vs. Aaron Rodgers 45 (2011) and confirm Brees edges Rodgers for 5th."
+  },
+  {
+    "question": "Name the players with the most receiving yards in a single NFL season.",
+    "answers": [
+      {"text": "Calvin Johnson", "display": "Calvin Johnson — 1,964 yds (2012)", "points": 30},
+      {"text": "Jerry Rice", "display": "Jerry Rice — 1,848 yds (1995)", "points": 25},
+      {"text": "Isaac Bruce", "display": "Isaac Bruce — 1,781 yds (1995)", "points": 20},
+      {"text": "Marvin Harrison", "display": "Marvin Harrison — 1,722 yds (2002)", "points": 15},
+      {"text": "Torry Holt", "display": "Torry Holt — 1,696 yds (2003)", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Verify that Charley Hennigan's 1961 AFL season (1,746 yds) is included or excluded. If AFL seasons count, Hennigan (1,746) falls between Bruce (1,781) and Harrison (1,722), displacing Holt. Confirm no player appears twice in the top 5."
+  },
+  {
+    "question": "Name the players with the most receptions in a single NFL season.",
+    "answers": [
+      {"text": "Michael Thomas", "display": "Michael Thomas — 149 receptions (2019)", "points": 30},
+      {"text": "Marvin Harrison", "display": "Marvin Harrison — 143 receptions (2002)", "points": 25},
+      {"text": "Antonio Brown", "display": "Antonio Brown — 136 receptions (2015)", "points": 20},
+      {"text": "Herman Moore", "display": "Herman Moore — 123 receptions (1995)", "points": 15},
+      {"text": "Wes Welker", "display": "Wes Welker — 122 receptions (2009)", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Verify Antonio Brown's reception total in 2015 (may be 136 or different). Check whether Welker had the same reception total in multiple seasons (122 in both 2009 and 2011 would still only count once as his best). Confirm Pierre Garcon's 2013 season (~113 receptions) is below Welker."
+  },
+  {
+    "question": "Name the players with the most sacks in a single NFL season.",
+    "answers": [
+      {"text": "Michael Strahan", "display": "Michael Strahan — 22.5 sacks (2001)", "points": 30},
+      {"text": "Mark Gastineau", "display": "Mark Gastineau — 22.0 sacks (1984)", "points": 25},
+      {"text": "Chris Doleman", "display": "Chris Doleman — 21.0 sacks (1989)", "points": 20},
+      {"text": "Reggie White", "display": "Reggie White — 21.0 sacks (1987)", "points": 15},
+      {"text": "Lawrence Taylor", "display": "Lawrence Taylor — 20.5 sacks (1986)", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Doleman and White tied at 21.0 — ranked alphabetically by first name (Chris before Reggie). Verify Doleman's exact year (1989) and White's year (1987). Confirm LT's total (20.5 in 1986)."
+  },
+  {
+    "question": "Name the players selected to the most Pro Bowls in NFL history.",
+    "answers": [
+      {"text": "Tom Brady", "display": "Tom Brady — 15 Pro Bowl selections", "points": 30},
+      {"text": "Bruce Matthews", "display": "Bruce Matthews — 14 Pro Bowl selections", "points": 25},
+      {"text": "Merlin Olsen", "display": "Merlin Olsen — 14 Pro Bowl selections", "points": 20},
+      {"text": "Tony Gonzalez", "display": "Tony Gonzalez — 14 Pro Bowl selections", "points": 15},
+      {"text": "Jerry Rice", "display": "Jerry Rice — 13 Pro Bowl selections", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Matthews, Olsen, and Gonzalez all tied at 14 — ranked alphabetically by first name (Bruce, Merlin, Tony). Verify Brady at 15 (some sources count differently based on alternates/replacements). Confirm Rice at 13."
+  },
+  {
+    "question": "Name the NFL teams with the most wins in a single regular season.",
+    "answers": [
+      {"text": "New England Patriots", "display": "New England Patriots — 16 wins (2007, 16-0)", "points": 30},
+      {"text": "Carolina Panthers", "display": "Carolina Panthers — 15 wins (2015, 15-1)", "points": 25},
+      {"text": "Chicago Bears", "display": "Chicago Bears — 15 wins (1985, 15-1)", "points": 20},
+      {"text": "Minnesota Vikings", "display": "Minnesota Vikings — 15 wins (1998, 15-1)", "points": 15},
+      {"text": "San Francisco 49ers", "display": "San Francisco 49ers — 15 wins (1984, 15-1)", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Patriots 2007 are the only team to go 16-0. The four 15-1 teams are ranked alphabetically by city: Carolina, Chicago, Minnesota, San Francisco. Verify no team has gone 16-1 or better in the 17-game era (2021+). Also check if the 49ers (1984) or another team had a better 15-1 record before Carolina 2015."
+  },
+  {
+    "question": "Name the running backs with the most career 1,000-yard rushing seasons.",
+    "answers": [
+      {"text": "Emmitt Smith", "display": "Emmitt Smith — 11 seasons with 1,000+ rushing yards", "points": 30},
+      {"text": "Barry Sanders", "display": "Barry Sanders — 10 seasons with 1,000+ rushing yards", "points": 25},
+      {"text": "Walter Payton", "display": "Walter Payton — 10 seasons with 1,000+ rushing yards", "points": 20},
+      {"text": "LaDainian Tomlinson", "display": "LaDainian Tomlinson — 9 seasons with 1,000+ rushing yards", "points": 15},
+      {"text": "Curtis Martin", "display": "Curtis Martin — 8 seasons with 1,000+ rushing yards", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Sanders and Payton tied at 10 — ranked alphabetically by first name (Barry before Walter). Verify LDT at 9 and Curtis Martin at 8. Check if Adrian Peterson, Frank Gore, or another back should displace Martin."
+  },
+  {
+    "question": "Name the quarterbacks with the most career 4,000-yard passing seasons.",
+    "answers": [
+      {"text": "Drew Brees", "display": "Drew Brees — 15 seasons with 4,000+ passing yards", "points": 30},
+      {"text": "Tom Brady", "display": "Tom Brady — 14 seasons with 4,000+ passing yards", "points": 25},
+      {"text": "Peyton Manning", "display": "Peyton Manning — 12 seasons with 4,000+ passing yards", "points": 20},
+      {"text": "Ben Roethlisberger", "display": "Ben Roethlisberger — 9 seasons with 4,000+ passing yards", "points": 15},
+      {"text": "Matt Ryan", "display": "Matt Ryan — 8 seasons with 4,000+ passing yards", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "These counts are approximate and need verification from pro-football-reference. Brees and Brady had the most such seasons among retired QBs. Check if active QBs like Patrick Mahomes or Aaron Rodgers have surpassed Roethlisberger or Ryan."
+  },
+  {
+    "question": "Name the NFL teams with the most consecutive playoff appearances.",
+    "answers": [
+      {"text": "Dallas Cowboys", "display": "Dallas Cowboys — 20 consecutive playoff appearances (1966-1985)", "points": 30},
+      {"text": "Los Angeles Rams", "display": "Los Angeles Rams — 9 consecutive playoff appearances (1973-1979 streak, or 2017-2022 streak)", "points": 25},
+      {"text": "New England Patriots", "display": "New England Patriots — 11 consecutive playoff appearances (2009-2019)", "points": 20},
+      {"text": "Pittsburgh Steelers", "display": "Pittsburgh Steelers — 9 consecutive playoff appearances (2001-2008 or similar)", "points": 15},
+      {"text": "Kansas City Chiefs", "display": "Kansas City Chiefs — 9 consecutive playoff appearances (2016-2024)", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "HIGH UNCERTAINTY on this question — consecutive playoff appearance records are difficult to recall precisely. The Cowboys' 1966-1985 streak needs verification (they likely had some missed years within that span). Strongly recommend verifying all entries against pro-football-reference before using this question."
+  },
+  {
+    "question": "Name the teams that scored the most points in a single Super Bowl.",
+    "answers": [],
+    "category": "NFL",
+    "removeQuestion": "DISCARDED — The San Francisco 49ers scored 55 points in Super Bowl XXIV (1990) AND 49 points in Super Bowl XXIX (1995), which would place them in both the #1 and #3 spots of the top 5. Per the rules, a team appearing more than once in the top 5 requires discarding the question.",
+    "factCheck": "49ers 55 (SB XXIV), Cowboys 52 (SB XXVII), 49ers 49 (SB XXIX), Bears 46 (SB XX), Seahawks 43 (SB XLVIII). 49ers appear twice — question discarded."
+  },
+  {
+    "question": "Name the players with the most career punt return touchdowns in NFL history.",
+    "answers": [
+      {"text": "Devin Hester", "display": "Devin Hester — 14 career punt return TDs", "points": 30},
+      {"text": "Eric Metcalf", "display": "Eric Metcalf — 10 career punt return TDs", "points": 25},
+      {"text": "Jack Christiansen", "display": "Jack Christiansen — 8 career punt return TDs", "points": 20},
+      {"text": "Rick Upchurch", "display": "Rick Upchurch — 8 career punt return TDs", "points": 15},
+      {"text": "Billy Johnson", "display": "Billy \"White Shoes\" Johnson — 6 career punt return TDs", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "HIGH UNCERTAINTY — verify Devin Hester's punt return TD total (some sources cite 14, others differ). Check Eric Metcalf's total. Christiansen and Upchurch tied at 8 — ranked alphabetically by first name (Jack before Rick). Verify Billy Johnson's total and whether Desean Jackson or Dante Hall should be on this list."
+  },
+  {
+    "question": "Name the kickers with the most career field goals made in NFL history.",
+    "answers": [
+      {"text": "Adam Vinatieri", "display": "Adam Vinatieri — 599 FGs made", "points": 30},
+      {"text": "Morten Andersen", "display": "Morten Andersen — 565 FGs made", "points": 25},
+      {"text": "Gary Anderson", "display": "Gary Anderson — 538 FGs made", "points": 20},
+      {"text": "Jason Hanson", "display": "Jason Hanson — 495 FGs made", "points": 15},
+      {"text": "John Carney", "display": "John Carney — 478 FGs made", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "Verify all totals, especially Jason Hanson (495) and John Carney (478). Check if any active kickers (e.g., Justin Tucker, Robbie Gould) have entered the top 5 through the 2024 season."
+  },
+  {
+    "question": "Name the defensive players with the most career forced fumbles in NFL history.",
+    "answers": [
+      {"text": "Robert Mathis", "display": "Robert Mathis — 54 career forced fumbles", "points": 30},
+      {"text": "Dwight Freeney", "display": "Dwight Freeney — 47 career forced fumbles", "points": 25},
+      {"text": "Osi Umenyiora", "display": "Osi Umenyiora — 46 career forced fumbles", "points": 20},
+      {"text": "DeMarcus Ware", "display": "DeMarcus Ware — 36 career forced fumbles", "points": 15},
+      {"text": "Julius Peppers", "display": "Julius Peppers — 35 career forced fumbles", "points": 10}
+    ],
+    "category": "NFL",
+    "removeQuestion": "",
+    "factCheck": "HIGH UNCERTAINTY — forced fumbles are an unofficial/variably tracked stat. Verify all totals from pro-football-reference. The exact counts may differ significantly from what is listed here. Numbers only officially tracked since 1991."
+  }
+]

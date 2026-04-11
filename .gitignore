@@ -1,0 +1,15 @@
+# Ignored folders
+outdated/
+drafts/
+
+# Ignored file types (safety net — caught even outside ignored folders)
+*.psd
+*.xlsx
+*.rtfd
+
+# macOS / system
+.DS_Store
+
+# Project-specific
+.variants_batch_id
+session-transcript.rtfd/

@@ -1,0 +1,992 @@
+[
+  {
+    "question": "Name the artists with the most Grammy Award wins all-time.",
+    "answers": [
+      {
+        "text": "Beyonc\u00e9",
+        "display": "Beyonc\u00e9 \u2014 32 Grammy wins",
+        "points": 30
+      },
+      {
+        "text": "Georg Solti",
+        "display": "Georg Solti \u2014 31 Grammy wins",
+        "points": 25
+      },
+      {
+        "text": "Quincy Jones",
+        "display": "Quincy Jones \u2014 28 Grammy wins",
+        "points": 20
+      },
+      {
+        "text": "Alison Krauss",
+        "display": "Alison Krauss \u2014 27 Grammy wins",
+        "points": 15
+      },
+      {
+        "text": "Chick Corea",
+        "display": "Chick Corea \u2014 27 Grammy wins",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Verify Beyonc\u00e9 total after 2024 Grammys; Alison Krauss and Chick Corea are tied \u2014 adjust points if needed."
+  },
+  {
+    "question": "Name the best-selling albums of all time worldwide.",
+    "answers": [
+      {
+        "text": "Thriller",
+        "display": "Thriller (Michael Jackson) \u2014 ~70 million copies sold",
+        "points": 30
+      },
+      {
+        "text": "Back in Black",
+        "display": "Back in Black (AC/DC) \u2014 ~50 million copies sold",
+        "points": 25
+      },
+      {
+        "text": "The Dark Side of the Moon",
+        "display": "The Dark Side of the Moon (Pink Floyd) \u2014 ~45 million copies sold",
+        "points": 20
+      },
+      {
+        "text": "Bat Out of Hell",
+        "display": "Bat Out of Hell (Meat Loaf) \u2014 ~43 million copies sold",
+        "points": 15
+      },
+      {
+        "text": "Their Greatest Hits 1971\u20131975",
+        "display": "Their Greatest Hits 1971\u20131975 (Eagles) \u2014 ~42 million copies sold",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the artists with the most #1 singles on the Billboard Hot 100 all-time.",
+    "answers": [
+      {
+        "text": "The Beatles",
+        "display": "The Beatles \u2014 20 #1 singles",
+        "points": 30
+      },
+      {
+        "text": "Mariah Carey",
+        "display": "Mariah Carey \u2014 19 #1 singles",
+        "points": 25
+      },
+      {
+        "text": "Elvis Presley",
+        "display": "Elvis Presley \u2014 18 #1 singles",
+        "points": 20
+      },
+      {
+        "text": "Rihanna",
+        "display": "Rihanna \u2014 14 #1 singles",
+        "points": 15
+      },
+      {
+        "text": "Michael Jackson",
+        "display": "Michael Jackson \u2014 13 #1 singles",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the best-selling music artists of all time.",
+    "answers": [
+      {
+        "text": "The Beatles",
+        "display": "The Beatles \u2014 600 million+ records sold",
+        "points": 30
+      },
+      {
+        "text": "Elvis Presley",
+        "display": "Elvis Presley \u2014 500 million+ records sold",
+        "points": 25
+      },
+      {
+        "text": "Michael Jackson",
+        "display": "Michael Jackson \u2014 400 million+ records sold",
+        "points": 20
+      },
+      {
+        "text": "Madonna",
+        "display": "Madonna \u2014 300 million+ records sold",
+        "points": 15
+      },
+      {
+        "text": "Led Zeppelin",
+        "display": "Led Zeppelin \u2014 300 million+ records sold",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Sales figures are estimates; Madonna and Led Zeppelin are roughly tied."
+  },
+  {
+    "question": "Name the songs with the most weeks at #1 on the Billboard Hot 100.",
+    "answers": [
+      {
+        "text": "Old Town Road",
+        "display": "\"Old Town Road\" (Lil Nas X ft. Billy Ray Cyrus) \u2014 19 weeks at #1",
+        "points": 30
+      },
+      {
+        "text": "One Sweet Day",
+        "display": "\"One Sweet Day\" (Mariah Carey & Boyz II Men) \u2014 16 weeks at #1",
+        "points": 25
+      },
+      {
+        "text": "Despacito",
+        "display": "\"Despacito\" (Luis Fonsi ft. Daddy Yankee) \u2014 16 weeks at #1",
+        "points": 20
+      },
+      {
+        "text": "We Belong Together",
+        "display": "\"We Belong Together\" (Mariah Carey) \u2014 14 weeks at #1",
+        "points": 15
+      },
+      {
+        "text": "Macarena",
+        "display": "\"Macarena\" (Los Del Rio) \u2014 14 weeks at #1",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "One Sweet Day and Despacito are tied at 16 weeks; We Belong Together and Macarena are tied at 14 weeks."
+  },
+  {
+    "question": "Name the artists with the most Grammy Award nominations all-time.",
+    "answers": [
+      {
+        "text": "Beyonc\u00e9",
+        "display": "Beyonc\u00e9 \u2014 88 Grammy nominations",
+        "points": 30
+      },
+      {
+        "text": "Jay-Z",
+        "display": "Jay-Z \u2014 88 Grammy nominations",
+        "points": 25
+      },
+      {
+        "text": "Quincy Jones",
+        "display": "Quincy Jones \u2014 80 Grammy nominations",
+        "points": 20
+      },
+      {
+        "text": "Kanye West",
+        "display": "Kanye West \u2014 75+ Grammy nominations",
+        "points": 15
+      },
+      {
+        "text": "Paul McCartney",
+        "display": "Paul McCartney \u2014 73 Grammy nominations",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Beyonc\u00e9 and Jay-Z are tied for most all-time nominations as of 2024. Verify Kanye/McCartney exact counts."
+  },
+  {
+    "question": "Name the rock bands with the most worldwide album sales.",
+    "answers": [
+      {
+        "text": "The Beatles",
+        "display": "The Beatles \u2014 600 million+ albums sold",
+        "points": 30
+      },
+      {
+        "text": "Led Zeppelin",
+        "display": "Led Zeppelin \u2014 300 million+ albums sold",
+        "points": 25
+      },
+      {
+        "text": "Pink Floyd",
+        "display": "Pink Floyd \u2014 250 million+ albums sold",
+        "points": 20
+      },
+      {
+        "text": "The Rolling Stones",
+        "display": "The Rolling Stones \u2014 250 million+ albums sold",
+        "points": 15
+      },
+      {
+        "text": "AC/DC",
+        "display": "AC/DC \u2014 200 million+ albums sold",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Pink Floyd and The Rolling Stones are roughly tied."
+  },
+  {
+    "question": "Name the best-selling female solo artists of all time.",
+    "answers": [
+      {
+        "text": "Madonna",
+        "display": "Madonna \u2014 300 million+ records sold",
+        "points": 30
+      },
+      {
+        "text": "Celine Dion",
+        "display": "Celine Dion \u2014 220 million+ records sold",
+        "points": 25
+      },
+      {
+        "text": "Whitney Houston",
+        "display": "Whitney Houston \u2014 200 million+ records sold",
+        "points": 20
+      },
+      {
+        "text": "Mariah Carey",
+        "display": "Mariah Carey \u2014 200 million+ records sold",
+        "points": 15
+      },
+      {
+        "text": "Britney Spears",
+        "display": "Britney Spears \u2014 150 million+ records sold",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Taylor Swift's rapidly growing sales may have moved her into this top 5."
+  },
+  {
+    "question": "Name the most viewed music videos on YouTube of all time.",
+    "answers": [
+      {
+        "text": "Baby Shark Dance",
+        "display": "\"Baby Shark Dance\" (Pinkfong) \u2014 14 billion+ views",
+        "points": 30
+      },
+      {
+        "text": "Despacito",
+        "display": "\"Despacito\" (Luis Fonsi ft. Daddy Yankee) \u2014 8 billion+ views",
+        "points": 25
+      },
+      {
+        "text": "Shape of You",
+        "display": "\"Shape of You\" (Ed Sheeran) \u2014 6 billion+ views",
+        "points": 20
+      },
+      {
+        "text": "See You Again",
+        "display": "\"See You Again\" (Wiz Khalifa ft. Charlie Puth) \u2014 6 billion+ views",
+        "points": 15
+      },
+      {
+        "text": "Uptown Funk",
+        "display": "\"Uptown Funk\" (Mark Ronson ft. Bruno Mars) \u2014 5 billion+ views",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "View counts change constantly; verify current rankings before play."
+  },
+  {
+    "question": "Name the artists with the most #1 singles on the UK Singles Chart.",
+    "answers": [
+      {
+        "text": "Elvis Presley",
+        "display": "Elvis Presley \u2014 21 #1 singles in the UK",
+        "points": 30
+      },
+      {
+        "text": "The Beatles",
+        "display": "The Beatles \u2014 17 #1 singles in the UK",
+        "points": 25
+      },
+      {
+        "text": "Cliff Richard",
+        "display": "Cliff Richard \u2014 14 #1 singles in the UK",
+        "points": 20
+      },
+      {
+        "text": "Westlife",
+        "display": "Westlife \u2014 14 #1 singles in the UK",
+        "points": 15
+      },
+      {
+        "text": "Madonna",
+        "display": "Madonna \u2014 13 #1 singles in the UK",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Cliff Richard and Westlife are tied at 14; verify Elvis total."
+  },
+  {
+    "question": "Name the hip-hop/rap artists with the most Grammy Award wins.",
+    "answers": [
+      {
+        "text": "Kanye West",
+        "display": "Kanye West \u2014 24 Grammy wins",
+        "points": 30
+      },
+      {
+        "text": "Jay-Z",
+        "display": "Jay-Z \u2014 24 Grammy wins",
+        "points": 25
+      },
+      {
+        "text": "Kendrick Lamar",
+        "display": "Kendrick Lamar \u2014 22 Grammy wins",
+        "points": 20
+      },
+      {
+        "text": "Eminem",
+        "display": "Eminem \u2014 15 Grammy wins",
+        "points": 15
+      },
+      {
+        "text": "Lauryn Hill",
+        "display": "Lauryn Hill \u2014 8 Grammy wins",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Kendrick won 5 Grammys at the 2025 ceremony (for Not Like Us); verify updated totals for all."
+  },
+  {
+    "question": "Name the country artists with the most Grammy Award wins.",
+    "answers": [
+      {
+        "text": "Alison Krauss",
+        "display": "Alison Krauss \u2014 27 Grammy wins",
+        "points": 30
+      },
+      {
+        "text": "Vince Gill",
+        "display": "Vince Gill \u2014 22 Grammy wins",
+        "points": 25
+      },
+      {
+        "text": "Chet Atkins",
+        "display": "Chet Atkins \u2014 14 Grammy wins",
+        "points": 20
+      },
+      {
+        "text": "Dolly Parton",
+        "display": "Dolly Parton \u2014 11 Grammy wins",
+        "points": 15
+      },
+      {
+        "text": "Willie Nelson",
+        "display": "Willie Nelson \u2014 9 Grammy wins",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Verify Dolly Parton and Willie Nelson exact totals."
+  },
+  {
+    "question": "Name the most-streamed songs on Spotify of all time.",
+    "answers": [
+      {
+        "text": "Blinding Lights",
+        "display": "\"Blinding Lights\" (The Weeknd) \u2014 4.3 billion+ streams",
+        "points": 30
+      },
+      {
+        "text": "Shape of You",
+        "display": "\"Shape of You\" (Ed Sheeran) \u2014 4.0 billion+ streams",
+        "points": 25
+      },
+      {
+        "text": "Dance Monkey",
+        "display": "\"Dance Monkey\" (Tones and I) \u2014 3.6 billion+ streams",
+        "points": 20
+      },
+      {
+        "text": "Sunflower",
+        "display": "\"Sunflower\" (Post Malone & Swae Lee) \u2014 3.6 billion+ streams",
+        "points": 15
+      },
+      {
+        "text": "One Dance",
+        "display": "\"One Dance\" (Drake ft. WizKid & Kyla) \u2014 3.3 billion+ streams",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Streaming totals update constantly; verify rankings before play."
+  },
+  {
+    "question": "Name the female artists with the most #1 singles on the Billboard Hot 100.",
+    "answers": [
+      {
+        "text": "Mariah Carey",
+        "display": "Mariah Carey \u2014 19 #1 singles",
+        "points": 30
+      },
+      {
+        "text": "Rihanna",
+        "display": "Rihanna \u2014 14 #1 singles",
+        "points": 25
+      },
+      {
+        "text": "Madonna",
+        "display": "Madonna \u2014 12 #1 singles",
+        "points": 20
+      },
+      {
+        "text": "Whitney Houston",
+        "display": "Whitney Houston \u2014 11 #1 singles",
+        "points": 15
+      },
+      {
+        "text": "Taylor Swift",
+        "display": "Taylor Swift \u2014 8 #1 singles",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Taylor Swift's count may have grown; verify before play."
+  },
+  {
+    "question": "Name the albums with the most weeks at #1 on the Billboard 200 all-time.",
+    "answers": [
+      {
+        "text": "South Pacific",
+        "display": "South Pacific (Original Soundtrack) \u2014 69 weeks at #1",
+        "points": 30
+      },
+      {
+        "text": "West Side Story",
+        "display": "West Side Story (Original Soundtrack) \u2014 54 weeks at #1",
+        "points": 25
+      },
+      {
+        "text": "Thriller",
+        "display": "Thriller (Michael Jackson) \u2014 37 weeks at #1",
+        "points": 20
+      },
+      {
+        "text": "Rumours",
+        "display": "Rumours (Fleetwood Mac) \u2014 31 weeks at #1",
+        "points": 15
+      },
+      {
+        "text": "Purple Rain",
+        "display": "Purple Rain (Prince) \u2014 24 weeks at #1",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the artists who have won the Grammy Award for Album of the Year the most times.",
+    "answers": [
+      {
+        "text": "Taylor Swift",
+        "display": "Taylor Swift \u2014 4 Album of the Year wins (Fearless, 1989, Folklore, Midnights)",
+        "points": 30
+      },
+      {
+        "text": "Frank Sinatra",
+        "display": "Frank Sinatra \u2014 3 Album of the Year wins",
+        "points": 25
+      },
+      {
+        "text": "Stevie Wonder",
+        "display": "Stevie Wonder \u2014 3 Album of the Year wins",
+        "points": 20
+      },
+      {
+        "text": "Paul Simon",
+        "display": "Paul Simon \u2014 2 Album of the Year wins",
+        "points": 15
+      },
+      {
+        "text": "U2",
+        "display": "U2 \u2014 2 Album of the Year wins",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the best-selling boy bands of all time.",
+    "answers": [
+      {
+        "text": "Backstreet Boys",
+        "display": "Backstreet Boys \u2014 100 million+ records sold",
+        "points": 30
+      },
+      {
+        "text": "New Kids on the Block",
+        "display": "New Kids on the Block \u2014 80 million+ records sold",
+        "points": 25
+      },
+      {
+        "text": "NSYNC",
+        "display": "NSYNC \u2014 70 million+ records sold",
+        "points": 20
+      },
+      {
+        "text": "One Direction",
+        "display": "One Direction \u2014 70 million+ records sold",
+        "points": 15
+      },
+      {
+        "text": "Boyz II Men",
+        "display": "Boyz II Men \u2014 60 million+ records sold",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "NSYNC and One Direction are roughly tied; verify."
+  },
+  {
+    "question": "Name the artists with the most MTV Video Music Award wins all-time.",
+    "answers": [
+      {
+        "text": "Beyonc\u00e9",
+        "display": "Beyonc\u00e9 \u2014 35+ MTV VMA wins",
+        "points": 30
+      },
+      {
+        "text": "Madonna",
+        "display": "Madonna \u2014 20 MTV VMA wins",
+        "points": 25
+      },
+      {
+        "text": "Lady Gaga",
+        "display": "Lady Gaga \u2014 18 MTV VMA wins",
+        "points": 20
+      },
+      {
+        "text": "Eminem",
+        "display": "Eminem \u2014 10 MTV VMA wins",
+        "points": 15
+      },
+      {
+        "text": "Peter Gabriel",
+        "display": "Peter Gabriel \u2014 9 MTV VMA wins (\"Sledgehammer\" swept 1987)",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Verify Madonna and Lady Gaga totals."
+  },
+  {
+    "question": "Name the albums with the highest RIAA certifications (most units sold in the US).",
+    "answers": [
+      {
+        "text": "Their Greatest Hits 1971\u20131975",
+        "display": "Their Greatest Hits 1971\u20131975 (Eagles) \u2014 38\u00d7 Platinum (38 million units)",
+        "points": 30
+      },
+      {
+        "text": "Thriller",
+        "display": "Thriller (Michael Jackson) \u2014 34\u00d7 Platinum (34 million units)",
+        "points": 25
+      },
+      {
+        "text": "Led Zeppelin IV",
+        "display": "Led Zeppelin IV \u2014 23\u00d7 Platinum (23 million units)",
+        "points": 20
+      },
+      {
+        "text": "The Wall",
+        "display": "The Wall (Pink Floyd) \u2014 23\u00d7 Platinum (23 million units)",
+        "points": 15
+      },
+      {
+        "text": "Back in Black",
+        "display": "Back in Black (AC/DC) \u2014 22\u00d7 Platinum (22 million units)",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Led Zeppelin IV and The Wall are tied at 23\u00d7."
+  },
+  {
+    "question": "Name the male solo artists with the most #1 singles on the Billboard Hot 100.",
+    "answers": [
+      {
+        "text": "Elvis Presley",
+        "display": "Elvis Presley \u2014 18 #1 singles",
+        "points": 30
+      },
+      {
+        "text": "Michael Jackson",
+        "display": "Michael Jackson \u2014 13 #1 singles",
+        "points": 25
+      },
+      {
+        "text": "Drake",
+        "display": "Drake \u2014 13 #1 singles",
+        "points": 20
+      },
+      {
+        "text": "Stevie Wonder",
+        "display": "Stevie Wonder \u2014 10 #1 singles",
+        "points": 15
+      },
+      {
+        "text": "Usher",
+        "display": "Usher \u2014 9 #1 singles",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Michael Jackson and Drake are tied; Drake's count may have grown. Verify."
+  },
+  {
+    "question": "Name the artists with the most American Music Award wins all-time.",
+    "answers": [
+      {
+        "text": "Taylor Swift",
+        "display": "Taylor Swift \u2014 40 AMA wins",
+        "points": 30
+      },
+      {
+        "text": "Michael Jackson",
+        "display": "Michael Jackson \u2014 26 AMA wins",
+        "points": 25
+      },
+      {
+        "text": "Whitney Houston",
+        "display": "Whitney Houston \u2014 22 AMA wins",
+        "points": 20
+      },
+      {
+        "text": "Kenny Rogers",
+        "display": "Kenny Rogers \u2014 19 AMA wins",
+        "points": 15
+      },
+      {
+        "text": "Garth Brooks",
+        "display": "Garth Brooks \u2014 18 AMA wins",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the music tours with the highest gross revenue of all time.",
+    "answers": [
+      {
+        "text": "The Eras Tour",
+        "display": "Taylor Swift: The Eras Tour \u2014 $2.1 billion (2023\u20132024)",
+        "points": 30
+      },
+      {
+        "text": "Mathematics Tour",
+        "display": "Ed Sheeran: Mathematics Tour \u2014 $1.04 billion (2022\u20132024)",
+        "points": 25
+      },
+      {
+        "text": "Farewell Yellow Brick Road",
+        "display": "Elton John: Farewell Yellow Brick Road \u2014 $939 million (2018\u20132023)",
+        "points": 20
+      },
+      {
+        "text": "360\u00b0 Tour",
+        "display": "U2: 360\u00b0 Tour \u2014 $736 million (2009\u20132011)",
+        "points": 15
+      },
+      {
+        "text": "A Bigger Bang Tour",
+        "display": "The Rolling Stones: A Bigger Bang Tour \u2014 $558 million (2005\u20132007)",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most-streamed artists on Spotify of all time.",
+    "answers": [
+      {
+        "text": "Drake",
+        "display": "Drake \u2014 most-streamed artist on Spotify all-time (~57 billion streams)",
+        "points": 30
+      },
+      {
+        "text": "Ed Sheeran",
+        "display": "Ed Sheeran \u2014 2nd most-streamed on Spotify (~47 billion streams)",
+        "points": 25
+      },
+      {
+        "text": "Bad Bunny",
+        "display": "Bad Bunny \u2014 3rd most-streamed on Spotify (~40+ billion streams)",
+        "points": 20
+      },
+      {
+        "text": "The Weeknd",
+        "display": "The Weeknd \u2014 4th most-streamed on Spotify (~40 billion streams)",
+        "points": 15
+      },
+      {
+        "text": "Taylor Swift",
+        "display": "Taylor Swift \u2014 5th most-streamed on Spotify (~35+ billion streams)",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Streaming rankings change constantly; verify before play."
+  },
+  {
+    "question": "Name the best-selling country albums of all time.",
+    "answers": [
+      {
+        "text": "Come On Over",
+        "display": "Come On Over (Shania Twain) \u2014 ~40 million copies sold worldwide",
+        "points": 30
+      },
+      {
+        "text": "The Woman in Me",
+        "display": "The Woman in Me (Shania Twain) \u2014 ~20 million copies sold worldwide",
+        "points": 25
+      },
+      {
+        "text": "No Fences",
+        "display": "No Fences (Garth Brooks) \u2014 ~18 million copies sold worldwide",
+        "points": 20
+      },
+      {
+        "text": "Ropin' the Wind",
+        "display": "Ropin' the Wind (Garth Brooks) \u2014 ~14 million copies sold worldwide",
+        "points": 15
+      },
+      {
+        "text": "Fearless",
+        "display": "Fearless (Taylor Swift) \u2014 ~12 million copies sold worldwide",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the artists who have been inducted into the Rock and Roll Hall of Fame the most times.",
+    "answers": [
+      {
+        "text": "Eric Clapton",
+        "display": "Eric Clapton \u2014 3 inductions (Yardbirds, Cream, solo)",
+        "points": 30
+      },
+      {
+        "text": "Neil Young",
+        "display": "Neil Young \u2014 2 inductions (solo, Buffalo Springfield)",
+        "points": 25
+      },
+      {
+        "text": "Stevie Nicks",
+        "display": "Stevie Nicks \u2014 2 inductions (Fleetwood Mac, solo)",
+        "points": 20
+      },
+      {
+        "text": "Jimmy Page",
+        "display": "Jimmy Page \u2014 2 inductions (Yardbirds, Led Zeppelin)",
+        "points": 15
+      },
+      {
+        "text": "Dave Grohl",
+        "display": "Dave Grohl \u2014 2 inductions (Nirvana, Foo Fighters)",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Eric Clapton is the only artist with 3 Rock Hall inductions."
+  },
+  {
+    "question": "Name the artists with the most #1 albums on the Billboard 200.",
+    "answers": [
+      {
+        "text": "Jay-Z",
+        "display": "Jay-Z \u2014 14 #1 albums on the Billboard 200",
+        "points": 30
+      },
+      {
+        "text": "The Beatles",
+        "display": "The Beatles \u2014 10 #1 albums on the Billboard 200",
+        "points": 25
+      },
+      {
+        "text": "Eminem",
+        "display": "Eminem \u2014 10 #1 albums on the Billboard 200",
+        "points": 20
+      },
+      {
+        "text": "Bruce Springsteen",
+        "display": "Bruce Springsteen \u2014 9 #1 albums on the Billboard 200",
+        "points": 15
+      },
+      {
+        "text": "Taylor Swift",
+        "display": "Taylor Swift \u2014 9 #1 albums on the Billboard 200",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Verify all totals; Taylor Swift's count has grown rapidly."
+  },
+  {
+    "question": "Name the artists with the most Billboard Music Award wins all-time.",
+    "answers": [
+      {
+        "text": "Taylor Swift",
+        "display": "Taylor Swift \u2014 64 Billboard Music Award wins",
+        "points": 30
+      },
+      {
+        "text": "Drake",
+        "display": "Drake \u2014 38 Billboard Music Award wins",
+        "points": 25
+      },
+      {
+        "text": "The Weeknd",
+        "display": "The Weeknd \u2014 18 Billboard Music Award wins",
+        "points": 20
+      },
+      {
+        "text": "Mariah Carey",
+        "display": "Mariah Carey \u2014 17 Billboard Music Award wins",
+        "points": 15
+      },
+      {
+        "text": "Whitney Houston",
+        "display": "Whitney Houston \u2014 17 Billboard Music Award wins",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Mariah and Whitney may be tied; verify."
+  },
+  {
+    "question": "Name the artists who have won the most Grammy Awards in a single night.",
+    "answers": [
+      {
+        "text": "Carlos Santana",
+        "display": "Carlos Santana \u2014 9 Grammys in one night (2000, for Supernatural)",
+        "points": 30
+      },
+      {
+        "text": "Michael Jackson",
+        "display": "Michael Jackson \u2014 8 Grammys in one night (1984, for Thriller)",
+        "points": 25
+      },
+      {
+        "text": "Adele",
+        "display": "Adele \u2014 6 Grammys in one night (2012, for 21)",
+        "points": 20
+      },
+      {
+        "text": "Beyonc\u00e9",
+        "display": "Beyonc\u00e9 \u2014 5 Grammys in one night (2004, for Dangerously in Love)",
+        "points": 15
+      },
+      {
+        "text": "Billie Eilish",
+        "display": "Billie Eilish \u2014 5 Grammys in one night (2020)",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the best-selling movie soundtracks of all time.",
+    "answers": [
+      {
+        "text": "The Bodyguard",
+        "display": "The Bodyguard (1992) \u2014 ~45 million copies sold worldwide",
+        "points": 30
+      },
+      {
+        "text": "Dirty Dancing",
+        "display": "Dirty Dancing (1987) \u2014 ~32 million copies sold worldwide",
+        "points": 25
+      },
+      {
+        "text": "Titanic",
+        "display": "Titanic (1997) \u2014 ~30 million copies sold worldwide",
+        "points": 20
+      },
+      {
+        "text": "Grease",
+        "display": "Grease (1978) \u2014 ~28 million copies sold worldwide",
+        "points": 15
+      },
+      {
+        "text": "Purple Rain",
+        "display": "Purple Rain (1984) \u2014 ~25 million copies sold worldwide",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the artists with the most Diamond-certified singles (10 million+ units) by the RIAA.",
+    "answers": [
+      {
+        "text": "Drake",
+        "display": "Drake \u2014 most RIAA Diamond-certified singles of any artist",
+        "points": 30
+      },
+      {
+        "text": "Taylor Swift",
+        "display": "Taylor Swift \u2014 multiple RIAA Diamond-certified singles",
+        "points": 25
+      },
+      {
+        "text": "Post Malone",
+        "display": "Post Malone \u2014 multiple RIAA Diamond-certified singles",
+        "points": 20
+      },
+      {
+        "text": "Ed Sheeran",
+        "display": "Ed Sheeran \u2014 multiple RIAA Diamond-certified singles",
+        "points": 15
+      },
+      {
+        "text": "Bruno Mars",
+        "display": "Bruno Mars \u2014 multiple RIAA Diamond-certified singles",
+        "points": 10
+      }
+    ],
+    "category": "Music",
+    "removeQuestion": "",
+    "factCheck": "Exact counts shift as certifications are updated; verify specific totals before play."
+  }
+]

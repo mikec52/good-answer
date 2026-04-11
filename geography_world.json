@@ -1,0 +1,392 @@
+[
+  {
+    "question": "Name the largest countries in the world by land area.",
+    "answers": [
+      {"text": "Russia", "display": "Russia — 6.6 million sq mi (largest country by land area)", "points": 30},
+      {"text": "Canada", "display": "Canada — 3.9 million sq mi", "points": 25},
+      {"text": "United States", "display": "United States — 3.8 million sq mi", "points": 20},
+      {"text": "China", "display": "China — 3.7 million sq mi", "points": 15},
+      {"text": "Brazil", "display": "Brazil — 3.3 million sq mi", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the smallest countries in the world by land area.",
+    "answers": [
+      {"text": "Vatican City", "display": "Vatican City — 0.17 sq mi (smallest country in the world)", "points": 30},
+      {"text": "Monaco", "display": "Monaco — 0.78 sq mi", "points": 25},
+      {"text": "San Marino", "display": "San Marino — 24 sq mi", "points": 20},
+      {"text": "Liechtenstein", "display": "Liechtenstein — 62 sq mi", "points": 15},
+      {"text": "Malta", "display": "Malta — 122 sq mi", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most populous countries in the world.",
+    "answers": [
+      {"text": "India", "display": "India — 1.44 billion people (surpassed China in 2023)", "points": 30},
+      {"text": "China", "display": "China — 1.41 billion people", "points": 25},
+      {"text": "United States", "display": "United States — 340 million people", "points": 20},
+      {"text": "Indonesia", "display": "Indonesia — 278 million people", "points": 15},
+      {"text": "Pakistan", "display": "Pakistan — 240 million people", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most populous cities in the world by urban area population.",
+    "answers": [
+      {"text": "Tokyo", "display": "Tokyo — 37 million people (largest urban area in the world)", "points": 30},
+      {"text": "Delhi", "display": "Delhi — 33 million people", "points": 25},
+      {"text": "Shanghai", "display": "Shanghai — 29 million people", "points": 20},
+      {"text": "Dhaka", "display": "Dhaka — 23 million people", "points": 15},
+      {"text": "São Paulo", "display": "São Paulo — 22 million people", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the tallest mountains in the world by elevation above sea level.",
+    "answers": [
+      {"text": "Mount Everest", "display": "Mount Everest — 29,032 ft (tallest mountain in the world)", "points": 30},
+      {"text": "K2", "display": "K2 — 28,251 ft", "points": 25},
+      {"text": "Kangchenjunga", "display": "Kangchenjunga — 28,169 ft", "points": 20},
+      {"text": "Lhotse", "display": "Lhotse — 27,940 ft", "points": 15},
+      {"text": "Makalu", "display": "Makalu — 27,838 ft", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the longest rivers in the world.",
+    "answers": [
+      {"text": "Nile", "display": "Nile — 4,130 miles (longest river in the world)", "points": 30},
+      {"text": "Amazon", "display": "Amazon — 3,976 miles", "points": 25},
+      {"text": "Yangtze", "display": "Yangtze — 3,917 miles", "points": 20},
+      {"text": "Mississippi–Missouri", "display": "Mississippi–Missouri — 3,710 miles", "points": 15},
+      {"text": "Yenisei", "display": "Yenisei — 3,445 miles", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest oceans in the world by surface area.",
+    "answers": [
+      {"text": "Pacific Ocean", "display": "Pacific Ocean — 63.8 million sq mi (largest ocean, covers 1/3 of Earth)", "points": 30},
+      {"text": "Atlantic Ocean", "display": "Atlantic Ocean — 31.8 million sq mi", "points": 25},
+      {"text": "Indian Ocean", "display": "Indian Ocean — 27.2 million sq mi", "points": 20},
+      {"text": "Southern Ocean", "display": "Southern Ocean — 7.8 million sq mi", "points": 15},
+      {"text": "Arctic Ocean", "display": "Arctic Ocean — 5.4 million sq mi (smallest ocean)", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest lakes in the world by surface area.",
+    "answers": [
+      {"text": "Caspian Sea", "display": "Caspian Sea — 143,000 sq mi (largest lake in the world)", "points": 30},
+      {"text": "Lake Superior", "display": "Lake Superior — 31,700 sq mi (largest freshwater lake by surface area)", "points": 25},
+      {"text": "Lake Victoria", "display": "Lake Victoria — 26,600 sq mi", "points": 20},
+      {"text": "Lake Huron", "display": "Lake Huron — 23,000 sq mi", "points": 15},
+      {"text": "Lake Michigan", "display": "Lake Michigan — 22,400 sq mi", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest islands in the world by land area.",
+    "answers": [
+      {"text": "Greenland", "display": "Greenland — 836,000 sq mi (largest island in the world)", "points": 30},
+      {"text": "New Guinea", "display": "New Guinea — 303,000 sq mi", "points": 25},
+      {"text": "Borneo", "display": "Borneo — 288,000 sq mi", "points": 20},
+      {"text": "Madagascar", "display": "Madagascar — 227,000 sq mi", "points": 15},
+      {"text": "Baffin Island", "display": "Baffin Island — 196,000 sq mi", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest deserts in the world by area.",
+    "answers": [
+      {"text": "Antarctic Desert", "display": "Antarctic Desert — 5.5 million sq mi (largest desert in the world)", "points": 30},
+      {"text": "Sahara", "display": "Sahara — 3.6 million sq mi (largest hot desert)", "points": 25},
+      {"text": "Arabian Desert", "display": "Arabian Desert — 1.0 million sq mi", "points": 20},
+      {"text": "Gobi Desert", "display": "Gobi Desert — 500,000 sq mi", "points": 15},
+      {"text": "Patagonian Desert", "display": "Patagonian Desert — 260,000 sq mi", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest waterfalls in the world by total drop.",
+    "answers": [
+      {"text": "Angel Falls", "display": "Angel Falls (Venezuela) — 3,212 ft (tallest waterfall in the world)", "points": 30},
+      {"text": "Tugela Falls", "display": "Tugela Falls (South Africa) — 3,110 ft", "points": 25},
+      {"text": "Cataratas las Tres Hermanas", "display": "Cataratas las Tres Hermanas (Peru) — 3,000 ft", "points": 20},
+      {"text": "Olo'upena Falls", "display": "Olo'upena Falls (Hawaii, USA) — 2,953 ft", "points": 15},
+      {"text": "Yumbilla Falls", "display": "Yumbilla Falls (Peru) — 2,938 ft", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the deepest lakes in the world.",
+    "answers": [
+      {"text": "Lake Baikal", "display": "Lake Baikal (Russia) — 5,387 ft deep (deepest lake in the world)", "points": 30},
+      {"text": "Lake Tanganyika", "display": "Lake Tanganyika (Africa) — 4,823 ft deep", "points": 25},
+      {"text": "Caspian Sea", "display": "Caspian Sea — 3,363 ft deep", "points": 20},
+      {"text": "Lake Vostok", "display": "Lake Vostok (Antarctica) — 2,950 ft deep (subglacial)", "points": 15},
+      {"text": "O'Higgins–San Martín Lake", "display": "O'Higgins–San Martín Lake (South America) — 2,742 ft deep", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the deepest ocean trenches in the world.",
+    "answers": [
+      {"text": "Mariana Trench", "display": "Mariana Trench (Pacific) — 36,089 ft deep (deepest point on Earth)", "points": 30},
+      {"text": "Tonga Trench", "display": "Tonga Trench (Pacific) — 35,702 ft deep", "points": 25},
+      {"text": "Philippine Trench", "display": "Philippine Trench (Pacific) — 34,580 ft deep", "points": 20},
+      {"text": "Kuril–Kamchatka Trench", "display": "Kuril–Kamchatka Trench (Pacific) — 34,449 ft deep", "points": 15},
+      {"text": "Kermadec Trench", "display": "Kermadec Trench (Pacific) — 32,963 ft deep", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the longest mountain ranges in the world.",
+    "answers": [
+      {"text": "Andes", "display": "Andes (South America) — 4,500 miles (longest mountain range on land)", "points": 30},
+      {"text": "Rocky Mountains", "display": "Rocky Mountains (North America) — 3,000 miles", "points": 25},
+      {"text": "Transantarctic Mountains", "display": "Transantarctic Mountains (Antarctica) — 2,200 miles", "points": 20},
+      {"text": "Great Dividing Range", "display": "Great Dividing Range (Australia) — 2,300 miles", "points": 15},
+      {"text": "Himalayas", "display": "Himalayas (Asia) — 1,500 miles", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the countries with the longest coastlines.",
+    "answers": [
+      {"text": "Canada", "display": "Canada — 125,567 miles of coastline (longest in the world)", "points": 30},
+      {"text": "Norway", "display": "Norway — 36,122 miles of coastline", "points": 25},
+      {"text": "Indonesia", "display": "Indonesia — 33,999 miles of coastline", "points": 20},
+      {"text": "Russia", "display": "Russia — 23,396 miles of coastline", "points": 15},
+      {"text": "Philippines", "display": "Philippines — 22,549 miles of coastline", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most visited countries in the world by international tourist arrivals.",
+    "answers": [
+      {"text": "France", "display": "France — 90 million+ international tourists per year (most visited country)", "points": 30},
+      {"text": "Spain", "display": "Spain — 83 million international tourists per year", "points": 25},
+      {"text": "United States", "display": "United States — 79 million international tourists per year", "points": 20},
+      {"text": "Turkey", "display": "Turkey — 51 million international tourists per year", "points": 15},
+      {"text": "Italy", "display": "Italy — 57 million international tourists per year", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the countries with the most UNESCO World Heritage Sites.",
+    "answers": [
+      {"text": "Italy", "display": "Italy — 59 UNESCO World Heritage Sites (most of any country)", "points": 30},
+      {"text": "China", "display": "China — 57 UNESCO World Heritage Sites", "points": 25},
+      {"text": "Germany", "display": "Germany — 54 UNESCO World Heritage Sites", "points": 20},
+      {"text": "France", "display": "France — 53 UNESCO World Heritage Sites", "points": 15},
+      {"text": "Spain", "display": "Spain — 50 UNESCO World Heritage Sites", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the world's busiest airports by total passenger traffic.",
+    "answers": [
+      {"text": "Hartsfield–Jackson Atlanta", "display": "Hartsfield–Jackson Atlanta — 104 million passengers/year (busiest in the world)", "points": 30},
+      {"text": "Dubai International", "display": "Dubai International — 92 million passengers/year", "points": 25},
+      {"text": "Dallas/Fort Worth", "display": "Dallas/Fort Worth — 81 million passengers/year", "points": 20},
+      {"text": "O'Hare International", "display": "O'Hare International (Chicago) — 80 million passengers/year", "points": 15},
+      {"text": "Heathrow", "display": "Heathrow (London) — 79 million passengers/year", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the longest rail networks in the world by total track length.",
+    "answers": [
+      {"text": "United States", "display": "United States — 140,000+ miles of rail (longest network in the world)", "points": 30},
+      {"text": "China", "display": "China — 100,000+ miles of rail", "points": 25},
+      {"text": "Russia", "display": "Russia — 54,000+ miles of rail", "points": 20},
+      {"text": "India", "display": "India — 40,000+ miles of rail", "points": 15},
+      {"text": "Canada", "display": "Canada — 28,000+ miles of rail", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the longest road tunnels in the world.",
+    "answers": [
+      {"text": "Lærdal Tunnel", "display": "Lærdal Tunnel (Norway) — 15.2 miles (longest road tunnel in the world)", "points": 30},
+      {"text": "Zhongnanshan Tunnel", "display": "Zhongnanshan Tunnel (China) — 11.2 miles", "points": 25},
+      {"text": "St. Gotthard Road Tunnel", "display": "St. Gotthard Road Tunnel (Switzerland) — 10.5 miles", "points": 20},
+      {"text": "Arlberg Road Tunnel", "display": "Arlberg Road Tunnel (Austria) — 8.7 miles", "points": 15},
+      {"text": "Hsuehshan Tunnel", "display": "Hsuehshan Tunnel (Taiwan) — 8.1 miles", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the longest bridges in the world by total span.",
+    "answers": [
+      {"text": "Danyang–Kunshan Grand Bridge", "display": "Danyang–Kunshan Grand Bridge (China) — 102 miles (longest bridge in the world)", "points": 30},
+      {"text": "Changhua–Kaohsiung Viaduct", "display": "Changhua–Kaohsiung Viaduct (Taiwan) — 98 miles", "points": 25},
+      {"text": "Tianjin Grand Bridge", "display": "Tianjin Grand Bridge (China) — 74 miles", "points": 20},
+      {"text": "Weinan Weihe Grand Bridge", "display": "Weinan Weihe Grand Bridge (China) — 49 miles", "points": 15},
+      {"text": "Bang Na Expressway", "display": "Bang Na Expressway (Thailand) — 33 miles", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the countries with the highest population density (people per square mile).",
+    "answers": [
+      {"text": "Monaco", "display": "Monaco — 51,000 people per sq mi (most densely populated country)", "points": 30},
+      {"text": "Singapore", "display": "Singapore — 21,000 people per sq mi", "points": 25},
+      {"text": "Bahrain", "display": "Bahrain — 5,300 people per sq mi", "points": 20},
+      {"text": "Bangladesh", "display": "Bangladesh — 3,100 people per sq mi", "points": 15},
+      {"text": "Maldives", "display": "Maldives — 3,800 people per sq mi", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest capital cities in the world by elevation.",
+    "answers": [
+      {"text": "Sucre", "display": "Sucre, Bolivia — 9,350 ft above sea level (highest constitutional capital)", "points": 30},
+      {"text": "Quito", "display": "Quito, Ecuador — 9,350 ft above sea level", "points": 25},
+      {"text": "Thimphu", "display": "Thimphu, Bhutan — 7,710 ft above sea level", "points": 20},
+      {"text": "Bogotá", "display": "Bogotá, Colombia — 8,660 ft above sea level", "points": 15},
+      {"text": "Addis Ababa", "display": "Addis Ababa, Ethiopia — 7,726 ft above sea level", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest countries in Africa by land area.",
+    "answers": [
+      {"text": "Algeria", "display": "Algeria — 919,000 sq mi (largest country in Africa)", "points": 30},
+      {"text": "Democratic Republic of the Congo", "display": "Democratic Republic of the Congo — 905,000 sq mi", "points": 25},
+      {"text": "Sudan", "display": "Sudan — 728,000 sq mi", "points": 20},
+      {"text": "Libya", "display": "Libya — 679,000 sq mi", "points": 15},
+      {"text": "Chad", "display": "Chad — 496,000 sq mi", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest countries in South America by land area.",
+    "answers": [
+      {"text": "Brazil", "display": "Brazil — 3.3 million sq mi (largest country in South America)", "points": 30},
+      {"text": "Argentina", "display": "Argentina — 1.1 million sq mi", "points": 25},
+      {"text": "Peru", "display": "Peru — 496,000 sq mi", "points": 20},
+      {"text": "Colombia", "display": "Colombia — 440,000 sq mi", "points": 15},
+      {"text": "Bolivia", "display": "Bolivia — 424,000 sq mi", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the tallest volcanoes in the world by elevation.",
+    "answers": [
+      {"text": "Ojos del Salado", "display": "Ojos del Salado (Argentina/Chile) — 22,615 ft (tallest active volcano)", "points": 30},
+      {"text": "Nevado Pissis", "display": "Nevado Pissis (Argentina) — 22,293 ft", "points": 25},
+      {"text": "Nevado Tres Cruces", "display": "Nevado Tres Cruces (Chile) — 22,162 ft", "points": 20},
+      {"text": "Mauna Kea", "display": "Mauna Kea (Hawaii) — 13,796 ft above sea level (33,500 ft from ocean floor)", "points": 15},
+      {"text": "Mount Kilimanjaro", "display": "Mount Kilimanjaro (Tanzania) — 19,341 ft (tallest freestanding mountain)", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the countries with the most land borders (neighboring countries).",
+    "answers": [
+      {"text": "China", "display": "China — 14 neighboring countries (tied for most in the world)", "points": 30},
+      {"text": "Russia", "display": "Russia — 14 neighboring countries (tied for most in the world)", "points": 25},
+      {"text": "Brazil", "display": "Brazil — 10 neighboring countries", "points": 20},
+      {"text": "Democratic Republic of the Congo", "display": "Democratic Republic of the Congo — 9 neighboring countries", "points": 15},
+      {"text": "Germany", "display": "Germany — 9 neighboring countries", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the world's largest rainforests by area.",
+    "answers": [
+      {"text": "Amazon Rainforest", "display": "Amazon Rainforest (South America) — 2.1 million sq mi (largest rainforest in the world)", "points": 30},
+      {"text": "Congo Rainforest", "display": "Congo Rainforest (Central Africa) — 700,000 sq mi", "points": 25},
+      {"text": "Valdivian Temperate Rainforest", "display": "Valdivian Temperate Rainforest (Chile/Argentina) — 95,000 sq mi", "points": 20},
+      {"text": "Tongass National Forest", "display": "Tongass National Forest (Alaska) — 26,000 sq mi (largest US national forest)", "points": 15},
+      {"text": "Daintree Rainforest", "display": "Daintree Rainforest (Australia) — 460 sq mi (oldest rainforest on Earth)", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the longest national highways and road systems in the world.",
+    "answers": [
+      {"text": "United States Interstate Highway System", "display": "US Interstate Highway System — 48,000+ miles (longest national highway system)", "points": 30},
+      {"text": "China National Highways", "display": "China National Highways — 100,000+ miles of expressways", "points": 25},
+      {"text": "Trans-Siberian Highway", "display": "Trans-Siberian Highway (Russia) — 6,800 miles", "points": 20},
+      {"text": "Pan-American Highway", "display": "Pan-American Highway — 19,000 miles (longest road in the world)", "points": 15},
+      {"text": "Highway 1 (Australia)", "display": "Highway 1 (Australia) — 9,000 miles (longest national highway)", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most populous metropolitan areas in the Americas.",
+    "answers": [
+      {"text": "São Paulo", "display": "São Paulo, Brazil — 22 million people (largest metro area in the Americas)", "points": 30},
+      {"text": "Mexico City", "display": "Mexico City, Mexico — 22 million people", "points": 25},
+      {"text": "New York City", "display": "New York City, USA — 19 million people", "points": 20},
+      {"text": "Los Angeles", "display": "Los Angeles, USA — 13 million people", "points": 15},
+      {"text": "Buenos Aires", "display": "Buenos Aires, Argentina — 15 million people", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  }
+]

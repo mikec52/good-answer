@@ -1,0 +1,392 @@
+[
+  {
+    "question": "Name the highest-grossing films of all time worldwide (unadjusted).",
+    "answers": [
+      {"text": "Avatar", "display": "Avatar (2009) — $2.92 billion worldwide", "points": 30},
+      {"text": "Avengers: Endgame", "display": "Avengers: Endgame (2019) — $2.80 billion worldwide", "points": 25},
+      {"text": "Avatar: The Way of Water", "display": "Avatar: The Way of Water (2022) — $2.32 billion worldwide", "points": 20},
+      {"text": "Titanic", "display": "Titanic (1997) — $2.26 billion worldwide", "points": 15},
+      {"text": "Star Wars: The Force Awakens", "display": "Star Wars: The Force Awakens (2015) — $2.07 billion worldwide", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the films that have won the most Academy Awards.",
+    "answers": [
+      {"text": "Ben-Hur", "display": "Ben-Hur (1959) — 11 Oscar wins (tied for all-time record)", "points": 30},
+      {"text": "Titanic", "display": "Titanic (1997) — 11 Oscar wins (tied for all-time record)", "points": 25},
+      {"text": "The Lord of the Rings: The Return of the King", "display": "The Return of the King (2003) — 11 Oscar wins (tied for all-time record)", "points": 20},
+      {"text": "Gigi", "display": "Gigi (1958) — 9 Oscar wins", "points": 15},
+      {"text": "The Last Emperor", "display": "The Last Emperor (1987) — 9 Oscar wins", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the films with the most Academy Award nominations.",
+    "answers": [
+      {"text": "All About Eve", "display": "All About Eve (1950) — 14 nominations (tied for all-time record)", "points": 30},
+      {"text": "Titanic", "display": "Titanic (1997) — 14 nominations (tied for all-time record)", "points": 25},
+      {"text": "La La Land", "display": "La La Land (2016) — 14 nominations (tied for all-time record)", "points": 20},
+      {"text": "Gone with the Wind", "display": "Gone with the Wind (1939) — 13 nominations", "points": 15},
+      {"text": "Forrest Gump", "display": "Forrest Gump (1994) — 13 nominations", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the actors or actresses with the most Academy Award nominations all-time.",
+    "answers": [
+      {"text": "Meryl Streep", "display": "Meryl Streep — 21 Oscar nominations (most of any performer)", "points": 30},
+      {"text": "Katharine Hepburn", "display": "Katharine Hepburn — 12 Oscar nominations", "points": 25},
+      {"text": "Jack Nicholson", "display": "Jack Nicholson — 12 Oscar nominations", "points": 20},
+      {"text": "Bette Davis", "display": "Bette Davis — 10 Oscar nominations", "points": 15},
+      {"text": "Laurence Olivier", "display": "Laurence Olivier — 10 Oscar nominations", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the performers with the most Academy Award wins for acting.",
+    "answers": [
+      {"text": "Katharine Hepburn", "display": "Katharine Hepburn — 4 Oscar acting wins (all-time record)", "points": 30},
+      {"text": "Daniel Day-Lewis", "display": "Daniel Day-Lewis — 3 Oscar acting wins", "points": 25},
+      {"text": "Meryl Streep", "display": "Meryl Streep — 3 Oscar acting wins", "points": 20},
+      {"text": "Frances McDormand", "display": "Frances McDormand — 3 Oscar acting wins", "points": 15},
+      {"text": "Walter Brennan", "display": "Walter Brennan — 3 Oscar acting wins (all supporting)", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the directors with the most Academy Award wins for Best Director.",
+    "answers": [
+      {"text": "John Ford", "display": "John Ford — 4 Best Director wins (The Informer, Grapes of Wrath, How Green Was My Valley, The Quiet Man)", "points": 30},
+      {"text": "Frank Capra", "display": "Frank Capra — 3 Best Director wins", "points": 25},
+      {"text": "William Wyler", "display": "William Wyler — 3 Best Director wins", "points": 20},
+      {"text": "Billy Wilder", "display": "Billy Wilder — 2 Best Director wins", "points": 15},
+      {"text": "Steven Spielberg", "display": "Steven Spielberg — 2 Best Director wins (Schindler's List, Saving Private Ryan)", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing film franchises of all time.",
+    "answers": [
+      {"text": "Marvel Cinematic Universe", "display": "Marvel Cinematic Universe — $30 billion+ worldwide", "points": 30},
+      {"text": "Star Wars", "display": "Star Wars — $10.3 billion+ worldwide", "points": 25},
+      {"text": "Harry Potter / Wizarding World", "display": "Harry Potter / Wizarding World — $9.4 billion+ worldwide", "points": 20},
+      {"text": "James Bond", "display": "James Bond — $7.7 billion+ worldwide", "points": 15},
+      {"text": "Fast & Furious", "display": "Fast & Furious — $7.3 billion+ worldwide", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing superhero films of all time.",
+    "answers": [
+      {"text": "Avengers: Endgame", "display": "Avengers: Endgame (2019) — $2.80 billion", "points": 30},
+      {"text": "Avengers: Infinity War", "display": "Avengers: Infinity War (2018) — $2.05 billion", "points": 25},
+      {"text": "Spider-Man: No Way Home", "display": "Spider-Man: No Way Home (2021) — $1.90 billion", "points": 20},
+      {"text": "The Avengers", "display": "The Avengers (2012) — $1.52 billion", "points": 15},
+      {"text": "Black Panther", "display": "Black Panther (2018) — $1.35 billion", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing animated films of all time.",
+    "answers": [
+      {"text": "Inside Out 2", "display": "Inside Out 2 (2024) — $1.69 billion", "points": 30},
+      {"text": "Frozen II", "display": "Frozen II (2019) — $1.45 billion", "points": 25},
+      {"text": "The Super Mario Bros. Movie", "display": "The Super Mario Bros. Movie (2023) — $1.36 billion", "points": 20},
+      {"text": "Frozen", "display": "Frozen (2013) — $1.28 billion", "points": 15},
+      {"text": "Incredibles 2", "display": "Incredibles 2 (2018) — $1.24 billion", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the films with the highest-grossing opening weekends at the domestic (US) box office.",
+    "answers": [
+      {"text": "Avengers: Endgame", "display": "Avengers: Endgame (2019) — $357 million opening weekend", "points": 30},
+      {"text": "Spider-Man: No Way Home", "display": "Spider-Man: No Way Home (2021) — $260 million opening weekend", "points": 25},
+      {"text": "Avengers: Infinity War", "display": "Avengers: Infinity War (2018) — $258 million opening weekend", "points": 20},
+      {"text": "The Avengers", "display": "The Avengers (2012) — $207 million opening weekend", "points": 15},
+      {"text": "Black Panther", "display": "Black Panther (2018) — $202 million opening weekend", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the film directors with the highest career worldwide box office gross.",
+    "answers": [
+      {"text": "Steven Spielberg", "display": "Steven Spielberg — $10.5 billion+ career worldwide gross", "points": 30},
+      {"text": "James Cameron", "display": "James Cameron — $8.5 billion+ career worldwide gross", "points": 25},
+      {"text": "Peter Jackson", "display": "Peter Jackson — $6.3 billion+ career worldwide gross", "points": 20},
+      {"text": "Christopher Nolan", "display": "Christopher Nolan — $5.8 billion+ career worldwide gross", "points": 15},
+      {"text": "Michael Bay", "display": "Michael Bay — $5.5 billion+ career worldwide gross", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the performers with the most Golden Globe wins.",
+    "answers": [
+      {"text": "Meryl Streep", "display": "Meryl Streep — 9 Golden Globe wins (most by any performer)", "points": 30},
+      {"text": "Jack Nicholson", "display": "Jack Nicholson — 6 Golden Globe wins", "points": 25},
+      {"text": "Jane Fonda", "display": "Jane Fonda — 5 Golden Globe wins", "points": 20},
+      {"text": "Barbra Streisand", "display": "Barbra Streisand — 5 Golden Globe wins", "points": 15},
+      {"text": "Bette Davis", "display": "Bette Davis — 4 Golden Globe wins", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing horror films of all time.",
+    "answers": [
+      {"text": "It", "display": "It (2017) — $701 million worldwide (highest-grossing horror film ever)", "points": 30},
+      {"text": "The Sixth Sense", "display": "The Sixth Sense (1999) — $672 million worldwide", "points": 25},
+      {"text": "It Chapter Two", "display": "It Chapter Two (2019) — $473 million worldwide", "points": 20},
+      {"text": "Jaws", "display": "Jaws (1975) — $470 million worldwide", "points": 15},
+      {"text": "A Quiet Place", "display": "A Quiet Place (2018) — $340 million worldwide", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing R-rated films of all time.",
+    "answers": [
+      {"text": "Deadpool & Wolverine", "display": "Deadpool & Wolverine (2024) — $1.34 billion (highest-grossing R-rated film ever)", "points": 30},
+      {"text": "Joker", "display": "Joker (2019) — $1.08 billion", "points": 25},
+      {"text": "Deadpool 2", "display": "Deadpool 2 (2018) — $785 million", "points": 20},
+      {"text": "Deadpool", "display": "Deadpool (2016) — $783 million", "points": 15},
+      {"text": "The Matrix Reloaded", "display": "The Matrix Reloaded (2003) — $742 million", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the films that have won the most Razzie Awards (Golden Raspberry Awards) in a single year.",
+    "answers": [
+      {"text": "Jack and Jill", "display": "Jack and Jill (2012) — 10 Razzies, swept all 10 nominated categories", "points": 30},
+      {"text": "I Know Who Killed Me", "display": "I Know Who Killed Me (2007) — 8 Razzies", "points": 25},
+      {"text": "Battlefield Earth", "display": "Battlefield Earth (2000) — 7 Razzies", "points": 20},
+      {"text": "Gigli", "display": "Gigli (2003) — 6 Razzies", "points": 15},
+      {"text": "Showgirls", "display": "Showgirls (1995) — 6 Razzies", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing Christmas and holiday films of all time.",
+    "answers": [
+      {"text": "The Grinch", "display": "The Grinch (2018, animated) — $511 million worldwide", "points": 30},
+      {"text": "Home Alone", "display": "Home Alone (1990) — $476 million worldwide", "points": 25},
+      {"text": "Home Alone 2", "display": "Home Alone 2: Lost in New York (1992) — $359 million worldwide", "points": 20},
+      {"text": "How the Grinch Stole Christmas", "display": "How the Grinch Stole Christmas (2000) — $345 million worldwide", "points": 15},
+      {"text": "The Polar Express", "display": "The Polar Express (2004) — $314 million worldwide", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing James Bond films of all time.",
+    "answers": [
+      {"text": "Skyfall", "display": "Skyfall (2012) — $1.11 billion (first Bond film to cross $1 billion)", "points": 30},
+      {"text": "Spectre", "display": "Spectre (2015) — $880 million", "points": 25},
+      {"text": "No Time to Die", "display": "No Time to Die (2021) — $774 million", "points": 20},
+      {"text": "Casino Royale", "display": "Casino Royale (2006) — $599 million", "points": 15},
+      {"text": "Die Another Day", "display": "Die Another Day (2002) — $431 million", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing war films of all time.",
+    "answers": [
+      {"text": "American Sniper", "display": "American Sniper (2014) — $547 million worldwide (highest-grossing war film ever)", "points": 30},
+      {"text": "Dunkirk", "display": "Dunkirk (2017) — $527 million worldwide", "points": 25},
+      {"text": "Saving Private Ryan", "display": "Saving Private Ryan (1998) — $482 million worldwide", "points": 20},
+      {"text": "1917", "display": "1917 (2019) — $384 million worldwide", "points": 15},
+      {"text": "Hacksaw Ridge", "display": "Hacksaw Ridge (2016) — $180 million worldwide", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing Pixar films of all time.",
+    "answers": [
+      {"text": "Inside Out 2", "display": "Inside Out 2 (2024) — $1.69 billion (highest-grossing Pixar film ever)", "points": 30},
+      {"text": "Incredibles 2", "display": "Incredibles 2 (2018) — $1.24 billion", "points": 25},
+      {"text": "Toy Story 4", "display": "Toy Story 4 (2019) — $1.07 billion", "points": 20},
+      {"text": "Finding Dory", "display": "Finding Dory (2016) — $1.03 billion", "points": 15},
+      {"text": "Toy Story 3", "display": "Toy Story 3 (2010) — $1.07 billion", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the film studios with the highest all-time North American box office gross.",
+    "answers": [
+      {"text": "Walt Disney Studios", "display": "Walt Disney Studios — $40 billion+ all-time North American gross", "points": 30},
+      {"text": "Warner Bros.", "display": "Warner Bros. — $35 billion+ all-time North American gross", "points": 25},
+      {"text": "Universal Pictures", "display": "Universal Pictures — $35 billion+ all-time North American gross", "points": 20},
+      {"text": "Sony / Columbia", "display": "Sony / Columbia — $30 billion+ all-time North American gross", "points": 15},
+      {"text": "Paramount Pictures", "display": "Paramount Pictures — $30 billion+ all-time North American gross", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing science fiction films of all time (excluding superhero films).",
+    "answers": [
+      {"text": "Avatar", "display": "Avatar (2009) — $2.92 billion", "points": 30},
+      {"text": "Avatar: The Way of Water", "display": "Avatar: The Way of Water (2022) — $2.32 billion", "points": 25},
+      {"text": "Star Wars: The Force Awakens", "display": "Star Wars: The Force Awakens (2015) — $2.07 billion", "points": 20},
+      {"text": "Jurassic World", "display": "Jurassic World (2015) — $1.67 billion", "points": 15},
+      {"text": "Star Wars: The Last Jedi", "display": "Star Wars: The Last Jedi (2017) — $1.33 billion", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most expensive films ever made by reported production budget.",
+    "answers": [
+      {"text": "Pirates of the Caribbean: On Stranger Tides", "display": "Pirates of the Caribbean: On Stranger Tides (2011) — $378.5 million budget", "points": 30},
+      {"text": "Avengers: Age of Ultron", "display": "Avengers: Age of Ultron (2015) — $365 million budget", "points": 25},
+      {"text": "Avengers: Endgame", "display": "Avengers: Endgame (2019) — $356 million budget", "points": 20},
+      {"text": "Avengers: Infinity War", "display": "Avengers: Infinity War (2018) — $316 million budget", "points": 15},
+      {"text": "Justice League", "display": "Justice League (2017) — $300 million budget", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the film composers with the most Academy Award wins.",
+    "answers": [
+      {"text": "Alan Menken", "display": "Alan Menken — 8 Oscar wins (most by any composer; scores and songs for Disney animated films)", "points": 30},
+      {"text": "John Williams", "display": "John Williams — 5 Oscar wins for film scoring (Jaws, Star Wars, E.T., Schindler's List, Fiddler on the Roof)", "points": 25},
+      {"text": "Henry Mancini", "display": "Henry Mancini — 4 Oscar wins (Breakfast at Tiffany's, Days of Wine and Roses, and others)", "points": 20},
+      {"text": "Dimitri Tiomkin", "display": "Dimitri Tiomkin — 4 Oscar wins", "points": 15},
+      {"text": "Max Steiner", "display": "Max Steiner — 3 Oscar wins (Now, Voyager; Since You Went Away; The Informer)", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing foreign-language films of all time.",
+    "answers": [
+      {"text": "The Battle at Lake Changjin", "display": "The Battle at Lake Changjin (2021, Chinese) — $902 million", "points": 30},
+      {"text": "Wolf Warrior 2", "display": "Wolf Warrior 2 (2017, Chinese) — $874 million", "points": 25},
+      {"text": "Hi, Mom", "display": "Hi, Mom (2021, Chinese) — $822 million", "points": 20},
+      {"text": "Ne Zha", "display": "Ne Zha (2019, Chinese animated) — $726 million", "points": 15},
+      {"text": "Parasite", "display": "Parasite (2019, Korean) — $258 million worldwide", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing films that also won the Academy Award for Best Picture.",
+    "answers": [
+      {"text": "Titanic", "display": "Titanic (1997) — $2.26 billion worldwide, won Best Picture", "points": 30},
+      {"text": "The Lord of the Rings: The Return of the King", "display": "The Return of the King (2003) — $1.12 billion, won Best Picture", "points": 25},
+      {"text": "Forrest Gump", "display": "Forrest Gump (1994) — $678 million, won Best Picture", "points": 20},
+      {"text": "Chicago", "display": "Chicago (2002) — $306 million, won Best Picture", "points": 15},
+      {"text": "The Silence of the Lambs", "display": "The Silence of the Lambs (1991) — $272 million, won Best Picture", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing film trilogies of all time by combined worldwide gross.",
+    "answers": [
+      {"text": "The Hobbit", "display": "The Hobbit Trilogy — $2.93 billion combined", "points": 30},
+      {"text": "The Lord of the Rings", "display": "The Lord of the Rings Trilogy — $2.92 billion combined", "points": 25},
+      {"text": "The Dark Knight Trilogy", "display": "The Dark Knight Trilogy — $2.46 billion combined", "points": 20},
+      {"text": "Jurassic Park (original trilogy)", "display": "Original Jurassic Park Trilogy — $2.02 billion combined", "points": 15},
+      {"text": "Toy Story (original trilogy)", "display": "Original Toy Story Trilogy — $1.94 billion combined", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the entertainers who have hosted the Academy Awards ceremony the most times.",
+    "answers": [
+      {"text": "Bob Hope", "display": "Bob Hope — hosted the Oscars 18 times (most ever)", "points": 30},
+      {"text": "Billy Crystal", "display": "Billy Crystal — hosted the Oscars 9 times", "points": 25},
+      {"text": "Johnny Carson", "display": "Johnny Carson — hosted the Oscars 5 times", "points": 20},
+      {"text": "Whoopi Goldberg", "display": "Whoopi Goldberg — hosted the Oscars 4 times", "points": 15},
+      {"text": "Jack Lemmon", "display": "Jack Lemmon — hosted the Oscars 4 times", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing original films of all time (not based on existing IP, not sequels).",
+    "answers": [
+      {"text": "Avatar", "display": "Avatar (2009) — $2.92 billion (original screenplay)", "points": 30},
+      {"text": "Titanic", "display": "Titanic (1997) — $2.26 billion (original screenplay)", "points": 25},
+      {"text": "Inception", "display": "Inception (2010) — $836 million (original screenplay)", "points": 20},
+      {"text": "Interstellar", "display": "Interstellar (2014) — $701 million (original screenplay)", "points": 15},
+      {"text": "The Matrix", "display": "The Matrix (1999) — $467 million (original screenplay)", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing films of all time adjusted for inflation.",
+    "answers": [
+      {"text": "Gone with the Wind", "display": "Gone with the Wind (1939) — est. $3.7 billion inflation-adjusted", "points": 30},
+      {"text": "Star Wars", "display": "Star Wars (1977) — est. $3.0 billion inflation-adjusted", "points": 25},
+      {"text": "The Sound of Music", "display": "The Sound of Music (1965) — est. $2.6 billion inflation-adjusted", "points": 20},
+      {"text": "E.T. the Extra-Terrestrial", "display": "E.T. the Extra-Terrestrial (1982) — est. $2.3 billion inflation-adjusted", "points": 15},
+      {"text": "Titanic", "display": "Titanic (1997) — est. $2.0 billion inflation-adjusted", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the highest-grossing musical films of all time.",
+    "answers": [
+      {"text": "Frozen II", "display": "Frozen II (2019) — $1.45 billion", "points": 30},
+      {"text": "Barbie", "display": "Barbie (2023) — $1.44 billion (highest-grossing live-action musical)", "points": 25},
+      {"text": "Frozen", "display": "Frozen (2013) — $1.28 billion", "points": 20},
+      {"text": "Beauty and the Beast", "display": "Beauty and the Beast (2017) — $1.26 billion", "points": 15},
+      {"text": "Mamma Mia!", "display": "Mamma Mia! (2008) — $609 million", "points": 10}
+    ],
+    "category": "Movies",
+    "removeQuestion": "",
+    "factCheck": ""
+  }
+]

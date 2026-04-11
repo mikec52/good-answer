@@ -1,0 +1,392 @@
+[
+  {
+    "question": "Name the all-time career scoring leaders in NBA history.",
+    "answers": [
+      {"text": "LeBron James", "display": "LeBron James — 40,000+ pts", "points": 30},
+      {"text": "Kareem Abdul-Jabbar", "display": "Kareem Abdul-Jabbar — 38,387 pts", "points": 25},
+      {"text": "Karl Malone", "display": "Karl Malone — 36,928 pts", "points": 20},
+      {"text": "Kobe Bryant", "display": "Kobe Bryant — 33,643 pts", "points": 15},
+      {"text": "Michael Jordan", "display": "Michael Jordan — 32,292 pts", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Verify LeBron's exact career total. Confirm Kobe vs. Jordan order at #4-5."
+  },
+  {
+    "question": "Name the all-time career assists leaders in NBA history.",
+    "answers": [
+      {"text": "John Stockton", "display": "John Stockton — 15,806 ast", "points": 30},
+      {"text": "Jason Kidd", "display": "Jason Kidd — 12,091 ast", "points": 25},
+      {"text": "Steve Nash", "display": "Steve Nash — 10,335 ast", "points": 20},
+      {"text": "Mark Jackson", "display": "Mark Jackson — 10,334 ast", "points": 15},
+      {"text": "Magic Johnson", "display": "Magic Johnson — 10,141 ast", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Verify whether Chris Paul (~11,000+ assists) has passed Kidd for #2 all-time before retirement. Confirm Nash vs. Mark Jackson order at #3-4."
+  },
+  {
+    "question": "Name the all-time career rebounds leaders in NBA history.",
+    "answers": [
+      {"text": "Wilt Chamberlain", "display": "Wilt Chamberlain — 23,924 reb", "points": 30},
+      {"text": "Bill Russell", "display": "Bill Russell — 21,620 reb", "points": 25},
+      {"text": "Moses Malone", "display": "Moses Malone — 17,834 reb", "points": 20},
+      {"text": "Kareem Abdul-Jabbar", "display": "Kareem Abdul-Jabbar — 17,440 reb", "points": 15},
+      {"text": "Elvin Hayes", "display": "Elvin Hayes — 16,279 reb", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Verify #5 — confirm Elvin Hayes over Artis Gilmore (NBA-only totals, excluding ABA stats)."
+  },
+  {
+    "question": "Name the all-time career steals leaders in NBA history.",
+    "answers": [
+      {"text": "John Stockton", "display": "John Stockton — 3,265 stl", "points": 30},
+      {"text": "Jason Kidd", "display": "Jason Kidd — 2,684 stl", "points": 25},
+      {"text": "Michael Jordan", "display": "Michael Jordan — 2,514 stl", "points": 20},
+      {"text": "Gary Payton", "display": "Gary Payton — 2,445 stl", "points": 15},
+      {"text": "Maurice Cheeks", "display": "Maurice Cheeks — 2,310 stl", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Verify whether Chris Paul entered the top 5 in career steals before retirement."
+  },
+  {
+    "question": "Name the all-time career blocks leaders in NBA history.",
+    "answers": [
+      {"text": "Hakeem Olajuwon", "display": "Hakeem Olajuwon — 3,830 blk", "points": 30},
+      {"text": "Dikembe Mutombo", "display": "Dikembe Mutombo — 3,289 blk", "points": 25},
+      {"text": "Kareem Abdul-Jabbar", "display": "Kareem Abdul-Jabbar — 3,189 blk", "points": 20},
+      {"text": "Mark Eaton", "display": "Mark Eaton — 3,064 blk", "points": 15},
+      {"text": "Tim Duncan", "display": "Tim Duncan — 3,020 blk", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Verify exact totals and order of #3-5. Some sources list Eaton above Kareem. Confirm Tim Duncan (~3,020) vs. David Robinson (~2,954) for #5."
+  },
+  {
+    "question": "Name the all-time career leaders in 3-pointers made in NBA history.",
+    "answers": [
+      {"text": "Stephen Curry", "display": "Stephen Curry — 3,700+ 3PM", "points": 30},
+      {"text": "Ray Allen", "display": "Ray Allen — 2,973 3PM", "points": 25},
+      {"text": "James Harden", "display": "James Harden — 2,800+ 3PM", "points": 20},
+      {"text": "Reggie Miller", "display": "Reggie Miller — 2,560 3PM", "points": 15},
+      {"text": "Vince Carter", "display": "Vince Carter — 2,290 3PM", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Verify Curry's exact total (active). Confirm Harden vs. Allen order at #2-3. Check if LeBron James has surpassed Vince Carter for #5."
+  },
+  {
+    "question": "Name the players with the most career games played in NBA history.",
+    "answers": [
+      {"text": "Robert Parish", "display": "Robert Parish — 1,611 games", "points": 30},
+      {"text": "Kareem Abdul-Jabbar", "display": "Kareem Abdul-Jabbar — 1,560 games", "points": 25},
+      {"text": "John Stockton", "display": "John Stockton — 1,504 games", "points": 20},
+      {"text": "Karl Malone", "display": "Karl Malone — 1,476 games", "points": 15},
+      {"text": "Kevin Willis", "display": "Kevin Willis — 1,424 games", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Verify whether Dirk Nowitzki (~1,522), Vince Carter (~1,541), or LeBron James have displaced Stockton, Malone, or Willis in the top 5."
+  },
+  {
+    "question": "Name the NBA players with the most championship rings.",
+    "answers": [
+      {"text": "Bill Russell", "display": "Bill Russell — 11 rings", "points": 30},
+      {"text": "Sam Jones", "display": "Sam Jones — 10 rings", "points": 25},
+      {"text": "John Havlicek", "display": "John Havlicek — 8 rings", "points": 20},
+      {"text": "K.C. Jones", "display": "K.C. Jones — 8 rings", "points": 15},
+      {"text": "Tom Heinsohn", "display": "Tom Heinsohn — 8 rings", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Four players share 8 rings (Havlicek, K.C. Jones, Heinsohn, Satch Sanders) — all Boston Celtics dynasty players. Alphabetical tiebreaker by first name: John < K.C. < Tom H. < Tom S. Verify Frank Ramsey's total (believed to be 7, not 8, excluding him from this group)."
+  },
+  {
+    "question": "Name the NBA franchises with the most championship titles.",
+    "answers": [
+      {"text": "Boston Celtics", "display": "Boston Celtics — 17 championships", "points": 30},
+      {"text": "Los Angeles Lakers", "display": "Los Angeles Lakers — 17 championships", "points": 25},
+      {"text": "Golden State Warriors", "display": "Golden State Warriors — 7 championships", "points": 20},
+      {"text": "Chicago Bulls", "display": "Chicago Bulls — 6 championships", "points": 15},
+      {"text": "San Antonio Spurs", "display": "San Antonio Spurs — 5 championships", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Celtics and Lakers tied at 17 — alphabetical: Boston before Los Angeles. Confirm Warriors at 7 (1947, 1956, 1975, 2015, 2017, 2018, 2022). Confirm Bulls at 6, Spurs at 5."
+  },
+  {
+    "question": "Name the NBA players with the most regular-season MVP awards.",
+    "answers": [
+      {"text": "Kareem Abdul-Jabbar", "display": "Kareem Abdul-Jabbar — 6 MVPs", "points": 30},
+      {"text": "Bill Russell", "display": "Bill Russell — 5 MVPs", "points": 25},
+      {"text": "Michael Jordan", "display": "Michael Jordan — 5 MVPs", "points": 20},
+      {"text": "LeBron James", "display": "LeBron James — 4 MVPs", "points": 15},
+      {"text": "Wilt Chamberlain", "display": "Wilt Chamberlain — 4 MVPs", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Tie at 5: Bill (Russell) before Michael (Jordan) alphabetically by first name. Tie at 4: LeBron (L) before Wilt (W) alphabetically. Confirm Wilt has exactly 4 MVPs (1960, 1966, 1967, 1968)."
+  },
+  {
+    "question": "Name the NBA players with the most Finals MVP awards.",
+    "answers": [
+      {"text": "Michael Jordan", "display": "Michael Jordan — 6 Finals MVPs (1991–1993, 1996–1998)", "points": 30},
+      {"text": "LeBron James", "display": "LeBron James — 4 Finals MVPs (2012, 2013, 2016, 2020)", "points": 25},
+      {"text": "Magic Johnson", "display": "Magic Johnson — 3 Finals MVPs (1980, 1982, 1987)", "points": 20},
+      {"text": "Shaquille O'Neal", "display": "Shaquille O'Neal — 3 Finals MVPs (2000, 2001, 2002)", "points": 15},
+      {"text": "Tim Duncan", "display": "Tim Duncan — 3 Finals MVPs (1999, 2003, 2005)", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Three-way tie at 3: Magic (M) before Shaquille (S) before Tim (T) by first name. Verify Tim Duncan won 3 Finals MVPs and not 4 (2007 Finals MVP was Tony Parker, not Duncan)."
+  },
+  {
+    "question": "Name the NBA players with the most scoring titles (seasons leading the league in scoring).",
+    "answers": [
+      {"text": "Michael Jordan", "display": "Michael Jordan — 10 scoring titles", "points": 30},
+      {"text": "Wilt Chamberlain", "display": "Wilt Chamberlain — 7 scoring titles", "points": 25},
+      {"text": "Allen Iverson", "display": "Allen Iverson — 4 scoring titles", "points": 20},
+      {"text": "George Gervin", "display": "George Gervin — 4 scoring titles", "points": 15},
+      {"text": "Kevin Durant", "display": "Kevin Durant — 4 scoring titles", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Three-way tie at 4: Allen (Iverson) before George (Gervin) before Kevin (Durant) by first name. Verify Durant's scoring title count and whether James Harden also won 4 or more scoring titles."
+  },
+  {
+    "question": "Name the NBA head coaches with the most career wins.",
+    "answers": [
+      {"text": "Gregg Popovich", "display": "Gregg Popovich — 1,300+ wins", "points": 30},
+      {"text": "Don Nelson", "display": "Don Nelson — 1,335 wins", "points": 25},
+      {"text": "Lenny Wilkens", "display": "Lenny Wilkens — 1,332 wins", "points": 20},
+      {"text": "Pat Riley", "display": "Pat Riley — 1,210 wins", "points": 15},
+      {"text": "Larry Brown", "display": "Larry Brown — 1,098 wins", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Popovich surpassed Nelson and Wilkens before retiring in 2025 — verify his exact final total and reorder the top 3 accordingly. Confirm Pat Riley at #4 and Larry Brown at #5."
+  },
+  {
+    "question": "Name the NBA head coaches with the most championship titles.",
+    "answers": [
+      {"text": "Phil Jackson", "display": "Phil Jackson — 11 titles (Bulls, Lakers)", "points": 30},
+      {"text": "Red Auerbach", "display": "Red Auerbach — 9 titles (Celtics)", "points": 25},
+      {"text": "Gregg Popovich", "display": "Gregg Popovich — 5 titles (Spurs)", "points": 20},
+      {"text": "John Kundla", "display": "John Kundla — 5 titles (Minneapolis Lakers)", "points": 15},
+      {"text": "Pat Riley", "display": "Pat Riley — 5 titles (Lakers, Heat)", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Three-way tie at 5: Gregg (G) before John (J) before Pat (P) by first name. Verify John Kundla's count coaching the Minneapolis Lakers dynasty (1948–1954). Confirm no other coach has 3 or more titles besides these five."
+  },
+  {
+    "question": "Name the players with the highest single-season scoring averages in NBA history, excluding Wilt Chamberlain.",
+    "answers": [
+      {"text": "Elgin Baylor", "display": "Elgin Baylor — 38.3 PPG (1961–62)", "points": 30},
+      {"text": "Michael Jordan", "display": "Michael Jordan — 37.1 PPG (1986–87)", "points": 25},
+      {"text": "James Harden", "display": "James Harden — 36.1 PPG (2018–19)", "points": 20},
+      {"text": "Rick Barry", "display": "Rick Barry — 35.6 PPG (1966–67)", "points": 15},
+      {"text": "Kobe Bryant", "display": "Kobe Bryant — 35.4 PPG (2005–06)", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Verify Elgin Baylor's 38.3 PPG in 1961-62 (NBA only). Confirm Rick Barry's 35.6 was his NBA season (1966-67, San Francisco Warriors) and not his ABA season. Verify Harden (36.1) ranks above Barry (35.6) and Kobe (35.4)."
+  },
+  {
+    "question": "Name the players with the most 3-pointers made in a single NBA season.",
+    "answers": [
+      {"text": "Stephen Curry", "display": "Stephen Curry — 402 3PM (2015–16)", "points": 30},
+      {"text": "James Harden", "display": "James Harden — 299 3PM (2018–19)", "points": 25},
+      {"text": "Buddy Hield", "display": "Buddy Hield — 278 3PM (2020–21)", "points": 20},
+      {"text": "Klay Thompson", "display": "Klay Thompson — 276 3PM (2015–16)", "points": 15},
+      {"text": "Paul George", "display": "Paul George — 244 3PM (2018–19)", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Curry at 402 is clearly #1. Verify exact totals and ordering for #2-5 among Harden (~299), Hield (~278), Klay Thompson (~276). Confirm Paul George at #5 over Damian Lillard or Trae Young."
+  },
+  {
+    "question": "Name the tallest players in NBA history.",
+    "answers": [
+      {"text": "Gheorghe Muresan", "display": "Gheorghe Mureșan — 7'7\"", "points": 30},
+      {"text": "Manute Bol", "display": "Manute Bol — 7'7\"", "points": 25},
+      {"text": "Shawn Bradley", "display": "Shawn Bradley — 7'6\"", "points": 20},
+      {"text": "Slavko Vranes", "display": "Slavko Vraneš — 7'6\"", "points": 15},
+      {"text": "Yao Ming", "display": "Yao Ming — 7'6\"", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Tie at 7'7\": Gheorghe (G) before Manute (M) by first name. Tie at 7'6\": Shawn (S-h-a) before Slavko (S-l-a) before Yao (Y) by first name. Verify no other player has reached 7'6\" or taller (Chuck Nevitt listed at 7'5\" — confirm excluded)."
+  },
+  {
+    "question": "Name the NBA franchises with the most wins in a single regular season.",
+    "answers": [
+      {"text": "Golden State Warriors", "display": "Golden State Warriors — 73 wins (2015–16)", "points": 30},
+      {"text": "Chicago Bulls", "display": "Chicago Bulls — 72 wins (1995–96)", "points": 25},
+      {"text": "Los Angeles Lakers", "display": "Los Angeles Lakers — 69 wins (1971–72)", "points": 20},
+      {"text": "Boston Celtics", "display": "Boston Celtics — 68 wins (1972–73)", "points": 15},
+      {"text": "Philadelphia 76ers", "display": "Philadelphia 76ers — 68 wins (1966–67)", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Tie at 68 wins: Boston (B) before Philadelphia (P) alphabetically. Verify Lakers had exactly 69 wins in 1971-72. Confirm San Antonio Spurs (67 wins in 2015-16) do not reach 68+."
+  },
+  {
+    "question": "Name the NBA players with the most career triple-doubles.",
+    "answers": [
+      {"text": "Russell Westbrook", "display": "Russell Westbrook — 200+ triple-doubles", "points": 30},
+      {"text": "Oscar Robertson", "display": "Oscar Robertson — 181 triple-doubles", "points": 25},
+      {"text": "Magic Johnson", "display": "Magic Johnson — 138 triple-doubles", "points": 20},
+      {"text": "Jason Kidd", "display": "Jason Kidd — 107 triple-doubles", "points": 15},
+      {"text": "LeBron James", "display": "LeBron James — 100+ triple-doubles", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Verify Westbrook's exact total and LeBron's total (active). Confirm LeBron has surpassed Kidd for #4, or adjust ranking if not. Order: Westbrook, Robertson, Magic (138), Kidd (107), LeBron (100+)."
+  },
+  {
+    "question": "Name the NBA players with the most All-Star Game selections.",
+    "answers": [
+      {"text": "LeBron James", "display": "LeBron James — 20 selections", "points": 30},
+      {"text": "Kareem Abdul-Jabbar", "display": "Kareem Abdul-Jabbar — 19 selections", "points": 25},
+      {"text": "Kobe Bryant", "display": "Kobe Bryant — 18 selections", "points": 20},
+      {"text": "Tim Duncan", "display": "Tim Duncan — 15 selections", "points": 15},
+      {"text": "Kevin Garnett", "display": "Kevin Garnett — 15 selections", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Verify LeBron's total (active player, may have increased beyond 20). Tie at 15: Tim (Duncan) before Kevin (Garnett) by first name. Verify Shaquille O'Neal also had 15 — confirm Shaq excluded by same tiebreaker (S after K)."
+  },
+  {
+    "question": "Name the youngest players to reach 20,000 career NBA points.",
+    "answers": [
+      {"text": "LeBron James", "display": "LeBron James — age 28 years, 17 days (youngest ever)", "points": 30},
+      {"text": "Kobe Bryant", "display": "Kobe Bryant — age 29", "points": 25},
+      {"text": "Kevin Durant", "display": "Kevin Durant — age 28 (close to LeBron)", "points": 20},
+      {"text": "Wilt Chamberlain", "display": "Wilt Chamberlain — age 29", "points": 15},
+      {"text": "Michael Jordan", "display": "Michael Jordan — age 31", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "NEEDS HEAVY VERIFICATION. LeBron at age 28 years, 17 days is widely cited as youngest. This entire list is uncertain — ranks #2-5 may be incorrect. Do not use without fact-checking against a reliable source."
+  },
+  {
+    "question": "Name the NBA franchises with the most Finals appearances.",
+    "answers": [
+      {"text": "Los Angeles Lakers", "display": "Los Angeles Lakers — 32 Finals appearances", "points": 30},
+      {"text": "Boston Celtics", "display": "Boston Celtics — 22 Finals appearances", "points": 25},
+      {"text": "Golden State Warriors", "display": "Golden State Warriors — 12 Finals appearances", "points": 20},
+      {"text": "Philadelphia 76ers", "display": "Philadelphia 76ers — 9 Finals appearances", "points": 15},
+      {"text": "New York Knicks", "display": "New York Knicks — 8 Finals appearances", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Verify all appearance counts, including franchise history continuations (Warriors from Philadelphia/SF eras, 76ers from Syracuse Nationals era). Confirm Miami Heat (7) and San Antonio Spurs (6) do not displace the top 5. Verify Lakers' exact total including Minneapolis years."
+  },
+  {
+    "question": "Name the players with the most career points scored in NBA playoff history.",
+    "answers": [
+      {"text": "LeBron James", "display": "LeBron James — 7,000+ playoff pts", "points": 30},
+      {"text": "Michael Jordan", "display": "Michael Jordan — 5,987 playoff pts", "points": 25},
+      {"text": "Kareem Abdul-Jabbar", "display": "Kareem Abdul-Jabbar — 5,762 playoff pts", "points": 20},
+      {"text": "Kobe Bryant", "display": "Kobe Bryant — 5,640 playoff pts", "points": 15},
+      {"text": "Karl Malone", "display": "Karl Malone — 4,761 playoff pts", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Verify LeBron's exact total (active through recent seasons). Confirm Kareem (~5,762) ranks above Kobe (~5,640) at #3-4. Confirm Karl Malone at #5 over Tim Duncan (~3,941)."
+  },
+  {
+    "question": "Name the players with the most points scored in a single NBA Finals game.",
+    "answers": [
+      {"text": "Elgin Baylor", "display": "Elgin Baylor — 61 pts (1962 Finals, Game 5)", "points": 30},
+      {"text": "Rick Barry", "display": "Rick Barry — 55 pts (1967 Finals)", "points": 25},
+      {"text": "Michael Jordan", "display": "Michael Jordan — 55 pts (1993 Finals, Game 4)", "points": 20},
+      {"text": "Jerry West", "display": "Jerry West — 53 pts (1969 Finals, Game 3)", "points": 15},
+      {"text": "LeBron James", "display": "LeBron James — 51 pts (2018 Finals, Game 1)", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "NEEDS HEAVY VERIFICATION. Baylor's 61-point Finals record is well-documented. Rick Barry and Jordan tied at 55 — tiebreaker: Rick (R) before Michael (M)? No: M < R alphabetically, so Jordan ranks above Barry. Recheck ordering if both are at 55. Verify West's 53 and LeBron's 51. Do not use without fact-checking box scores."
+  },
+  {
+    "question": "Name the colleges that have produced the most first overall NBA Draft picks all-time.",
+    "answers": [
+      {"text": "Kentucky", "display": "Kentucky — most #1 overall picks all-time", "points": 30},
+      {"text": "Duke", "display": "Duke — multiple #1 overall picks", "points": 25},
+      {"text": "Ohio State", "display": "Ohio State — multiple #1 overall picks", "points": 20},
+      {"text": "Kansas", "display": "Kansas — multiple #1 overall picks", "points": 15},
+      {"text": "Notre Dame", "display": "Notre Dame — multiple #1 overall picks", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "NEEDS HEAVY VERIFICATION. Kentucky (Anthony Davis 2012, Karl-Anthony Towns 2015, plus others) likely leads. Duke has several (Elton Brand 1999, Zion Williamson 2019). The remaining schools are uncertain. Do not use without verifying the complete historical list of #1 overall picks by school."
+  },
+  {
+    "question": "Name the NBA players with the most Defensive Player of the Year awards.",
+    "answers": [
+      {"text": "Ben Wallace", "display": "Ben Wallace — 4 DPOY awards (2002, 2003, 2005, 2006)", "points": 30},
+      {"text": "Dikembe Mutombo", "display": "Dikembe Mutombo — 4 DPOY awards (1995, 1997, 1998, 2001)", "points": 25},
+      {"text": "Rudy Gobert", "display": "Rudy Gobert — 4 DPOY awards (2018, 2019, 2021, 2022)", "points": 20},
+      {"text": "Dwight Howard", "display": "Dwight Howard — 3 DPOY awards (2009, 2010, 2011)", "points": 15},
+      {"text": "Sidney Moncrief", "display": "Sidney Moncrief — 2 DPOY awards (1983, 1984)", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Three-way tie at 4: Ben (Wallace) before Dikembe (Mutombo) before Rudy (Gobert) by first name. Verify Gobert's total — he may have won a 5th DPOY after 2022. Confirm Sidney Moncrief at #5 among players with 2 awards (others: Alvin Robertson, Mark Eaton, Dennis Rodman)."
+  },
+  {
+    "question": "Name the NBA players with the most consecutive seasons leading the league in scoring.",
+    "answers": [
+      {"text": "Michael Jordan", "display": "Michael Jordan — 7 consecutive scoring titles (1987–1993)", "points": 30},
+      {"text": "Wilt Chamberlain", "display": "Wilt Chamberlain — 7 consecutive scoring titles (1960–1966)", "points": 25},
+      {"text": "George Gervin", "display": "George Gervin — 4 consecutive scoring titles (1978–1982)", "points": 20},
+      {"text": "Kevin Durant", "display": "Kevin Durant — 4 consecutive scoring titles (2010–2014)", "points": 15},
+      {"text": "Neil Johnston", "display": "Neil Johnston — 3 consecutive scoring titles (1953–1955)", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Tie at 7: Michael (Jordan) before Wilt (Chamberlain) by first name. Tie at 4: George (Gervin) before Kevin (Durant) by first name. Verify Neil Johnston's 3 consecutive titles for #5. Confirm Allen Iverson did not have 3+ consecutive scoring titles."
+  },
+  {
+    "question": "Name the players with the highest single-game assist totals in NBA history.",
+    "answers": [
+      {"text": "Scott Skiles", "display": "Scott Skiles — 30 assists (Dec 30, 1990)", "points": 30},
+      {"text": "Kevin Porter", "display": "Kevin Porter — 29 assists (Feb 24, 1978)", "points": 25},
+      {"text": "Bob Cousy", "display": "Bob Cousy — 28 assists (Feb 27, 1959)", "points": 20},
+      {"text": "Guy Rodgers", "display": "Guy Rodgers — 28 assists (Mar 14, 1963)", "points": 15},
+      {"text": "Geoff Huston", "display": "Geoff Huston — 27 assists (Jan 21, 1982)", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Skiles' 30-assist game (Orlando vs Denver, Dec 30, 1990) is well-documented as the all-time record. Tie at 28: Bob (Cousy) before Guy (Rodgers) by first name. Verify Kevin Porter's 29-assist game and Geoff Huston's 27 at #5."
+  },
+  {
+    "question": "Name the NBA players with the most career games with 50 or more points.",
+    "answers": [
+      {"text": "Wilt Chamberlain", "display": "Wilt Chamberlain — 118 games of 50+ pts", "points": 30},
+      {"text": "Michael Jordan", "display": "Michael Jordan — 31 games of 50+ pts", "points": 25},
+      {"text": "Kobe Bryant", "display": "Kobe Bryant — 25 games of 50+ pts", "points": 20},
+      {"text": "Elgin Baylor", "display": "Elgin Baylor — 17 games of 50+ pts", "points": 15},
+      {"text": "Rick Barry", "display": "Rick Barry — 14 games of 50+ pts", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Verify counts for #2-5. Confirm Kobe (25) ranks above Baylor (17) at #3-4. Check whether James Harden or LeBron James have surpassed Rick Barry for #5."
+  },
+  {
+    "question": "Name the players with the most career assists in NBA playoff history.",
+    "answers": [
+      {"text": "Magic Johnson", "display": "Magic Johnson — 2,346 playoff ast", "points": 30},
+      {"text": "John Stockton", "display": "John Stockton — 1,839 playoff ast", "points": 25},
+      {"text": "LeBron James", "display": "LeBron James — 1,600+ playoff ast", "points": 20},
+      {"text": "Jason Kidd", "display": "Jason Kidd — 1,263 playoff ast", "points": 15},
+      {"text": "Larry Bird", "display": "Larry Bird — 1,062 playoff ast", "points": 10}
+    ],
+    "category": "NBA",
+    "removeQuestion": "",
+    "factCheck": "Verify LeBron's exact playoff assist total (active) and whether he has surpassed Stockton for #2. Confirm Larry Bird at #5 over Isiah Thomas, Dennis Johnson, or Tony Parker."
+  }
+]

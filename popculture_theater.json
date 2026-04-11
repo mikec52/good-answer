@@ -1,0 +1,132 @@
+[
+  {
+    "question": "Name the longest-running shows in Broadway history.",
+    "answers": [
+      {"text": "The Phantom of the Opera", "display": "The Phantom of the Opera — 13,981 performances (1988–2023)", "points": 30},
+      {"text": "Chicago", "display": "Chicago — 10,800+ performances (1996–present)", "points": 25},
+      {"text": "The Lion King", "display": "The Lion King — 10,500+ performances (1997–present)", "points": 20},
+      {"text": "Cats", "display": "Cats — 7,485 performances (1982–2000)", "points": 15},
+      {"text": "A Chorus Line", "display": "A Chorus Line — 6,137 performances (1975–1990)", "points": 10}
+    ],
+    "category": "Theater",
+    "removeQuestion": "",
+    "factCheck": "Chicago and Lion King are still running; verify current counts before play."
+  },
+  {
+    "question": "Name the Broadway musicals that have won the most Tony Awards.",
+    "answers": [
+      {"text": "The Producers", "display": "The Producers — 12 Tony wins (2001, all-time record)", "points": 30},
+      {"text": "Hamilton", "display": "Hamilton — 11 Tony wins (2016)", "points": 25},
+      {"text": "Hello, Dolly!", "display": "Hello, Dolly! — 10 Tony wins (1964)", "points": 20},
+      {"text": "Billy Elliot", "display": "Billy Elliot — 10 Tony wins (2009)", "points": 15},
+      {"text": "The Book of Mormon", "display": "The Book of Mormon — 9 Tony wins (2011)", "points": 10}
+    ],
+    "category": "Theater",
+    "removeQuestion": "",
+    "factCheck": "Hello, Dolly! and Billy Elliot are tied at 10 wins."
+  },
+  {
+    "question": "Name the highest-grossing Broadway shows of all time.",
+    "answers": [
+      {"text": "The Lion King", "display": "The Lion King — $2 billion+ in total gross", "points": 30},
+      {"text": "Wicked", "display": "Wicked — $1.7 billion+ in total gross", "points": 25},
+      {"text": "The Phantom of the Opera", "display": "The Phantom of the Opera — $1.3 billion+ in total gross", "points": 20},
+      {"text": "Hamilton", "display": "Hamilton — $1 billion+ in total gross", "points": 15},
+      {"text": "Chicago", "display": "Chicago — $650 million+ in total gross", "points": 10}
+    ],
+    "category": "Theater",
+    "removeQuestion": "",
+    "factCheck": "Gross figures accumulate as long-running shows continue; verify before play."
+  },
+  {
+    "question": "Name the individuals with the most Tony Award wins in Broadway history.",
+    "answers": [
+      {"text": "Harold Prince", "display": "Harold Prince — 21 Tony wins (producer/director)", "points": 30},
+      {"text": "Tommy Tune", "display": "Tommy Tune — 9 Tony wins (choreographer/director/performer)", "points": 25},
+      {"text": "Stephen Sondheim", "display": "Stephen Sondheim — 8 Tony wins", "points": 20},
+      {"text": "Bob Fosse", "display": "Bob Fosse — 8 Tony wins (choreographer/director)", "points": 15},
+      {"text": "Audra McDonald", "display": "Audra McDonald — 6 Tony wins (most by any performer)", "points": 10}
+    ],
+    "category": "Theater",
+    "removeQuestion": "",
+    "factCheck": "Sondheim and Fosse are tied at 8; verify exact Tommy Tune total."
+  },
+  {
+    "question": "Name the Broadway shows with the most Tony Award nominations.",
+    "answers": [
+      {"text": "Hamilton", "display": "Hamilton — 16 Tony nominations (2016, all-time record)", "points": 30},
+      {"text": "The Producers", "display": "The Producers — 15 Tony nominations (2001)", "points": 25},
+      {"text": "Billy Elliot", "display": "Billy Elliot — 15 Tony nominations (2009)", "points": 20},
+      {"text": "Moulin Rouge!", "display": "Moulin Rouge! — 14 Tony nominations (2020)", "points": 15},
+      {"text": "The Book of Mormon", "display": "The Book of Mormon — 14 Tony nominations (2011)", "points": 10}
+    ],
+    "category": "Theater",
+    "removeQuestion": "",
+    "factCheck": "The Producers and Billy Elliot are tied at 15; Moulin Rouge! and Book of Mormon are tied at 14."
+  },
+  {
+    "question": "Name the longest-running shows in West End history.",
+    "answers": [
+      {"text": "The Mousetrap", "display": "The Mousetrap — 28,000+ performances (1952–present)", "points": 30},
+      {"text": "Les Misérables", "display": "Les Misérables — 15,000+ performances (1985–present, with breaks)", "points": 25},
+      {"text": "The Phantom of the Opera", "display": "The Phantom of the Opera — ~13,500 performances (1986–2020)", "points": 20},
+      {"text": "Blood Brothers", "display": "Blood Brothers — 10,000+ performances (1983–2012)", "points": 15},
+      {"text": "Cats", "display": "Cats — 8,949 performances (1981–2002)", "points": 10}
+    ],
+    "category": "Theater",
+    "removeQuestion": "",
+    "factCheck": "The Mousetrap is still running and adds performances every year."
+  },
+  {
+    "question": "Name the performers with the most Tony Award wins for acting.",
+    "answers": [
+      {"text": "Audra McDonald", "display": "Audra McDonald — 6 acting Tonys (all-time record for any performer)", "points": 30},
+      {"text": "Julie Harris", "display": "Julie Harris — 5 acting Tonys", "points": 25},
+      {"text": "Angela Lansbury", "display": "Angela Lansbury — 4 competitive acting Tonys", "points": 20},
+      {"text": "Bernadette Peters", "display": "Bernadette Peters — 2 acting Tonys", "points": 15},
+      {"text": "Patti LuPone", "display": "Patti LuPone — 2 acting Tonys", "points": 10}
+    ],
+    "category": "Theater",
+    "removeQuestion": "",
+    "factCheck": "Angela Lansbury also received a special Tony, bringing her total to 5. Peters and LuPone are tied at 2 competitive wins."
+  },
+  {
+    "question": "Name the playwrights with the most Pulitzer Prizes for Drama.",
+    "answers": [
+      {"text": "Eugene O'Neill", "display": "Eugene O'Neill — 4 Pulitzer Prizes for Drama", "points": 30},
+      {"text": "Edward Albee", "display": "Edward Albee — 3 Pulitzer Prizes for Drama", "points": 25},
+      {"text": "August Wilson", "display": "August Wilson — 2 Pulitzer Prizes for Drama (Fences, The Piano Lesson)", "points": 20},
+      {"text": "Tennessee Williams", "display": "Tennessee Williams — 2 Pulitzer Prizes for Drama (Streetcar Named Desire, Cat on a Hot Tin Roof)", "points": 15},
+      {"text": "Lynn Nottage", "display": "Lynn Nottage — 2 Pulitzer Prizes for Drama (Ruined, Sweat)", "points": 10}
+    ],
+    "category": "Theater",
+    "removeQuestion": "",
+    "factCheck": "Several playwrights share 2 Pulitzers; August Wilson, Tennessee Williams, Lynn Nottage, and others all have 2."
+  },
+  {
+    "question": "Name the stage musicals whose film adaptations have grossed the most at the worldwide box office.",
+    "answers": [
+      {"text": "Mamma Mia!", "display": "Mamma Mia! (2008) — $609 million worldwide", "points": 30},
+      {"text": "Les Misérables", "display": "Les Misérables (2012) — $441 million worldwide", "points": 25},
+      {"text": "Grease", "display": "Grease (1978) — $395 million worldwide", "points": 20},
+      {"text": "Chicago", "display": "Chicago (2002) — $306 million worldwide", "points": 15},
+      {"text": "The Sound of Music", "display": "The Sound of Music (1965) — $286 million worldwide (over $2B inflation-adjusted)", "points": 10}
+    ],
+    "category": "Theater",
+    "removeQuestion": "",
+    "factCheck": "Unadjusted box office figures used; The Sound of Music would rank #1 if inflation-adjusted."
+  },
+  {
+    "question": "Name the performers with the most Tony Award nominations.",
+    "answers": [
+      {"text": "Chita Rivera", "display": "Chita Rivera — 10 Tony nominations (most by any performer)", "points": 30},
+      {"text": "Audra McDonald", "display": "Audra McDonald — 9 Tony nominations", "points": 25},
+      {"text": "Angela Lansbury", "display": "Angela Lansbury — 7 Tony nominations", "points": 20},
+      {"text": "Bernadette Peters", "display": "Bernadette Peters — 5 Tony nominations", "points": 15},
+      {"text": "Patti LuPone", "display": "Patti LuPone — 5 Tony nominations", "points": 10}
+    ],
+    "category": "Theater",
+    "removeQuestion": "",
+    "factCheck": "Verify Angela Lansbury nomination count; Peters and LuPone may be tied."
+  }
+]

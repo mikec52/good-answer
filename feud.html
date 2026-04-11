@@ -35,11 +35,11 @@
       --bg-blob-base: #513f6d;
 
       /* Category color palette */
-      --cat-science:    #03a9f4;
-      --cat-geography:  #43a047;
-      --cat-popculture: #e91e8c;
-      --cat-survey:     #fb8c00;
-      --cat-sports:     #fdd835;
+      --cat-science: #0000c0;
+      --cat-geography: #00c000;
+      --cat-popculture: #c000c0;
+      --cat-survey: #00c0c0;
+      --cat-sports: #c0c000;
     }
 
     html { height: 100%; }
@@ -182,11 +182,12 @@
 
     /* ── Setup screen title — wave animation ─────────────────────── */
     .setup-title-wave {
-      font-size: 3rem;
+      font-size: 4rem;
       letter-spacing: 0.4rem;
       color: #fba300;
       text-align: center;
-      margin: 0 0 10px;
+      margin: 10px 0;
+
     }
     .setup-title-wave span {
       display: inline-block;
@@ -303,7 +304,15 @@
     #start-screen h1 {
       font-size: 4rem;
       margin: 0;
+      color: #C0C000;
       animation: start-prompt-pulse 2s ease-in-out infinite;
+    }
+    #start-screen h1.drop-out {
+      animation: start-h1-drop 0.6s ease-in forwards;
+    }
+    @keyframes start-h1-drop {
+      0%   { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(200px); opacity: 0; }
     }
     @keyframes start-prompt-pulse {
       0%, 100% { opacity: 1; }
@@ -315,6 +324,103 @@
     #start-screen.dismissing {
       animation: start-screen-fade-out 0.4s ease forwards;
       pointer-events: none;
+    }
+
+    /* ── CRT start screen — composite TV effect ───────────────────
+       Layers: vignette (box-shadow), noise (::before), scanlines + glare (::after).
+       Content sits above both pseudo-elements via z-index on #start-content. */
+    .crt-start-screen {
+      box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.5);
+    }
+    .crt-start-screen #start-content {
+      position: relative;
+      z-index: 3;
+    }
+    .crt-start-screen #dev-mode-btn {
+      z-index: 3;
+    }
+    /* Noise layer — same SVG turbulence + tv-static animation as cat-label */
+    .crt-start-screen::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+      background-repeat: repeat;
+      opacity: 0.12;
+      mix-blend-mode: overlay;
+      z-index: 1;
+      animation: tv-static 0.8s step-end infinite;
+    }
+    /* Scanlines (rolling) + glare (diagonal highlight) */
+    .crt-start-screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      background:
+        /* scanlines — 3px transparent + 1px dark, rolling */
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 3px,
+          rgba(0, 0, 0, 0.1) 3px,
+          rgba(0, 0, 0, 0.1) 4px
+        ),
+        /* glare — diagonal light reflection on glass */
+        linear-gradient(
+          125deg,
+          rgba(255, 255, 255, 0.07) 0%,
+          rgba(255, 255, 255, 0.03) 25%,
+          transparent 45%,
+          transparent 100%
+        );
+      animation: scanline-roll 8s linear infinite;
+    }
+
+    /* Logo TV-off — adapted from crt-power-off for the start screen logo.
+       Starts from normal state (no pre-existing glow), collapses to a dot. */
+    @keyframes logo-tv-off {
+      0% {
+        transform: scale(1, 1);
+        filter: brightness(1);
+        opacity: 1;
+      }
+      10% {
+        transform: scale(1, 1);
+        filter: brightness(2.4) saturate(0);
+      }
+      40% {
+        transform: scale(1, 0.02);
+        filter: brightness(3.2) saturate(0);
+      }
+      55% {
+        transform: scale(1.06, 0.02);
+        filter: brightness(5) saturate(0);
+      }
+      70% {
+        transform: scale(1, 0.02);
+        filter: brightness(4.5) saturate(0);
+      }
+      85% {
+        transform: scale(0.015, 0.02);
+        filter: brightness(5) saturate(0);
+      }
+      92% {
+        transform: scale(0.015, 0.02);
+        filter: brightness(5) saturate(0);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(0, 0);
+        filter: brightness(0) saturate(0);
+        opacity: 0;
+      }
+    }
+    #start-logo.tv-off {
+      animation: logo-tv-off 0.5s ease-in forwards;
+      transition: none !important;
     }
     #dev-mode-btn {
       position: absolute;
@@ -342,9 +448,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       overflow: hidden;
-      padding: 20px;
+      margin: 50px 0 20px 0;
       position: relative;
     }
     #setup input { padding: 6px; margin: 4px; }
@@ -357,7 +462,80 @@
       width: 100%;
       max-width: 80%;
     }
-    #setup-step-2 { display: none; }
+    #setup-step-2 { display: none; position: relative; }
+    #selected-rounds {
+      position: absolute;
+      left: 0%;
+      top: 50%;
+      transform: translateY(-50%);
+      text-align: center;
+      opacity: 0;
+    }
+    #selected-rounds.fade-in {
+      animation: selected-rounds-fade-in 2s ease forwards;
+    }
+    #selected-rounds.fade-out {
+      animation: selected-rounds-fade-out 1s ease forwards;
+    }
+    @keyframes selected-rounds-fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes selected-rounds-fade-out {
+      from { opacity: 1; }
+      to   { opacity: 0; }
+    }
+
+    #selected-rounds .game-length {
+      font-family: 'Futura', sans-serif;
+      font-weight: 100;
+      font-size: 1rem;
+      text-transform: uppercase;
+      color: #fba300;
+    }
+
+    #selected-rounds .rounds-number {
+      font-family: 'Futura', 'Futura-Bold', sans-serif;
+      font-weight: 700;
+      font-size: 6rem;
+      text-transform: uppercase;
+      color: #fba300;
+      line-height: 1;
+    }
+    #selected-rounds .rounds-label {
+      font-family: 'Futura', 'Futura-Bold', sans-serif;
+      font-weight: 700;
+      font-size: 1.4rem;
+      text-transform: uppercase;
+      color: #fba300;
+      letter-spacing: 0.1em;
+    }
+    #setup-back-btn {
+      background: none; border: none; cursor: pointer;
+      padding: 10px 0 0; margin: 12px auto 0;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .rewind-glyphs {
+      display: flex; align-items: center;
+      font-size: 1.8rem; line-height: 1; color: #fba300;
+    }
+    .rewind-glyphs .rw-arrow {
+      display: inline-block;
+    }
+    .rewind-glyphs .rw-arrow:nth-child(1) { animation: rw-grow 2s ease-in-out infinite; }
+    .rewind-glyphs .rw-arrow:nth-child(2) { margin-left: -0.45em; animation: rw-grow 2s ease-in-out 0.4s infinite; }
+    @keyframes rw-grow {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.2); }
+    }
+    .rewind-label {
+      font-family: 'Futura', sans-serif;
+      font-weight: 100;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      color: #fba300;
+      letter-spacing: 0.1em;
+    }
 
     /* Setup exit animations (when starting game) */
     @keyframes exit-slide-down  { to { transform: translateY(800px);  opacity: 0; } }
@@ -378,8 +556,19 @@
     }
     .setup-fly-out { animation: setup-fly-out 0.28s cubic-bezier(0.4, 0, 1, 1) forwards; }
     .setup-fly-in  { animation: setup-fly-in  0.30s cubic-bezier(0, 0, 0.3, 1) forwards; }
+    /* Reverse direction — back from step 2 to step 1 */
+    @keyframes setup-fly-out-left {
+      from { transform: translateX(0);    opacity: 1; }
+      to   { transform: translateX(-120%); opacity: 0; }
+    }
+    @keyframes setup-fly-in-right {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+    .setup-fly-out-left { animation: setup-fly-out-left 0.28s cubic-bezier(0.4, 0, 1, 1) forwards; }
+    .setup-fly-in-right { animation: setup-fly-in-right 0.30s cubic-bezier(0, 0, 0.3, 1) forwards; }
     /* Win condition two-column layout */
-    #win-condition { display: flex; align-items: stretch; justify-content: center; margin: 16px auto; background: #f2ebdf; border-radius: 20px; max-width: 100%; }
+    #win-condition { display: flex; align-items: stretch; justify-content: center; margin: 16px auto; background: none; border-radius: 20px; max-width: 100%; }
     .win-option { flex: 1; max-width: 45%; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; }
     .win-option-desc { color: #333; margin-bottom: 12px; line-height: 1.5; }
     .or-divider { display: flex; flex-direction: column; align-items: center; padding: 0 2px; }
@@ -387,25 +576,29 @@
     .or-divider .or-text { font-size: 2.5rem; font-weight: bold; color: white; padding: 0; }
     .mode-button-row { display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
     .win-option-sub { opacity: 0.35; transition: opacity 0.3s; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
+    .win-option-sub label { color: white; font-family: 'Futura', sans-serif; font-weight: 700; text-transform: uppercase; font-size: 1.5rem; margin: 20px 0; }
     .win-option.selected .win-option-sub { opacity: 1; }
-    .mode-btn { background: transparent; color: #333; border: 2px solid #aaa; }
-    button.rounds-btn { border: 2px solid #aaa; background: transparent; min-width: 0; width: 2.5rem; height: 2.5rem; padding: 0; margin: 2px; }
-    button.rounds-btn.selected { background: #1565c0; color: #fff; border-color: #1565c0; }
-    /* Mode indicator arrows */
-    .btn-with-arrow { position: relative; display: inline-block; }
-    .mode-arrow { position: absolute; visibility: hidden; top: 0; bottom: 0; margin: auto; height: 1em; font-family: "Helvetica", sans-serif; font-size: 1rem; }
-    .mode-arrow.visible { visibility: visible; }
-    @keyframes mode-arrow-float-score {
-      0%, 100% { transform: translateX(0px); }
-      50%       { transform: translateX(3px); }
+    .rounds-btns { display: flex; gap: 16px; justify-content: center; }
+    /* 3D isometric SVG round-select buttons */
+    .rounds-svg {
+      width: 120px;
+      height: 120px;
+      cursor: pointer;
+      outline: none;
     }
-    @keyframes mode-arrow-float-rounds {
-      0%, 100% { transform: translateX(0px)   scaleX(-1); }
-      50%       { transform: translateX(-3px)  scaleX(-1); }
+    .rounds-svg .btn-number {
+      font-family: 'Bitcount Single', sans-serif;
+      font-size: 2.5rem;
+      fill: rgba(255, 180, 180, 0.35);
+      text-anchor: middle;
+      dominant-baseline: central;
+      transition: filter 0.3s, fill 0.3s;
     }
-    #score-arrow  { right: calc(100% + 6px); animation: mode-arrow-float-score  1.5s ease-in-out infinite; }
-    #rounds-arrow { left:  calc(100% + 6px); animation: mode-arrow-float-rounds 1.5s ease-in-out infinite; }
-    .rounds-btns { display: flex; gap: 6px; justify-content: center; flex-basis: 100%; }
+    .rounds-svg:hover .btn-number,
+    .rounds-svg.selected .btn-number {
+      fill: white;
+      filter: drop-shadow(0 0 10px white) drop-shadow(0 0 22px rgba(255, 255, 255, 0.5));
+    }
     #player-columns {
       display: flex;
       justify-content: center;
@@ -644,22 +837,26 @@
     /* Sidebar zone (25%) — always visible, content toggled per screen */
     #sidebar-zone {
       flex: 0 0 25%;
+      min-width: 0;
       display: flex;
       flex-direction: column;
       overflow: visible;
       padding: 0 8px 0 0;
     }
     #sidebar-category-select { display: flex; flex-direction: column; flex: 1; }
+    /* overflow: hidden is safe here — the old pop-through animation that needed
+       visible overflow has been replaced by tv-on (which stays within bounds).
+       #cat-label clips its own marquee content. question-box uses clip-path
+       for extrusion. sq-zone-input's off-canvas slide is clipped by #game-root. */
     #sidebar-question-answer { display: none; flex-direction: column; height: 100%; overflow: hidden; }
-    /* Sidebar question-screen zones */
-    #sq-zone-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding: 0; }
+    #sq-zone-content { flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 0; }
     #sq-zone-input   { flex-shrink: 0; }
     /* Category label header on question screen */
     #cat-label {
       width: 100%;
       height: 80px;
       font-family: 'Bitcount Single', sans-serif;
-      font-size: 2.5rem;
+      font-size: 3rem;
       font-weight: 300;
       text-transform: uppercase;
       letter-spacing: 2px;
@@ -667,28 +864,123 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 0;
+      border-radius: 14px;
       box-sizing: border-box;
       background: var(--cat-face, #333);
+      border: 3px solid var(--cat-solid, #333);
+      overflow: hidden;
       flex-shrink: 0;
       margin-top: 30px;
+      position: relative;
+      z-index: 2;
+      /* CRT screen inset — darkens edges to simulate curved glass tube */
+      box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.5);
+    }
+    /* Initial off-canvas state (left of canvas). JS removes .offscreen-left + adds .slide-in-left to animate. */
+    #cat-label.offscreen-left { transform: translateX(-150%); }
+    #cat-label.slide-in-left  { animation: cat-label-slide-in-left 0.5s cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
+    @keyframes cat-label-slide-in-left {
+      from { transform: translateX(-150%); }
+      to   { transform: translateX(0); }
     }
     #cat-label.cat-science    { background: var(--cat-science); }
     #cat-label.cat-geography  { background: var(--cat-geography); }
     #cat-label.cat-popculture { background: var(--cat-popculture); }
     #cat-label.cat-survey     { background: var(--cat-survey); }
     #cat-label.cat-sports     { background: var(--cat-sports); color: #000; }
-    /* Cat-label text pop-through animation */
-    @keyframes text-pop-through {
-      0%   { transform: scale(0) rotate(-3deg); opacity: 0; text-shadow: none; }
-      50%  { transform: scale(1.4) rotate(1deg); opacity: 1; text-shadow: 0 0 20px rgba(255,255,255,0.8); }
-      70%  { transform: scale(0.9) rotate(-0.5deg); }
-      85%  { transform: scale(1.08); }
-      100% { transform: scale(1) rotate(0deg); text-shadow: none; }
+    /* Animated TV-static overlay on cat-label. The ::before sits above the
+       solid category background and below the text span. The SVG is a tiled
+       grayscale turbulence texture; we jitter background-position in
+       discrete steps (step-end) so the grain snaps to a new frame rather than
+       sliding, producing an old-CRT static hiss. Tuning knobs:
+         - opacity (overall intensity)
+         - mix-blend-mode (hard-light is contrasty, overlay softer, screen lighter)
+         - baseFrequency in the SVG (grain size; higher = finer)
+         - tv-static duration (faster = jitterier)
+         - number of keyframe steps (more = smoother flicker feel) */
+    #cat-label::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+      background-repeat: repeat;
+      opacity: 0.8;
+      mix-blend-mode: soft-light;
+      z-index: 1;
+      animation: tv-static 0.8s step-end infinite;
     }
-    #cat-label span {
-      display: inline-block;
-      animation: text-pop-through 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.9s backwards;
+    @keyframes tv-static {
+      0%   { background-position:   0px   0px; }
+      10%  { background-position:  37px  83px; }
+      20%  { background-position: 112px  21px; }
+      30%  { background-position:  64px 141px; }
+      40%  { background-position: 149px  56px; }
+      50%  { background-position:  22px 108px; }
+      60%  { background-position:  95px   9px; }
+      70%  { background-position: 131px 127px; }
+      80%  { background-position:   8px  47px; }
+      90%  { background-position:  73px  94px; }
+    }
+    /* CRT scanlines — horizontal stripes on the glass surface (above text).
+       2px transparent + 2px dark = 4px period. Sits at z-index 3 (above text
+       at z-index 2) for authentic CRT look where lines cross over everything. */
+    #cat-label::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: .8;
+      pointer-events: none;
+      border-radius: inherit;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        rgba(0, 0, 0, 0.12) 2px,
+        rgba(0, 0, 0, 0.12) 4px
+      );
+      z-index: 3;
+    }
+    #cat-label > span {
+      position: relative;
+      z-index: 2;
+      display: inline-flex;
+      white-space: nowrap;
+      transform: scale(0);
+      opacity: 0;
+    }
+    /* Each inner copy carries its own trailing gap so both halves are
+       identical — translateX(-50%) scrolls exactly one copy's worth. */
+    #cat-label > span > span {
+      padding-right: 3em;
+    }
+    /* "TV on" entrance — inverse of the CRT power-off used on category exit.
+       Dot appears → expands to horizontal line → fills vertically → settles. */
+    @keyframes tv-on {
+      0%   { transform: scale(0, 0);       opacity: 0; filter: brightness(0); }
+      15%  { transform: scale(0.02, 0.02); opacity: 1; filter: brightness(5) saturate(0); }
+      25%  { transform: scale(0.02, 0.02); opacity: 1; filter: brightness(5) saturate(0); }
+      45%  { transform: scale(1, 0.02);    opacity: 1; filter: brightness(3) saturate(0); }
+      55%  { transform: scale(1, 0.02);    opacity: 1; filter: brightness(2.5) saturate(0.3); }
+      75%  { transform: scale(1, 1);       opacity: 1; filter: brightness(1.8) saturate(0.7); }
+      100% { transform: scale(1, 1);       opacity: 1; filter: brightness(1) saturate(1); }
+    }
+    #cat-label > span.tv-on {
+      animation: tv-on 0.7s ease-out forwards;
+    }
+    /* Horizontal marquee scroll — starts after tv-on completes.
+       Text is duplicated by JS; translateX(-50%) loops one copy seamlessly. */
+    @keyframes cat-label-marquee {
+      from { transform: scale(1) translateX(0); }
+      to   { transform: scale(1) translateX(-50%); }
+    }
+    #cat-label:has(> span.marquee-scroll) {
+      justify-content: flex-start;
+    }
+    #cat-label > span.marquee-scroll {
+      opacity: 1;
+      animation: cat-label-marquee var(--marquee-duration, 6s) linear infinite;
     }
     /* Phase indicator — persistent sidebar header. The container stays put
        once it slides in at game start; phase spans inside swap based on
@@ -697,11 +989,12 @@
       position: relative;
       display: block;
       padding: 0 16px;
-      height: 140px;
+      max-height: 140px;
+      min-height: 140px;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
       box-sizing: border-box;
       color: #fff;
       font-family: "Futura-Bold", sans-serif;
-      font-size: 1.5rem;
       text-transform: uppercase;
       letter-spacing: 0.04em;
       line-height: 1.3;
@@ -737,6 +1030,9 @@
       padding: 0 16px;
       box-sizing: border-box;
       opacity: 0;
+      /* Shrink-to-fit by char count: setPhaseText() sets --fit-scale per span. */
+      --fit-base: 1.5rem;
+      font-size: calc(var(--fit-base) * var(--fit-scale, 1));
     }
     #phase-indicator[data-phase="category-select"] .ph-category-select,
     #phase-indicator[data-phase="gameplay"]        .ph-gameplay,
@@ -771,22 +1067,15 @@
       40%  { transform: translateY(60px)  rotate(-4deg); opacity: 0.9; }
       100% { transform: translateY(220px) rotate(-8deg); opacity: 0; }
     }
-    /* Question slide-down */
-    @keyframes question-slide-down {
-      from { transform: translateY(-100%); opacity: 0; }
-      to   { transform: translateY(0);     opacity: 1; }
-    }
-    .question-enter {
-      animation: question-slide-down 0.4s ease-out 0.3s backwards;
-    }
-    /* Input slide-up */
+    /* Input slide-up from below the canvas. sq-zone-input lives at the bottom
+       of the sidebar (which has overflow:hidden), so translateY(400%) pushes
+       it fully below the visible area before sliding back into place. */
     @keyframes input-slide-up {
-      from { transform: translateY(120%); }
+      from { transform: translateY(400%); }
       to   { transform: translateY(0); }
     }
-    .input-enter {
-      animation: input-slide-up 0.4s ease-out backwards;
-    }
+    #sq-zone-input.offscreen-below { transform: translateY(400%); }
+    #sq-zone-input.input-enter     { animation: input-slide-up 0.5s cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
 
     /* Right column (75%) */
     #zone-board-main {
@@ -893,11 +1182,11 @@
     .btn-3d span:nth-child(3) { transform: rotateX(180deg) translateZ(25px); }
     .btn-3d span:nth-child(4) { transform: rotateX(90deg)  translateZ(25px); }
     /* Category color classes — sets CSS vars that span inherits */
-    .cat-science    { --cat-face: rgba(3,   169, 244, 0.9); --cat-solid: rgba(3,   169, 244, 1); --cat-text: #fff; --cat-text-hover: #fff; }
-    .cat-geography  { --cat-face: rgba(67,  160,  71, 0.9); --cat-solid: rgba(67,  160,  71, 1); --cat-text: #fff; --cat-text-hover: #fff; }
-    .cat-popculture { --cat-face: rgba(233,  30, 140, 0.9); --cat-solid: rgba(233,  30, 140, 1); --cat-text: #fff; --cat-text-hover: #fff; }
-    .cat-survey     { --cat-face: rgba(251, 140,   0, 0.9); --cat-solid: rgba(251, 140,   0, 1); --cat-text: #fff; --cat-text-hover: #fff; }
-    .cat-sports     { --cat-face: rgba(253, 216,  53, 0.9); --cat-solid: rgba(253, 216,  53, 1); --cat-text: #000; --cat-text-hover: #000; }
+    .cat-science    { --cat-face: color-mix(in srgb, var(--cat-science)    90%, transparent); --cat-solid: var(--cat-science);    --cat-text: #fff; --cat-text-hover: #fff; }
+    .cat-geography  { --cat-face: color-mix(in srgb, var(--cat-geography)  90%, transparent); --cat-solid: var(--cat-geography);  --cat-text: #fff; --cat-text-hover: #fff; }
+    .cat-popculture { --cat-face: color-mix(in srgb, var(--cat-popculture) 90%, transparent); --cat-solid: var(--cat-popculture); --cat-text: #fff; --cat-text-hover: #fff; }
+    .cat-survey     { --cat-face: color-mix(in srgb, var(--cat-survey)     90%, transparent); --cat-solid: var(--cat-survey);     --cat-text: #fff; --cat-text-hover: #fff; }
+    .cat-sports     { --cat-face: color-mix(in srgb, var(--cat-sports)     90%, transparent); --cat-solid: var(--cat-sports);     --cat-text: #000; --cat-text-hover: #000; }
     /* Category row — wraps button + optional badge.
        Fixed 80px height so the row occupies a known slot regardless of
        the button's margin contribution, and so the row can go
@@ -969,11 +1258,14 @@
        intentionally identical to the glow's 100% keyframe so there's
        no visual jump when the second animation replaces the first. */
 
-    /* Phase 1 — freeze tilt + glow ramp */
+    /* Phase 1 — freeze tilt + glow ramp + border fade
+       --tv-glow-duration is the shared duration for the glow ramp on
+       the row AND the border fade on the button face spans. Tune in
+       one place, both stay in sync. Should match Path A total duration
+       (~700ms) so the glow peaks as the last unselected item finishes. */
     .cat-row.selected-glow {
-      /* Glow duration = Path A total duration. If TIMING.catRowExitStagger
-         or cat-slide-out-left duration changes, update here too. */
-      animation: cat-glow-ramp 700ms ease-in both;
+      --tv-glow-duration: 700ms;
+      animation: cat-glow-ramp var(--tv-glow-duration) ease-in both;
       /* Sit above siblings so the glow halo isn't clipped by them */
       z-index: 5;
     }
@@ -982,6 +1274,13 @@
          so the glow "reads" as a stable TV screen surface. */
       animation: none !important;
       transform: perspective(1000px) rotateX(0deg);
+    }
+    /* Border fade — each prism face span loses its 2px black border in
+       sync with the glow ramp. Animating border-color (not border-width)
+       avoids the 2px content-area shift that border-box would cause if
+       the border thickness changed. */
+    .cat-row.selected-glow .btn-3d span {
+      animation: cat-button-border-fade var(--tv-glow-duration) ease-in both;
     }
     @keyframes cat-glow-ramp {
       from {
@@ -998,6 +1297,35 @@
           brightness(1.45)
           saturate(1.35);
       }
+    }
+    @keyframes cat-button-border-fade {
+      from { border-color: #000; }
+      to   { border-color: transparent; }
+    }
+
+    /* Pills area background slide-out — last beat of the Path A cascade.
+       We animate the .blend-multiply ::before pseudo-element (which is
+       the only visible "background" of the pills area) rather than the
+       pills area itself, for two reasons:
+         1. The selected category row is a child of #category-pills-area
+            and is supposed to stay anchored in place during its glow +
+            CRT. Translating the parent would drag the selected row with
+            it.
+         2. Adding `transform` to #category-pills-area would create a
+            new stacking context that breaks the ::before's
+            mix-blend-mode multiply (which depends on blending against
+            the #game-root backdrop).
+       Animating left+right (not transform) on the ::before keeps the
+       box width constant while translating it left, and avoids any
+       stacking-context interference. The selected row floats in place
+       against the canvas background as the multiply layer slides out
+       beneath it. */
+    @keyframes pills-bg-slide-out {
+      from { left: 0;       right: 0; }
+      to   { left: -400px;  right: 400px; }
+    }
+    #category-pills-area.pills-exit::before {
+      animation: pills-bg-slide-out 0.3s ease-in 0.5s both;
     }
 
     /* Phase 2 — CRT power-off sequence.
@@ -1144,6 +1472,7 @@
       cursor: default;
       animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-1 1.6s ease-out backwards;
       transition: transform 0.3s ease;
+      z-index: 10;
     }
     .cat-mult-badge:hover {
       transform: perspective(500px) rotateY(15deg) rotateX(-5deg);
@@ -1212,7 +1541,7 @@
       font-size: 1.8rem;
       font-family: 'Bitcount Single';
       font-weight: 300;
-      color: #111;
+      color: white;
       text-align: center;
       opacity: 0; /* starts hidden; fade-in class triggers a delayed reveal
                      once all cat-rows have slid into position */
@@ -1268,14 +1597,28 @@
     #question-box {
       background: #f9f9e8;
       border-radius: 0 0 14px 14px;
-      padding: 16px 24px;
-      margin: 0 auto 10px auto;
+      padding: 20px 14px 14px 14px;
+      margin: -10px auto 10px auto;
       width: 95%;
-      max-height: 180px;
+      max-height: 200px;
+      min-height: 200px;
       overflow: hidden;
       color: #111;
       font-family: "Bitcount Single", sans-serif;
       font-weight: 300;
+      position: relative;
+      z-index: 1;
+    }
+    /* Initial state: translated up by its own height AND fully clipped from the
+       top. The animation runs both in parallel: the box slides down while its
+       visible region grows from the top, so the visible strip appears to
+       extrude from cat-label's bottom edge. The clip-path prevents the
+       translated box from ever peeking above cat-label. */
+    #question-box.hidden-behind { transform: translateY(-100%); clip-path: inset(100% 0 0 0); }
+    #question-box.reveal-drop   { animation: question-box-drop 0.45s cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
+    @keyframes question-box-drop {
+      from { transform: translateY(-100%); clip-path: inset(100% 0 0 0); }
+      to   { transform: translateY(0);     clip-path: inset(0 0 0 0); }
     }
 
     #category {
@@ -1291,6 +1634,21 @@
       /* Shrink-to-fit by char count: fitByCharCount() sets --fit-scale when text is set. */
       --fit-base: 1.8rem;
       font-size: calc(var(--fit-base) * var(--fit-scale, 1));
+      opacity: 0;
+    }
+    /* Typewriter reveal: .typing shows the element + a blinking cursor
+       while text is streamed in char-by-char. .typed is the final
+       resting state (opacity 1, no cursor). */
+    #question.typing,
+    #question.typed { opacity: 1; }
+    #question.typing::after {
+      content: '|';
+      display: inline-block;
+      margin-left: 2px;
+      animation: cursor-blink 0.7s steps(1) infinite;
+    }
+    @keyframes cursor-blink {
+      50% { opacity: 0; }
     }
     #accuracy-note {
       font-size: .7rem;
@@ -1720,8 +2078,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 500;
-      font-size: 0.75rem;
+      font-weight: 350;
+      font-size: 1.5rem;
     }
     .tile-text {
       overflow: hidden;
@@ -1789,7 +2147,7 @@
       grid-column: 1 / 5;
       text-align: right;
       font-size: 1rem;
-      color: #888;
+      color: white;
       letter-spacing: 1px;
       text-transform: uppercase;
       align-self: center;
@@ -1823,14 +2181,47 @@
       margin-bottom: 6px;
     }
     .board-stat-value {
-      font-size: 0.9rem;
-      color: #aaa;
+      font-size: 2.5rem;
+      color: white;
       background-color: #111;
       border-radius: 6px;
       flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
+    }
+    /* Stat change chevron — appears on right edge of value field on change */
+    .stat-chevron {
+      position: absolute;
+      right: 6px;
+      font-size: 1.3rem;
+      font-family: sans-serif;
+      line-height: 1;
+      pointer-events: none;
+      opacity: 0;
+    }
+    .stat-chevron.up {
+      bottom: 6px;
+      color: #4caf50;
+      animation: chevron-up 0.75s ease-out forwards;
+    }
+    .stat-chevron.down {
+      top: 10px;
+      color: var(--red-text, #ff5555);
+      animation: chevron-down 0.75s ease-out forwards;
+    }
+    @keyframes chevron-up {
+      0%   { opacity: 1; transform: translateY(0); }
+      50%  { opacity: 1; transform: translateY(-22px); }
+      99.9% { opacity: 1; transform: translateY(-45px); }
+      100% { opacity: 0; transform: translateY(-45px); }
+    }
+    @keyframes chevron-down {
+      0%   { opacity: 1; transform: translateY(0); }
+      50%  { opacity: 1; transform: translateY(22px); }
+      99.9% { opacity: 1; transform: translateY(45px); }
+      100% { opacity: 0; transform: translateY(45px); }
     }
 
     /* Strikes — housed inside board-stat-value */
@@ -1863,7 +2254,7 @@
     }
 
     /* Input */
-    #input-area { width: 100%; border-radius: 10px; border: 3px solid transparent; overflow: hidden; box-sizing: border-box; }
+    #input-area { width: 100%; border-radius: 10px; border: 3px solid transparent; overflow: hidden; box-sizing: border-box; font-family: 'Futura'; text-transform: uppercase;}
     #input-area.team-red  { border-color: var(--red-bg);  background: color-mix(in srgb, var(--red-bg)  80%, black); }
     #input-area.team-blue { border-color: var(--blue-bg); background: color-mix(in srgb, var(--blue-bg) 80%, black); }
     #input-area.hidden { display: none; }
@@ -1907,12 +2298,25 @@
       gap: 10px;
     }
     #turn-subtext {
-      font-size: 1rem;
+      --fit-base: 1.5rem;
+      font-size: calc(var(--fit-base) * var(--fit-scale, 1));
       font-weight: bold;
       margin: 0;
     }
     #input-area.team-red  #turn-subtext { color: var(--red-text); }
     #input-area.team-blue #turn-subtext { color: var(--blue-text); }
+    /* Turn swap animation — current player pops up, slams back down,
+       text swaps to next player mid-flight with a scale pop on landing. */
+    #turn-subtext.turn-swapping {
+      animation: turn-swap 0.45s ease-in-out;
+    }
+    @keyframes turn-swap {
+      0%   { transform: translateY(0) scale(1); }
+      35%  { transform: translateY(-14px) scale(0.95); }
+      65%  { transform: translateY(2px) scale(1.12); }
+      82%  { transform: translateY(-1px) scale(1.03); }
+      100% { transform: translateY(0) scale(1); }
+    }
 
     .turn-input-row {
       display: flex;
@@ -2586,10 +2990,10 @@
     <defs>
       <style>
         @keyframes bg-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .bg-out-top    { animation: bg-rotate 29s linear infinite; transform-origin: 13px 25px; fill: var(--bg-blob-base); opacity: 0.6; }
-        .bg-in-top     { animation: bg-rotate 14s linear infinite; transform-origin: 13px 25px; fill: var(--bg-blob-base); opacity: 1.0; }
-        .bg-out-bottom { animation: bg-rotate 36s linear infinite; transform-origin: 84px 93px; fill: var(--bg-blob-base); opacity: 0.40; }
-        .bg-in-bottom  { animation: bg-rotate 21s linear infinite; transform-origin: 84px 93px; fill: var(--bg-blob-base); opacity: 0.80; }
+        .bg-out-top    { animation: bg-rotate 29s linear infinite; transform-origin: 13px 25px; fill: var(--bg-blob-base); opacity: 0.6;  transition: fill 1.5s ease; }
+        .bg-in-top     { animation: bg-rotate 14s linear infinite; transform-origin: 13px 25px; fill: var(--bg-blob-base); opacity: 1.0; transition: fill 1.5s ease; }
+        .bg-out-bottom { animation: bg-rotate 36s linear infinite; transform-origin: 84px 93px; fill: var(--bg-blob-base); opacity: 0.40; transition: fill 1.5s ease; }
+        .bg-in-bottom  { animation: bg-rotate 21s linear infinite; transform-origin: 84px 93px; fill: var(--bg-blob-base); opacity: 0.80; transition: fill 1.5s ease; }
       </style>
     </defs>
     <path class="bg-out-top"    d="M37-5C25.1-14.7,5.7-19.1-9.2-10-28.5,1.8-32.7,31.1-19.8,49c15.5,21.5,52.6,22,67.2,2.3C59.4,35,53.7,8.5,37-5Z"/>
@@ -2599,7 +3003,7 @@
   </svg>
 
   <!-- Start screen -->
-  <div id="start-screen">
+  <div id="start-screen" class="crt-start-screen">
     <button id="dev-mode-btn" onclick="event.stopPropagation(); activateDevMode();">Dev Mode</button>
     <div id="start-content">
       <div id="start-logo">GOOD<br>ANSWER</div>
@@ -2617,38 +3021,54 @@
     <!-- Step 1: Game mode selection -->
     <div id="setup-step-1">
       <div id="win-condition">
-        <div class="win-option" id="score-option">
-          <p class="win-option-desc">Play up to a target score. First team to reach that score wins when the round ends.</p>
-          <div class="mode-button-row">
-            <div class="btn-with-arrow">
-              <span class="mode-arrow" id="score-arrow">►</span>
-              <button class="btn mode-btn" onclick="setGameMode('score')">Target Score</button>
-            </div>
-          </div>
-          <div class="win-option-sub">
-            <label>Target Score:</label>
-            <input type="number" id="targetInput" value="300" min="50" step="50">
-          </div>
-        </div>
-        <div class="or-divider">
-          <div class="or-line"></div>
-          <span class="or-text">OR</span>
-          <div class="or-line"></div>
-        </div>
-        <div class="win-option" id="rounds-option">
-          <p class="win-option-desc">Play a defined number of rounds. High score at the end of the final round wins.</p>
-          <div class="mode-button-row">
-            <div class="btn-with-arrow">
-              <button class="btn mode-btn" onclick="setGameMode('rounds')">Rounds</button>
-              <span class="mode-arrow" id="rounds-arrow">►</span>
-            </div>
-          </div>
+        <div class="win-option selected" id="rounds-option">
           <div class="win-option-sub">
             <label>Number of Rounds:</label>
             <div class="rounds-btns">
-              <button class="btn rounds-btn selected" onclick="selectRounds(2, this)">2</button>
-              <button class="btn rounds-btn" onclick="selectRounds(4, this)">4</button>
-              <button class="btn rounds-btn" onclick="selectRounds(6, this)">6</button>
+              <!-- 3D isometric round-select buttons. Each SVG is the user's provided
+                   design with the play-triangle replaced by a number <text>. Unique
+                   IDs per button (suffix -r2/-r4/-r6) avoid conflicts in shared DOM. -->
+              <!-- Default SVG state is "raised" (top at y=43, side strip 16 tall).
+                   JS setButtonDepressed() pushes selected button to y=51/height=8. -->
+              <svg class="rounds-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" tabindex="0" onclick="selectRounds(2, this)">
+                <rect class="buttonSides btn-side-face" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 59)" fill="#7A0000"/>
+                <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#7A0000"/>
+                <g clip-path="url(#clip-r2)">
+                  <rect class="buttonTop" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="#C00000"/>
+                  <text class="btn-number" x="28.5" y="30" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)">2</text>
+                </g>
+                <defs>
+                  <clipPath id="clip-r2">
+                    <rect width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="white"/>
+                  </clipPath>
+                </defs>
+              </svg>
+              <svg class="rounds-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" tabindex="0" onclick="selectRounds(4, this)">
+                <rect class="buttonSides btn-side-face" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 59)" fill="#7A0000"/>
+                <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#7A0000"/>
+                <g clip-path="url(#clip-r4)">
+                  <rect class="buttonTop" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="#C00000"/>
+                  <text class="btn-number" x="28.5" y="30" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)">4</text>
+                </g>
+                <defs>
+                  <clipPath id="clip-r4">
+                    <rect width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="white"/>
+                  </clipPath>
+                </defs>
+              </svg>
+              <svg class="rounds-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" tabindex="0" onclick="selectRounds(6, this)">
+                <rect class="buttonSides btn-side-face" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 59)" fill="#7A0000"/>
+                <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#7A0000"/>
+                <g clip-path="url(#clip-r6)">
+                  <rect class="buttonTop" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="#C00000"/>
+                  <text class="btn-number" x="28.5" y="30" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)">6</text>
+                </g>
+                <defs>
+                  <clipPath id="clip-r6">
+                    <rect width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="white"/>
+                  </clipPath>
+                </defs>
+              </svg>
             </div>
             <input type="hidden" id="roundsInput" value="2">
           </div>
@@ -2659,6 +3079,15 @@
 
     <!-- Step 2: Team setup -->
     <div id="setup-step-2">
+      <div id="selected-rounds">
+        <div class="game-length">GAME LENGTH</div>
+        <div class="rounds-number"></div>
+        <div class="rounds-label">Rounds</div>
+        <button id="setup-back-btn" onclick="backToRoundSelect()">
+          <span class="rewind-glyphs"><span class="rw-arrow">◀</span><span class="rw-arrow">◀</span></span>
+          <span class="rewind-label">Back</span>
+        </button>
+      </div>
       <div id="player-columns">
         <div class="player-col red-col">
           <div class="player-col-header">
@@ -2735,7 +3164,7 @@
         <div id="sidebar-question-answer">
           <!-- Row 2: Category + Question -->
           <div id="sq-zone-content">
-            <div id="question-box">
+            <div id="question-box" class="hidden-behind">
               <div id="category"></div>
               <div id="question"></div>
               <div id="questionActions">
@@ -2756,7 +3185,7 @@
             </div>
           </div>
           <!-- Row 3: Input area -->
-          <div id="sq-zone-input">
+          <div id="sq-zone-input" class="offscreen-below">
             <!-- Answer history tray -->
             <div id="history" class="hidden">
               <div id="history-tray-handle" onclick="toggleHistoryTray()">
@@ -3083,11 +3512,15 @@
 
       // Setup → game transition
       setupExitBeatGap:       50,  // pause between the 3 setup exit beats
+
+      // Question phase entry animations are strictly serial via anim.done;
+      // their durations live in CSS and don't need TIMING constants here.
     };
 
     const sfxCorrect     = new Audio("correct.mp3");
     const sfxWrong       = new Audio("wrong.mp3");
     const sfxGoodAnswer  = new Audio("goodanswer.mp3");
+    const sfxButtonClick = new Audio("analogbuttonclick.mp3");
     const sfxSurveySays  = new Audio("surveysays.mp3");
 
     // ── Background music — crossfade loop ──────────────────────
@@ -3301,7 +3734,7 @@ document.addEventListener('keydown', e => {
     let guessHistory = [];
     let stealPhase = false;
     let targetScore = 300;
-    let gameMode = 'score';   // 'score' | 'rounds'
+    let gameMode = 'rounds';  // 'rounds' only (target-score mode removed)
     let maxRounds = 0;
     let lastRoundWinner = -1;
 
@@ -3349,23 +3782,14 @@ document.addEventListener('keydown', e => {
       document.getElementById('vol-music').value = 0;
       applyVolumes();
 
-      // Dismiss start screen (mirrors the normal click handler)
-      const startScreen = document.getElementById('start-screen');
-      const setup = document.getElementById('setup');
+      // Dismiss start screen with full animated sequence
       startBgMusic();
-      startScreen.classList.add('dismissing');
-      setup.style.transition = 'transform 0.5s cubic-bezier(0.2, 0, 0.3, 1)';
-      setup.style.transform = 'translateX(0)';
-      startScreen.addEventListener('animationend', () => {
-        startScreen.style.display = 'none';
-        setup.style.transition = '';
-      }, { once: true });
+      if (typeof _dismissStartScreen === 'function') _dismissStartScreen();
 
       // Pre-select Rounds mode with 2 rounds
       setGameMode('rounds');
-      document.getElementById('roundsInput').value = 2;
-      document.querySelectorAll('.rounds-btn').forEach(b => b.classList.remove('selected'));
-      document.querySelector('.rounds-btn').classList.add('selected'); // first btn is "2"
+      const firstSvg = document.querySelector('.rounds-svg');
+      if (firstSvg) selectRounds(2, firstSvg);
 
       // Pre-fill team names
       document.getElementById('redTeamName').value = 'Turbo Team';
@@ -3381,35 +3805,55 @@ document.addEventListener('keydown', e => {
     }
 
     function setGameMode(mode) {
-      document.getElementById('score-option').classList.toggle('selected',  mode === 'score');
-      document.getElementById('rounds-option').classList.toggle('selected', mode === 'rounds');
-      document.getElementById('score-arrow').classList.toggle('visible',    mode === 'score');
-      document.getElementById('rounds-arrow').classList.toggle('visible',   mode === 'rounds');
+      const roundsOpt = document.getElementById('rounds-option');
+      if (roundsOpt) roundsOpt.classList.toggle('selected', mode === 'rounds');
     }
 
-    function proceedToTeamSetup() {
-      if (!document.getElementById('score-option').classList.contains('selected') &&
-          !document.getElementById('rounds-option').classList.contains('selected')) {
-        alert('Please select a game mode first.');
-        return;
-      }
+    // Step 1 → Step 2: fly out right → fly in left → fade in selected-rounds
+    async function proceedToTeamSetup() {
       const step1 = document.getElementById('setup-step-1');
       const step2 = document.getElementById('setup-step-2');
-      step1.classList.add('setup-fly-out');
-      step1.addEventListener('animationend', () => {
-        step1.style.display = 'none';
-        step2.style.display = 'flex';
-        step2.classList.add('setup-fly-in');
-      }, { once: true });
+      const sr = document.getElementById('selected-rounds');
+      // Populate round count
+      sr.querySelector('.rounds-number').textContent = document.getElementById('roundsInput').value;
+      sr.classList.remove('fade-in', 'fade-out');
+
+      await anim.play(step1, 'setup-fly-out');
+      step1.style.display = 'none';
+      step2.style.display = 'flex';
+      await anim.play(step2, 'setup-fly-in');
+      sr.classList.add('fade-in');
+    }
+
+    // Step 2 → Step 1: fade out selected-rounds → fly out left → fly in right
+    async function backToRoundSelect() {
+      const step1 = document.getElementById('setup-step-1');
+      const step2 = document.getElementById('setup-step-2');
+      const sr = document.getElementById('selected-rounds');
+
+      sr.classList.remove('fade-in');
+      sr.classList.add('fade-out');
+      await anim.done(sr);
+      sr.classList.remove('fade-out');
+
+      await anim.play(step2, 'setup-fly-out-left');
+      step2.style.display = 'none';
+      step2.classList.remove('setup-fly-out-left');
+
+      step1.style.display = '';
+      step1.classList.remove('setup-fly-out');
+      await anim.play(step1, 'setup-fly-in-right');
+      step1.classList.remove('setup-fly-in-right');
     }
 
     function resetSetupSteps() {
       const step1 = document.getElementById('setup-step-1');
       const step2 = document.getElementById('setup-step-2');
       step1.style.display = '';
-      step1.classList.remove('setup-fly-out', 'setup-fly-in');
+      step1.classList.remove('setup-fly-out', 'setup-fly-in', 'setup-fly-in-right');
       step2.style.display = 'none';
-      step2.classList.remove('setup-fly-out', 'setup-fly-in');
+      step2.classList.remove('setup-fly-out', 'setup-fly-in', 'setup-fly-out-left');
+      document.getElementById('selected-rounds').classList.remove('fade-in', 'fade-out');
       document.getElementById('start-game-btn').classList.remove('exit-down');
       document.getElementById('player-columns').classList.remove('exit-right');
       document.getElementById('setup-title').classList.remove('exit-up');
@@ -3419,22 +3863,53 @@ document.addEventListener('keydown', e => {
       const btn     = document.getElementById('start-game-btn');
       const columns = document.getElementById('player-columns');
       const title   = document.getElementById('setup-title');
+      const sr      = document.getElementById('selected-rounds');
       const gap = TIMING.setupExitBeatGap;
 
-      anim.sequence([
-        () => anim.play(btn, 'exit-down'),
-        () => anim.wait(gap),
-        () => anim.play(columns, 'exit-right'),
-        () => anim.wait(gap),
-        () => anim.play(title, 'exit-up'),
-        () => startGame(),
-      ]);
+      // Fade out selected-rounds in parallel with the beat sequence.
+      // Both must finish before startGame — use anim.parallel so the
+      // slower one (1s fade-out) gates the transition.
+      sr.classList.remove('fade-in');
+      sr.classList.add('fade-out');
+
+      anim.parallel([
+        () => anim.done(sr),
+        () => anim.sequence([
+          () => anim.play(btn, 'exit-down'),
+          () => anim.wait(gap),
+          () => anim.play(columns, 'exit-right'),
+          () => anim.wait(gap),
+          () => anim.play(title, 'exit-up'),
+        ]),
+      ]).then(() => startGame());
     }
 
-    function selectRounds(n, btn) {
+    /** Set an isometric SVG button to raised (tall) or depressed (flat) state.
+     *  Modifies SVG attributes directly so clip-paths stay in sync. */
+    function setButtonDepressed(svg, depressed) {
+      const yTop   = depressed ? 51 : 43;
+      const stripH = depressed ? 8  : 16;
+      const matrix  = `matrix(0.866025 -0.5 0.866025 0.5 1 ${yTop})`;
+      // Top face + text + clip-path all share the same isometric transform
+      svg.querySelector('.buttonTop')?.setAttribute('transform', matrix);
+      svg.querySelector('.btn-number')?.setAttribute('transform', matrix);
+      const clipRect = svg.querySelector('clipPath rect');
+      if (clipRect) clipRect.setAttribute('transform', matrix);
+      // Side strip position and height
+      const strip = svg.querySelector('.btn-strip');
+      if (strip) { strip.setAttribute('y', yTop); strip.setAttribute('height', stripH); }
+    }
+
+    function selectRounds(n, el) {
       document.getElementById('roundsInput').value = n;
-      document.querySelectorAll('.rounds-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
+      const svg = el.closest('.rounds-svg') || el;
+      document.querySelectorAll('.rounds-svg').forEach(s => {
+        s.classList.remove('selected');
+        setButtonDepressed(s, false);
+      });
+      svg.classList.add('selected');
+      setButtonDepressed(svg, true);
+      playSound(sfxButtonClick);
     }
 
     /* Phase indicator helpers — one persistent container, four phase spans.
@@ -3443,7 +3918,9 @@ document.addEventListener('keydown', e => {
        briefly so a collision is visible (used for strike-3 → steal-chance). */
     function setPhaseText(phase, text) {
       const span = document.querySelector(`#phase-indicator .ph-${phase}`);
-      if (span) span.textContent = text;
+      if (!span) return;
+      span.textContent = text;
+      fitByCharCount(span, 40);
     }
     function setPhaseTeamColor(teamIdx) {
       const pi = document.getElementById("phase-indicator");
@@ -3463,11 +3940,18 @@ document.addEventListener('keydown', e => {
 
       if (outgoing) {
         const exitClass = opts.knock ? "ph-knocked" : "ph-exiting";
-        // Fire-and-forget: clean up the class when the exit animation ends
-        anim.play(outgoing, exitClass).then(() => outgoing.classList.remove(exitClass));
+        if (opts.knock) {
+          // Knock mode: fire-and-forget the exit, brief overlap window so the
+          // two spans briefly collide before the phase swap.
+          anim.play(outgoing, exitClass).then(() => outgoing.classList.remove(exitClass));
+          await anim.wait(TIMING.phaseKnockOverlap);
+        } else {
+          // Normal mode: await the exit fully before swapping so the incoming
+          // span doesn't cross paths with the outgoing one.
+          await anim.play(outgoing, exitClass);
+          outgoing.classList.remove(exitClass);
+        }
       }
-      // Knock mode: brief overlap window before phase swap so the two spans collide
-      if (opts.knock) await anim.wait(TIMING.phaseKnockOverlap);
       pi.setAttribute("data-phase", newPhase);
     }
     function showPhaseIndicator() {
@@ -3488,19 +3972,9 @@ document.addEventListener('keydown', e => {
     }
 
     function startGame() {
-      if (!document.getElementById('score-option').classList.contains('selected') &&
-          !document.getElementById('rounds-option').classList.contains('selected')) {
-        alert('Please select a game mode — Target Score or Rounds — before starting.');
-        return;
-      }
-      gameMode = document.getElementById('rounds-option').classList.contains('selected') ? 'rounds' : 'score';
-      if (gameMode === 'rounds') {
-        maxRounds = parseInt(document.getElementById('roundsInput').value) || 2;
-        targetScore = Infinity;
-      } else {
-        targetScore = parseInt(document.getElementById("targetInput").value) || 300;
-        maxRounds = 0;
-      }
+      gameMode = 'rounds';
+      maxRounds = parseInt(document.getElementById('roundsInput').value) || 2;
+      targetScore = Infinity;
       lastRoundWinner = -1;
       teamScores = [0, 0]; usedQuestions = [];
       roundNumber = 0; playerIndex = [0, 0];
@@ -3523,6 +3997,8 @@ document.addEventListener('keydown', e => {
       document.getElementById("setup").style.display = "none";
       document.getElementById("game").style.display = "flex";
       document.getElementById("ribbon-scroller").style.display = "none";
+      // Hide sidebar panels until showCategorySelection populates and reveals
+      document.getElementById("sidebar-category-select").style.display = "none";
       document.getElementById("input-area").classList.add("hidden");
       document.getElementById("history").classList.add("hidden");
       document.getElementById("roundTarget").textContent = maxRounds || '—';
@@ -3560,6 +4036,8 @@ document.addEventListener('keydown', e => {
       stealPhase = false;
       currentStreak = 0;
       answerMultiplier = 1.0;
+      _prevStreak = 0;
+      _prevMultiplier = 1.0;
       categoryMultiplier = 1;
       const catMultEl = document.getElementById("cat-mult-indicator");
       if (catMultEl) catMultEl.style.display = "none";
@@ -3569,9 +4047,20 @@ document.addEventListener('keydown', e => {
       const oldCatLabel = document.getElementById("cat-label");
       if (oldCatLabel) oldCatLabel.remove();
       document.querySelectorAll(".board-footer .cat-mult-badge").forEach(el => el.remove());
-      // Remove entrance animation classes so they replay next round
-      document.getElementById("question")?.classList.remove("question-enter");
-      document.getElementById("sq-zone-input")?.classList.remove("input-enter");
+      // Reset question-box + input-area + question text to their off-canvas /
+      // hidden states so the entry sequence replays cleanly next round
+      const qb = document.getElementById("question-box");
+      if (qb) {
+        qb.classList.remove("reveal-drop");
+        qb.classList.add("hidden-behind");
+      }
+      const szi = document.getElementById("sq-zone-input");
+      if (szi) {
+        szi.classList.remove("input-enter");
+        szi.classList.add("offscreen-below");
+      }
+      const qEl = document.getElementById("question");
+      if (qEl) { qEl.classList.remove("typing", "typed"); }
 
       document.getElementById("category").textContent = "";
       document.getElementById("category").style.display = "";
@@ -3603,6 +4092,10 @@ document.addEventListener('keydown', e => {
     function setup3dBtns() {
       document.querySelectorAll('.btn-3d').forEach(btn => {
         btn.addEventListener('mouseenter', function() {
+          // Clean up any pending resume from a previous mouseleave
+          if (this._resumeTimer) { clearTimeout(this._resumeTimer); this._resumeTimer = null; }
+          if (this._resumeHandler) { this.removeEventListener('transitionend', this._resumeHandler); this._resumeHandler = null; }
+
           const snapshot = window.getComputedStyle(this).transform;
           this.style.animation = 'none';
           this.style.transform = snapshot;
@@ -3611,14 +4104,25 @@ document.addEventListener('keydown', e => {
           this.style.transform = 'perspective(1000px) rotateX(0deg)';
         });
         btn.addEventListener('mouseleave', function() {
-          this.style.transition = 'none';
-          this.style.transform = '';
-          // Restart animation explicitly with 0s delay so it begins at 0deg (front-facing),
-          // regardless of the CSS stagger offset. Using the full shorthand prevents the
-          // stylesheet's animation-delay from reasserting via the cascade.
-          this.style.animation = 'none';
-          void this.offsetHeight;
-          this.style.animation = 'btn3d-tilt 25s ease-in-out 0s infinite';
+          // Let the transition to 0deg finish naturally (no snap), then restart the tilt animation.
+          const self = this;
+          const resume = (e) => {
+            // Ignore transitionend bubbling from child spans (background/color transitions)
+            if (e && (e.target !== self || e.propertyName !== 'transform')) return;
+            self.removeEventListener('transitionend', resume);
+            if (self._resumeTimer) { clearTimeout(self._resumeTimer); self._resumeTimer = null; }
+            self._resumeHandler = null;
+            self.style.transition = 'none';
+            self.style.transform = '';
+            // Restart animation at 0deg regardless of CSS stagger offset
+            self.style.animation = 'none';
+            void self.offsetHeight;
+            self.style.animation = 'btn3d-tilt 25s ease-in-out 0s infinite';
+          };
+          this._resumeHandler = resume;
+          this.addEventListener('transitionend', resume);
+          // Fallback: if already at 0deg, transitionend won't fire
+          this._resumeTimer = setTimeout(resume, 750);
         });
       });
     }
@@ -3687,6 +4191,9 @@ document.addEventListener('keydown', e => {
       // (see CSS note — opacity would break its mix-blend-mode background).
       // The cat-rows inside stagger in to give a gradual reveal.
       const pillsArea = document.getElementById("category-pills-area");
+      // Clear the previous round's exit state so the ::before background
+      // is back at left:0 for the new round.
+      pillsArea.classList.remove("pills-exit");
       pillsArea.innerHTML = pillsHtml;
       setup3dBtns();
 
@@ -3786,6 +4293,14 @@ document.addEventListener('keydown', e => {
         delay += stepSeconds;
       });
 
+      // Path A finale — the pills area's blended background slides out
+      // to the left as the cascade's last beat. The CSS rule for
+      // .pills-exit::before has its own delay (0.5s) baked in, matching
+      // the next stagger step after the last cat-row/divider. See the
+      // pills-bg-slide-out keyframe for why this animates the ::before
+      // pseudo-element rather than the pills area itself.
+      pillsArea.classList.add("pills-exit");
+
       // ═════ Path B — Selected category: glow ramp → CRT power-off ═════
       if (!selectedRow) {
         // Edge case: no selected row found. Just wait for Path A to finish.
@@ -3861,6 +4376,7 @@ document.addEventListener('keydown', e => {
           : cc.includes('sport') ? 'cat-sports' : '';
         const label = document.createElement("div");
         label.id = "cat-label";
+        label.classList.add("offscreen-left");
         if (colorClass) label.classList.add(colorClass);
         label.innerHTML = `<span>${catName}</span>`;
         contentZone.insertBefore(label, questionBox);
@@ -3895,24 +4411,80 @@ document.addEventListener('keydown', e => {
       // Hide old #category text — the 3D header replaces it
       if (oldCategory) oldCategory.style.display = "none";
       const questionEl = document.getElementById("question");
-      questionEl.textContent = currentQuestion.question;
-      fitByCharCount(questionEl, 45);
-      // Add entrance animations
-      document.getElementById("question")?.classList.add("question-enter");
-      document.getElementById("sq-zone-input")?.classList.add("input-enter");
+      // Pre-compute fit scale against the full final text so the layout is
+      // stable while the typewriter streams characters in.
+      fitByCharCount(questionEl, 45, currentQuestion.question);
+      questionEl.textContent = "";
 
       updateBoard(); updateScores(); updateStrikes(); updateStreakDisplay(); updateHistory(); updateTurn();
       document.getElementById("questionActions").style.display = "block";
       document.getElementById("input-area").classList.remove("hidden");
       document.getElementById("history").classList.remove("hidden");
-      document.getElementById("guess")?.focus();
 
-      // Slide board wrapper in from below
+      // Slide board wrapper in from below (starts immediately alongside cat-label)
       const bw = document.getElementById("board-wrapper");
       if (bw) {
         bw.classList.remove("offscreen");
         bw.classList.add("slide-in");
       }
+
+      // Question-phase entry sequence — strictly serial, each step awaits
+      // the previous animation's completion before starting:
+      //   1. cat-label slides in from the left
+      //   2. cat-label span text pops through
+      //   3. question-box extrudes from under cat-label
+      //   4. #question text fades in
+      //   5. sq-zone-input slides up from below the canvas
+      const labelEl = document.getElementById("cat-label");
+      const qboxEl  = document.getElementById("question-box");
+      const sziEl   = document.getElementById("sq-zone-input");
+      const questionEntryEl = document.getElementById("question");
+      anim.sequence([
+        // 1. cat-label slide in
+        async () => {
+          if (!labelEl) return;
+          labelEl.classList.remove("offscreen-left");
+          labelEl.classList.add("slide-in-left");
+          await anim.done(labelEl);
+        },
+        // 2. cat-label span TV-on effect
+        async () => {
+          const span = labelEl?.querySelector("span");
+          if (!span) return;
+          span.classList.add("tv-on");
+          await anim.done(span);
+        },
+        // 2b. Start horizontal marquee scroll.
+        // Must lock in tv-on's final state as inline styles before swapping
+        // animations — .marquee-scroll's animation property replaces tv-on's
+        // forwards fill, which would revert to the base scale(0)/opacity:0.
+        async () => {
+          const span = labelEl?.querySelector("span");
+          if (!span) return;
+          span.style.opacity = "1";
+          span.classList.remove("tv-on");
+          const text = span.textContent.trim();
+          span.innerHTML = `<span>${text}</span><span>${text}</span>`;
+          span.classList.add("marquee-scroll");
+        },
+        // 3. question-box drops out from behind cat-label
+        async () => {
+          if (!qboxEl) return;
+          qboxEl.classList.remove("hidden-behind");
+          qboxEl.classList.add("reveal-drop");
+          await anim.done(qboxEl);
+        },
+        // 4. question text typewriters in
+        () => typewriter(questionEntryEl, currentQuestion.question),
+        // 5. input area slides up from below the canvas
+        async () => {
+          if (!sziEl) return;
+          sziEl.classList.remove("offscreen-below");
+          sziEl.classList.add("input-enter");
+          await anim.done(sziEl);
+        },
+        () => { document.getElementById("guess")?.focus(); },
+      ]);
     }
 
     function getNewQuestion() {
@@ -4139,11 +4711,46 @@ document.addEventListener('keydown', e => {
       return 1;
     }
 
+    // Previous values for change-direction detection
+    let _prevStreak = 0;
+    let _prevMultiplier = 1.0;
+
+    /** Flash a chevron in the top-right of `el`.
+     *  @param {HTMLElement} el  — the .board-stat-value container
+     *  @param {"up"|"down"} dir — direction / color */
+    function flashChevron(el, dir) {
+      if (!el) return;
+      // Remove any existing chevron so the animation replays cleanly
+      el.querySelectorAll(".stat-chevron").forEach(c => c.remove());
+      const chev = document.createElement("span");
+      chev.className = `stat-chevron ${dir}`;
+      chev.textContent = dir === "up" ? "▲" : "▼";
+      el.appendChild(chev);
+      // Self-cleanup after animation ends
+      chev.addEventListener("animationend", () => chev.remove(), { once: true });
+    }
+
     function updateStreakDisplay() {
       const streakEl = document.getElementById("board-streak");
       const multEl = document.getElementById("board-mult");
+
+      // Detect direction of change
+      const streakDir = currentStreak > _prevStreak ? "up"
+                      : (currentStreak < _prevStreak && _prevStreak > 0) ? "down" : null;
+      const multDir   = answerMultiplier > _prevMultiplier ? "up"
+                      : (answerMultiplier < _prevMultiplier && _prevMultiplier > 1) ? "down" : null;
+
+      // Update display text first (textContent wipes children)
       if (streakEl) streakEl.textContent = currentStreak > 0 ? currentStreak : "—";
       if (multEl) multEl.textContent = answerMultiplier > 1 ? answerMultiplier.toFixed(1) + "x" : "—";
+
+      // Then append chevron indicators (survive after textContent set)
+      if (streakDir) flashChevron(streakEl, streakDir);
+      if (multDir) flashChevron(multEl, multDir);
+
+      // Store current values for next comparison
+      _prevStreak = currentStreak;
+      _prevMultiplier = answerMultiplier;
     }
 
     const BG_BLOB_DEFAULT = '#513f6d';
@@ -4181,16 +4788,43 @@ document.addEventListener('keydown', e => {
 
       if (stealPhase) {
         if (header)  header.textContent  = `${teamName} can STEAL!`;
-        if (subtext) subtext.textContent = "One guess for the steal...";
+        if (subtext) { subtext.textContent = "One guess for the steal..."; fitByCharCount(subtext, 18); }
       } else {
         if (header) header.textContent = `${teamName} has the board`;
         const cur = teamPlayers[teamTurn][playerIndex[teamTurn] % teamPlayers[teamTurn].length];
-        if (subtext) subtext.textContent = cur ? `${cur} is up` : `${teamName} is up`;
+        if (subtext) { subtext.textContent = cur ? `${cur} is up` : `${teamName} is up`; fitByCharCount(subtext, 18); }
       }
 
       document.getElementById("red-score-box").classList.toggle("active-team", teamTurn === 0);
       document.getElementById("blue-score-box").classList.toggle("active-team", teamTurn === 1);
       updatePlayerPanels();
+    }
+
+    /** Animated turn transition — pops the current player name up, slams it
+     *  back down, and swaps to the next player's name mid-flight.
+     *  Falls back to a plain updateTurn() if the text doesn't change. */
+    function animateTurnSwap() {
+      const subtext = document.getElementById("turn-subtext");
+      const oldText = subtext?.textContent;
+
+      // Let updateTurn set new text + all other state (team color, blobs, etc.)
+      updateTurn();
+
+      const newText = subtext?.textContent;
+      if (!subtext || oldText === newText) return;
+
+      // Restore old text, kick off animation
+      subtext.textContent = oldText;
+      subtext.classList.remove("turn-swapping");
+      void subtext.offsetWidth; // reflow to allow replay
+      subtext.classList.add("turn-swapping");
+
+      // Swap text at the top of the jump (~35% of 450ms ≈ 160ms)
+      setTimeout(() => { subtext.textContent = newText; fitByCharCount(subtext, 18); }, 160);
+
+      subtext.addEventListener("animationend", () => {
+        subtext.classList.remove("turn-swapping");
+      }, { once: true });
     }
 
     /* Shrink-to-fit by character count. No layout measurement — just arithmetic.
@@ -4202,6 +4836,31 @@ document.addEventListener('keydown', e => {
       const len = (text ?? el.textContent).trim().length;
       const scale = len <= maxChars ? 1 : maxChars / len;
       el.style.setProperty("--fit-scale", scale);
+    }
+
+    /* Typewriter effect — streams `text` into `el` one character at a time.
+       Adds `.typing` (shows element + blinking cursor) during the stream,
+       swaps to `.typed` (no cursor) when done. Resolves when complete. */
+    function typewriter(el, text, charMs = 30) {
+      return new Promise((resolve) => {
+        if (!el) { resolve(); return; }
+        el.textContent = "";
+        el.classList.remove("typed");
+        el.classList.add("typing");
+        let i = 0;
+        const tick = () => {
+          if (i >= text.length) {
+            el.classList.remove("typing");
+            el.classList.add("typed");
+            resolve();
+            return;
+          }
+          i++;
+          el.textContent = text.slice(0, i);
+          setTimeout(tick, charMs);
+        };
+        tick();
+      });
     }
 
     function updatePlayerPanels() {
@@ -4317,7 +4976,7 @@ document.addEventListener('keydown', e => {
         guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:resultTxt});foundIdx=i;}});
       const found=foundIdx!==-1;
       if(found){currentStreak++;answerMultiplier=1+(currentStreak*0.2);playCorrect(foundIdx===0);}else{currentStreak=0;answerMultiplier=1.0;playWrong();strikes++;guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:"✗ Wrong"});}playerIndex[teamTurn]=(playerIndex[teamTurn]+1)%teamPlayers[teamTurn].length;
-      document.getElementById("message").textContent="";if(found){flipTile(foundIdx,'correct',foundTotal,foundMult);}else{updateBoard();}updateScores();updateStrikes();updateStreakDisplay();updateHistory();updateTurn();document.getElementById("guess")?.focus();
+      document.getElementById("message").textContent="";if(found){flipTile(foundIdx,'correct',foundTotal,foundMult);}else{updateBoard();}updateScores();updateStrikes();updateStreakDisplay();updateHistory();if(!found&&strikes>=3){updateTurn();}else{animateTurnSwap();}document.getElementById("guess")?.focus();
       if(!found&&strikes>=3){stealPhase=true;teamTurn=1-teamTurn;updateTurn();
         // Phase indicator: gameplay → steal-chance with "knock" collision
         setPhaseText("steal-chance", `${teamNames[teamTurn]} can steal!`);
@@ -4459,11 +5118,7 @@ document.addEventListener('keydown', e => {
       // Slide phase indicator out of view — stays hidden until next startGame
       hidePhaseIndicator();
       teamScores=[0,0];usedQuestions=[];roundNumber=0;playerIndex=[0,0];startingTeam=0;
-      gameMode='score';maxRounds=0;lastRoundWinner=-1;
-      document.getElementById('score-option').classList.remove('selected');
-      document.getElementById('rounds-option').classList.remove('selected');
-      document.getElementById('score-arrow').classList.remove('visible');
-      document.getElementById('rounds-arrow').classList.remove('visible');
+      gameMode='rounds';maxRounds=0;lastRoundWinner=-1;
       resetSetupSteps();
       clearInterval(fm.timerInterval);
       document.getElementById("setup").style.display="block";
@@ -5123,27 +5778,73 @@ document.addEventListener('keydown', e => {
     (function() {
       const startScreen = document.getElementById('start-screen');
       const setup       = document.getElementById('setup');
+      const gameRoot    = document.getElementById('game-root');
 
       // Setup starts off-screen right; start screen covers it
       setup.style.transform = 'translateX(110%)';
 
-      startScreen.addEventListener('click', function() {
-        startBgMusic();
+      // Start screen blob colors: set base to black, then assign distinct
+      // per-blob fills via inline style (overrides the CSS var).
+      const START_BLOB_COLORS = ['#0000c0', '#00c000', '#c000c0', '#00c0c0'];
+      const blobEls = ['.bg-out-top', '.bg-in-top', '.bg-out-bottom', '.bg-in-bottom']
+        .map(sel => document.querySelector(sel));
+      gameRoot.style.setProperty('--bg-blob-base', '#000000');
+      blobEls.forEach((el, i) => { if (el) el.style.fill = START_BLOB_COLORS[i]; });
 
-        // Fade out start screen
-        startScreen.classList.add('dismissing');
+      // Shared cleanup: crossfade inline blob fills to the default purple,
+      // then clear them so CSS variable control takes over.
+      // Called by both normal click and dev mode.
+      window._restoreStartBlobs = function() {
+        // Set each blob's inline fill to the default — the CSS transition
+        // on fill (1.5s) crossfades from the bright start color to purple.
+        blobEls.forEach(el => { if (el) el.style.fill = BG_BLOB_DEFAULT; });
+        // Also crossfade --bg-blob-base (black → purple) for game-root bg.
+        gameRoot.style.setProperty('--bg-blob-base', BG_BLOB_DEFAULT);
+        // After transition completes, remove inline fills so the blobs
+        // respond to future --bg-blob-base changes (team colors, etc.)
+        setTimeout(() => {
+          blobEls.forEach(el => { if (el) el.style.fill = ''; });
+        }, 1600);
+      };
 
-        // Simultaneously slide setup in from the right
-        setup.style.transition = 'transform 0.5s cubic-bezier(0.2, 0, 0.3, 1)';
-        setup.style.transform  = 'translateX(0)';
+      // Shared dismiss sequence: crossfade blobs → TV-off logo → fade screen.
+      // Used by both normal click and dev mode.
+      window._dismissStartScreen = function() {
+        // 1. Crossfade blobs (1.5s) + drop prompt text immediately
+        _restoreStartBlobs();
 
-        startScreen.addEventListener('animationend', function() {
+        const logo = document.getElementById('start-logo');
+        const h1   = startScreen.querySelector('h1');
+        if (h1) h1.classList.add('drop-out');
+
+        // 2. After blob crossfade, TV-off the logo
+        setTimeout(() => {
+          if (logo) logo.classList.add('tv-off');
+        }, 1500);
+
+        // 3. After TV-off completes (~500ms anim), fade CRT screen + slide setup
+        setTimeout(() => {
+          startScreen.classList.add('dismissing');
+          setup.style.transition = 'transform 0.5s cubic-bezier(0.2, 0, 0.3, 1)';
+          setup.style.transform  = 'translateX(0)';
+        }, 1800);
+
+        startScreen.addEventListener('animationend', function(e) {
+          if (e.target !== startScreen) return;
           startScreen.style.display = 'none';
           setup.style.transition    = '';
         }, { once: true });
+      };
 
+      startScreen.addEventListener('click', function() {
+        startBgMusic();
+        startScreen.style.pointerEvents = 'none'; // prevent double-clicks
+        _dismissStartScreen();
       }, { once: true });
     })();
+
+    // Set default round selection (button "2" starts depressed/selected)
+    selectRounds(2, document.querySelector('.rounds-svg'));
   </script>
 </body>
 </html>

@@ -1,0 +1,275 @@
+[
+  {
+    "question": "Name the men with the most Grand Slam singles titles in the Open Era.",
+    "answers": [
+      {"text": "Novak Djokovic", "display": "Novak Djokovic — 24 Grand Slam titles", "points": 30},
+      {"text": "Rafael Nadal", "display": "Rafael Nadal — 22 Grand Slam titles", "points": 25},
+      {"text": "Roger Federer", "display": "Roger Federer — 20 Grand Slam titles", "points": 20},
+      {"text": "Pete Sampras", "display": "Pete Sampras — 14 Grand Slam titles", "points": 15},
+      {"text": "Bjorn Borg", "display": "Bjorn Borg — 11 Grand Slam titles", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the men with the most career weeks ranked ATP World #1.",
+    "answers": [
+      {"text": "Novak Djokovic", "display": "Novak Djokovic — 400+ weeks at #1", "points": 30},
+      {"text": "Roger Federer", "display": "Roger Federer — 310 weeks at #1", "points": 25},
+      {"text": "Pete Sampras", "display": "Pete Sampras — 286 weeks at #1", "points": 20},
+      {"text": "Ivan Lendl", "display": "Ivan Lendl — 270 weeks at #1", "points": 15},
+      {"text": "Jimmy Connors", "display": "Jimmy Connors — 268 weeks at #1", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the men with the most consecutive weeks at ATP World #1.",
+    "answers": [
+      {"text": "Roger Federer", "display": "Roger Federer — 237 consecutive weeks at #1 (2004–2008)", "points": 30},
+      {"text": "Jimmy Connors", "display": "Jimmy Connors — 160 consecutive weeks at #1", "points": 25},
+      {"text": "Ivan Lendl", "display": "Ivan Lendl — 157 consecutive weeks at #1", "points": 20},
+      {"text": "Novak Djokovic", "display": "Novak Djokovic — 122 consecutive weeks at #1", "points": 15},
+      {"text": "Pete Sampras", "display": "Pete Sampras — 102 consecutive weeks at #1", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the men with the most career ATP singles titles.",
+    "answers": [
+      {"text": "Jimmy Connors", "display": "Jimmy Connors — 109 career ATP titles", "points": 30},
+      {"text": "Roger Federer", "display": "Roger Federer — 103 career ATP titles", "points": 25},
+      {"text": "Ivan Lendl", "display": "Ivan Lendl — 94 career ATP titles", "points": 20},
+      {"text": "Novak Djokovic", "display": "Novak Djokovic — 90+ career ATP titles", "points": 15},
+      {"text": "John McEnroe", "display": "John McEnroe — 77 career ATP titles", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the men with the most Wimbledon singles titles in the Open Era.",
+    "answers": [
+      {"text": "Roger Federer", "display": "Roger Federer — 8 Wimbledon titles", "points": 30},
+      {"text": "Pete Sampras", "display": "Pete Sampras — 7 Wimbledon titles", "points": 25},
+      {"text": "Novak Djokovic", "display": "Novak Djokovic — 7 Wimbledon titles", "points": 20},
+      {"text": "Bjorn Borg", "display": "Bjorn Borg — 5 Wimbledon titles", "points": 15},
+      {"text": "John McEnroe", "display": "John McEnroe — 3 Wimbledon titles", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the men with the most Australian Open singles titles.",
+    "answers": [
+      {"text": "Novak Djokovic", "display": "Novak Djokovic — 10 Australian Open titles", "points": 30},
+      {"text": "Roy Emerson", "display": "Roy Emerson — 6 Australian Open titles", "points": 25},
+      {"text": "Roger Federer", "display": "Roger Federer — 6 Australian Open titles", "points": 20},
+      {"text": "Andre Agassi", "display": "Andre Agassi — 4 Australian Open titles", "points": 15},
+      {"text": "Mats Wilander", "display": "Mats Wilander — 3 Australian Open titles", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the men with the most French Open singles titles.",
+    "answers": [
+      {"text": "Rafael Nadal", "display": "Rafael Nadal — 14 French Open titles", "points": 30},
+      {"text": "Bjorn Borg", "display": "Bjorn Borg — 6 French Open titles", "points": 25},
+      {"text": "Novak Djokovic", "display": "Novak Djokovic — 3 French Open titles", "points": 20},
+      {"text": "Mats Wilander", "display": "Mats Wilander — 3 French Open titles", "points": 15},
+      {"text": "Gustavo Kuerten", "display": "Gustavo Kuerten — 3 French Open titles", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the men with the most ATP Masters 1000 singles titles.",
+    "answers": [
+      {"text": "Novak Djokovic", "display": "Novak Djokovic — 40 ATP Masters titles", "points": 30},
+      {"text": "Rafael Nadal", "display": "Rafael Nadal — 36 ATP Masters titles", "points": 25},
+      {"text": "Roger Federer", "display": "Roger Federer — 28 ATP Masters titles", "points": 20},
+      {"text": "Andre Agassi", "display": "Andre Agassi — 17 ATP Masters titles", "points": 15},
+      {"text": "Pete Sampras", "display": "Pete Sampras — 11 ATP Masters titles", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the countries with the most Davis Cup titles.",
+    "answers": [
+      {"text": "United States", "display": "United States — 32 Davis Cup titles", "points": 30},
+      {"text": "Australia", "display": "Australia — 28 Davis Cup titles", "points": 25},
+      {"text": "France", "display": "France — 10 Davis Cup titles", "points": 20},
+      {"text": "Sweden", "display": "Sweden — 7 Davis Cup titles", "points": 15},
+      {"text": "Spain", "display": "Spain — 6 Davis Cup titles", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the youngest men's Grand Slam singles champions in the Open Era.",
+    "answers": [
+      {"text": "Michael Chang", "display": "Michael Chang — 17 yrs 3 mos (1989 French Open)", "points": 30},
+      {"text": "Boris Becker", "display": "Boris Becker — 17 yrs 7 mos (1985 Wimbledon)", "points": 25},
+      {"text": "Mats Wilander", "display": "Mats Wilander — 17 yrs 9 mos (1982 French Open)", "points": 20},
+      {"text": "Bjorn Borg", "display": "Bjorn Borg — 18 yrs (1974 French Open)", "points": 15},
+      {"text": "Pete Sampras", "display": "Pete Sampras — 19 yrs (1990 US Open)", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the women with the most Grand Slam singles titles all-time.",
+    "answers": [
+      {"text": "Margaret Court", "display": "Margaret Court — 24 Grand Slam titles", "points": 30},
+      {"text": "Serena Williams", "display": "Serena Williams — 23 Grand Slam titles", "points": 25},
+      {"text": "Steffi Graf", "display": "Steffi Graf — 22 Grand Slam titles", "points": 20},
+      {"text": "Helen Wills Moody", "display": "Helen Wills Moody — 19 Grand Slam titles", "points": 15},
+      {"text": "Martina Navratilova", "display": "Martina Navratilova — 18 Grand Slam titles", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the women with the most Grand Slam singles titles in the Open Era.",
+    "answers": [
+      {"text": "Serena Williams", "display": "Serena Williams — 23 Grand Slam titles", "points": 30},
+      {"text": "Steffi Graf", "display": "Steffi Graf — 22 Grand Slam titles", "points": 25},
+      {"text": "Martina Navratilova", "display": "Martina Navratilova — 18 Grand Slam titles", "points": 20},
+      {"text": "Chris Evert", "display": "Chris Evert — 18 Grand Slam titles", "points": 15},
+      {"text": "Monica Seles", "display": "Monica Seles — 9 Grand Slam titles", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the women with the most career weeks ranked WTA World #1.",
+    "answers": [
+      {"text": "Steffi Graf", "display": "Steffi Graf — 377 weeks at #1", "points": 30},
+      {"text": "Martina Navratilova", "display": "Martina Navratilova — 332 weeks at #1", "points": 25},
+      {"text": "Serena Williams", "display": "Serena Williams — 319 weeks at #1", "points": 20},
+      {"text": "Monica Seles", "display": "Monica Seles — 178 weeks at #1", "points": 15},
+      {"text": "Chris Evert", "display": "Chris Evert — 113 weeks at #1", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the women with the most Wimbledon singles titles all-time.",
+    "answers": [
+      {"text": "Martina Navratilova", "display": "Martina Navratilova — 9 Wimbledon titles", "points": 30},
+      {"text": "Helen Wills Moody", "display": "Helen Wills Moody — 8 Wimbledon titles", "points": 25},
+      {"text": "Steffi Graf", "display": "Steffi Graf — 7 Wimbledon titles", "points": 20},
+      {"text": "Serena Williams", "display": "Serena Williams — 7 Wimbledon titles", "points": 15},
+      {"text": "Billie Jean King", "display": "Billie Jean King — 6 Wimbledon titles", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the women with the most French Open singles titles all-time.",
+    "answers": [
+      {"text": "Chris Evert", "display": "Chris Evert — 7 French Open titles", "points": 30},
+      {"text": "Steffi Graf", "display": "Steffi Graf — 6 French Open titles", "points": 25},
+      {"text": "Justine Henin", "display": "Justine Henin — 5 French Open titles", "points": 20},
+      {"text": "Monica Seles", "display": "Monica Seles — 3 French Open titles", "points": 15},
+      {"text": "Arantxa Sanchez Vicario", "display": "Arantxa Sanchez Vicario — 3 French Open titles", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the women with the most Australian Open singles titles all-time.",
+    "answers": [
+      {"text": "Margaret Court", "display": "Margaret Court — 11 Australian Open titles", "points": 30},
+      {"text": "Serena Williams", "display": "Serena Williams — 7 Australian Open titles", "points": 25},
+      {"text": "Nancye Wynne Bolton", "display": "Nancye Wynne Bolton — 6 Australian Open titles", "points": 20},
+      {"text": "Daphne Akhurst", "display": "Daphne Akhurst — 5 Australian Open titles", "points": 15},
+      {"text": "Steffi Graf", "display": "Steffi Graf — 4 Australian Open titles", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the countries with the most Billie Jean King Cup (Fed Cup) titles.",
+    "answers": [
+      {"text": "United States", "display": "United States — 18 Billie Jean King Cup titles", "points": 30},
+      {"text": "Czech Republic", "display": "Czech Republic / Czechoslovakia — 11 titles", "points": 25},
+      {"text": "Australia", "display": "Australia — 7 titles", "points": 20},
+      {"text": "Spain", "display": "Spain — 5 titles", "points": 15},
+      {"text": "Russia", "display": "Russia — 4 titles", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the women with the most career WTA singles titles.",
+    "answers": [
+      {"text": "Martina Navratilova", "display": "Martina Navratilova — 167 career WTA titles", "points": 30},
+      {"text": "Chris Evert", "display": "Chris Evert — 154 career WTA titles", "points": 25},
+      {"text": "Steffi Graf", "display": "Steffi Graf — 107 career WTA titles", "points": 20},
+      {"text": "Serena Williams", "display": "Serena Williams — 73 career WTA titles", "points": 15},
+      {"text": "Billie Jean King", "display": "Billie Jean King — 67 career WTA titles", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the youngest women's Grand Slam singles champions in the Open Era.",
+    "answers": [
+      {"text": "Martina Hingis", "display": "Martina Hingis — 16 yrs 3 mos (1997 Australian Open)", "points": 30},
+      {"text": "Monica Seles", "display": "Monica Seles — 16 yrs 6 mos (1990 French Open)", "points": 25},
+      {"text": "Tracy Austin", "display": "Tracy Austin — 16 yrs 9 mos (1979 US Open)", "points": 20},
+      {"text": "Maria Sharapova", "display": "Maria Sharapova — 17 yrs (2004 Wimbledon)", "points": 15},
+      {"text": "Steffi Graf", "display": "Steffi Graf — 17 yrs 11 mos (1987 French Open)", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the women with the most US Open singles titles all-time.",
+    "answers": [
+      {"text": "Serena Williams", "display": "Serena Williams — 6 US Open titles", "points": 30},
+      {"text": "Chris Evert", "display": "Chris Evert — 6 US Open titles", "points": 25},
+      {"text": "Steffi Graf", "display": "Steffi Graf — 5 US Open titles", "points": 20},
+      {"text": "Martina Navratilova", "display": "Martina Navratilova — 4 US Open titles", "points": 15},
+      {"text": "Billie Jean King", "display": "Billie Jean King — 4 US Open titles", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the men with the most US Open singles titles all-time.",
+    "answers": [
+      {"text": "Jimmy Connors", "display": "Jimmy Connors — 5 US Open titles", "points": 30},
+      {"text": "Pete Sampras", "display": "Pete Sampras — 5 US Open titles", "points": 25},
+      {"text": "Roger Federer", "display": "Roger Federer — 5 US Open titles", "points": 20},
+      {"text": "John McEnroe", "display": "John McEnroe — 4 US Open titles", "points": 15},
+      {"text": "Ivan Lendl", "display": "Ivan Lendl — 3 US Open titles", "points": 10}
+    ],
+    "category": "Tennis",
+    "removeQuestion": "",
+    "factCheck": ""
+  }
+]

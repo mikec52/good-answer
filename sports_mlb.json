@@ -1,0 +1,999 @@
+[
+  {
+    "question": "Name the all-time career home run leaders in MLB history.",
+    "answers": [
+      {
+        "text": "Barry Bonds",
+        "display": "Barry Bonds — 762 HR",
+        "points": 30
+      },
+      {
+        "text": "Hank Aaron",
+        "display": "Hank Aaron — 755 HR",
+        "points": 25
+      },
+      {
+        "text": "Babe Ruth",
+        "display": "Babe Ruth — 714 HR",
+        "points": 20
+      },
+      {
+        "text": "Alex Rodriguez",
+        "display": "Alex Rodriguez — 696 HR",
+        "points": 15
+      },
+      {
+        "text": "Willie Mays",
+        "display": "Willie Mays — 660 HR",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the all-time career hits leaders in MLB history.",
+    "answers": [
+      {
+        "text": "Pete Rose",
+        "display": "Pete Rose — 4,256 hits",
+        "points": 30
+      },
+      {
+        "text": "Ty Cobb",
+        "display": "Ty Cobb — 4,189 hits",
+        "points": 25
+      },
+      {
+        "text": "Hank Aaron",
+        "display": "Hank Aaron — 3,771 hits",
+        "points": 20
+      },
+      {
+        "text": "Stan Musial",
+        "display": "Stan Musial — 3,630 hits",
+        "points": 15
+      },
+      {
+        "text": "Tris Speaker",
+        "display": "Tris Speaker — 3,514 hits",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the all-time career RBI leaders in MLB history.",
+    "answers": [
+      {
+        "text": "Hank Aaron",
+        "display": "Hank Aaron — 2,297 RBI",
+        "points": 30
+      },
+      {
+        "text": "Babe Ruth",
+        "display": "Babe Ruth — 2,214 RBI",
+        "points": 25
+      },
+      {
+        "text": "Cap Anson",
+        "display": "Cap Anson — 2,075 RBI",
+        "points": 20
+      },
+      {
+        "text": "Lou Gehrig",
+        "display": "Lou Gehrig — 1,995 RBI",
+        "points": 15
+      },
+      {
+        "text": "Stan Musial",
+        "display": "Stan Musial — 1,951 RBI",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the all-time career stolen bases leaders in MLB history.",
+    "answers": [
+      {
+        "text": "Rickey Henderson",
+        "display": "Rickey Henderson — 1,406 SB",
+        "points": 30
+      },
+      {
+        "text": "Lou Brock",
+        "display": "Lou Brock — 938 SB",
+        "points": 25
+      },
+      {
+        "text": "Billy Hamilton",
+        "display": "Billy Hamilton (19th c.) — 912 SB",
+        "points": 20
+      },
+      {
+        "text": "Ty Cobb",
+        "display": "Ty Cobb — 897 SB",
+        "points": 15
+      },
+      {
+        "text": "Tim Raines",
+        "display": "Tim Raines — 808 SB",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the all-time career strikeout leaders among MLB pitchers.",
+    "answers": [
+      {
+        "text": "Nolan Ryan",
+        "display": "Nolan Ryan — 5,714 Ks",
+        "points": 30
+      },
+      {
+        "text": "Randy Johnson",
+        "display": "Randy Johnson — 4,875 Ks",
+        "points": 25
+      },
+      {
+        "text": "Roger Clemens",
+        "display": "Roger Clemens — 4,672 Ks",
+        "points": 20
+      },
+      {
+        "text": "Steve Carlton",
+        "display": "Steve Carlton — 4,136 Ks",
+        "points": 15
+      },
+      {
+        "text": "Bert Blyleven",
+        "display": "Bert Blyleven — 3,701 Ks",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the all-time career wins leaders among MLB pitchers.",
+    "answers": [
+      {
+        "text": "Cy Young",
+        "display": "Cy Young — 511 wins",
+        "points": 30
+      },
+      {
+        "text": "Walter Johnson",
+        "display": "Walter Johnson — 417 wins",
+        "points": 25
+      },
+      {
+        "text": "Grover Cleveland Alexander",
+        "display": "Grover Cleveland Alexander — 373 wins",
+        "points": 20
+      },
+      {
+        "text": "Christy Mathewson",
+        "display": "Christy Mathewson — 373 wins",
+        "points": 15
+      },
+      {
+        "text": "Warren Spahn",
+        "display": "Warren Spahn — 363 wins",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career walks (BB) in MLB history.",
+    "answers": [
+      {
+        "text": "Barry Bonds",
+        "display": "Barry Bonds — 2,558 BB",
+        "points": 30
+      },
+      {
+        "text": "Rickey Henderson",
+        "display": "Rickey Henderson — 2,190 BB",
+        "points": 25
+      },
+      {
+        "text": "Babe Ruth",
+        "display": "Babe Ruth — 2,062 BB",
+        "points": 20
+      },
+      {
+        "text": "Ted Williams",
+        "display": "Ted Williams — 2,021 BB",
+        "points": 15
+      },
+      {
+        "text": "Jim Thome",
+        "display": "Jim Thome — 1,747 BB",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career doubles in MLB history.",
+    "answers": [
+      {
+        "text": "Tris Speaker",
+        "display": "Tris Speaker — 792 doubles",
+        "points": 30
+      },
+      {
+        "text": "Pete Rose",
+        "display": "Pete Rose — 746 doubles",
+        "points": 25
+      },
+      {
+        "text": "Stan Musial",
+        "display": "Stan Musial — 725 doubles",
+        "points": 20
+      },
+      {
+        "text": "Ty Cobb",
+        "display": "Ty Cobb — 724 doubles",
+        "points": 15
+      },
+      {
+        "text": "George Brett",
+        "display": "George Brett — 665 doubles",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the pitchers with the most career no-hitters in MLB history.",
+    "answers": [
+      {
+        "text": "Nolan Ryan",
+        "display": "Nolan Ryan — 7 no-hitters",
+        "points": 30
+      },
+      {
+        "text": "Sandy Koufax",
+        "display": "Sandy Koufax — 4 no-hitters",
+        "points": 25
+      },
+      {
+        "text": "Bob Feller",
+        "display": "Bob Feller — 3 no-hitters",
+        "points": 20
+      },
+      {
+        "text": "Cy Young",
+        "display": "Cy Young — 3 no-hitters",
+        "points": 15
+      },
+      {
+        "text": "Larry Corcoran",
+        "display": "Larry Corcoran — 3 no-hitters",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the franchises with the most World Series championships in MLB history.",
+    "answers": [
+      {
+        "text": "New York Yankees",
+        "display": "New York Yankees — 27 championships",
+        "points": 30
+      },
+      {
+        "text": "St. Louis Cardinals",
+        "display": "St. Louis Cardinals — 11 championships",
+        "points": 25
+      },
+      {
+        "text": "Oakland Athletics",
+        "display": "Oakland/Philadelphia Athletics — 9 championships",
+        "points": 20
+      },
+      {
+        "text": "Boston Red Sox",
+        "display": "Boston Red Sox — 9 championships",
+        "points": 15
+      },
+      {
+        "text": "San Francisco Giants",
+        "display": "New York/San Francisco Giants — 8 championships",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career grand slams in MLB history.",
+    "answers": [
+      {
+        "text": "Alex Rodriguez",
+        "display": "Alex Rodriguez — 25 grand slams",
+        "points": 30
+      },
+      {
+        "text": "Lou Gehrig",
+        "display": "Lou Gehrig — 23 grand slams",
+        "points": 25
+      },
+      {
+        "text": "Manny Ramirez",
+        "display": "Manny Ramirez — 21 grand slams",
+        "points": 20
+      },
+      {
+        "text": "Eddie Murray",
+        "display": "Eddie Murray — 19 grand slams",
+        "points": 15
+      },
+      {
+        "text": "Willie McCovey",
+        "display": "Willie McCovey — 18 grand slams",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players who have won the most MLB MVP awards.",
+    "answers": [
+      {
+        "text": "Barry Bonds",
+        "display": "Barry Bonds — 7 MVP awards",
+        "points": 30
+      },
+      {
+        "text": "Yogi Berra",
+        "display": "Yogi Berra — 3 MVP awards",
+        "points": 25
+      },
+      {
+        "text": "Roy Campanella",
+        "display": "Roy Campanella — 3 MVP awards",
+        "points": 20
+      },
+      {
+        "text": "Mike Trout",
+        "display": "Mike Trout — 3 MVP awards",
+        "points": 15
+      },
+      {
+        "text": "Stan Musial",
+        "display": "Stan Musial — 3 MVP awards",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the pitchers who have won the most Cy Young Awards.",
+    "answers": [
+      {
+        "text": "Roger Clemens",
+        "display": "Roger Clemens — 7 Cy Young Awards",
+        "points": 30
+      },
+      {
+        "text": "Randy Johnson",
+        "display": "Randy Johnson — 5 Cy Young Awards",
+        "points": 25
+      },
+      {
+        "text": "Steve Carlton",
+        "display": "Steve Carlton — 4 Cy Young Awards",
+        "points": 20
+      },
+      {
+        "text": "Greg Maddux",
+        "display": "Greg Maddux — 4 Cy Young Awards",
+        "points": 15
+      },
+      {
+        "text": "Sandy Koufax",
+        "display": "Sandy Koufax — 3 Cy Young Awards",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career plate appearances in a single season (400+ AB threshold, modern era single-season hits record context).",
+    "answers": [],
+    "category": "MLB",
+    "removeQuestion": "DISCARDED — Too narrow/confusing as phrased. Replace with a clearer single-season record question.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the highest career batting average in MLB history (min. 3,000 plate appearances).",
+    "answers": [
+      {
+        "text": "Ty Cobb",
+        "display": "Ty Cobb — .366 career avg",
+        "points": 30
+      },
+      {
+        "text": "Rogers Hornsby",
+        "display": "Rogers Hornsby — .358 career avg",
+        "points": 25
+      },
+      {
+        "text": "Shoeless Joe Jackson",
+        "display": "Shoeless Joe Jackson — .356 career avg",
+        "points": 20
+      },
+      {
+        "text": "Lefty O'Doul",
+        "display": "Lefty O'Doul — .349 career avg",
+        "points": 15
+      },
+      {
+        "text": "Ted Williams",
+        "display": "Ted Williams — .344 career avg",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players who hit the most home runs in a single MLB season.",
+    "answers": [
+      {
+        "text": "Barry Bonds",
+        "display": "Barry Bonds — 73 HR (2001)",
+        "points": 30
+      },
+      {
+        "text": "Mark McGwire",
+        "display": "Mark McGwire — 70 HR (1998)",
+        "points": 25
+      },
+      {
+        "text": "Sammy Sosa",
+        "display": "Sammy Sosa — 66 HR (1998)",
+        "points": 20
+      },
+      {
+        "text": "Roger Maris",
+        "display": "Roger Maris — 61 HR (1961)",
+        "points": 15
+      },
+      {
+        "text": "Babe Ruth",
+        "display": "Babe Ruth — 60 HR (1927)",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the teams that appeared in the most consecutive World Series.",
+    "answers": [
+      {
+        "text": "New York Yankees",
+        "display": "New York Yankees — 5 consecutive WS (1949–1953)",
+        "points": 30
+      },
+      {
+        "text": "New York Giants",
+        "display": "New York Giants — 4 consecutive WS (1921–1924)",
+        "points": 25
+      },
+      {
+        "text": "Oakland Athletics",
+        "display": "Oakland Athletics — 3 consecutive WS (1972–1974)",
+        "points": 20
+      },
+      {
+        "text": "Cincinnati Reds",
+        "display": "Cincinnati Reds — 2 consecutive WS (1975–1976)",
+        "points": 15
+      },
+      {
+        "text": "Toronto Blue Jays",
+        "display": "Toronto Blue Jays — 2 consecutive WS (1992–1993)",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career triples in MLB history.",
+    "answers": [
+      {
+        "text": "Sam Crawford",
+        "display": "Sam Crawford — 309 triples",
+        "points": 30
+      },
+      {
+        "text": "Ty Cobb",
+        "display": "Ty Cobb — 295 triples",
+        "points": 25
+      },
+      {
+        "text": "Honus Wagner",
+        "display": "Honus Wagner — 252 triples",
+        "points": 20
+      },
+      {
+        "text": "Jake Beckley",
+        "display": "Jake Beckley — 243 triples",
+        "points": 15
+      },
+      {
+        "text": "Roger Connor",
+        "display": "Roger Connor — 233 triples",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the pitchers with the most career saves in MLB history.",
+    "answers": [
+      {
+        "text": "Mariano Rivera",
+        "display": "Mariano Rivera — 652 saves",
+        "points": 30
+      },
+      {
+        "text": "Trevor Hoffman",
+        "display": "Trevor Hoffman — 601 saves",
+        "points": 25
+      },
+      {
+        "text": "Lee Smith",
+        "display": "Lee Smith — 478 saves",
+        "points": 20
+      },
+      {
+        "text": "John Franco",
+        "display": "John Franco — 424 saves",
+        "points": 15
+      },
+      {
+        "text": "Billy Wagner",
+        "display": "Billy Wagner — 422 saves",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career runs scored in MLB history.",
+    "answers": [
+      {
+        "text": "Rickey Henderson",
+        "display": "Rickey Henderson — 2,295 runs",
+        "points": 30
+      },
+      {
+        "text": "Ty Cobb",
+        "display": "Ty Cobb — 2,246 runs",
+        "points": 25
+      },
+      {
+        "text": "Babe Ruth",
+        "display": "Babe Ruth — 2,174 runs",
+        "points": 20
+      },
+      {
+        "text": "Hank Aaron",
+        "display": "Hank Aaron — 2,174 runs",
+        "points": 15
+      },
+      {
+        "text": "Pete Rose",
+        "display": "Pete Rose — 2,165 runs",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players who won the most Gold Glove Awards in MLB history.",
+    "answers": [
+      {
+        "text": "Greg Maddux",
+        "display": "Greg Maddux — 18 Gold Gloves (pitcher)",
+        "points": 30
+      },
+      {
+        "text": "Brooks Robinson",
+        "display": "Brooks Robinson — 16 Gold Gloves (3B)",
+        "points": 25
+      },
+      {
+        "text": "Roberto Clemente",
+        "display": "Roberto Clemente — 12 Gold Gloves (RF)",
+        "points": 20
+      },
+      {
+        "text": "Ozzie Smith",
+        "display": "Ozzie Smith — 13 Gold Gloves (SS)",
+        "points": 15
+      },
+      {
+        "text": "Willie Mays",
+        "display": "Willie Mays — 12 Gold Gloves (CF)",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career strikeouts as a batter in MLB history.",
+    "answers": [
+      {
+        "text": "Reggie Jackson",
+        "display": "Reggie Jackson — 2,597 Ks",
+        "points": 30
+      },
+      {
+        "text": "Jim Thome",
+        "display": "Jim Thome — 2,548 Ks",
+        "points": 25
+      },
+      {
+        "text": "Adam Dunn",
+        "display": "Adam Dunn — 2,379 Ks",
+        "points": 20
+      },
+      {
+        "text": "Sammy Sosa",
+        "display": "Sammy Sosa — 2,306 Ks",
+        "points": 15
+      },
+      {
+        "text": "Alex Rodriguez",
+        "display": "Alex Rodriguez — 2,287 Ks",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the highest single-season batting average in MLB history (modern era, post-1900).",
+    "answers": [
+      {
+        "text": "Rogers Hornsby",
+        "display": "Rogers Hornsby — .424 in 1924",
+        "points": 30
+      },
+      {
+        "text": "Nap Lajoie",
+        "display": "Nap Lajoie — .422 in 1901",
+        "points": 25
+      },
+      {
+        "text": "George Sisler",
+        "display": "George Sisler — .420 in 1922",
+        "points": 20
+      },
+      {
+        "text": "Ty Cobb",
+        "display": "Ty Cobb — .420 in 1911",
+        "points": 15
+      },
+      {
+        "text": "Joe Jackson",
+        "display": "Joe Jackson — .408 in 1911",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the MLB teams with the most regular season wins in a single season.",
+    "answers": [
+      {
+        "text": "Seattle Mariners",
+        "display": "Seattle Mariners — 116 wins (2001)",
+        "points": 30
+      },
+      {
+        "text": "Chicago Cubs",
+        "display": "Chicago Cubs — 116 wins (1906)",
+        "points": 25
+      },
+      {
+        "text": "Cleveland Indians",
+        "display": "Cleveland Indians — 111 wins (1954)",
+        "points": 20
+      },
+      {
+        "text": "New York Yankees",
+        "display": "New York Yankees — 114 wins (1998)",
+        "points": 15
+      },
+      {
+        "text": "Los Angeles Dodgers",
+        "display": "Los Angeles Dodgers — 111 wins (2022)",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career runs batted in during a single MLB season.",
+    "answers": [
+      {
+        "text": "Hack Wilson",
+        "display": "Hack Wilson — 191 RBI (1930)",
+        "points": 30
+      },
+      {
+        "text": "Lou Gehrig",
+        "display": "Lou Gehrig — 185 RBI (1931)",
+        "points": 25
+      },
+      {
+        "text": "Hank Greenberg",
+        "display": "Hank Greenberg — 183 RBI (1937)",
+        "points": 20
+      },
+      {
+        "text": "Jimmie Foxx",
+        "display": "Jimmie Foxx — 175 RBI (1938)",
+        "points": 15
+      },
+      {
+        "text": "Lou Gehrig",
+        "display": "Lou Gehrig — 174 RBI (1927)",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "DISCARDED — Lou Gehrig appears twice (1931 and 1927 seasons), violating the one-answer-per-entity rule.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most single-season RBI totals in MLB history (one entry per player).",
+    "answers": [
+      {
+        "text": "Hack Wilson",
+        "display": "Hack Wilson — 191 RBI (1930)",
+        "points": 30
+      },
+      {
+        "text": "Lou Gehrig",
+        "display": "Lou Gehrig — 185 RBI (1931)",
+        "points": 25
+      },
+      {
+        "text": "Hank Greenberg",
+        "display": "Hank Greenberg — 183 RBI (1937)",
+        "points": 20
+      },
+      {
+        "text": "Jimmie Foxx",
+        "display": "Jimmie Foxx — 175 RBI (1938)",
+        "points": 15
+      },
+      {
+        "text": "Babe Ruth",
+        "display": "Babe Ruth — 171 RBI (1921)",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the MLB franchises with the most consecutive division titles.",
+    "answers": [
+      {
+        "text": "Atlanta Braves",
+        "display": "Atlanta Braves — 14 consecutive division titles (1991–2005)",
+        "points": 30
+      },
+      {
+        "text": "New York Yankees",
+        "display": "New York Yankees — 13 consecutive division titles (1998–2006 era, approx.)",
+        "points": 25
+      },
+      {
+        "text": "Oakland Athletics",
+        "display": "Oakland Athletics — 5 consecutive division titles (1971–1975)",
+        "points": 20
+      },
+      {
+        "text": "Houston Astros",
+        "display": "Houston Astros — 6 consecutive division titles (2017–2023)",
+        "points": 15
+      },
+      {
+        "text": "Los Angeles Dodgers",
+        "display": "Los Angeles Dodgers — 8 consecutive division titles (2013–2020)",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the pitchers with the most career complete games in MLB history.",
+    "answers": [
+      {
+        "text": "Cy Young",
+        "display": "Cy Young — 749 complete games",
+        "points": 30
+      },
+      {
+        "text": "Pud Galvin",
+        "display": "Pud Galvin — 646 complete games",
+        "points": 25
+      },
+      {
+        "text": "Tim Keefe",
+        "display": "Tim Keefe — 554 complete games",
+        "points": 20
+      },
+      {
+        "text": "Walter Johnson",
+        "display": "Walter Johnson — 531 complete games",
+        "points": 15
+      },
+      {
+        "text": "Kid Nichols",
+        "display": "Kid Nichols — 531 complete games",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career sacrifice flies in MLB history.",
+    "answers": [
+      {
+        "text": "Eddie Murray",
+        "display": "Eddie Murray — 128 sacrifice flies",
+        "points": 30
+      },
+      {
+        "text": "Cal Ripken Jr.",
+        "display": "Cal Ripken Jr. — 127 sacrifice flies",
+        "points": 25
+      },
+      {
+        "text": "Hank Aaron",
+        "display": "Hank Aaron — 121 sacrifice flies",
+        "points": 20
+      },
+      {
+        "text": "Andre Dawson",
+        "display": "Andre Dawson — 121 sacrifice flies",
+        "points": 15
+      },
+      {
+        "text": "Dave Winfield",
+        "display": "Dave Winfield — 115 sacrifice flies",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players who have hit for the cycle the most times in MLB history.",
+    "answers": [
+      {
+        "text": "Bob Meusel",
+        "display": "Bob Meusel — 3 times hitting for the cycle",
+        "points": 30
+      },
+      {
+        "text": "Babe Herman",
+        "display": "Babe Herman — 3 times hitting for the cycle",
+        "points": 25
+      },
+      {
+        "text": "Adrian Beltre",
+        "display": "Adrian Beltre — 3 times hitting for the cycle",
+        "points": 20
+      },
+      {
+        "text": "John Reilly",
+        "display": "John Reilly — 3 times hitting for the cycle (19th c.)",
+        "points": 15
+      },
+      {
+        "text": "Trea Turner",
+        "display": "Trea Turner — 3 times hitting for the cycle",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the MLB players with the most career intentional walks.",
+    "answers": [
+      {
+        "text": "Barry Bonds",
+        "display": "Barry Bonds — 688 intentional walks",
+        "points": 30
+      },
+      {
+        "text": "Albert Pujols",
+        "display": "Albert Pujols — 312 intentional walks",
+        "points": 25
+      },
+      {
+        "text": "Hank Aaron",
+        "display": "Hank Aaron — 293 intentional walks",
+        "points": 20
+      },
+      {
+        "text": "Ken Griffey Jr.",
+        "display": "Ken Griffey Jr. — 246 intentional walks",
+        "points": 15
+      },
+      {
+        "text": "Willie Mays",
+        "display": "Willie Mays — 208 intentional walks",
+        "points": 10
+      }
+    ],
+    "category": "MLB",
+    "removeQuestion": "",
+    "factCheck": ""
+  }
+]

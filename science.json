@@ -1,0 +1,262 @@
+[
+  {
+    "question": "Name the planets in our solar system in order from the Sun.",
+    "answers": [
+      {"text": "Mercury", "display": "Mercury — 36 million miles from the Sun (1st)", "points": 30},
+      {"text": "Venus", "display": "Venus — 67 million miles from the Sun (2nd)", "points": 25},
+      {"text": "Earth", "display": "Earth — 93 million miles from the Sun (3rd)", "points": 20},
+      {"text": "Mars", "display": "Mars — 142 million miles from the Sun (4th)", "points": 15},
+      {"text": "Jupiter", "display": "Jupiter — 484 million miles from the Sun (5th)", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most abundant elements in the universe by mass.",
+    "answers": [
+      {"text": "Hydrogen", "display": "Hydrogen — ~75% of all normal matter in the universe", "points": 30},
+      {"text": "Helium", "display": "Helium — ~24% of all normal matter in the universe", "points": 25},
+      {"text": "Oxygen", "display": "Oxygen — ~1% of all normal matter in the universe (3rd most abundant)", "points": 20},
+      {"text": "Carbon", "display": "Carbon — 4th most abundant element in the universe", "points": 15},
+      {"text": "Neon", "display": "Neon — 5th most abundant element in the universe", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most abundant elements in Earth's crust by mass.",
+    "answers": [
+      {"text": "Oxygen", "display": "Oxygen — 46% of Earth's crust by mass", "points": 30},
+      {"text": "Silicon", "display": "Silicon — 28% of Earth's crust by mass", "points": 25},
+      {"text": "Aluminum", "display": "Aluminum — 8% of Earth's crust by mass", "points": 20},
+      {"text": "Iron", "display": "Iron — 5% of Earth's crust by mass", "points": 15},
+      {"text": "Calcium", "display": "Calcium — 4% of Earth's crust by mass", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest moons in our solar system by diameter.",
+    "answers": [
+      {"text": "Ganymede", "display": "Ganymede (Jupiter) — 3,273 miles diameter (largest moon, bigger than Mercury)", "points": 30},
+      {"text": "Titan", "display": "Titan (Saturn) — 3,200 miles diameter", "points": 25},
+      {"text": "Callisto", "display": "Callisto (Jupiter) — 2,995 miles diameter", "points": 20},
+      {"text": "Io", "display": "Io (Jupiter) — 2,264 miles diameter", "points": 15},
+      {"text": "Earth's Moon", "display": "Earth's Moon — 2,159 miles diameter", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the brightest stars visible from Earth.",
+    "answers": [
+      {"text": "Sirius", "display": "Sirius — magnitude −1.46 (brightest star in the night sky)", "points": 30},
+      {"text": "Canopus", "display": "Canopus — magnitude −0.74 (2nd brightest)", "points": 25},
+      {"text": "Rigil Kentaurus", "display": "Rigil Kentaurus (Alpha Centauri) — magnitude −0.27 (3rd brightest)", "points": 20},
+      {"text": "Arcturus", "display": "Arcturus — magnitude −0.05 (4th brightest)", "points": 15},
+      {"text": "Vega", "display": "Vega — magnitude 0.03 (5th brightest)", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most abundant gases in Earth's atmosphere by volume.",
+    "answers": [
+      {"text": "Nitrogen", "display": "Nitrogen — 78% of Earth's atmosphere", "points": 30},
+      {"text": "Oxygen", "display": "Oxygen — 21% of Earth's atmosphere", "points": 25},
+      {"text": "Argon", "display": "Argon — 0.93% of Earth's atmosphere", "points": 20},
+      {"text": "Carbon dioxide", "display": "Carbon dioxide — 0.04% of Earth's atmosphere", "points": 15},
+      {"text": "Neon", "display": "Neon — 0.0018% of Earth's atmosphere (5th most abundant)", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the longest bones in the human body.",
+    "answers": [
+      {"text": "Femur", "display": "Femur (thigh bone) — avg. 19 inches (longest bone in the body)", "points": 30},
+      {"text": "Tibia", "display": "Tibia (shin bone) — avg. 16 inches", "points": 25},
+      {"text": "Fibula", "display": "Fibula (outer lower leg) — avg. 15 inches", "points": 20},
+      {"text": "Humerus", "display": "Humerus (upper arm) — avg. 14 inches", "points": 15},
+      {"text": "Radius", "display": "Radius (forearm) — avg. 10 inches", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest organs in the human body by weight.",
+    "answers": [
+      {"text": "Skin", "display": "Skin — avg. 8–10 lbs (largest organ by weight and surface area)", "points": 30},
+      {"text": "Liver", "display": "Liver — avg. 3.3 lbs", "points": 25},
+      {"text": "Brain", "display": "Brain — avg. 3.0 lbs", "points": 20},
+      {"text": "Lungs", "display": "Lungs — avg. 2.5 lbs (both combined)", "points": 15},
+      {"text": "Heart", "display": "Heart — avg. 0.7 lbs", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most common blood types in the United States by prevalence.",
+    "answers": [
+      {"text": "O positive", "display": "O positive — 37.4% of the US population (most common)", "points": 30},
+      {"text": "A positive", "display": "A positive — 35.7% of the US population", "points": 25},
+      {"text": "B positive", "display": "B positive — 8.5% of the US population", "points": 20},
+      {"text": "AB positive", "display": "AB positive — 3.4% of the US population", "points": 15},
+      {"text": "O negative", "display": "O negative — 6.6% of the US population (universal donor)", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the elements with the highest melting points.",
+    "answers": [
+      {"text": "Tungsten", "display": "Tungsten — 6,192°F melting point (highest of any element)", "points": 30},
+      {"text": "Rhenium", "display": "Rhenium — 5,756°F melting point", "points": 25},
+      {"text": "Osmium", "display": "Osmium — 5,491°F melting point", "points": 20},
+      {"text": "Tantalum", "display": "Tantalum — 5,463°F melting point", "points": 15},
+      {"text": "Molybdenum", "display": "Molybdenum — 4,753°F melting point", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the fastest animals on Earth by top speed.",
+    "answers": [
+      {"text": "Cheetah", "display": "Cheetah — 70–75 mph (fastest land animal)", "points": 30},
+      {"text": "Pronghorn", "display": "Pronghorn — 55 mph (fastest land animal in the Western Hemisphere)", "points": 25},
+      {"text": "Springbok", "display": "Springbok — 55 mph", "points": 20},
+      {"text": "Wildebeest", "display": "Wildebeest — 50 mph", "points": 15},
+      {"text": "Lion", "display": "Lion — 50 mph", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest land animals by weight.",
+    "answers": [
+      {"text": "African Bush Elephant", "display": "African Bush Elephant — up to 13,000 lbs (largest land animal)", "points": 30},
+      {"text": "Hippopotamus", "display": "Hippopotamus — up to 9,900 lbs", "points": 25},
+      {"text": "White Rhinoceros", "display": "White Rhinoceros — up to 5,100 lbs", "points": 20},
+      {"text": "Giraffe", "display": "Giraffe — up to 3,000 lbs", "points": 15},
+      {"text": "Gaur", "display": "Gaur (Indian Bison) — up to 3,300 lbs (largest bovine)", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest animals in the ocean by weight.",
+    "answers": [
+      {"text": "Blue Whale", "display": "Blue Whale — up to 330,000 lbs (largest animal ever known to exist)", "points": 30},
+      {"text": "Fin Whale", "display": "Fin Whale — up to 150,000 lbs", "points": 25},
+      {"text": "Sperm Whale", "display": "Sperm Whale — up to 125,000 lbs", "points": 20},
+      {"text": "Right Whale", "display": "Right Whale — up to 100,000 lbs", "points": 15},
+      {"text": "Whale Shark", "display": "Whale Shark — up to 47,000 lbs (largest fish)", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the tallest animals in the world.",
+    "answers": [
+      {"text": "Giraffe", "display": "Giraffe — up to 19 ft tall (tallest living animal)", "points": 30},
+      {"text": "African Elephant", "display": "African Elephant — up to 13 ft at the shoulder", "points": 25},
+      {"text": "Ostrich", "display": "Ostrich — up to 9 ft tall (tallest bird)", "points": 20},
+      {"text": "Brown Bear", "display": "Brown Bear — up to 9 ft tall when standing upright", "points": 15},
+      {"text": "Moose", "display": "Moose — up to 7.5 ft at the shoulder", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the longest-living animals in the world.",
+    "answers": [
+      {"text": "Ocean Quahog Clam", "display": "Ocean Quahog Clam — 500+ years (oldest confirmed: 507 years)", "points": 30},
+      {"text": "Greenland Shark", "display": "Greenland Shark — 400+ years (longest-lived vertebrate)", "points": 25},
+      {"text": "Bowhead Whale", "display": "Bowhead Whale — 200+ years", "points": 20},
+      {"text": "Giant Tortoise", "display": "Giant Tortoise — 180+ years (longest-lived land animal)", "points": 15},
+      {"text": "Rougheye Rockfish", "display": "Rougheye Rockfish — 150+ years", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the fastest birds in the world by top speed.",
+    "answers": [
+      {"text": "Peregrine Falcon", "display": "Peregrine Falcon — 240 mph in a dive (fastest animal on Earth)", "points": 30},
+      {"text": "Golden Eagle", "display": "Golden Eagle — 150–200 mph in a dive", "points": 25},
+      {"text": "White-throated Needletail", "display": "White-throated Needletail — 105 mph in level flight (fastest in level flight)", "points": 20},
+      {"text": "Eurasian Hobby", "display": "Eurasian Hobby — 100 mph", "points": 15},
+      {"text": "Frigatebird", "display": "Frigatebird — 95 mph", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest primates in the world by weight.",
+    "answers": [
+      {"text": "Eastern Gorilla", "display": "Eastern Gorilla — up to 440 lbs (largest living primate)", "points": 30},
+      {"text": "Western Gorilla", "display": "Western Gorilla — up to 400 lbs", "points": 25},
+      {"text": "Orangutan", "display": "Orangutan — up to 285 lbs", "points": 20},
+      {"text": "Common Chimpanzee", "display": "Common Chimpanzee — up to 130 lbs", "points": 15},
+      {"text": "Gelada", "display": "Gelada (bleeding-heart monkey) — up to 44 lbs (largest Old World monkey)", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the heaviest flightless birds in the world.",
+    "answers": [
+      {"text": "Ostrich", "display": "Ostrich — up to 345 lbs (heaviest bird alive)", "points": 30},
+      {"text": "Southern Cassowary", "display": "Southern Cassowary — up to 167 lbs", "points": 25},
+      {"text": "Emu", "display": "Emu — up to 130 lbs", "points": 20},
+      {"text": "Emperor Penguin", "display": "Emperor Penguin — up to 99 lbs (heaviest penguin)", "points": 15},
+      {"text": "Greater Rhea", "display": "Greater Rhea — up to 88 lbs", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most commonly fractured bones in the human body.",
+    "answers": [
+      {"text": "Clavicle", "display": "Clavicle (collarbone) — most frequently broken bone in the body", "points": 30},
+      {"text": "Radius", "display": "Radius (forearm) — most common wrist/arm fracture", "points": 25},
+      {"text": "Ankle bones", "display": "Ankle bones (fibula/tibia) — most common lower-leg fractures", "points": 20},
+      {"text": "Hip (femoral neck)", "display": "Hip (femoral neck) — most common fracture in the elderly", "points": 15},
+      {"text": "Vertebrae", "display": "Vertebrae — most common fractures from osteoporosis and compression", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most commonly diagnosed cancers in the United States.",
+    "answers": [
+      {"text": "Breast cancer", "display": "Breast cancer — 300,000+ new cases/year (most diagnosed cancer overall)", "points": 30},
+      {"text": "Prostate cancer", "display": "Prostate cancer — 290,000+ new cases/year", "points": 25},
+      {"text": "Lung cancer", "display": "Lung cancer — 235,000+ new cases/year (leading cause of cancer death)", "points": 20},
+      {"text": "Colorectal cancer", "display": "Colorectal cancer — 153,000+ new cases/year", "points": 15},
+      {"text": "Melanoma", "display": "Melanoma (skin cancer) — 100,000+ new cases/year", "points": 10}
+    ],
+    "category": "Science",
+    "removeQuestion": "",
+    "factCheck": ""
+  }
+]

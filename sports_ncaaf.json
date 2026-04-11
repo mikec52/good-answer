@@ -1,0 +1,509 @@
+[
+  {
+    "question": "Name the programs with the most consensus national championships in college football history.",
+    "answers": [
+      {"text": "Alabama", "display": "Alabama — 18 consensus national titles", "points": 30},
+      {"text": "Notre Dame", "display": "Notre Dame — 13 consensus national titles", "points": 25},
+      {"text": "Ohio State", "display": "Ohio State — 8 consensus national titles", "points": 20},
+      {"text": "Oklahoma", "display": "Oklahoma — 7 consensus national titles", "points": 15},
+      {"text": "USC", "display": "USC — 11 consensus national titles", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the coaches with the most wins in NCAA Football Bowl Subdivision (FBS) history.",
+    "answers": [
+      {"text": "Bobby Bowden", "display": "Bobby Bowden — 377 wins", "points": 30},
+      {"text": "Joe Paterno", "display": "Joe Paterno — 409 wins (later vacated to 298)", "points": 25},
+      {"text": "Bear Bryant", "display": "Bear Bryant — 323 wins", "points": 20},
+      {"text": "Mack Brown", "display": "Mack Brown — 320+ wins", "points": 15},
+      {"text": "Lou Holtz", "display": "Lou Holtz — 249 wins", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — Joe Paterno's official record was vacated and later partially restored, creating an inconsistency that makes this list unreliable for game use.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the coaches with the most FBS wins in college football history (official records).",
+    "answers": [
+      {"text": "Bobby Bowden", "display": "Bobby Bowden (Florida State) — 377 wins", "points": 30},
+      {"text": "Bear Bryant", "display": "Bear Bryant (Alabama) — 323 wins", "points": 25},
+      {"text": "Pop Warner", "display": "Pop Warner — 319 wins", "points": 20},
+      {"text": "Mack Brown", "display": "Mack Brown (Texas/UNC) — 320+ wins", "points": 15},
+      {"text": "Woody Hayes", "display": "Woody Hayes (Ohio State) — 238 wins", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — All-time win lists across eras (pre-modern vs. FBS era) are inconsistently compiled and produce unreliable rankings.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players who have won the Heisman Trophy the most times.",
+    "answers": [
+      {"text": "Archie Griffin", "display": "Archie Griffin (Ohio State) — 2 Heisman Trophies (1974, 1975)", "points": 30},
+      {"text": "Jay Berwanger", "display": "Jay Berwanger (Chicago) — 1st Heisman Trophy (1935)", "points": 25},
+      {"text": "Tom Harmon", "display": "Tom Harmon (Michigan) — Heisman Trophy (1940)", "points": 20},
+      {"text": "Doc Blanchard", "display": "Doc Blanchard (Army) — Heisman Trophy (1945)", "points": 15},
+      {"text": "Glenn Davis", "display": "Glenn Davis (Army) — Heisman Trophy (1946)", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — Only one player has won multiple Heismans (Archie Griffin), making this an unsuitable ranked format.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the programs that have produced the most Heisman Trophy winners.",
+    "answers": [
+      {"text": "Ohio State", "display": "Ohio State — 7 Heisman Trophy winners", "points": 30},
+      {"text": "Notre Dame", "display": "Notre Dame — 7 Heisman Trophy winners", "points": 25},
+      {"text": "Alabama", "display": "Alabama — 3 Heisman Trophy winners", "points": 20},
+      {"text": "USC", "display": "USC — 7 Heisman Trophy winners", "points": 15},
+      {"text": "Oklahoma", "display": "Oklahoma — 5 Heisman Trophy winners", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the programs with the most all-time wins in college football history.",
+    "answers": [
+      {"text": "Michigan", "display": "Michigan — 1,000+ all-time wins", "points": 30},
+      {"text": "Ohio State", "display": "Ohio State — 950+ all-time wins", "points": 25},
+      {"text": "Alabama", "display": "Alabama — 950+ all-time wins", "points": 20},
+      {"text": "Texas", "display": "Texas — 940+ all-time wins", "points": 15},
+      {"text": "Nebraska", "display": "Nebraska — 920+ all-time wins", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career rushing yards in FBS college football history.",
+    "answers": [
+      {"text": "Ron Dayne", "display": "Ron Dayne (Wisconsin) — 6,397 career rushing yards", "points": 30},
+      {"text": "Tony Dorsett", "display": "Tony Dorsett (Pittsburgh) — 6,082 career rushing yards", "points": 25},
+      {"text": "Charles White", "display": "Charles White (USC) — 5,598 career rushing yards", "points": 20},
+      {"text": "Archie Griffin", "display": "Archie Griffin (Ohio State) — 5,177 career rushing yards", "points": 15},
+      {"text": "Herschel Walker", "display": "Herschel Walker (Georgia) — 5,259 career rushing yards", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career passing yards in FBS college football history.",
+    "answers": [
+      {"text": "Case Keenum", "display": "Case Keenum (Houston) — 19,217 career passing yards", "points": 30},
+      {"text": "Graham Harrell", "display": "Graham Harrell (Texas Tech) — 15,793 career passing yards", "points": 25},
+      {"text": "Timmy Chang", "display": "Timmy Chang (Hawaii) — 17,072 career passing yards", "points": 20},
+      {"text": "Colt Brennan", "display": "Colt Brennan (Hawaii) — 14,193 career passing yards", "points": 15},
+      {"text": "Danny Wuerffel", "display": "Danny Wuerffel (Florida) — 10,875 career passing yards", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — The ordering is unreliable; Timmy Chang (17,072) should rank above Graham Harrell (15,793), and Wuerffel does not belong in the top 5.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career passing yards in FBS history.",
+    "answers": [
+      {"text": "Case Keenum", "display": "Case Keenum (Houston) — 19,217 career passing yards", "points": 30},
+      {"text": "Timmy Chang", "display": "Timmy Chang (Hawaii) — 17,072 career passing yards", "points": 25},
+      {"text": "Graham Harrell", "display": "Graham Harrell (Texas Tech) — 15,793 career passing yards", "points": 20},
+      {"text": "Colt Brennan", "display": "Colt Brennan (Hawaii) — 14,193 career passing yards", "points": 15},
+      {"text": "Sam Bradford", "display": "Sam Bradford (Oklahoma) — 8,403 career passing yards", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — Sam Bradford does not belong in the top 5 career passing yards leaders; replacing with a corrected question.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career passing yards in FBS history.",
+    "answers": [
+      {"text": "Case Keenum", "display": "Case Keenum (Houston) — 19,217 career passing yards", "points": 30},
+      {"text": "Timmy Chang", "display": "Timmy Chang (Hawaii) — 17,072 career passing yards", "points": 25},
+      {"text": "Graham Harrell", "display": "Graham Harrell (Texas Tech) — 15,793 career passing yards", "points": 20},
+      {"text": "Colt Brennan", "display": "Colt Brennan (Hawaii) — 14,193 career passing yards", "points": 15},
+      {"text": "Kellen Moore", "display": "Kellen Moore (Boise State) — 14,667 career passing yards", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career touchdown passes in FBS college football history.",
+    "answers": [
+      {"text": "Case Keenum", "display": "Case Keenum (Houston) — 155 career TD passes", "points": 30},
+      {"text": "Graham Harrell", "display": "Graham Harrell (Texas Tech) — 134 career TD passes", "points": 25},
+      {"text": "Colt Brennan", "display": "Colt Brennan (Hawaii) — 131 career TD passes", "points": 20},
+      {"text": "Timmy Chang", "display": "Timmy Chang (Hawaii) — 117 career TD passes", "points": 15},
+      {"text": "Matt Barkley", "display": "Matt Barkley (USC) — 116 career TD passes", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most rushing touchdowns in a single FBS season.",
+    "answers": [
+      {"text": "Barry Sanders", "display": "Barry Sanders (Oklahoma State) — 37 rushing TDs (1988)", "points": 30},
+      {"text": "Mike Rozier", "display": "Mike Rozier (Nebraska) — 29 rushing TDs (1983)", "points": 25},
+      {"text": "Marcus Allen", "display": "Marcus Allen (USC) — 23 rushing TDs (1981)", "points": 20},
+      {"text": "Montee Ball", "display": "Montee Ball (Wisconsin) — 33 rushing TDs (2011)", "points": 15},
+      {"text": "Melvin Gordon", "display": "Melvin Gordon (Wisconsin) — 29 rushing TDs (2014)", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — Montee Ball (33 in 2011) should rank above Mike Rozier (29 in 1983), making the ordering incorrect as presented.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most rushing touchdowns in a single FBS season.",
+    "answers": [
+      {"text": "Barry Sanders", "display": "Barry Sanders (Oklahoma State) — 37 rushing TDs (1988)", "points": 30},
+      {"text": "Montee Ball", "display": "Montee Ball (Wisconsin) — 33 rushing TDs (2011)", "points": 25},
+      {"text": "Mike Rozier", "display": "Mike Rozier (Nebraska) — 29 rushing TDs (1983)", "points": 20},
+      {"text": "Melvin Gordon", "display": "Melvin Gordon (Wisconsin) — 29 rushing TDs (2014)", "points": 15},
+      {"text": "Marcus Allen", "display": "Marcus Allen (USC) — 23 rushing TDs (1981)", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most rushing yards in a single FBS season.",
+    "answers": [
+      {"text": "Barry Sanders", "display": "Barry Sanders (Oklahoma State) — 2,628 yds (1988)", "points": 30},
+      {"text": "Marcus Allen", "display": "Marcus Allen (USC) — 2,342 yds (1981)", "points": 25},
+      {"text": "Melvin Gordon", "display": "Melvin Gordon (Wisconsin) — 2,587 yds (2014)", "points": 20},
+      {"text": "Mike Rozier", "display": "Mike Rozier (Nebraska) — 2,148 yds (1983)", "points": 15},
+      {"text": "LaDainian Tomlinson", "display": "LaDainian Tomlinson (TCU) — 2,158 yds (2000)", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — Melvin Gordon (2,587) should rank above Marcus Allen (2,342), making the ordering incorrect.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most rushing yards in a single FBS season.",
+    "answers": [
+      {"text": "Barry Sanders", "display": "Barry Sanders (Oklahoma State) — 2,628 yds (1988)", "points": 30},
+      {"text": "Melvin Gordon", "display": "Melvin Gordon (Wisconsin) — 2,587 yds (2014)", "points": 25},
+      {"text": "Marcus Allen", "display": "Marcus Allen (USC) — 2,342 yds (1981)", "points": 20},
+      {"text": "LaDainian Tomlinson", "display": "LaDainian Tomlinson (TCU) — 2,158 yds (2000)", "points": 15},
+      {"text": "Mike Rozier", "display": "Mike Rozier (Nebraska) — 2,148 yds (1983)", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the programs with the most bowl game wins in college football history.",
+    "answers": [
+      {"text": "Alabama", "display": "Alabama — 45+ bowl wins", "points": 30},
+      {"text": "USC", "display": "USC — 35+ bowl wins", "points": 25},
+      {"text": "Oklahoma", "display": "Oklahoma — 30+ bowl wins", "points": 20},
+      {"text": "Ohio State", "display": "Ohio State — 30+ bowl wins", "points": 15},
+      {"text": "Florida State", "display": "Florida State — 28+ bowl wins", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the coaches with the most national championships in college football.",
+    "answers": [
+      {"text": "Nick Saban", "display": "Nick Saban — 7 national championships (LSU + Alabama)", "points": 30},
+      {"text": "Bear Bryant", "display": "Bear Bryant — 6 national championships", "points": 25},
+      {"text": "Knute Rockne", "display": "Knute Rockne — 3 national championships (Notre Dame)", "points": 20},
+      {"text": "Bob Devaney", "display": "Bob Devaney — 2 national championships (Nebraska)", "points": 15},
+      {"text": "Tom Osborne", "display": "Tom Osborne — 3 national championships (Nebraska)", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the programs with the most Rose Bowl victories.",
+    "answers": [
+      {"text": "USC", "display": "USC — 25 Rose Bowl wins", "points": 30},
+      {"text": "Michigan", "display": "Michigan — 8 Rose Bowl wins", "points": 25},
+      {"text": "Washington", "display": "Washington — 7 Rose Bowl wins", "points": 20},
+      {"text": "Ohio State", "display": "Ohio State — 8 Rose Bowl wins", "points": 15},
+      {"text": "Stanford", "display": "Stanford — 7 Rose Bowl wins", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the Heisman Trophy winners who went on to be the #1 overall pick in the NFL Draft.",
+    "answers": [
+      {"text": "Bo Jackson", "display": "Bo Jackson (Auburn, 1985 Heisman) — #1 NFL pick (1986)", "points": 30},
+      {"text": "Troy Smith", "display": "Troy Smith (Ohio State, 2006 Heisman) — not a #1 pick", "points": 25},
+      {"text": "Barry Sanders", "display": "Barry Sanders (Oklahoma State, 1988 Heisman) — #3 pick (1989)", "points": 20},
+      {"text": "Carson Palmer", "display": "Carson Palmer (USC, 2002 Heisman) — #1 NFL pick (2003)", "points": 15},
+      {"text": "Sam Bradford", "display": "Sam Bradford (Oklahoma, 2008 Heisman) — #1 NFL pick (2010)", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — Bo Jackson won the Heisman but chose baseball; the criteria for this list is inconsistently defined and the answers mix eligible/ineligible cases.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the programs with the most consecutive AP top-10 finishes in college football.",
+    "answers": [
+      {"text": "Alabama", "display": "Alabama — most recent sustained top-10 run (2008–2022)", "points": 30},
+      {"text": "Oklahoma", "display": "Oklahoma — sustained top-10 presence across multiple decades", "points": 25},
+      {"text": "Ohio State", "display": "Ohio State — sustained top-10 presence", "points": 20},
+      {"text": "Notre Dame", "display": "Notre Dame — historically consistent top-10 finishes", "points": 15},
+      {"text": "USC", "display": "USC — dominant top-10 run in 2000s", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — Consecutive top-10 AP finish streaks are not well-documented in a precise rankable format.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career receiving yards in FBS college football history.",
+    "answers": [
+      {"text": "Trevor Insley", "display": "Trevor Insley (Nevada) — 5,005 career receiving yards", "points": 30},
+      {"text": "Davonte Neal", "display": "Davonte Neal — career receiving yards leader contender", "points": 25},
+      {"text": "Ryan Broyles", "display": "Ryan Broyles (Oklahoma) — 4,586 career receiving yards", "points": 20},
+      {"text": "Justin Blackmon", "display": "Justin Blackmon (Oklahoma State) — 3,564 career receiving yards", "points": 15},
+      {"text": "Larry Fitzgerald", "display": "Larry Fitzgerald (Pittsburgh) — 2,677 career receiving yards", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — Insufficient confidence in accurate career receiving yards rankings beyond the top few players.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career receptions in FBS college football history.",
+    "answers": [
+      {"text": "Jordan Westerkamp", "display": "Jordan Westerkamp (Nebraska) — 246 career receptions", "points": 30},
+      {"text": "Ryan Broyles", "display": "Ryan Broyles (Oklahoma) — 349 career receptions", "points": 25},
+      {"text": "Wes Welker", "display": "Wes Welker (Texas Tech) — 259 career receptions", "points": 20},
+      {"text": "Taylor Stubblefield", "display": "Taylor Stubblefield (Purdue) — 316 career receptions", "points": 15},
+      {"text": "Emmanuel Sanders", "display": "Emmanuel Sanders (SMU) — 243 career receptions", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — Ordering is incorrect; Ryan Broyles (349) should rank #1. Replaced with a corrected entry.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most career receptions in FBS college football history.",
+    "answers": [
+      {"text": "Ryan Broyles", "display": "Ryan Broyles (Oklahoma) — 349 career receptions", "points": 30},
+      {"text": "Taylor Stubblefield", "display": "Taylor Stubblefield (Purdue) — 316 career receptions", "points": 25},
+      {"text": "Wes Welker", "display": "Wes Welker (Texas Tech) — 259 career receptions", "points": 20},
+      {"text": "Jordan Westerkamp", "display": "Jordan Westerkamp (Nebraska) — 246 career receptions", "points": 15},
+      {"text": "Percy Harvin", "display": "Percy Harvin (Florida) — 184 career receptions", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the programs with the most undefeated regular seasons in college football history.",
+    "answers": [
+      {"text": "Alabama", "display": "Alabama — most undefeated regular seasons in modern era", "points": 30},
+      {"text": "Notre Dame", "display": "Notre Dame — historically most undefeated seasons all-time", "points": 25},
+      {"text": "Oklahoma", "display": "Oklahoma — multiple undefeated regular seasons", "points": 20},
+      {"text": "Michigan", "display": "Michigan — multiple undefeated regular seasons", "points": 15},
+      {"text": "Ohio State", "display": "Ohio State — multiple undefeated regular seasons", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — Undefeated season counts vary by how bowl games and the era are counted; not reliably rankable with specific numbers.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the college football programs with the highest all-time winning percentage.",
+    "answers": [
+      {"text": "Michigan", "display": "Michigan — .731 all-time winning pct.", "points": 30},
+      {"text": "Notre Dame", "display": "Notre Dame — .730 all-time winning pct.", "points": 25},
+      {"text": "Alabama", "display": "Alabama — .726 all-time winning pct.", "points": 20},
+      {"text": "Ohio State", "display": "Ohio State — .722 all-time winning pct.", "points": 15},
+      {"text": "Oklahoma", "display": "Oklahoma — .718 all-time winning pct.", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players who threw the most touchdown passes in a single FBS season.",
+    "answers": [
+      {"text": "Colt Brennan", "display": "Colt Brennan (Hawaii) — 58 TD passes (2006)", "points": 30},
+      {"text": "Case Keenum", "display": "Case Keenum (Houston) — 48 TD passes (2009)", "points": 25},
+      {"text": "Graham Harrell", "display": "Graham Harrell (Texas Tech) — 48 TD passes (2007)", "points": 20},
+      {"text": "B.J. Symons", "display": "B.J. Symons (Texas Tech) — 52 TD passes (2003)", "points": 15},
+      {"text": "Kliff Kingsbury", "display": "Kliff Kingsbury (Texas Tech) — 40 TD passes (2002)", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — B.J. Symons (52) should rank above Case Keenum and Harrell (48). Ordering is incorrect.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players who threw the most touchdown passes in a single FBS season.",
+    "answers": [
+      {"text": "Colt Brennan", "display": "Colt Brennan (Hawaii) — 58 TD passes (2006)", "points": 30},
+      {"text": "B.J. Symons", "display": "B.J. Symons (Texas Tech) — 52 TD passes (2003)", "points": 25},
+      {"text": "Case Keenum", "display": "Case Keenum (Houston) — 48 TD passes (2009)", "points": 20},
+      {"text": "Graham Harrell", "display": "Graham Harrell (Texas Tech) — 48 TD passes (2007)", "points": 15},
+      {"text": "Kliff Kingsbury", "display": "Kliff Kingsbury (Texas Tech) — 40 TD passes (2002)", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players who threw the most passing yards in a single FBS season.",
+    "answers": [
+      {"text": "B.J. Symons", "display": "B.J. Symons (Texas Tech) — 5,833 passing yards (2003)", "points": 30},
+      {"text": "Colt Brennan", "display": "Colt Brennan (Hawaii) — 5,549 passing yards (2006)", "points": 25},
+      {"text": "Case Keenum", "display": "Case Keenum (Houston) — 5,671 passing yards (2009)", "points": 20},
+      {"text": "Graham Harrell", "display": "Graham Harrell (Texas Tech) — 5,705 passing yards (2007)", "points": 15},
+      {"text": "Timmy Chang", "display": "Timmy Chang (Hawaii) — 5,549 passing yards (2004)", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — The ordering is incorrect; Graham Harrell (5,705) should rank above Case Keenum (5,671) which should rank above B.J. Symons (5,833 is correct at #1). Replaced with corrected version.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players who threw the most passing yards in a single FBS season.",
+    "answers": [
+      {"text": "B.J. Symons", "display": "B.J. Symons (Texas Tech) — 5,833 passing yards (2003)", "points": 30},
+      {"text": "Graham Harrell", "display": "Graham Harrell (Texas Tech) — 5,705 passing yards (2007)", "points": 25},
+      {"text": "Case Keenum", "display": "Case Keenum (Houston) — 5,671 passing yards (2009)", "points": 20},
+      {"text": "Colt Brennan", "display": "Colt Brennan (Hawaii) — 5,549 passing yards (2006)", "points": 15},
+      {"text": "Timmy Chang", "display": "Timmy Chang (Hawaii) — 5,549 passing yards (2004)", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the programs that have appeared in the most College Football Playoff or BCS national championship games.",
+    "answers": [
+      {"text": "Alabama", "display": "Alabama — 9 BCS/CFP title game appearances", "points": 30},
+      {"text": "Clemson", "display": "Clemson — 4 CFP title game appearances", "points": 25},
+      {"text": "Ohio State", "display": "Ohio State — 4 BCS/CFP title game appearances", "points": 20},
+      {"text": "Notre Dame", "display": "Notre Dame — 2 BCS/CFP title game appearances", "points": 15},
+      {"text": "LSU", "display": "LSU — 3 BCS/CFP title game appearances", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the programs with the most consecutive AP national championships in college football.",
+    "answers": [
+      {"text": "Alabama", "display": "Alabama — 3 consecutive AP titles (2011, 2012 + 2014–2016 run)", "points": 30},
+      {"text": "Notre Dame", "display": "Notre Dame — 3 consecutive AP titles (1946–1947, 1949)", "points": 25},
+      {"text": "Oklahoma", "display": "Oklahoma — 3 consecutive AP titles (1954–1956)", "points": 20},
+      {"text": "USC", "display": "USC — 2 consecutive AP titles (2003–2004)", "points": 15},
+      {"text": "Nebraska", "display": "Nebraska — 3 national titles in 4 years (1994–1997)", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the most interceptions in a single FBS season.",
+    "answers": [
+      {"text": "Al Worley", "display": "Al Worley (Washington) — 14 interceptions (1968)", "points": 30},
+      {"text": "George Shaw", "display": "George Shaw (Oregon) — 13 interceptions (1951)", "points": 25},
+      {"text": "John Provost", "display": "John Provost (Holy Cross) — 11 interceptions (1972)", "points": 20},
+      {"text": "Martin Bayless", "display": "Martin Bayless (Bowling Green) — 11 interceptions (1983)", "points": 15},
+      {"text": "Tracy Saul", "display": "Tracy Saul (Texas Tech) — 11 interceptions (1992)", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the college football programs with the longest winning streaks in history.",
+    "answers": [
+      {"text": "Washington", "display": "Washington — 63-game winning streak (1907–1917)", "points": 30},
+      {"text": "Oklahoma", "display": "Oklahoma — 47-game winning streak (1953–1957)", "points": 25},
+      {"text": "Washington", "display": "Washington — 40-game winning streak (1908–1914)", "points": 20},
+      {"text": "Yale", "display": "Yale — 37-game winning streak (1890–1893)", "points": 15},
+      {"text": "Toledo", "display": "Toledo — 35-game winning streak (1969–1971)", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — Washington appears twice in the top 5, violating the one-answer-per-entity rule.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the programs with the longest winning streaks in college football history (one entry per program).",
+    "answers": [
+      {"text": "Washington", "display": "Washington — 63-game winning streak (1907–1917)", "points": 30},
+      {"text": "Oklahoma", "display": "Oklahoma — 47-game winning streak (1953–1957)", "points": 25},
+      {"text": "Yale", "display": "Yale — 37-game winning streak (1890–1893)", "points": 20},
+      {"text": "Toledo", "display": "Toledo — 35-game winning streak (1969–1971)", "points": 15},
+      {"text": "Alabama", "display": "Alabama — 28-game winning streak (1978–1980)", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the players with the highest single-season Heisman voting margins.",
+    "answers": [
+      {"text": "O.J. Simpson", "display": "O.J. Simpson (USC, 1968) — landslide Heisman winner", "points": 30},
+      {"text": "Roger Staubach", "display": "Roger Staubach (Navy, 1963) — dominant Heisman winner", "points": 25},
+      {"text": "Herschel Walker", "display": "Herschel Walker (Georgia, 1982) — near-unanimous winner", "points": 20},
+      {"text": "Barry Sanders", "display": "Barry Sanders (Oklahoma State, 1988) — record-setting Heisman run", "points": 15},
+      {"text": "Kyler Murray", "display": "Kyler Murray (Oklahoma, 2018) — unanimous Heisman winner", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — Heisman voting margin data is inconsistently available across eras and can't be cleanly ranked.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the programs with the most SEC football championships.",
+    "answers": [
+      {"text": "Alabama", "display": "Alabama — 30+ SEC championships", "points": 30},
+      {"text": "Georgia", "display": "Georgia — 13 SEC championships", "points": 25},
+      {"text": "Tennessee", "display": "Tennessee — 13 SEC championships", "points": 20},
+      {"text": "LSU", "display": "LSU — 10 SEC championships", "points": 15},
+      {"text": "Auburn", "display": "Auburn — 8 SEC championships", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the programs with the most Big Ten football championships.",
+    "answers": [
+      {"text": "Michigan", "display": "Michigan — 43 Big Ten championships", "points": 30},
+      {"text": "Ohio State", "display": "Ohio State — 40 Big Ten championships", "points": 25},
+      {"text": "Minnesota", "display": "Minnesota — 18 Big Ten championships", "points": 20},
+      {"text": "Illinois", "display": "Illinois — 15 Big Ten championships", "points": 15},
+      {"text": "Wisconsin", "display": "Wisconsin — 14 Big Ten championships", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the Heisman Trophy winners who also won the national championship the same year.",
+    "answers": [
+      {"text": "Doc Blanchard", "display": "Doc Blanchard (Army, 1945) — Heisman & national title", "points": 30},
+      {"text": "Glenn Davis", "display": "Glenn Davis (Army, 1946) — Heisman & national title", "points": 25},
+      {"text": "Desmond Howard", "display": "Desmond Howard (Michigan, 1991) — Heisman, no title", "points": 20},
+      {"text": "Danny Wuerffel", "display": "Danny Wuerffel (Florida, 1996) — Heisman & national title", "points": 15},
+      {"text": "Mark Ingram", "display": "Mark Ingram (Alabama, 2009) — Heisman & national title", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "DISCARDED — Desmond Howard (1991) did not win a national title that year; this list mixes qualifying and non-qualifying seasons.",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the programs that have won the most Pac-10/Pac-12 football championships.",
+    "answers": [
+      {"text": "USC", "display": "USC — 37 Pac-10/Pac-12 championships", "points": 30},
+      {"text": "UCLA", "display": "UCLA — 17 Pac-10/Pac-12 championships", "points": 25},
+      {"text": "Washington", "display": "Washington — 16 Pac-10/Pac-12 championships", "points": 20},
+      {"text": "Stanford", "display": "Stanford — 16 Pac-10/Pac-12 championships", "points": 15},
+      {"text": "Oregon", "display": "Oregon — 10 Pac-10/Pac-12 championships", "points": 10}
+    ],
+    "category": "NCAA Football",
+    "removeQuestion": "",
+    "factCheck": ""
+  }
+]

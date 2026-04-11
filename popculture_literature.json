@@ -1,0 +1,132 @@
+[
+  {
+    "question": "Name the best-selling fiction authors of all time by estimated copies sold.",
+    "answers": [
+      {"text": "Agatha Christie", "display": "Agatha Christie — 2 billion+ copies sold (most by any solo fiction author)", "points": 30},
+      {"text": "J.R.R. Tolkien", "display": "J.R.R. Tolkien — 600 million+ copies sold", "points": 25},
+      {"text": "Stephen King", "display": "Stephen King — 350 million+ copies sold", "points": 20},
+      {"text": "J.K. Rowling", "display": "J.K. Rowling — 600 million+ copies sold", "points": 15},
+      {"text": "Danielle Steel", "display": "Danielle Steel — 800 million+ copies sold", "points": 10}
+    ],
+    "category": "Literature",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the best-selling book series of all time by copies sold.",
+    "answers": [
+      {"text": "Harry Potter", "display": "Harry Potter (J.K. Rowling) — 600 million+ copies sold", "points": 30},
+      {"text": "Goosebumps", "display": "Goosebumps (R.L. Stine) — 400 million+ copies sold", "points": 25},
+      {"text": "Perry Mason", "display": "Perry Mason (Erle Stanley Gardner) — 300 million+ copies sold", "points": 20},
+      {"text": "Berenstain Bears", "display": "Berenstain Bears (Stan & Jan Berenstain) — 260 million+ copies sold", "points": 15},
+      {"text": "Choose Your Own Adventure", "display": "Choose Your Own Adventure — 250 million+ copies sold", "points": 10}
+    ],
+    "category": "Literature",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the best-selling individual novels of all time.",
+    "answers": [
+      {"text": "Don Quixote", "display": "Don Quixote (Cervantes) — 500 million+ copies sold", "points": 30},
+      {"text": "A Tale of Two Cities", "display": "A Tale of Two Cities (Dickens) — 200 million+ copies sold", "points": 25},
+      {"text": "The Lord of the Rings", "display": "The Lord of the Rings (Tolkien) — 150 million+ copies sold", "points": 20},
+      {"text": "The Little Prince", "display": "The Little Prince (Saint-Exupéry) — 200 million+ copies sold", "points": 15},
+      {"text": "Harry Potter and the Philosopher's Stone", "display": "Harry Potter and the Philosopher's Stone — 120 million+ copies sold", "points": 10}
+    ],
+    "category": "Literature",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the authors who have won the most Pulitzer Prizes for Fiction.",
+    "answers": [
+      {"text": "Booth Tarkington", "display": "Booth Tarkington — 2 Pulitzer Prizes for Fiction (The Magnificent Ambersons, Alice Adams)", "points": 30},
+      {"text": "William Faulkner", "display": "William Faulkner — 2 Pulitzer Prizes for Fiction (A Fable, The Reivers)", "points": 25},
+      {"text": "John Updike", "display": "John Updike — 2 Pulitzer Prizes for Fiction (Rabbit Is Rich, Rabbit at Rest)", "points": 20},
+      {"text": "Colson Whitehead", "display": "Colson Whitehead — 2 Pulitzer Prizes for Fiction (The Underground Railroad, The Nickel Boys)", "points": 15},
+      {"text": "Jhumpa Lahiri", "display": "Jhumpa Lahiri — 1 Pulitzer Prize for Fiction (Interpreter of Maladies)", "points": 10}
+    ],
+    "category": "Literature",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the countries whose authors have won the most Nobel Prizes in Literature.",
+    "answers": [
+      {"text": "France", "display": "France — 16 Nobel Prizes in Literature (most of any country)", "points": 30},
+      {"text": "United States", "display": "United States — 13 Nobel Prizes in Literature", "points": 25},
+      {"text": "United Kingdom", "display": "United Kingdom — 13 Nobel Prizes in Literature", "points": 20},
+      {"text": "Germany", "display": "Germany — 9 Nobel Prizes in Literature", "points": 15},
+      {"text": "Sweden", "display": "Sweden — 8 Nobel Prizes in Literature", "points": 10}
+    ],
+    "category": "Literature",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the authors with the most books on the New York Times Best Sellers list all-time.",
+    "answers": [
+      {"text": "Nora Roberts", "display": "Nora Roberts — 200+ NYT bestsellers (most of any author)", "points": 30},
+      {"text": "Stephen King", "display": "Stephen King — 60+ NYT bestsellers", "points": 25},
+      {"text": "John Grisham", "display": "John Grisham — 28 consecutive #1 NYT bestsellers (record)", "points": 20},
+      {"text": "James Patterson", "display": "James Patterson — 100+ NYT bestsellers", "points": 15},
+      {"text": "Danielle Steel", "display": "Danielle Steel — 100+ NYT bestsellers", "points": 10}
+    ],
+    "category": "Literature",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the novels that have won both the Pulitzer Prize for Fiction and the National Book Award.",
+    "answers": [
+      {"text": "The Invisible Man", "display": "Invisible Man (Ralph Ellison, 1953) — National Book Award", "points": 30},
+      {"text": "To Kill a Mockingbird", "display": "To Kill a Mockingbird (Harper Lee, 1961) — Pulitzer Prize", "points": 25},
+      {"text": "The Color Purple", "display": "The Color Purple (Alice Walker, 1983) — Pulitzer Prize & National Book Award", "points": 20},
+      {"text": "Beloved", "display": "Beloved (Toni Morrison, 1988) — Pulitzer Prize", "points": 15},
+      {"text": "The Underground Railroad", "display": "The Underground Railroad (Colson Whitehead, 2016) — Pulitzer Prize & National Book Award", "points": 10}
+    ],
+    "category": "Literature",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the best-selling nonfiction books of all time.",
+    "answers": [
+      {"text": "Quotations from Chairman Mao Tse-tung", "display": "Quotations from Chairman Mao Tse-tung — 900 million+ copies sold", "points": 30},
+      {"text": "The Holy Bible", "display": "The Holy Bible — 5 billion+ copies distributed (all editions)", "points": 25},
+      {"text": "A Brief History of Time", "display": "A Brief History of Time (Stephen Hawking) — 25 million+ copies sold", "points": 20},
+      {"text": "Guinness World Records", "display": "Guinness World Records (annual) — 143 million+ copies sold since 1955", "points": 15},
+      {"text": "The Diary of a Young Girl", "display": "The Diary of a Young Girl (Anne Frank) — 35 million+ copies sold", "points": 10}
+    ],
+    "category": "Literature",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the authors who have won the Man Booker Prize (now the Booker Prize) the most times.",
+    "answers": [
+      {"text": "Peter Carey", "display": "Peter Carey — 2 Booker Prize wins (Oscar and Lucinda, True History of the Kelly Gang)", "points": 30},
+      {"text": "J.M. Coetzee", "display": "J.M. Coetzee — 2 Booker Prize wins (Life & Times of Michael K, Disgrace)", "points": 25},
+      {"text": "Hilary Mantel", "display": "Hilary Mantel — 2 Booker Prize wins (Wolf Hall, Bring Up the Bodies)", "points": 20},
+      {"text": "Salman Rushdie", "display": "Salman Rushdie — 1 Booker Prize win (Midnight's Children, also won Best of the Booker)", "points": 15},
+      {"text": "Ian McEwan", "display": "Ian McEwan — 1 Booker Prize win (Amsterdam)", "points": 10}
+    ],
+    "category": "Literature",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the best-selling children's book series of all time by copies sold.",
+    "answers": [
+      {"text": "Harry Potter", "display": "Harry Potter (J.K. Rowling) — 600 million+ copies sold", "points": 30},
+      {"text": "Goosebumps", "display": "Goosebumps (R.L. Stine) — 400 million+ copies sold", "points": 25},
+      {"text": "Berenstain Bears", "display": "Berenstain Bears (Stan & Jan Berenstain) — 260 million+ copies sold", "points": 20},
+      {"text": "Diary of a Wimpy Kid", "display": "Diary of a Wimpy Kid (Jeff Kinney) — 250 million+ copies sold", "points": 15},
+      {"text": "The Hunger Games", "display": "The Hunger Games (Suzanne Collins) — 100 million+ copies sold", "points": 10}
+    ],
+    "category": "Literature",
+    "removeQuestion": "",
+    "factCheck": ""
+  }
+]

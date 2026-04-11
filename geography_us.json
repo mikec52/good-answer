@@ -1,0 +1,132 @@
+[
+  {
+    "question": "Name the largest US states by land area.",
+    "answers": [
+      {"text": "Alaska", "display": "Alaska — 663,268 sq mi (largest state by far)", "points": 30},
+      {"text": "Texas", "display": "Texas — 268,596 sq mi", "points": 25},
+      {"text": "California", "display": "California — 163,696 sq mi", "points": 20},
+      {"text": "Montana", "display": "Montana — 147,040 sq mi", "points": 15},
+      {"text": "New Mexico", "display": "New Mexico — 121,590 sq mi", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the smallest US states by land area.",
+    "answers": [
+      {"text": "Rhode Island", "display": "Rhode Island — 1,545 sq mi (smallest state)", "points": 30},
+      {"text": "Delaware", "display": "Delaware — 2,489 sq mi", "points": 25},
+      {"text": "Connecticut", "display": "Connecticut — 5,543 sq mi", "points": 20},
+      {"text": "New Jersey", "display": "New Jersey — 8,723 sq mi", "points": 15},
+      {"text": "New Hampshire", "display": "New Hampshire — 9,349 sq mi", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most populous US states.",
+    "answers": [
+      {"text": "California", "display": "California — 39 million people", "points": 30},
+      {"text": "Texas", "display": "Texas — 30 million people", "points": 25},
+      {"text": "Florida", "display": "Florida — 22 million people", "points": 20},
+      {"text": "New York", "display": "New York — 20 million people", "points": 15},
+      {"text": "Pennsylvania", "display": "Pennsylvania — 13 million people", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most populous cities in the United States.",
+    "answers": [
+      {"text": "New York City", "display": "New York City, NY — 8.3 million people (city proper)", "points": 30},
+      {"text": "Los Angeles", "display": "Los Angeles, CA — 3.9 million people", "points": 25},
+      {"text": "Chicago", "display": "Chicago, IL — 2.7 million people", "points": 20},
+      {"text": "Houston", "display": "Houston, TX — 2.3 million people", "points": 15},
+      {"text": "Phoenix", "display": "Phoenix, AZ — 1.6 million people", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the longest rivers in the United States.",
+    "answers": [
+      {"text": "Missouri River", "display": "Missouri River — 2,341 miles (longest river in the US)", "points": 30},
+      {"text": "Mississippi River", "display": "Mississippi River — 2,340 miles", "points": 25},
+      {"text": "Yukon River", "display": "Yukon River — 1,979 miles", "points": 20},
+      {"text": "Rio Grande", "display": "Rio Grande — 1,896 miles", "points": 15},
+      {"text": "Colorado River", "display": "Colorado River — 1,450 miles", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the tallest mountains in the contiguous United States (Lower 48).",
+    "answers": [
+      {"text": "Mount Whitney", "display": "Mount Whitney, CA — 14,505 ft (tallest peak in the contiguous US)", "points": 30},
+      {"text": "Mount Elbert", "display": "Mount Elbert, CO — 14,440 ft (tallest peak in the Rockies)", "points": 25},
+      {"text": "Mount Massive", "display": "Mount Massive, CO — 14,428 ft", "points": 20},
+      {"text": "Mount Harvard", "display": "Mount Harvard, CO — 14,421 ft", "points": 15},
+      {"text": "Mount Rainier", "display": "Mount Rainier, WA — 14,411 ft (tallest peak in the Cascades)", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the most visited US National Parks by annual visitors.",
+    "answers": [
+      {"text": "Great Smoky Mountains", "display": "Great Smoky Mountains — 13 million visitors/year (most visited national park)", "points": 30},
+      {"text": "Grand Canyon", "display": "Grand Canyon — 6 million visitors/year", "points": 25},
+      {"text": "Zion", "display": "Zion — 5 million visitors/year", "points": 20},
+      {"text": "Rocky Mountain", "display": "Rocky Mountain — 4.5 million visitors/year", "points": 15},
+      {"text": "Acadia", "display": "Acadia — 4 million visitors/year", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the largest US cities by land area.",
+    "answers": [
+      {"text": "Sitka", "display": "Sitka, AK — 2,870 sq mi (largest US city by land area)", "points": 30},
+      {"text": "Juneau", "display": "Juneau, AK — 2,716 sq mi", "points": 25},
+      {"text": "Wrangell", "display": "Wrangell, AK — 2,541 sq mi", "points": 20},
+      {"text": "Anchorage", "display": "Anchorage, AK — 1,706 sq mi", "points": 15},
+      {"text": "Jacksonville", "display": "Jacksonville, FL — 747 sq mi (largest in the contiguous US)", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the US states with the longest coastlines.",
+    "answers": [
+      {"text": "Alaska", "display": "Alaska — 33,904 miles of coastline (longest of any US state)", "points": 30},
+      {"text": "Florida", "display": "Florida — 8,436 miles of coastline", "points": 25},
+      {"text": "Louisiana", "display": "Louisiana — 7,721 miles of coastline", "points": 20},
+      {"text": "Maine", "display": "Maine — 3,478 miles of coastline", "points": 15},
+      {"text": "California", "display": "California — 3,427 miles of coastline", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  },
+  {
+    "question": "Name the US states that border the most other states.",
+    "answers": [
+      {"text": "Tennessee", "display": "Tennessee — borders 8 states (tied for most)", "points": 30},
+      {"text": "Missouri", "display": "Missouri — borders 8 states (tied for most)", "points": 25},
+      {"text": "Colorado", "display": "Colorado — borders 7 states", "points": 20},
+      {"text": "Kentucky", "display": "Kentucky — borders 7 states", "points": 15},
+      {"text": "Idaho", "display": "Idaho — borders 6 states", "points": 10}
+    ],
+    "category": "Geography",
+    "removeQuestion": "",
+    "factCheck": ""
+  }
+]

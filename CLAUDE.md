@@ -5,7 +5,7 @@ Single-file Family Feud-style game. Stack: vanilla HTML/CSS/JS, no frameworks.
 - Main game file: `feud.html`
 - Question bank: `master_question_bank.json` (active file, includes variants — see below)
 - Pre-variants backup: `question_bank_pre-variants.json`
-- Sound files alongside feud.html: `correct.mp3`, `wrong.mp3`, `goodanswer.mp3`, `opentheme.mp3`, `endtheme.mp3`
+- Sound files alongside feud.html: `correct.mp3`, `wrong.mp3`, `goodanswer.mp3`, `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`
 
 ---
 
@@ -126,10 +126,10 @@ Evolved from a simple 3-zone vertical stack to a **sidebar + main column** model
 
 ### Screen Flow
 
-1. **Start screen** — logo centered at 40% width, "Click anywhere to start", CRT overlay fades out on click
-2. **Setup step 1** — game mode selection (target score vs. rounds). "Proceed to Team Setup" button.
-3. **Setup step 2** — team/player name entry. Flies in from left after step 1 flies right.
-4. **Game start exit** — 3-beat animation: Start button slides down → player columns slide right → title slides up → game loads
+1. **Start screen** — `.crt-start-screen` class applies composite CRT effects (animated noise via `::before`, scanlines + glare via `::after`, vignette via inset box-shadow). SVG blobs use distinct per-blob colors on start screen only (set via inline `fill`, restored to `--bg-blob-base` on dismiss). On click: blob colors crossfade to default (1.5s), then logo does `logo-tv-off` animation, then screen fades out + setup slides in.
+2. **Setup step 1** — rounds selection only (target score mode removed). 3D isometric SVG buttons for 2/4/6 rounds with raised/depressed states. "Proceed to Team Setup" button.
+3. **Setup step 2** — team/player name entry. Flies in from left after step 1 flies right. `#selected-rounds` (absolutely positioned left side) shows the chosen round count with a rewind-icon back button. The back button returns to step 1 with reverse fly animations. See "Setup Step Transitions" below for full timing.
+4. **Game start exit** — two parallel tracks: 3-beat sequence (Start button slides down → player columns slide right → title slides up) runs alongside `#selected-rounds` fade-out (1s). `startGame()` fires after the slower track completes.
 5. **Category selection** — sidebar shows team prompt + 3D rotating category pills
 6. **Gameplay** — sidebar shows question + input; main zone shows scoreboard + board
 
@@ -144,14 +144,19 @@ Evolved from a simple 3-zone vertical stack to a **sidebar + main column** model
 
 ### Category Color Palette
 
-CSS variables in `:root` — used for 3D category buttons, potentially other UI elements later:
+CSS variables in `:root` — **single source of truth** for all category colors. The 3D buttons derive `--cat-face` (0.9 alpha) and `--cat-solid` (1.0) via `color-mix()`:
 
 ```css
---cat-science:    #3a8fd4;   /* blue */
---cat-geography:  #2d8659;   /* green */
---cat-popculture: #c44d8a;   /* pink */
---cat-survey:     #d4852a;   /* orange */
---cat-sports:     #c8a820;   /* yellow — uses black text */
+--cat-science:    #0000c0;   /* blue */
+--cat-geography:  #00c000;   /* green */
+--cat-popculture: #c000c0;   /* pink */
+--cat-survey:     #fb8c00;   /* orange */
+--cat-sports:     #fdd835;   /* yellow — uses black text */
+```
+
+Button color derivation (no hardcoded rgba duplicates):
+```css
+.cat-science { --cat-face: color-mix(in srgb, var(--cat-science) 90%, transparent); --cat-solid: var(--cat-science); }
 ```
 
 `getCategoryClass()` in JS maps category strings to CSS classes via lowercase matching.
@@ -242,6 +247,8 @@ const TIMING = {
 5. Prefer `anim.sequence` over nested `setTimeout` chains or nested `animationend` callbacks.
 6. Prefer `anim.stagger` over manual `forEach` loops that compute `animationDelay`.
 7. **Prefer `anim.done(el)` over `anim.wait(ms)` when sequencing two animations on the same element.** `anim.wait` is wall-clock; `anim.done` is animation-clock. See the next section for why this matters.
+8. **Never use raw `animationend` listeners on elements with animated descendants.** `animationend` bubbles — a child's animation finishing will trigger a parent's `{ once: true }` listener prematurely. `anim.done` uses WAAPI's `getAnimations({ subtree: false })` which only tracks the element's own animations, avoiding this entirely. This was the root cause of the setup flow bugs where `backToRoundSelect` listeners were consumed by the `.rw-arrow` rewind glyph animations.
+9. **Present a timing table when proposing new animation sequences.** Before implementing, lay out a table showing parallel tracks, per-step durations, and cumulative timing. This catches conflicts (e.g. a 520ms sequence gating a 1s fade-out) before code is written.
 
 ### `anim.done` is WAAPI-only (and why)
 
@@ -268,6 +275,14 @@ There are two ways to avoid this:
 2. **Explicitly clear the longhand** before class-based animations — `el.style.animationDelay = ""`. Path B's selected row needed this fix because it only added a class, never an inline shorthand.
 
 `animateCategoryTransition` clears the inline `animationDelay` on every cat-row + the divider at the start of the function as a defensive measure. Any new code that does `classList.add(...)` to trigger a CSS animation on an element that was previously touched by `anim.stagger` should do the same.
+
+### `forwards` fill-mode + missing 100% keyframe properties — gotcha
+
+When a keyframe animation uses `animation-fill-mode: forwards`, only properties **explicitly listed at the 100% keyframe** persist after the animation ends. Any property that's animated at intermediate keyframes but omitted at 100% reverts to whatever the element's base rule specifies.
+
+Fix: add the intended final value to the 100% keyframe explicitly (e.g. `100% { transform: scale(1); opacity: 1; ... }`). When writing a new keyframed animation with `forwards` fill, audit the 100% step against every property you animated earlier *and* every property you set in the base rule — if the base rule would mask the desired final value, pin it at 100%.
+
+**Additional gotcha with animation replacement**: when a new CSS animation class replaces a previous one (e.g. `.marquee-scroll` replacing `.tv-on`), the `forwards` fill from the first animation is lost and base-rule values reassert. The `cat-label-marquee` keyframes include `scale(1)` in both `from` and `to` to prevent the base `transform: scale(0)` from snapping back. Inline `opacity: 1` is set in JS before the class swap.
 
 ### Testing limitation: hidden preview tab
 
@@ -360,6 +375,7 @@ Call it immediately after assigning `textContent` — no deferral, no rAF, no ob
 
 - **Team labels** (`.team-score-box .team-label h4`) — `--fit-base: 1.5rem`, `maxChars: 10`, called in `startGame()` at the `textContent` assignment.
 - **Question text** (`#question`) — `--fit-base: 1.8rem`, `maxChars: 45`, called in the question-render block. `#question-box` has `max-height: 180px; overflow: hidden` as a safety net.
+- **Turn subtext** (`#turn-subtext`) — `--fit-base: 1.5rem`, `maxChars: 18`, called in `updateTurn()` and the mid-animation swap in `animateTurnSwap()`.
 - **NOT the players list** — char-count wasn't the right tool there (see marquee below).
 
 ### Caveats and tuning
@@ -470,7 +486,7 @@ showPhaseIndicator();          // slide container in from above (game start)
 hidePhaseIndicator();          // slide container out (resetGame)
 ```
 
-- `setPhase()` handles the outgoing span's exit animation and the incoming span's entry animation. In normal mode the swap is immediate; in `knock` mode there's a 120ms overlap window (`TIMING.phaseKnockOverlap`) before `data-phase` flips, so both spans render simultaneously and visually collide.
+- `setPhase()` handles the outgoing span's exit animation and the incoming span's entry animation. In **normal mode** it `await`s the outgoing exit animation fully before flipping `data-phase`, so the incoming span never crosses paths with the outgoing one. In **`knock` mode** the exit is fire-and-forget and only `TIMING.phaseKnockOverlap` (~120ms) elapses before the swap, so both spans render simultaneously and visually collide. Callers generally do not `await` the returned promise — the phase swap runs alongside whatever other sequence follows.
 - All span entry/exit animations live in CSS (`ph-text-slide-in`, `ph-text-slide-out`, `ph-text-knock-out`). The JS only adds `.ph-exiting` or `.ph-knocked` to the outgoing span and awaits the animationend.
 
 ### Phase flow
@@ -492,8 +508,8 @@ hidePhaseIndicator();          // slide container out (resetGame)
 The sidebar during gameplay is split between the persistent `#phase-indicator` at the top (see previous section) and `#sidebar-question-answer` below it, which is a flex column stack with two zones:
 
 ### Zone 1: Content (`#sq-zone-content`)
-- `#cat-label` — flat colored rectangle header using the selected category's color. 80px tall, 2.5rem Bitcount font, no border-radius. Text has a "pop-through" entrance animation (scale from 0 → overshoot → settle).
-- `#question-box` — sits directly below cat-label (no top border-radius, flush join). Contains `#category` (hidden — cat-label replaces it), `#question`, and `#questionActions`.
+- `#cat-label` — CRT "screen" header using the selected category's color. 80px tall, 3rem Bitcount font, `border-radius: 14px`, `border: 3px solid var(--cat-solid)`, `overflow: hidden`, `box-shadow: inset` for vignette. Three stacked layers: `::before` = animated white noise (SVG turbulence + `tv-static` keyframes, `hard-light` blend), `::after` = CRT scanlines (repeating-linear-gradient). Text entrance uses `tv-on` animation (inverse CRT power-on: dot → line → full), then switches to horizontal marquee scroll (`cat-label-marquee` keyframes, `translateX(-50%)` on doubled text with `padding-right` gap).
+- `#question-box` — sits directly below cat-label. Contains `#category` (hidden — cat-label replaces it), `#question`, and `#questionActions`.
 
 ### Zone 2: Input (`#sq-zone-input`)
 - Answer history tray at top (collapsed by default)
@@ -505,6 +521,178 @@ The sidebar during gameplay is split between the persistent `#phase-indicator` a
 - Slides in from above the canvas (behind the scoreboard) via `board-slide-in-top` animation
 - `#game-board-zone` uses `justify-content: flex-start` + `overflow: hidden` to position board at top and clip the slide-in
 - **Initial state**: has `class="offscreen"` in HTML so it starts above the canvas. Without this the wrapper briefly flashes on-screen at game start before sliding up to its hidden position.
+
+### Canvas clipping lives at `#game-root`
+
+`#game-root` has `overflow: hidden` and is the primary clipping boundary. Overflow settings down the sidebar chain:
+
+- **`#sidebar-zone`** — `overflow: visible`, `min-width: 0`. Visible overflow is needed for category multiplier badges that hang off `.cat-row` edges. `min-width: 0` prevents flex expansion from nowrap marquee content.
+- **`#sidebar-question-answer`** — `overflow: hidden`. Clips the cat-label marquee and question content.
+- **`#sq-zone-content`** — `overflow: hidden`. Additional clipping layer.
+- **`#cat-label`** — `overflow: hidden`. Clips its own horizontal marquee scroll.
+
+`question-box`'s extrude animation uses its own `clip-path` for containment, not a parent `overflow`.
+
+---
+
+## Question Phase — Entry Animations (locked in)
+
+The full sequence from "category picked → ready-to-play" state. Like the category phase entry section above, these are **committed and should not be changed without explicit instruction**.
+
+### Order — strictly serial
+
+Each step `await`s the previous animation's completion via `anim.done` before the next begins. Orchestrated in `pickCategory()` via `anim.sequence`:
+
+1. **`#cat-label`** slides in from the left (`.offscreen-left` → `.slide-in-left`, `cat-label-slide-in-left` keyframes, 500ms)
+2. **`#cat-label > span`** TV-on effect (`.tv-on` class, `tv-on` keyframes, 700ms) — dot → line → full screen. Uses `forwards` fill; 100% keyframe explicitly sets `opacity: 1`, `transform: scale(1,1)`, `filter: brightness(1) saturate(1)`.
+2b. **Marquee starts** — JS removes `.tv-on`, sets inline `opacity: 1`, duplicates text into two inner `<span>` elements (each with `padding-right: 3em` for gap), adds `.marquee-scroll`. The marquee keyframes include `scale(1)` to prevent base `scale(0)` from reasserting. `:has(> span.marquee-scroll)` switches cat-label to `justify-content: flex-start`.
+3. **`#question-box`** extrudes from under cat-label (`.hidden-behind` → `.reveal-drop`, `question-box-drop` keyframes, 450ms)
+4. **`#question`** text streams in via `typewriter()` (default 30ms per char; cursor blinks during `.typing`, steady during `.typed`)
+5. **`#sq-zone-input`** slides up from below the canvas (`.offscreen-below` → `.input-enter`, `input-slide-up` keyframes, 500ms)
+
+After step 5, `#guess` is focused. The board wrapper's `slide-in` from above starts in parallel at the very beginning of this sequence (separate from `anim.sequence`) so the main game area fills in while the sidebar steps play out.
+
+### The question-box extrude technique
+
+`#question-box` must appear to emerge from cat-label's bottom edge — not slide down from above the canvas, and not wipe in place. The trick is combining two transforms that animate in parallel:
+
+- **`transform: translateY(-100%)` → `translateY(0)`** — the box physically moves downward from its "hidden behind cat-label" position into its natural position. This provides the motion illusion.
+- **`clip-path: inset(100% 0 0 0)` → `inset(0)`** — the top inset shrinks from 100% to 0, revealing the box from its own top edge downward. This prevents the translated box from ever being visible above cat-label during the slide.
+
+Without the clip-path, the box peeks through the gap above cat-label (cat-label's 30px `margin-top`) and looks like a drop-in from the top. Without the translate, it's a pure wipe reveal with no motion. Both together = extrusion. Keyframes:
+
+```css
+@keyframes question-box-drop {
+  from { transform: translateY(-100%); clip-path: inset(100% 0 0 0); }
+  to   { transform: translateY(0);     clip-path: inset(0 0 0 0); }
+}
+```
+
+### `typewriter()` helper
+
+`typewriter(el, text, charMs = 30)` streams characters into `el` one at a time via `setTimeout`, returns a promise that resolves when done. Sequence:
+- Clears `el.textContent`, removes `.typed`, adds `.typing` (opacity 1 + blinking `::after` cursor)
+- Appends one char per `charMs` via `el.textContent = text.slice(0, i)`
+- On completion, swaps `.typing` → `.typed` (opacity 1, no cursor)
+
+**Call `fitByCharCount(el, max, finalText)` BEFORE clearing and streaming** — the fit scale needs to be computed against the full final text, not each intermediate substring, so the layout is stable while chars stream in.
+
+Hidden-tab caveat: Chrome throttles `setTimeout` in background tabs, so the typewriter runs at ~1s/char in the Claude Preview hidden tab. Full visible runs need an in-browser check.
+
+### Cleanup between rounds
+
+`initRoundState()` resets all of these back to their off-canvas / hidden states so the sequence replays cleanly:
+- `#question-box`: remove `.reveal-drop`, add `.hidden-behind`
+- `#sq-zone-input`: remove `.input-enter`, add `.offscreen-below`
+- `#question`: remove `.typing`, `.typed`
+- `#cat-label`: the entire element is removed (the next round recreates it with `.offscreen-left` applied at insertion)
+
+---
+
+## Stat Change Chevrons
+
+`#board-streak` and `#board-mult` (`.board-stat-value` elements) show directional chevron indicators when their values change:
+
+- **`flashChevron(el, dir)`** — creates a `<span class="stat-chevron up|down">` with `▲` or `▼`, appends to the stat element, self-removes on `animationend`.
+- **Up** (value increased): green `#4caf50`, starts at `bottom: 6px`, animates upward 45px.
+- **Down** (value decreased): red `var(--red-text)`, starts at `top: 10px`, animates downward 45px.
+- Both animations: 0.75s, 3 keyframe stops, opacity stays 1 until 99.9% then snaps to 0 (abrupt disappear, no fade).
+- **`_prevStreak` / `_prevMultiplier`** track previous values for direction detection. Reset in `initRoundState()`.
+- **`updateStreakDisplay()`** sets text first (`textContent` wipes children), then appends chevrons.
+
+---
+
+## Turn Swap Animation
+
+`animateTurnSwap()` provides visual feedback when the active player changes after a guess:
+
+- Captures old text, calls `updateTurn()` (which sets new text + all game state), then if text changed: restores old text, plays `turn-swap` animation (0.45s), swaps to new text at 160ms (peak of the jump).
+- `@keyframes turn-swap`: pop up 14px → slam down 2px past center with 1.12× scale → small bounce → settle.
+- **Not used** when 3 strikes trigger steal phase — plain `updateTurn()` runs instead to avoid the 160ms setTimeout racing with the steal-phase UI update.
+- `#turn-subtext` uses `fitByCharCount` with `maxChars: 18`.
+
+---
+
+## 3D Isometric Round-Select Buttons
+
+Setup step 1 uses inline SVG buttons (`.rounds-svg`) for round count selection (2/4/6):
+
+- **Structure**: isometric projected rhombus (top face `#C00000`, sides `#7A0000`) with `<text>` numbers sharing the same isometric `transform="matrix(0.866025 -0.5 0.866025 0.5 ...)"` as the face so they appear on the 3D surface.
+- **Height states**: `setButtonDepressed(svg, bool)` modifies SVG attributes directly (transform matrix Y offset, side strip y/height, clip-path) — CSS transforms can't be used because clip-paths need to stay in sync. Raised = y=43, height=16. Depressed = y=51, height=8.
+- **Glow**: CSS `filter: drop-shadow()` on `.btn-number` for hover/selected states. Dormant LED look (`fill: rgba(255,180,180,0.35)`) for non-active state.
+- **Sound**: `analogbuttonclick.mp3` plays on selection via `playSound(sfxButtonClick)`.
+- **Unique SVG IDs**: each button uses suffixed IDs (`clip-r2`/`clip-r4`/`clip-r6`) to avoid conflicts in shared DOM.
+- **`selectRounds(n, el)`** uses `el.closest('.rounds-svg')` to handle clicks on child SVG elements.
+
+---
+
+## Setup Step Transitions
+
+Three navigation flows between setup screens. All use `async`/`await` with `anim.play`/`anim.done` — no raw `animationend` listeners (see animation rule 8).
+
+### `#selected-rounds` — round count display
+
+Absolutely positioned on the left side of `#setup-step-2`. Contains:
+- `.game-length` label ("GAME LENGTH") — Futura weight 100
+- `.rounds-number` — large round count (Futura 700, 6rem, `#fba300`)
+- `.rounds-label` — "ROUNDS" (Futura 700, 1.4rem, `#fba300`)
+- `#setup-back-btn` — rewind icon (two overlapping `◀` glyphs with staggered `rw-grow` scale animation, 2s cycle, always running) + "BACK" label. All `#fba300`.
+
+Fade-in: 2s. Fade-out: 1s. Both via `.fade-in` / `.fade-out` classes with `forwards` fill.
+
+### Forward: Step 1 → Step 2 (`proceedToTeamSetup`)
+
+| Step | Action | Duration |
+|------|--------|----------|
+| 1 | Step 1 flies out right (`setup-fly-out`) | 0.28s |
+| 2 | Step 1 hidden, step 2 shown, flies in from left (`setup-fly-in`) | 0.30s |
+| 3 | `#selected-rounds` fades in | 2s |
+
+### Back: Step 2 → Step 1 (`backToRoundSelect`)
+
+| Step | Action | Duration |
+|------|--------|----------|
+| 1 | `#selected-rounds` fades out | 1s |
+| 2 | Step 2 flies out left (`setup-fly-out-left`) | 0.28s |
+| 3 | Step 2 hidden, step 1 shown, flies in from right (`setup-fly-in-right`) | 0.30s |
+
+Team names and player inputs are preserved across back/forward navigation (DOM state is untouched). Round selection SVG button state is also preserved.
+
+### Game start: Step 2 → Game (`beginStartGameExit`)
+
+Two parallel tracks, `startGame()` fires after both complete:
+
+| Time | Track 1: beat sequence | Track 2: selected-rounds |
+|------|----------------------|--------------------------|
+| 0ms | Start Game btn slides down (0.14s) | Fade-out begins (1s) |
+| 190ms | Player columns slide right (0.14s) | ...fading... |
+| 380ms | Title slides up (0.14s) | ...fading... |
+| 520ms | *Track 1 done* | ...fading... |
+| 1000ms | *(waiting)* | *Track 2 done* |
+| 1000ms | `startGame()` fires | |
+
+`TIMING.setupExitBeatGap` (50ms) controls the pause between beats. Track 2 (1s fade-out) currently gates the transition.
+
+### Dev mode dismiss
+
+`activateDevMode()` calls `_dismissStartScreen()` — the same animated sequence as a normal start screen click (blob crossfade → logo TV-off → screen fade). No instant skip.
+
+---
+
+## Start Screen — CRT Effects and Dismiss Sequence
+
+The `.crt-start-screen` class applies a composite TV effect to `#start-screen`:
+
+- **`::before`** — animated white noise (same SVG turbulence as cat-label, `tv-static` keyframes, `overlay` blend at 0.12 opacity)
+- **`::after`** — rolling scanlines (`scanline-roll` keyframes) + diagonal glare gradient (125deg white highlight)
+- **Vignette** — `box-shadow: inset 0 0 120px rgba(0,0,0,0.5)`
+- **Blob colors** — per-blob inline `fill` overrides set distinct colors on load; `--bg-blob-base` set to black. On dismiss, `_restoreStartBlobs()` crossfades each blob's inline fill to `BG_BLOB_DEFAULT` and transitions `--bg-blob-base` back. SVG blob elements have `transition: fill 1.5s ease`. After 1.6s, inline fills are cleared so blobs respond to future `--bg-blob-base` changes.
+
+### Dismiss sequence (`_dismissStartScreen()`)
+Shared by both normal click and dev mode:
+1. **0ms**: blob crossfade starts (1.5s) + `h1.drop-out` animation (drops off bottom)
+2. **1500ms**: logo gets `.tv-off` (`logo-tv-off` keyframes, 0.5s — adapted from `crt-power-off`)
+3. **1800ms**: start screen fades out (`.dismissing`), setup slides in
 
 ---
 

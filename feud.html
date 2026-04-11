@@ -1737,7 +1737,7 @@
     /* Game area: board container */
     #game-area {
       width: 100%;
-      margin: 0;
+      margin: -1px 0 0 0;
       box-sizing: border-box;
     }
 
@@ -1910,7 +1910,7 @@
 
     /* Board wrapper — #222 frame, bleeds off bottom of canvas */
     #board-wrapper {
-      background: rgba(34, 34, 34, 0.95);
+      background: rgba(34, 34, 34, 0.9);
       font-family: 'Bitcount Single';
       font-weight: 300;
       padding: 20px;
@@ -2119,6 +2119,22 @@
       display: flex;
       align-items: center;
       padding: 0 8px;
+    }
+    .tile-text.tile-marquee {
+      text-overflow: clip;
+    }
+    .tile-text.tile-marquee > .tile-marquee-track {
+      display: inline-block;
+      animation: tile-marquee-scroll var(--tile-marquee-dur, 4s) linear infinite;
+      padding-right: 2em;
+    }
+    @keyframes tile-marquee-scroll {
+      0%   { transform: translateX(0); }
+      10%  { transform: translateX(0); }
+      45%  { transform: translateX(var(--tile-marquee-dist)); }
+      55%  { transform: translateX(var(--tile-marquee-dist)); }
+      90%  { transform: translateX(0); }
+      100% { transform: translateX(0); }
     }
     .tile-pts, .tile-mult, .tile-total {
       text-align: center;
@@ -3764,6 +3780,7 @@ document.addEventListener('keydown', e => {
     let questions = [];
     let currentQuestion = null;
     let revealed = [];
+    let revealedData = [];
     let roundScore = 0;
     let teamScores = [0, 0];
     let strikes = 0;
@@ -4075,6 +4092,7 @@ document.addEventListener('keydown', e => {
     function initRoundState() {
       currentQuestion = null;
       revealed = [];
+      revealedData = [];
       roundScore = 0;
       strikes = 0;
       guessHistory = [];
@@ -4596,7 +4614,7 @@ document.addEventListener('keydown', e => {
           back.classList.add("tile-back");
           if (revealed[i]) {
             back.classList.add("correct");
-            buildTileBack(back, i, ans);
+            buildTileBack(back, i, ans, revealedData[i] || null);
             inner.classList.add("revealed");
           }
 
@@ -4618,6 +4636,7 @@ document.addEventListener('keydown', e => {
           }
         }
         b.appendChild(d);
+        if (revealed[i]) applyTileMarquee(d.querySelector('.tile-back .tile-text'));
       }
       updateBoardRoundTotal();
     }
@@ -4649,6 +4668,23 @@ document.addEventListener('keydown', e => {
         total.textContent = ans.points;
       }
       back.append(num, txt, pts, mult, total);
+    }
+
+    function applyTileMarquee(txtEl) {
+      if (!txtEl) return;
+      const overflow = txtEl.scrollWidth - txtEl.clientWidth;
+      if (overflow <= 3) return;
+      const text = txtEl.textContent;
+      txtEl.textContent = "";
+      const track = document.createElement("span");
+      track.classList.add("tile-marquee-track");
+      track.textContent = text;
+      txtEl.appendChild(track);
+      txtEl.classList.add("tile-marquee");
+      // Set scroll distance and duration proportional to overflow
+      const dur = 4 + overflow / 48;
+      txtEl.style.setProperty("--tile-marquee-dist", `-${overflow}px`);
+      txtEl.style.setProperty("--tile-marquee-dur", `${dur}s`);
     }
 
     function updateBoardRoundTotal() {
@@ -4703,6 +4739,7 @@ document.addEventListener('keydown', e => {
 
       // Show the answer (green/red) immediately under the cover, then slide cover away
       inner.classList.add('revealed');
+      applyTileMarquee(back.querySelector('.tile-text'));
       const cover = tile.querySelector('.tile-cover');
       if (cover) {
         cover.classList.add('revealed');
@@ -4987,7 +5024,7 @@ document.addEventListener('keydown', e => {
             const stealAns=currentQuestion.answers[idx];
             const stealMult=answerMultiplier;
             const stealTotal=Math.round(stealAns.points*stealMult);
-            playCorrect(idx===0);revealed[idx]=true;roundScore+=stealTotal;
+            playCorrect(idx===0);revealed[idx]=true;roundScore+=stealTotal;revealedData[idx]={mult:stealMult,earnedTotal:stealTotal};
             const stealResult=stealMult>1?`✓ Steal (${stealTotal} pts) [${stealMult.toFixed(1)}x]`:`✓ Steal (${stealTotal} pts)`;
             guessHistory.push({player:playerName,team:stealingTeam,guess:guess,result:stealResult});
             currentStreak++;answerMultiplier=1+(currentStreak*0.2);
@@ -5016,7 +5053,7 @@ document.addEventListener('keydown', e => {
         },1500);
         return;}
       let foundIdx=-1;let foundTotal=0;let foundMult=answerMultiplier;currentQuestion.answers.forEach((ans,i)=>{if(answerMatches(guess,ans)&&!revealed[i]){revealed[i]=true;
-        foundMult=answerMultiplier;foundTotal=Math.round(ans.points*foundMult);roundScore+=foundTotal;
+        foundMult=answerMultiplier;foundTotal=Math.round(ans.points*foundMult);roundScore+=foundTotal;revealedData[i]={mult:foundMult,earnedTotal:foundTotal};
         const resultTxt=foundMult>1?`✓ Correct (${foundTotal} pts) [${foundMult.toFixed(1)}x]`:`✓ Correct (${foundTotal} pts)`;
         guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:resultTxt});foundIdx=i;}});
       const found=foundIdx!==-1;

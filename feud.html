@@ -651,6 +651,14 @@
     }
     .player-col-header h3 { margin: 0 0 8px; }
     .player-col-header input { text-align: center; width: 100%; box-sizing: border-box; }
+    @keyframes input-shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-4px); }
+      40% { transform: translateX(4px); }
+      60% { transform: translateX(-3px); }
+      80% { transform: translateX(3px); }
+    }
+    .input-shake { animation: input-shake 0.3s ease; }
     .player-col-body {
       display: flex;
       flex-direction: column;
@@ -2120,6 +2128,10 @@
       align-items: center;
       padding: 0 8px;
     }
+
+    .tile-mult {
+      font-size: 1.3rem;
+    }
     .tile-text.tile-marquee {
       text-overflow: clip;
     }
@@ -2350,7 +2362,7 @@
       gap: 10px;
     }
     #turn-subtext {
-      --fit-base: 1.5rem;
+      --fit-base: 2rem;
       font-size: calc(var(--fit-base) * var(--fit-scale, 1));
       font-weight: bold;
       margin: 0;
@@ -3148,23 +3160,23 @@
         <div class="player-col red-col">
           <div class="player-col-header">
             <h3><span class="red">Red Team</span></h3>
-            <input type="text" id="redTeamName" placeholder="Team name">
+            <input type="text" id="redTeamName" placeholder="Team name" maxlength="18">
           </div>
           <div class="player-col-body">
             <div class="players-label">Players</div>
             <div id="redPlayers">
-              <input type="text" class="redPlayer" placeholder="Player name">
-              <input type="text" class="redPlayer" placeholder="Player name">
-              <input type="text" class="redPlayer" placeholder="Player name">
-              <input type="text" class="redPlayer" placeholder="Player name">
-              <input type="text" class="redPlayer" placeholder="Player name">
+              <input type="text" class="redPlayer" placeholder="Player name" maxlength="18">
+              <input type="text" class="redPlayer" placeholder="Player name" maxlength="18">
+              <input type="text" class="redPlayer" placeholder="Player name" maxlength="18">
+              <input type="text" class="redPlayer" placeholder="Player name" maxlength="18">
+              <input type="text" class="redPlayer" placeholder="Player name" maxlength="18">
             </div>
           </div>
         </div>
         <div class="player-col blue-col">
           <div class="player-col-header">
             <h3><span class="blue">Blue Team</span></h3>
-            <input type="text" id="blueTeamName" placeholder="Team name">
+            <input type="text" id="blueTeamName" placeholder="Team name" maxlength="18">
           </div>
           <div class="player-col-body">
             <div class="players-label">Players</div>
@@ -3626,6 +3638,33 @@
     // Load tick sound — will silently no-op if file doesn't exist
     initTickSfx("flick.wav");
 
+    // ── Keystroke SFX — typewriter character sound ─────────────
+    let keystrokeBuffer = null;
+
+    async function initKeystrokeSfx(url) {
+      try {
+        if (!tickAudioCtx) tickAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const response = await fetch(url);
+        const arrayBuf = await response.arrayBuffer();
+        keystrokeBuffer = await tickAudioCtx.decodeAudioData(arrayBuf);
+      } catch (e) {
+        console.warn("Keystroke SFX failed to load:", e);
+      }
+    }
+
+    function playKeystroke() {
+      if (!keystrokeBuffer || !tickAudioCtx || !soundEnabled) return;
+      const source = tickAudioCtx.createBufferSource();
+      source.buffer = keystrokeBuffer;
+      const gainNode = tickAudioCtx.createGain();
+      gainNode.gain.value = 1.0 * (soundEnabled ? volumeMaster : 0) * volumeSfx;
+      source.connect(gainNode);
+      gainNode.connect(tickAudioCtx.destination);
+      source.start();
+    }
+
+    initKeystrokeSfx("phonetype.wav");
+
     // Resume AudioContext on first user interaction (browser autoplay policy)
     function resumeTickCtx() {
       if (tickAudioCtx && tickAudioCtx.state === "suspended") tickAudioCtx.resume();
@@ -3844,6 +3883,17 @@ document.addEventListener('keydown', e => {
       redNames.forEach((name, i) => { if (redPlayers[i]) redPlayers[i].value = name; });
       blueNames.forEach((name, i) => { if (bluePlayers[i]) bluePlayers[i].value = name; });
     }
+
+    // Shake input when maxlength reached
+    document.getElementById('setup-step-2').addEventListener('keydown', (e) => {
+      const inp = e.target;
+      if (inp.tagName !== 'INPUT' || !inp.maxLength) return;
+      if (inp.value.length >= inp.maxLength && e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+        inp.classList.remove('input-shake');
+        void inp.offsetWidth;
+        inp.classList.add('input-shake');
+      }
+    });
 
     function setGameMode(mode) {
       const roundsOpt = document.getElementById('rounds-option');
@@ -4462,7 +4512,7 @@ document.addEventListener('keydown', e => {
       const questionEl = document.getElementById("question");
       // Pre-compute fit scale against the full final text so the layout is
       // stable while the typewriter streams characters in.
-      fitByCharCount(questionEl, 45, currentQuestion.question);
+      fitByCharCount(questionEl, 48, currentQuestion.question, 0.5);
       questionEl.textContent = "";
 
       updateBoard(); updateScores(); updateStrikes(); updateStreakDisplay(); updateHistory(); updateTurn();
@@ -4973,11 +5023,11 @@ document.addEventListener('keydown', e => {
 
       if (stealPhase) {
         if (header)  header.textContent  = `${teamName} can STEAL!`;
-        if (subtext) { subtext.textContent = "One guess for the steal..."; fitByCharCount(subtext, 18); }
+        if (subtext) { subtext.textContent = "One guess for the steal..."; fitByCharCount(subtext, 12); }
       } else {
         if (header) header.textContent = `${teamName} has the board`;
         const cur = teamPlayers[teamTurn][playerIndex[teamTurn] % teamPlayers[teamTurn].length];
-        if (subtext) { subtext.textContent = cur ? `${cur} is up` : `${teamName} is up`; fitByCharCount(subtext, 18); }
+        if (subtext) { subtext.textContent = cur ? `${cur} is up` : `${teamName} is up`; fitByCharCount(subtext, 12); }
       }
 
       document.getElementById("red-score-box").classList.toggle("active-team", teamTurn === 0);
@@ -5005,7 +5055,7 @@ document.addEventListener('keydown', e => {
       subtext.classList.add("turn-swapping");
 
       // Swap text at the top of the jump (~35% of 450ms ≈ 160ms)
-      setTimeout(() => { subtext.textContent = newText; fitByCharCount(subtext, 18); }, 160);
+      setTimeout(() => { subtext.textContent = newText; fitByCharCount(subtext, 12); }, 160);
 
       subtext.addEventListener("animationend", () => {
         subtext.classList.remove("turn-swapping");
@@ -5016,10 +5066,10 @@ document.addEventListener('keydown', e => {
        Sets --fit-scale on `el`. Tuned to `maxChars`: text <= maxChars renders at
        base size, longer text scales proportionally. Works because our fonts are
        roughly monospace and the canvas is a fixed design coordinate space. */
-    function fitByCharCount(el, maxChars, text) {
+    function fitByCharCount(el, maxChars, text, power = 1) {
       if (!el) return;
       const len = (text ?? el.textContent).trim().length;
-      const scale = len <= maxChars ? 1 : maxChars / len;
+      const scale = len <= maxChars ? 1 : Math.pow(maxChars / len, power);
       el.style.setProperty("--fit-scale", scale);
     }
 
@@ -5042,6 +5092,7 @@ document.addEventListener('keydown', e => {
           }
           i++;
           el.textContent = text.slice(0, i);
+          playKeystroke();
           setTimeout(tick, charMs);
         };
         tick();

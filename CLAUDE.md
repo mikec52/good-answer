@@ -5,7 +5,7 @@ Family Feud-inspired game with original features and styling. Working title: **G
 - Main game file: `feud.html`
 - Question bank: `master_question_bank.json` (active file, includes variants — see below)
 - Pre-variants backup: `question_bank_pre-variants.json`
-- Sound files alongside feud.html: `correct.mp3`, `wrong.mp3`, `goodanswer.mp3`, `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX), `balbg.mp3` (background music, looping)
+- Sound files alongside feud.html: `correct.mp3`, `wrong.mp3`, `goodanswer.mp3`, `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX), `phonetype.wav` (typewriter keystroke SFX), `balbg.mp3` (background music, looping)
 
 ### Branch structure
 - **`main`** — active development (formerly `viewport-redesign`)
@@ -374,21 +374,28 @@ The base size is the "comfortable" size. `--fit-scale` defaults to 1 (no shrinki
 ### JS helper
 
 ```js
-function fitByCharCount(el, maxChars, text) {
+function fitByCharCount(el, maxChars, text, power = 1) {
   if (!el) return;
   const len = (text ?? el.textContent).trim().length;
-  const scale = len <= maxChars ? 1 : maxChars / len;
+  const scale = len <= maxChars ? 1 : Math.pow(maxChars / len, power);
   el.style.setProperty("--fit-scale", scale);
 }
 ```
 
 Call it immediately after assigning `textContent` — no deferral, no rAF, no observers.
 
+The optional `power` parameter controls the shrink curve shape:
+- **`power = 1`** (default) — linear shrink. Good for single-line elements where overflow is the hard constraint.
+- **`power < 1`** (e.g. 0.5 = square root) — concave curve, shrinks less aggressively. Better for multi-line wrapping text where moderate shrinking suffices and the char-count proxy is noisier.
+- **`power > 1`** — convex curve, shrinks more aggressively (not currently used).
+
+Tuning process: collect 5–7 real strings with their ideal font sizes, compute `base × (maxChars / len)^power` across candidate values, pick the combination that minimizes max error. Non-monotonic outliers are expected with proportional fonts — the formula can't predict which strings wrap efficiently.
+
 ### Where it's currently applied
 
 - **Team labels** (`.team-score-box .team-label h4`) — `--fit-base: 1.5rem`, `maxChars: 10`, called in `startGame()` at the `textContent` assignment.
-- **Question text** (`#question`) — `--fit-base: 1.8rem`, `maxChars: 45`, called in the question-render block. `#question-box` has `max-height: 180px; overflow: hidden` as a safety net.
-- **Turn subtext** (`#turn-subtext`) — `--fit-base: 1.5rem`, `maxChars: 18`, called in `updateTurn()` and the mid-animation swap in `animateTurnSwap()`.
+- **Question text** (`#question`) — `--fit-base: 1.8rem`, `maxChars: 48`, `power: 0.5` (square root curve), called in the question-render block. `#question-box` has `max-height: 180px; overflow: hidden` as a safety net.
+- **Turn subtext** (`#turn-subtext`) — `--fit-base: 2rem`, `maxChars: 12`, `power: 1` (linear), called in `updateTurn()` and the mid-animation swap in `animateTurnSwap()`.
 - **NOT the players list** — char-count wasn't the right tool there (see marquee below).
 
 ### Caveats and tuning
@@ -434,6 +441,7 @@ The element was changed from `<ul>` to `<div>` at the outer level so we could ne
 - **"Advanced question options"** — question admin links (get new question, flag for removal, fact check, copy answers) are collapsed under a `<details>` element during a round. This element must be explicitly closed when a new question loads (`removeAttribute("open")`).
 - **End-of-round state** repurposes the turn-input-box: header shows the round result message, body shows Reveal All / Next Round buttons. Score edits live in a separate `<details>` element outside the box.
 - **Score edits** use a `<details>` element labeled "Score edits needed?" to keep them collapsed by default.
+- **Player/team name limit** — 18 characters max (`maxlength="18"` on all setup inputs). No explicit error message; the input shakes (CSS `input-shake` animation, 0.3s) when a keystroke is rejected at the limit. Backspace, arrows, and modifier shortcuts pass through normally.
 
 ---
 
@@ -716,6 +724,16 @@ Ideal tick sound: short (<100ms), dry, percussive. Marimba hit, digital pip, or 
 
 ---
 
+## Keystroke SFX — Typewriter Sound
+
+The `typewriter()` helper plays a keystroke sound (`phonetype.wav`) on every character (including spaces). Uses the same Web Audio API pattern as the tick system — a single `AudioBuffer` decoded once, disposable `AudioBufferSourceNode` per play.
+
+- **`playKeystroke()`** — no pitch variation, no random sample selection. Single identical sound per character. This mirrors phone keyboard SFX behavior (iOS/Android use one repeated click) and sounds natural in a digital context.
+- **Volume**: `1.0 × master × SFX` gain — intentionally louder than tick SFX (0.3) because the typewriter runs at ~30ms intervals vs. tick's rapid-fire scoring bursts.
+- **Reuses `tickAudioCtx`** — no second AudioContext. `initKeystrokeSfx()` creates the context if the tick system hasn't already.
+
+---
+
 ## Tile Text Marquee
 
 When a revealed answer's display text overflows `.tile-text`, a horizontal bounce marquee scrolls to show the full text.
@@ -751,7 +769,7 @@ Single looping track (`balbg.mp3`) via `<audio>` element with `loop = true`. No 
 - `@keyframes turn-swap`: pop up 14px → slam down 2px past center with 1.12× scale → small bounce → settle.
 - **Not used** when 3 strikes trigger steal phase — plain `updateTurn()` runs instead to avoid the 160ms setTimeout racing with the steal-phase UI update.
 - **Not used** when the correct answer reveals the final tile — round is ending, no next turn.
-- `#turn-subtext` uses `fitByCharCount` with `maxChars: 18`.
+- `#turn-subtext` uses `fitByCharCount` with `maxChars: 12`.
 
 ---
 

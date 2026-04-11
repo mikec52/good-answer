@@ -2174,6 +2174,13 @@
     .tile-back.correct .tile-mult,
     .tile-back.correct .tile-total { background: #1b5e20; color: #fff; }
     .tile-back.correct .tile-pts { color: #a5d6a7; }
+    .tile-back.correct .tile-pts,
+    .tile-back.correct .tile-mult,
+    .tile-back.correct .tile-total { color: transparent; }
+    .tile-back.correct .tile-pts.tile-stat-visible,
+    .tile-back.correct .tile-mult.tile-stat-visible,
+    .tile-back.correct .tile-total.tile-stat-visible { color: #fff; }
+    .tile-back.correct .tile-pts.tile-stat-visible { color: #a5d6a7; }
     .tile-back.missed { color: #fff; }
     .tile-back.missed .tile-num { background: #ef9a9a; color: #7b0000; }
     .tile-back.missed .tile-text,
@@ -3567,6 +3574,9 @@
       // Setup → game transition
       setupExitBeatGap:       50,  // pause between the 3 setup exit beats
 
+      // Scoring sequence (correct answer)
+      scoringStepGap:         150,  // ms pause between scoring animation steps
+
       // Question phase entry animations are strictly serial via anim.done;
       // their durations live in CSS and don't need TIMING constants here.
     };
@@ -3577,19 +3587,56 @@
     const sfxButtonClick = new Audio("analogbuttonclick.mp3");
     const sfxSurveySays  = new Audio("surveysays.mp3");
 
-    // ── Background music — crossfade loop ──────────────────────
-    const bgA = new Audio("bgtheme.m4a");
-    const bgB = new Audio("bgtheme.m4a");
-    const BG_FADE_OUT_AT = 283;   // song's own fade starts here (~-22 dBFS → silence)
-    const BG_FADE = 17;           // crossfade spans the song's built-in fade-out
-    const BG_INTRO_SKIP = 10;     // skip 10s of silence/buildup on first play
-    const BG_FADE_IN = 3;         // fade-in duration on first play (seconds)
-    let bgActive = bgA;           // currently audible track
-    let bgNext   = bgB;           // next track (fades in)
-    let bgFadeInterval = null;
-    let bgCrossfadeTimer = null;
+    // ── Tick SFX — Web Audio API for rapid-fire scoring ticks ─────
+    let tickAudioCtx = null;
+    let tickBuffer = null;
+
+    async function initTickSfx(url) {
+      try {
+        tickAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const response = await fetch(url);
+        const arrayBuf = await response.arrayBuffer();
+        tickBuffer = await tickAudioCtx.decodeAudioData(arrayBuf);
+      } catch (e) {
+        console.warn("Tick SFX failed to load:", e);
+      }
+    }
+
+    /**
+     * Play the tick sound with pitch/volume scaling.
+     * @param {number} progress — 0 to 1, how far through the count-up
+     * @param {object} [opts] — { pitchRange (default 0.5), baseRate (default 0.9), volume (default 0.3) }
+     */
+    function playTick(progress, opts = {}) {
+      if (!tickBuffer || !tickAudioCtx || !soundEnabled) return;
+      const { pitchRange = 1.2, baseRate = 0.6, volume = 0.3 } = opts;
+      const source = tickAudioCtx.createBufferSource();
+      source.buffer = tickBuffer;
+      source.playbackRate.value = baseRate + progress * pitchRange;
+
+      const gainNode = tickAudioCtx.createGain();
+      const masterGain = (soundEnabled ? volumeMaster : 0) * volumeSfx;
+      gainNode.gain.value = volume * masterGain;
+
+      source.connect(gainNode);
+      gainNode.connect(tickAudioCtx.destination);
+      source.start();
+    }
+
+    // Load tick sound — will silently no-op if file doesn't exist
+    initTickSfx("flick.wav");
+
+    // Resume AudioContext on first user interaction (browser autoplay policy)
+    function resumeTickCtx() {
+      if (tickAudioCtx && tickAudioCtx.state === "suspended") tickAudioCtx.resume();
+    }
+    document.addEventListener("click", resumeTickCtx, { once: true });
+    document.addEventListener("keydown", resumeTickCtx, { once: true });
+
+    // ── Background music — simple loop ──────────────────────
+    const bgMusic = new Audio("balbg.mp3");
+    bgMusic.loop = true;
     let bgPlaying = false;
-    let bgFirstPlay = true;
 
     function getMusicGain() {
       return (soundEnabled ? volumeMaster : 0) * volumeMusic;
@@ -3598,78 +3645,17 @@
     function startBgMusic() {
       if (bgPlaying) return;
       bgPlaying = true;
-      const gain = getMusicGain();
-      if (bgFirstPlay) {
-        bgFirstPlay = false;
-        bgActive.currentTime = BG_INTRO_SKIP;
-        bgActive.volume = 0;
-        bgActive.play();
-        // Fade in over BG_FADE_IN seconds
-        const steps = 30;
-        const stepMs = (BG_FADE_IN * 1000) / steps;
-        let step = 0;
-        const fadeIn = setInterval(() => {
-          step++;
-          bgActive.volume = gain * (step / steps);
-          if (step >= steps) clearInterval(fadeIn);
-        }, stepMs);
-      } else {
-        bgActive.currentTime = BG_INTRO_SKIP;
-        bgActive.volume = gain;
-        bgActive.play();
-      }
-      scheduleBgCrossfade();
-    }
-
-    function scheduleBgCrossfade() {
-      if (bgFadeInterval) clearInterval(bgFadeInterval);
-      bgFadeInterval = setInterval(() => {
-        if (!bgPlaying) return;
-        const ct = bgActive.currentTime;
-        if (isNaN(ct)) return;
-        if (ct >= BG_FADE_OUT_AT) {
-          beginCrossfade();
-        }
-      }, 250);
-    }
-
-    function beginCrossfade() {
-      clearInterval(bgFadeInterval);
-      const gain = getMusicGain();
-      bgNext.currentTime = BG_INTRO_SKIP;
-      bgNext.volume = 0;
-      bgNext.play();
-      const steps = 50;
-      const stepMs = (BG_FADE * 1000) / steps;
-      let step = 0;
-      bgCrossfadeTimer = setInterval(() => {
-        step++;
-        const t = step / steps;               // 0→1
-        bgActive.volume = gain * (1 - t);
-        bgNext.volume   = gain * t;
-        if (step >= steps) {
-          clearInterval(bgCrossfadeTimer);
-          bgCrossfadeTimer = null;
-          bgActive.pause();
-          bgActive.currentTime = 0;
-          // swap roles
-          const tmp = bgActive;
-          bgActive = bgNext;
-          bgNext   = tmp;
-          scheduleBgCrossfade();
-        }
-      }, stepMs);
+      bgMusic.volume = getMusicGain();
+      bgMusic.play();
     }
 
     function stopBgMusic() {
       bgPlaying = false;
-      if (bgFadeInterval) { clearInterval(bgFadeInterval); bgFadeInterval = null; }
-      if (bgCrossfadeTimer) { clearInterval(bgCrossfadeTimer); bgCrossfadeTimer = null; }
-      bgA.pause(); bgA.currentTime = 0;
-      bgB.pause(); bgB.currentTime = 0;
+      bgMusic.pause();
+      bgMusic.currentTime = 0;
     }
 
-    const bgTracks = [bgA, bgB];
+    const bgTracks = [bgMusic];
     const sfxTracks = [sfxCorrect, sfxWrong, sfxGoodAnswer, sfxSurveySays];
 
     let soundEnabled = true;
@@ -3678,7 +3664,7 @@
     function applyVolumes() {
       const gain = soundEnabled ? volumeMaster : 0;
       // Only set the active bg track volume (avoid overriding crossfade ratios)
-      if (bgPlaying) bgActive.volume = gain * volumeMusic;
+      if (bgPlaying) bgMusic.volume = gain * volumeMusic;
       sfxTracks.forEach(t => t.volume = gain * volumeSfx);
     }
     applyVolumes();
@@ -4616,6 +4602,10 @@ document.addEventListener('keydown', e => {
             back.classList.add("correct");
             buildTileBack(back, i, ans, revealedData[i] || null);
             inner.classList.add("revealed");
+            // Mark stat cells visible (they start hidden for the scoring sequence)
+            back.querySelectorAll('.tile-pts, .tile-mult, .tile-total').forEach(
+              el => el.classList.add('tile-stat-visible')
+            );
           }
 
           inner.append(front, back);
@@ -4687,9 +4677,53 @@ document.addEventListener('keydown', e => {
       txtEl.style.setProperty("--tile-marquee-dur", `${dur}s`);
     }
 
+    /**
+     * Animate a number counting up (or down) in an element.
+     * @param {HTMLElement} el — target element
+     * @param {number} from — starting value
+     * @param {number} to — ending value
+     * @param {object} [opts] — { duration (ms, default 400), suffix (e.g. "x"), decimals (default 0) }
+     */
+    function animateCountUp(el, from, to, opts = {}) {
+      return new Promise(resolve => {
+        if (!el || from === to) { if (el) el.textContent = to; resolve(); return; }
+        const { suffix = "", decimals = 0, tick = true } = opts;
+        const diff = to - from;
+        // Count increments: whole numbers for integers, 0.1 steps for decimals
+        const increments = decimals > 0
+          ? Math.round(Math.abs(diff) * Math.pow(10, decimals))
+          : Math.abs(Math.round(diff));
+        // Duration scales with increments: small changes are leisurely, large are faster per-tick
+        const minDur = 1000, maxDur = 3000, diffCeil = 100;
+        const duration = minDur + (maxDur - minDur) * Math.min(increments / diffCeil, 1);
+        const steps = Math.min(increments, 100);
+        const stepTime = Math.min(Math.max(duration / steps, 16), 500);
+        let step = 0;
+        // Set initial display to prevent flash of final value
+        el.textContent = (decimals > 0 ? from.toFixed(decimals) : from) + suffix;
+        // Clear any existing count-up on this element
+        if (el._countUpTimer) clearInterval(el._countUpTimer);
+        el._countUpTimer = setInterval(() => {
+          step++;
+          const progress = step / steps;
+          const current = from + diff * progress;
+          el.textContent = (decimals > 0 ? current.toFixed(decimals) : Math.round(current)) + suffix;
+          if (tick) playTick(progress);
+          if (step >= steps) {
+            clearInterval(el._countUpTimer);
+            el._countUpTimer = null;
+            el.textContent = (decimals > 0 ? to.toFixed(decimals) : to) + suffix;
+            resolve();
+          }
+        }, stepTime);
+      });
+    }
+
     function updateBoardRoundTotal() {
       const el = document.getElementById("board-round-total");
-      if (el) el.textContent = roundScore;
+      if (!el) return;
+      const oldVal = parseInt(el.textContent, 10) || 0;
+      animateCountUp(el, oldVal, roundScore, { tick: false });
     }
 
     function awardRoundScore(team, callback) {
@@ -4725,7 +4759,7 @@ document.addEventListener('keydown', e => {
       }
     }
 
-    function flipTile(index, type, earnedTotal, appliedMult) {
+    async function flipTile(index, type, earnedTotal, appliedMult) {
       const tile = document.querySelector(`[data-tile-index="${index}"]`);
       if (!tile) return;
       const inner = tile.querySelector('.tile-inner');
@@ -4737,15 +4771,68 @@ document.addEventListener('keydown', e => {
         : earnedTotal != null ? { mult: appliedMult || 1, earnedTotal } : null;
       buildTileBack(back, index, ans, opts);
 
-      // Show the answer (green/red) immediately under the cover, then slide cover away
+      // Show the answer under the cover, then slide cover away
       inner.classList.add('revealed');
       applyTileMarquee(back.querySelector('.tile-text'));
+
       const cover = tile.querySelector('.tile-cover');
+      if (type !== 'correct' || earnedTotal == null) {
+        // Missed / no-data: instant reveal, no scoring sequence
+        if (cover) { cover.classList.add('revealed'); setTimeout(() => cover.remove(), 400); }
+        updateBoardRoundTotal();
+        return;
+      }
+
+      // --- Correct answer scoring sequence ---
+      const gap = TIMING.scoringStepGap;
+      const tilePts = back.querySelector('.tile-pts');
+      const tileMult = back.querySelector('.tile-mult');
+      const tileTotal = back.querySelector('.tile-total');
+
+      // Step 1: slide cover off, wait for animation
       if (cover) {
         cover.classList.add('revealed');
-        setTimeout(() => { cover.remove(); }, 400);
+        await anim.done(cover);
+        cover.remove();
       }
-      updateBoardRoundTotal();
+
+      // Step 2a: reveal tile-pts with count-up
+      if (tilePts) {
+        tilePts.classList.add('tile-stat-visible');
+        await animateCountUp(tilePts, 0, ans.points);
+      }
+      await anim.wait(gap);
+
+      // Step 2b: reveal tile-mult — count up if numeric, single tick for "—"
+      if (tileMult) {
+        tileMult.classList.add('tile-stat-visible');
+        if (appliedMult > 1) {
+          await animateCountUp(tileMult, 1.0, appliedMult, { suffix: "x", decimals: 1 });
+        } else {
+          playTick(0);
+        }
+      }
+      await anim.wait(gap);
+
+      // Step 2c: reveal tile-total with count-up
+      if (tileTotal) {
+        tileTotal.classList.add('tile-stat-visible');
+        await animateCountUp(tileTotal, 0, earnedTotal);
+      }
+      await anim.wait(gap);
+
+      // Step 3: round total count-up
+      const roundTotalEl = document.getElementById("board-round-total");
+      const oldRoundTotal = parseInt(roundTotalEl?.textContent, 10) || 0;
+      await animateCountUp(roundTotalEl, oldRoundTotal, roundScore);
+      await anim.wait(gap);
+
+      // Step 4a/4b: streak + multiplier (skip on final answer — values don't carry over)
+      if (!revealed.every(r => r)) {
+        await updateStreakValue();
+        await anim.wait(gap);
+        await updateMultValue();
+      }
     }
 
     function revealAll() {
@@ -4762,8 +4849,12 @@ document.addEventListener('keydown', e => {
     }
 
     function updateScores() {
-      document.getElementById("red-score").textContent = teamScores[0];
-      document.getElementById("blue-score").textContent = teamScores[1];
+      const redEl = document.getElementById("red-score");
+      const blueEl = document.getElementById("blue-score");
+      const oldRed = parseInt(redEl?.textContent, 10) || 0;
+      const oldBlue = parseInt(blueEl?.textContent, 10) || 0;
+      animateCountUp(redEl, oldRed, teamScores[0]);
+      animateCountUp(blueEl, oldBlue, teamScores[1]);
       updateBoardRoundTotal();
     }
 
@@ -4812,27 +4903,39 @@ document.addEventListener('keydown', e => {
       chev.addEventListener("animationend", () => chev.remove(), { once: true });
     }
 
-    function updateStreakDisplay() {
+    async function updateStreakValue() {
       const streakEl = document.getElementById("board-streak");
-      const multEl = document.getElementById("board-mult");
-
-      // Detect direction of change
-      const streakDir = currentStreak > _prevStreak ? "up"
-                      : (currentStreak < _prevStreak && _prevStreak > 0) ? "down" : null;
-      const multDir   = answerMultiplier > _prevMultiplier ? "up"
-                      : (answerMultiplier < _prevMultiplier && _prevMultiplier > 1) ? "down" : null;
-
-      // Update display text first (textContent wipes children)
-      if (streakEl) streakEl.textContent = currentStreak > 0 ? currentStreak : "—";
-      if (multEl) multEl.textContent = answerMultiplier > 1 ? answerMultiplier.toFixed(1) + "x" : "—";
-
-      // Then append chevron indicators (survive after textContent set)
-      if (streakDir) flashChevron(streakEl, streakDir);
-      if (multDir) flashChevron(multEl, multDir);
-
-      // Store current values for next comparison
+      if (!streakEl) return;
+      const dir = currentStreak > _prevStreak ? "up"
+                : (currentStreak < _prevStreak && _prevStreak > 0) ? "down" : null;
+      if (currentStreak > 0) {
+        // Count up from previous (or 0 if coming from "—")
+        await animateCountUp(streakEl, Math.max(_prevStreak, 0), currentStreak);
+      } else {
+        streakEl.textContent = "—";
+      }
+      if (dir) flashChevron(streakEl, dir);
       _prevStreak = currentStreak;
+    }
+
+    async function updateMultValue() {
+      const multEl = document.getElementById("board-mult");
+      if (!multEl) return;
+      const dir = answerMultiplier > _prevMultiplier ? "up"
+                : (answerMultiplier < _prevMultiplier && _prevMultiplier > 1) ? "down" : null;
+      if (answerMultiplier > 1) {
+        // Count up from previous (or 1.0 if coming from "—")
+        await animateCountUp(multEl, Math.max(_prevMultiplier, 1.0), answerMultiplier, { suffix: "x", decimals: 1 });
+      } else {
+        multEl.textContent = "—";
+      }
+      if (dir) flashChevron(multEl, dir);
       _prevMultiplier = answerMultiplier;
+    }
+
+    function updateStreakDisplay() {
+      updateStreakValue();
+      updateMultValue();
     }
 
     const BG_BLOB_DEFAULT = '#513f6d';
@@ -5006,7 +5109,7 @@ document.addEventListener('keydown', e => {
       });
     }
 
-    function submitGuess(){const input=document.getElementById("guess");const guess=input.value.trim();input.value="";if(!guess||!currentQuestion)return;
+    async function submitGuess(){const input=document.getElementById("guess");const guess=input.value.trim();input.value="";if(!guess||!currentQuestion)return;
       if(guessHistory.some(e=>normalize(e.guess)===normalize(guess))){const msgEl=document.getElementById("message");msgEl.textContent="⚠️ Already guessed!";msgEl.style.opacity="1";clearTimeout(msgEl._fadeTimer);msgEl._fadeTimer=setTimeout(()=>{msgEl.style.opacity="0";},2000);return;}
       const playerName=stealPhase?teamNames[teamTurn]:teamPlayers[teamTurn][playerIndex[teamTurn]%teamPlayers[teamTurn].length]||teamNames[teamTurn];
       if(stealPhase){
@@ -5017,7 +5120,7 @@ document.addEventListener('keydown', e => {
         const guessInput=document.getElementById("guess");
         if(submitBtn) submitBtn.disabled=true;
         if(guessInput) guessInput.disabled=true;
-        setTimeout(()=>{
+        setTimeout(async ()=>{
           if(submitBtn) submitBtn.disabled=false;
           if(guessInput) { guessInput.disabled=false; guessInput.focus(); }
           if(idx!==-1){
@@ -5028,7 +5131,8 @@ document.addEventListener('keydown', e => {
             const stealResult=stealMult>1?`✓ Steal (${stealTotal} pts) [${stealMult.toFixed(1)}x]`:`✓ Steal (${stealTotal} pts)`;
             guessHistory.push({player:playerName,team:stealingTeam,guess:guess,result:stealResult});
             currentStreak++;answerMultiplier=1+(currentStreak*0.2);
-            flipTile(idx,'correct',stealTotal,stealMult);updateStreakDisplay();updateHistory();
+            updateHistory();
+            await flipTile(idx,'correct',stealTotal,stealMult);
             awardRoundScore(stealingTeam, (final) => {
               // Phase indicator: steal-chance → round-result
               setPhaseText("round-result", `${teamNames[stealingTeam]} stole ${final} points!`);
@@ -5058,7 +5162,22 @@ document.addEventListener('keydown', e => {
         guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:resultTxt});foundIdx=i;}});
       const found=foundIdx!==-1;
       if(found){currentStreak++;answerMultiplier=1+(currentStreak*0.2);playCorrect(foundIdx===0);}else{currentStreak=0;answerMultiplier=1.0;playWrong();strikes++;guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:"✗ Wrong"});}playerIndex[teamTurn]=(playerIndex[teamTurn]+1)%teamPlayers[teamTurn].length;
-      document.getElementById("message").textContent="";if(found){flipTile(foundIdx,'correct',foundTotal,foundMult);}else{updateBoard();}updateScores();updateStrikes();updateStreakDisplay();updateHistory();if(!found&&strikes>=3){updateTurn();}else{animateTurnSwap();}document.getElementById("guess")?.focus();
+      document.getElementById("message").textContent="";
+      if(found){
+        const guessInput=document.getElementById("guess");
+        const submitBtn=document.getElementById("turn-submit-btn");
+        if(guessInput) guessInput.disabled=true;
+        if(submitBtn) submitBtn.disabled=true;
+        updateStrikes();updateHistory();
+        await flipTile(foundIdx,'correct',foundTotal,foundMult);
+        if(guessInput) guessInput.disabled=false;
+        if(submitBtn) submitBtn.disabled=false;
+        if(!revealed.every(r=>r)) animateTurnSwap();
+      }else{
+        updateBoard();updateScores();updateStrikes();updateStreakDisplay();updateHistory();
+        if(strikes>=3){updateTurn();}else{animateTurnSwap();}
+      }
+      document.getElementById("guess")?.focus();
       if(!found&&strikes>=3){stealPhase=true;teamTurn=1-teamTurn;updateTurn();
         // Phase indicator: gameplay → steal-chance with "knock" collision
         setPhaseText("steal-chance", `${teamNames[teamTurn]} can steal!`);

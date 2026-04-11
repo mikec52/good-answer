@@ -5,7 +5,7 @@ Family Feud-inspired game with original features and styling. Working title: **G
 - Main game file: `feud.html`
 - Question bank: `master_question_bank.json` (active file, includes variants — see below)
 - Pre-variants backup: `question_bank_pre-variants.json`
-- Sound files alongside feud.html: `correct.mp3`, `wrong.mp3`, `goodanswer.mp3`, `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`
+- Sound files alongside feud.html: `correct.mp3`, `wrong.mp3`, `goodanswer.mp3`, `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX), `balbg.mp3` (background music, looping)
 
 ### Branch structure
 - **`main`** — active development (formerly `viewport-redesign`)
@@ -246,6 +246,9 @@ const TIMING = {
 
   // Setup → game transition
   setupExitBeatGap:      50,  // pause between the 3 setup exit beats
+
+  // Scoring sequence (correct answer)
+  scoringStepGap:        150,  // ms pause between scoring animation steps
 };
 ```
 
@@ -608,7 +611,135 @@ Hidden-tab caveat: Chrome throttles `setTimeout` in background tabs, so the type
 - **Down** (value decreased): red `var(--red-text)`, starts at `top: 10px`, animates downward 45px.
 - Both animations: 0.75s, 3 keyframe stops, opacity stays 1 until 99.9% then snaps to 0 (abrupt disappear, no fade).
 - **`_prevStreak` / `_prevMultiplier`** track previous values for direction detection. Reset in `initRoundState()`.
-- **`updateStreakDisplay()`** sets text first (`textContent` wipes children), then appends chevrons.
+- **`updateStreakValue()`** and **`updateMultValue()`** are separate async functions that each handle their own count-up + chevron and return a Promise. `updateStreakDisplay()` is a synchronous wrapper that calls both (used by the wrong-answer path where sequencing doesn't matter).
+- On the first correct answer (transitioning from "—"), streak counts up from 0 and multiplier counts up from 1.0 (not instant).
+
+---
+
+## Correct Answer Scoring Sequence
+
+When a correct answer is submitted, `flipTile` orchestrates a serialized animation sequence so each number change has individual visual impact. The sequence is `async` and `await`ed by `submitGuess`. Input is disabled during the sequence.
+
+### Sequence steps
+
+| Step | Element | Action |
+|------|---------|--------|
+| 1 | `.tile-cover` | Slide right (400ms CSS anim). Tile-back is revealed showing tile-num + tile-text only. |
+| 2a | `.tile-pts` | Fade in (`.tile-stat-visible`) + count up 0 → points |
+| gap | | `TIMING.scoringStepGap` (150ms) |
+| 2b | `.tile-mult` | Fade in + count up 1.0 → mult (if > 1), or instant "—" with single tick |
+| gap | | 150ms |
+| 2c | `.tile-total` | Fade in + count up 0 → earnedTotal |
+| gap | | 150ms |
+| 3 | `#board-round-total` | Count up oldVal → roundScore |
+| gap | | 150ms |
+| 4a | `#board-streak` | Count up (or set "—") + chevron |
+| gap | | 150ms |
+| 4b | `#board-mult` | Count up (or set "—") + chevron |
+
+After step 4b, `animateTurnSwap()` fires — unless all answers are now revealed (round ending), in which case the turn swap is skipped.
+
+### CSS: hidden stat cells on reveal
+
+`.tile-back.correct .tile-pts/.tile-mult/.tile-total` start with `color: transparent` (green background visible, text hidden). The `.tile-stat-visible` class sets `color: #fff` (or `#a5d6a7` for pts). Already-revealed tiles rebuilt by `updateBoard()` get `.tile-stat-visible` immediately.
+
+### Tile scoring data persistence
+
+`revealedData[]` stores `{ mult, earnedTotal }` per tile at reveal time. When `updateBoard()` rebuilds the DOM (e.g. after a strike), it passes `revealedData[i]` to `buildTileBack()` so tile-mult and tile-total retain their original values instead of showing current (reset) multiplier state.
+
+### Skip streak/mult on final answer
+
+When `revealed.every(r => r)` after a correct answer, steps 4a/4b are skipped entirely — streak and multiplier don't carry over to the next round.
+
+---
+
+## Count-Up Animation — `animateCountUp`
+
+`animateCountUp(el, from, to, opts)` animates a number in an element using `setInterval`. Returns a Promise that resolves when the animation completes.
+
+### Duration model (Balatro-inspired)
+
+Duration auto-scales with the number of increments, keeping small changes leisurely and large changes faster per-tick:
+
+```
+duration = minDur + (maxDur - minDur) × min(increments / diffCeiling, 1)
+```
+
+Current values: `minDur = 1000ms`, `maxDur = 3000ms`, `diffCeiling = 100`.
+
+| Increments | Duration |
+|-----------|----------|
+| 1–20 | 1000–1400ms |
+| 50 | 2000ms |
+| 100+ | 3000ms (capped) |
+
+- **Steps** capped at 100 (`Math.min(increments, 100)`)
+- **stepTime** capped at 500ms max (prevents single-increment changes from stalling)
+- **Decimal handling**: when `decimals > 0`, increments are computed as `diff × 10^decimals` (so 1.2→1.4 = 2 increments at 0.1 steps)
+- Sets `el.textContent` to the `from` value before the interval starts (prevents flash of final value)
+
+### Options
+
+- `suffix` (string, default `""`) — appended to displayed value (e.g. `"x"`)
+- `decimals` (int, default `0`) — decimal places in display
+- `tick` (bool, default `true`) — play tick SFX on each step
+
+### Future: game speed multiplier
+
+A global speed setting (Balatro-style 1×/2×/3×/4×) could scale `minDur`/`maxDur` and `TIMING.scoringStepGap` uniformly.
+
+---
+
+## Tick SFX — Web Audio API
+
+Rapid-fire tick sounds during count-up animations use the Web Audio API (not `new Audio()`) for performance. A single `AudioBuffer` is decoded once from `flick.wav`; each tick creates a disposable `AudioBufferSourceNode`.
+
+### Pitch scaling
+
+`playTick(progress, opts)` plays a tick with pitch that rises over the count-up:
+
+- `baseRate` (default 0.6) — starting playback rate
+- `pitchRange` (default 1.2) — added to baseRate at progress=1
+- Range: 0.6× → 1.8× (≈1.5 octave sweep)
+- `volume` (default 0.3) — per-tick volume, multiplied by master × SFX gain
+
+### Where ticks play
+
+- **Scoring sequence** (inside `flipTile`): all count-ups have ticks by default
+- **"—" reveal** for tile-mult: single tick at `playTick(0)` (low pitch)
+- **Team scores** (`updateScores`): `tick: false` — these fire during round-end transitions
+- **Round total** (`updateBoardRoundTotal`): `tick: false` — called from non-sequenced paths
+
+### Sound file guidance
+
+Ideal tick sound: short (<100ms), dry, percussive. Marimba hit, digital pip, or coin ting. Avoid reverb tails — they blur at high tick rates.
+
+---
+
+## Tile Text Marquee
+
+When a revealed answer's display text overflows `.tile-text`, a horizontal bounce marquee scrolls to show the full text.
+
+### Trigger
+
+`applyTileMarquee(txtEl)` checks `scrollWidth - clientWidth > 3` (3px threshold prevents near-miss jitter). Called from `flipTile()` on reveal and `updateBoard()` on rebuild.
+
+### Structure
+
+Text is wrapped in a `.tile-marquee-track` span inside the `.tile-text` element (which gets `.tile-marquee` class). CSS `@keyframes tile-marquee-scroll` bounces: hold at start (0–10%) → scroll to end (10–45%) → hold at end (45–55%) → scroll back (55–90%) → hold at start (90–100%).
+
+### Duration
+
+`4 + overflow / 48` seconds — proportional to overflow distance. Longer text gets more time but moves slightly faster per pixel. Minimum ~4s for short overflows.
+
+---
+
+## Background Music
+
+Single looping track (`balbg.mp3`) via `<audio>` element with `loop = true`. No crossfade, no intro skip.
+
+- `startBgMusic()` / `stopBgMusic()` — play/pause controls
+- Volume: `volumeMaster × volumeMusic`, applied via `applyVolumes()`
 
 ---
 
@@ -619,6 +750,7 @@ Hidden-tab caveat: Chrome throttles `setTimeout` in background tabs, so the type
 - Captures old text, calls `updateTurn()` (which sets new text + all game state), then if text changed: restores old text, plays `turn-swap` animation (0.45s), swaps to new text at 160ms (peak of the jump).
 - `@keyframes turn-swap`: pop up 14px → slam down 2px past center with 1.12× scale → small bounce → settle.
 - **Not used** when 3 strikes trigger steal phase — plain `updateTurn()` runs instead to avoid the 160ms setTimeout racing with the steal-phase UI update.
+- **Not used** when the correct answer reveals the final tile — round is ending, no next turn.
 - `#turn-subtext` uses `fitByCharCount` with `maxChars: 18`.
 
 ---

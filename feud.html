@@ -283,23 +283,38 @@
       transform: translateY(-10%);
     }
     #start-logo {
-      -webkit-text-stroke: 4px #d6f4f4;
-      font-variation-settings: "wght" 900, "ital" 1;
-      font-size: 10rem;
-      text-align: center;
-      color: transparent;
-      font-family: "Meta", sans-serif;
-      line-height: 0.9;
-      text-shadow: 10px 10px 0px #07bccc,
-        15px 15px 0px #e601c0,
-        20px 20px 0px #e9019a,
-        25px 25px 0px #f40468,
-        45px 45px 10px #482896;
-      pointer-events: none;
+    font-size: 8rem;
+    text-align: center;
+    line-height: 0.9;
+    pointer-events: none;
+    font-family: 'futura-100';
+    color: white;
+    mix-blend-mode: multiply;
+    opacity: .85;
     }
+
+    #logo-good {
+      font-weight: 900;
+      position: relative;
+      z-index: 2;
+      font-size: 11rem;
+      letter-spacing: -10px;
+      display: inline-block;
+    }
+
+    #logo-answer {
+      display: inline-block;
+      position: relative;
+      z-index: 1;
+      line-height: 0.75;
+      padding: 2px 6px;
+    }
+
     #start-screen h1 {
-      font-size: 3rem;
-      margin: 0;
+      font-size: 2rem;
+      font-family: "Bitcount Single";
+      font-weight: 400;
+      margin-top: 20px;
       color: #C0C000;
       animation: start-prompt-pulse 2s ease-in-out infinite;
     }
@@ -729,7 +744,7 @@
     }
     #menu-backdrop.active { opacity: 1; pointer-events: all; }
     #menu-btn {
-      width: 44px; height: 44px; border-radius: 50%;
+      width: 31px; height: 31px; border-radius: 50%;
       background: none;
       border: none;
       cursor: pointer; flex-shrink: 0;
@@ -737,20 +752,20 @@
     }
     #menu-btn span {
       display: block; position: absolute;
-      height: 3px; width: 22px;
-      background: #fff; border-radius: 3px;
-      left: calc(50% - 11px);
+      height: 2px; width: 15px;
+      background: #fff; border-radius: 2px;
+      left: calc(50% - 7.5px);
       transform: rotate(0deg);
       transition: .25s ease-in-out;
     }
-    #menu-btn span:nth-child(1) { top: 11px; }
+    #menu-btn span:nth-child(1) { top: 8px; }
     #menu-btn span:nth-child(2),
-    #menu-btn span:nth-child(3) { top: 19px; }
-    #menu-btn span:nth-child(4) { top: 27px; }
-    #menu-btn.open span:nth-child(1) { top: 19px; width: 0; left: 50%; }
+    #menu-btn span:nth-child(3) { top: 14px; }
+    #menu-btn span:nth-child(4) { top: 20px; }
+    #menu-btn.open span:nth-child(1) { top: 14px; width: 0; left: 50%; }
     #menu-btn.open span:nth-child(2) { transform: rotate(45deg); }
     #menu-btn.open span:nth-child(3) { transform: rotate(-45deg); }
-    #menu-btn.open span:nth-child(4) { top: 19px; width: 0; left: 50%; }
+    #menu-btn.open span:nth-child(4) { top: 14px; width: 0; left: 50%; }
     #settings-tray {
       --tray-bg: #fff;
       position: fixed; top: 0; right: 0;
@@ -1606,6 +1621,7 @@
       animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-1 1.6s ease-out backwards;
       transition: transform 0.3s ease;
       z-index: 10;
+      overflow: visible;
     }
     .cat-mult-badge:hover {
       transform: perspective(500px) rotateY(15deg) rotateX(-5deg);
@@ -1636,6 +1652,19 @@
     @keyframes coin-pulse {
       0%, 100% { box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.4), 0 0 6px var(--coin-glow, rgba(200,200,200,0.4)); }
       50%      { box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.4), 0 0 16px var(--coin-glow, rgba(200,200,200,0.9)); }
+    }
+    /* Badge sparkle particles — emitted from cat-row at badge center */
+    .sparkle {
+      position: absolute;
+      pointer-events: none;
+      clip-path: polygon(50% 0%, 62% 35%, 100% 50%, 62% 65%, 50% 100%, 38% 65%, 0% 50%, 38% 35%);
+      animation: sparkle-burst 0.55s ease-out forwards;
+      z-index: 20;
+    }
+    @keyframes sparkle-burst {
+      0%   { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+      20%  { transform: translate(-50%,-50%) translate(var(--sx), var(--sy)) scale(1.2); opacity: 1; }
+      100% { transform: translate(-50%,-50%) translate(var(--ex), var(--ey)) scale(0); opacity: 0; }
     }
     /* Category multiplier indicator during round */
     .cat-mult-indicator {
@@ -2171,7 +2200,6 @@
       align-items: center;
       justify-content: center;
       line-height: 1;
-      padding: 0;
       margin: 0;
       box-sizing: border-box;
     }
@@ -2213,6 +2241,7 @@
       justify-content: center;
       font-weight: 350;
       font-size: 1.5rem;
+      padding-left: 0.1em;
     }
     .tile-text {
       overflow: hidden;
@@ -2350,6 +2379,7 @@
       align-items: center;
       justify-content: center;
       position: relative;
+      padding-left: 0.1em;
     }
     /* Stat change chevron — appears on right edge of value field on change */
     .stat-chevron {
@@ -2959,88 +2989,6 @@
     }
 
     /* ── STEAL overlay ───────────────────────────────────────────── */
-    #steal-overlay {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      z-index: 9999;
-      opacity: 0;
-    }
-    #steal-overlay.active {
-      animation: steal-bg 2.6s ease forwards;
-    }
-    #steal-band {
-      --band-color: #053977;
-      --band-shadow-color: color-mix(in srgb, var(--band-color) 75%, black);
-      position: absolute;
-      left: -5%;
-      right: -5%;
-      top: 50%;
-      height: 32vh;
-      filter: drop-shadow(15px 28px 0px var(--band-shadow-color));
-      opacity: 0;
-      transform: translateX(-110%) translateY(-50%);
-      z-index: 0;
-    }
-    #steal-band-shape {
-      position: absolute;
-      inset: 0;
-      background: var(--band-color);
-      clip-path: polygon(37% 20%, 75% 10%, 63% 95%, 20% 70%);
-    }
-    #steal-overlay.active #steal-band {
-      animation: steal-band-slide 2.6s forwards;
-    }
-    @keyframes steal-band-slide {
-      0%   { opacity: 0; transform: translateX(-110%) translateY(-50%); }
-      6%   { opacity: 1; transform: translateX(-110%) translateY(-50%); }
-      16%  { opacity: 1; transform: translateX(0)     translateY(-50%); }
-      68%  { opacity: 1; transform: translateX(0)     translateY(-50%); }
-      88%  { opacity: 0; transform: translateX(-110%) translateY(-50%); }
-      100% { opacity: 0; transform: translateX(-110%) translateY(-50%); }
-    }
-
-    #steal-text {
-      --steal-color: #ff6600;
-      font-family: "futura-100", sans-serif; font-weight: 700;
-      font-size: clamp(2rem, 6.5vw, 4.8rem);
-      color: var(--steal-color);
-      position: relative;
-      z-index: 1;
-      text-shadow:
-        0 0 55px var(--steal-color),
-        4px 4px 0 color-mix(in srgb, var(--steal-color) 45%, black),
-        7px 7px 0 color-mix(in srgb, var(--steal-color) 20%, black);
-      line-height: 1;
-      letter-spacing: 0.03em;
-      opacity: 0;
-      transform: translateX(110vw);
-    }
-    #steal-overlay.active #steal-text {
-      animation: steal-text-fly 2.6s forwards;
-    }
-    @keyframes steal-bg {
-      0%   { opacity: 0; background: rgba(180, 60, 0, 0); }
-      8%   { opacity: 1; background: rgba(180, 60, 0, 0.25); }
-      30%  { opacity: 1; background: rgba(180, 60, 0, 0.08); }
-      78%  { opacity: 1; background: rgba(180, 60, 0, 0); }
-      100% { opacity: 0; }
-    }
-    @keyframes steal-text-fly {
-      0%   { opacity: 0;   transform: translateX(110vw)  scale(0.85) skewX(-22deg); }
-      12%  { opacity: 1;   transform: translateX(8px)    scale(1.04) skewX(-8deg); }
-      18%  { opacity: 1;   transform: translateX(-4px)   scale(0.99) skewX(2deg); }
-      29%  { opacity: 1;   transform: translateX(0)      scale(1)    skewX(7deg);
-             animation-timing-function: ease-out; }
-      37%  { opacity: 1;   transform: translateX(0)      scale(1)    skewX(0deg); }
-      68%  { opacity: 1;   transform: translateX(0)      scale(1)    skewX(0deg);
-             animation-timing-function: ease-in; }
-      82%  { opacity: 1;   transform: translateX(-22vw)  scale(0.95) skewX(-14deg); }
-      100% { opacity: 0.5; transform: translateX(-110vw) scale(0.9)  skewX(-22deg); }
-    }
 
     /* ── TOP ANSWER overlay ─────────────────────────────────────── */
     #top-answer-overlay {
@@ -3135,7 +3083,6 @@
   </div>
   <div id="crt-overlay"></div>
   <div id="strike-overlay"><div id="strike-x-graphic">X</div></div>
-  <div id="steal-overlay"><div id="steal-band"><div id="steal-band-shape"></div></div><div id="steal-text">CHANCE FOR THE STEAL!</div></div>
   <div id="top-answer-overlay"><div id="top-answer-text">GOOD<br>ANSWER!</div></div>
 
   <div id="dev-panel">
@@ -3146,7 +3093,6 @@
     <div class="dev-section-label">Animations</div>
     <button class="dev-btn" onclick="playCorrect(true)">▶ Top Answer</button>
     <button class="dev-btn" onclick="playWrong()">▶ Strike X</button>
-    <button class="dev-btn" onclick="playWrong(); showStealOverlay();">▶ Steal sequence</button>
   </div>
   <!-- 16:9 letterbox canvas -->
   <div id="game-root">
@@ -3178,7 +3124,7 @@
   <div id="start-screen" class="crt-start-screen">
     <button id="dev-mode-btn" onclick="event.stopPropagation(); activateDevMode();">Dev Mode</button>
     <div id="start-content">
-      <div id="start-logo">GOOD<br>ANSWER</div>
+      <div id="start-logo"><span id="logo-good">GOOD</span><br><span id="logo-answer">ANSWER</span></div>
       <h1>Click anywhere to start</h1>
     </div>
     <div class="copyright">© Buffano Games</div>
@@ -3208,7 +3154,7 @@
                 <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#b87800"/>
                 <g clip-path="url(#clip-r2)">
                   <rect class="buttonTop" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="#fba300"/>
-                  <text class="btn-number" x="28.5" y="30" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)">2</text>
+                  <text class="btn-number" x="28.5" y="30" dx="0.1em" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)">2</text>
                 </g>
                 <defs>
                   <clipPath id="clip-r2">
@@ -3221,7 +3167,7 @@
                 <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#b87800"/>
                 <g clip-path="url(#clip-r4)">
                   <rect class="buttonTop" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="#fba300"/>
-                  <text class="btn-number" x="28.5" y="30" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)">4</text>
+                  <text class="btn-number" x="28.5" y="30" dx="0.1em" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)">4</text>
                 </g>
                 <defs>
                   <clipPath id="clip-r4">
@@ -3234,7 +3180,7 @@
                 <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#b87800"/>
                 <g clip-path="url(#clip-r6)">
                   <rect class="buttonTop" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="#fba300"/>
-                  <text class="btn-number" x="28.5" y="30" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)">6</text>
+                  <text class="btn-number" x="28.5" y="30" dx="0.1em" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)">6</text>
                 </g>
                 <defs>
                   <clipPath id="clip-r6">
@@ -3781,6 +3727,87 @@
 
     initKeystrokeSfx("phonetype.wav");
 
+    // ── Chime SFX — badge bounce sound ────────────────────────
+    let chimeBuffer = null;
+
+    async function initChimeSfx(url) {
+      try {
+        if (!tickAudioCtx) tickAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const response = await fetch(url);
+        const arrayBuf = await response.arrayBuffer();
+        chimeBuffer = await tickAudioCtx.decodeAudioData(arrayBuf);
+      } catch (e) {
+        console.warn("Chime SFX failed to load:", e);
+      }
+    }
+
+    /**
+     * Play chime with optional pitch shift.
+     * @param {number} [rate=1] — playback rate (higher = higher pitch)
+     */
+    function playChime(rate = 1, volume = 0.5) {
+      if (!chimeBuffer || !tickAudioCtx || !soundEnabled) return;
+      const source = tickAudioCtx.createBufferSource();
+      source.buffer = chimeBuffer;
+      source.playbackRate.value = rate;
+      const gainNode = tickAudioCtx.createGain();
+      gainNode.gain.value = volume * (soundEnabled ? volumeMaster : 0) * volumeSfx;
+      source.connect(gainNode);
+      gainNode.connect(tickAudioCtx.destination);
+      source.start();
+    }
+
+    initChimeSfx("chime.wav");
+
+    /**
+     * Emit sparkle particles from a badge's edge outward.
+     * Appended to the parent .cat-row (not the badge itself) so they
+     * don't inherit the badge's rotateY and become invisible edge-on.
+     * @param {Element} badge — the .cat-mult-badge element
+     * @param {number} [count=7] — number of particles
+     */
+    function emitSparkles(badge, count = 7) {
+      const row = badge.closest(".cat-row");
+      if (!row) return;
+      // Badge center in row coordinates (layout position, unaffected by transforms)
+      const cx = badge.offsetLeft + badge.offsetWidth / 2;
+      const cy = badge.offsetTop + badge.offsetHeight / 2;
+      const radius = badge.offsetWidth / 2;
+      // Grab the glow color from the badge since sparkles won't inherit it
+      const glow = getComputedStyle(badge).getPropertyValue("--coin-glow").trim()
+                   || "rgba(255,255,255,0.9)";
+      for (let i = 0; i < count; i++) {
+        const spark = document.createElement("span");
+        spark.className = "sparkle";
+        // Evenly spaced angles with jitter
+        const angle = (Math.PI * 2 * i / count) + (Math.random() - 0.5) * 0.5;
+        // Start at the badge's edge, travel outward 10–20px
+        const travelDist = 10 + Math.random() * 10;
+        const startX = Math.cos(angle) * radius;
+        const startY = Math.sin(angle) * radius;
+        const endX = Math.cos(angle) * (radius + travelDist);
+        const endY = Math.sin(angle) * (radius + travelDist);
+        // Mid-point (peak scale)
+        const midX = (startX + endX) * 0.5;
+        const midY = (startY + endY) * 0.5;
+        spark.style.left = cx + "px";
+        spark.style.top = cy + "px";
+        spark.style.setProperty("--sx", midX.toFixed(1) + "px");
+        spark.style.setProperty("--sy", midY.toFixed(1) + "px");
+        spark.style.setProperty("--ex", endX.toFixed(1) + "px");
+        spark.style.setProperty("--ey", endY.toFixed(1) + "px");
+        spark.style.background = glow;
+        // Random size 3–5.5px
+        const size = 3 + Math.random() * 2.5;
+        spark.style.width = size + "px";
+        spark.style.height = size + "px";
+        // Slight stagger
+        spark.style.animationDelay = (Math.random() * 0.08).toFixed(3) + "s";
+        row.appendChild(spark);
+        spark.addEventListener("animationend", () => spark.remove(), { once: true });
+      }
+    }
+
     // Resume AudioContext on first user interaction (browser autoplay policy)
     function resumeTickCtx() {
       if (tickAudioCtx && tickAudioCtx.state === "suspended") tickAudioCtx.resume();
@@ -3902,21 +3929,6 @@ document.addEventListener('keydown', e => {
       overlay.classList.add('active');
     }
 
-    function showStealOverlay() {
-      const stealTeam = teamTurn;
-      setTimeout(() => {
-        const overlay = document.getElementById('steal-overlay');
-        const textEl = document.getElementById('steal-text');
-        const colorVar = stealTeam === 0 ? 'var(--red-text)' : 'var(--blue-text)';
-        const bgVar    = stealTeam === 0 ? 'var(--red-bg)'   : 'var(--blue-bg)';
-        textEl.style.setProperty('--steal-color', colorVar);
-        document.getElementById('steal-band').style.setProperty('--band-color', bgVar);
-        textEl.innerHTML = `${teamNames[stealTeam]}<br>can steal!`;
-        overlay.classList.remove('active');
-        void overlay.offsetWidth;
-        overlay.classList.add('active');
-      }, 1200);
-    }
 
     let questions = [];
     let currentQuestion = null;
@@ -4480,10 +4492,31 @@ document.addEventListener('keydown', e => {
 
       // Stagger coin badge slide-ins: start after the last row lands, then
       // space subsequent badges 1s apart so each plays out visibly.
+      // Schedule chime SFX at each bounce's upward-launch keyframe.
       const badges = document.querySelectorAll("#category-pills-area .cat-mult-badge");
       const badgeBaseDelay = rows.length * TIMING.catRowStagger + 200;
+      // Bounce launch times (ms from animation start) per tier — the keyframe %
+      // where translateY first goes negative (upward trajectory begins).
+      // Bronze (1.6s): 55%  |  Silver (2.24s): 40%, 60%  |  Gold (2.88s): 33%, 49%, 65%
+      const badgeBounceTimes = {
+        "coin-bronze": [0.55 * 1600],
+        "coin-silver": [0.40 * 2240, 0.60 * 2240],
+        "coin-gold":   [0.33 * 2880, 0.49 * 2880, 0.65 * 2880],
+      };
       badges.forEach((badge, i) => {
-        anim.setDelay(badge, badgeBaseDelay + i * 1000);
+        const delay = badgeBaseDelay + i * 1000;
+        anim.setDelay(badge, delay);
+        // Schedule chime for each bounce
+        const tier = badge.classList.contains("coin-gold") ? "coin-gold"
+                   : badge.classList.contains("coin-silver") ? "coin-silver"
+                   : "coin-bronze";
+        const times = badgeBounceTimes[tier] || badgeBounceTimes["coin-bronze"];
+        times.forEach((t, bi) => {
+          // Pitch and volume escalate per successive bounce
+          const rate = 1.0 + bi * 0.15;
+          const vol = 0.3 + bi * 0.2;   // 0.3 → 0.5 → 0.7
+          setTimeout(() => { playChime(rate, vol); emitSparkles(badge); }, delay + t);
+        });
       });
 
       // Pills divider: fade in after all cat-rows settle.
@@ -5430,7 +5463,7 @@ document.addEventListener('keydown', e => {
         setPhaseText("steal-chance", `${teamNames[teamTurn]} can steal!`);
         setPhaseTeamColor(teamTurn);
         setPhase("steal-chance", { knock: true });
-        showStealOverlay();return;}
+        return;}
       if(revealed.every(r=>r)&&!stealPhase){awardRoundScore(teamTurn, (final) => {
         // Phase indicator: gameplay → round-result
         setPhaseText("round-result", `${teamNames[teamTurn]} won the round with ${final} points!`);

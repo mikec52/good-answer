@@ -5,7 +5,7 @@ Family Feud-inspired game with original features and styling. Working title: **G
 - Main game file: `feud.html`
 - Question bank: `master_question_bank.json` (active file, includes variants — see below)
 - Pre-variants backup: `question_bank_pre-variants.json`
-- Sound files alongside feud.html: `correct.mp3`, `wrong.mp3`, `goodanswer.mp3`, `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX), `phonetype.wav` (typewriter keystroke SFX), `balbg.mp3` (background music, looping), `roundend.wav` (round winner determined), `decreaseblip.mp3` (streak/mult decrease), `neutralbeep.wav` (duplicate answer rejection)
+- Sound files alongside feud.html: `correct.mp3`, `wrong.mp3`, `goodanswer.mp3`, `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX), `phonetype.wav` (typewriter keystroke SFX), `balbg.mp3` (background music, looping), `roundend.wav` (round winner determined), `decreaseblip.mp3` (streak/mult decrease), `neutralbeep.wav` (duplicate answer rejection), `chime.wav` (badge bounce SFX)
 
 ### Branch structure
 - **`main`** — active development (formerly `viewport-redesign`)
@@ -421,6 +421,15 @@ Tuning process: collect 5–7 real strings with their ideal font sizes, compute 
 - **Not for multi-line wrapping text.** Char count doesn't know about line breaks. If the container can grow taller (wrapping), use a different approach.
 - **Tune `maxChars` by watching real content.** Questions that still look cramped at scale 1 → lower `maxChars`. Too many things shrinking unnecessarily → raise it.
 - **Grid cells must have `minmax(0, 1fr)`**, not bare `1fr`. Bare `1fr` tracks expand to fit content, so an overflowing child can blow out the whole layout *before* the fit helper sees any overflow. The scoreboard and any similar grid layout using fit-shrink children need explicit `minmax(0, 1fr)`.
+
+### Bitcount Centering Nudge
+
+The Bitcount Single typeface has asymmetric horizontal bearings — characters sit slightly left of center in their em box. For elements where a number should appear visually centered (tile numbers, stat values, round buttons), a `padding-left: 0.1em` nudge corrects this. The `em` unit scales proportionally with font size so the correction works at any scale.
+
+Currently applied to:
+- **`.tile-num`** — board answer tile numbers. The `padding: 0` that was on `.tile-cover-circle .tile-num` was removed so it doesn't override.
+- **`.board-stat-value`** — streak, multiplier, and strikes displays
+- **`.btn-number`** (SVG `<text>`) — round select buttons, using `dx="0.1em"` (the SVG equivalent)
 
 ---
 
@@ -917,7 +926,7 @@ The `.crt-start-screen` class applies a composite TV effect to `#start-screen`:
 - **Vignette** — `box-shadow: inset 0 0 120px rgba(0,0,0,0.5)`
 - **Blob colors** — per-blob inline `fill` overrides set distinct colors on load; `--bg-blob-base` set to `#C00000`. These colors **persist through all setup screens** — they do not crossfade on start-screen dismiss. Inline fills are cleared in `startGame()` so `updateBlobColor()` (called via `updateTurn()`) can set `--bg-blob-base` to the first team's color. SVG blob elements have `transition: fill 1.5s ease` for smooth crossfades.
 - **Copyright** — `.copyright` is a direct child of `#start-screen` (not `#start-content`), positioned absolutely at `bottom: 10px` to anchor to the canvas bottom.
-- **Logo** — `#start-logo` has `pointer-events: none` (no hover effect).
+- **Logo** — `#start-logo` has `pointer-events: none` and `mix-blend-mode: multiply` (blends with SVG blob background). Contains two styled spans: `#logo-good` and `#logo-answer`.
 
 ### Dismiss sequence (`_dismissStartScreen()`)
 Shared by both normal click and dev mode:
@@ -939,7 +948,7 @@ All these run via the `anim` helper; timing is controlled by `TIMING` constants 
 2. **Scoreboard** slides down from above (`scoreboard-slide-down`, 0.5s) — both elements start with `class="offscreen"` in HTML and are swapped to `.slide-in` via `requestAnimationFrame` so the animation replays cleanly on subsequent games
 3. **Category pills area** — no container animation (would break `mix-blend-mode` background). Children stagger in individually instead.
 4. **Cat-rows** slide in from the left staggered via `anim.stagger(rows, { gap: TIMING.catRowStagger })` — each row's CSS `cat-slide-in` animation (0.4s) fires after its inline `animation-delay`
-5. **Coin badges** (category multiplier tokens) slide in after the last cat-row settles, 1s apart, via `anim.setDelay` on each badge
+5. **Coin badges** (category multiplier tokens) slide in after the last cat-row settles, 1s apart, via `anim.setDelay` on each badge. Each bounce apex triggers a chime SFX (`chime.wav` via Web Audio API) and sparkle particle burst (`.sparkle` elements appended to the `.cat-row`, not the badge, to avoid inheriting the badge's `rotateY`). Chime pitch escalates per bounce (1.0×/1.15×/1.3×) and volume escalates (0.3/0.5/0.7). Sparkle particles are 4-pointed stars using `clip-path`, colored with `--coin-glow`, 3–5.5px, travel 10–20px from the badge edge, 0.55s duration, self-remove on `animationend`.
 6. **Pills divider** ("— or —") starts at `opacity: 0`, fades in via `.fade-in` class with inline `animation-delay` computed to land *after* the last cat-row settles: `(rows.length - 1) * TIMING.catRowStagger + TIMING.catRowSlideDuration + TIMING.pillsDividerBuffer`
 7. **Phase text** (`ph-category-select`) drops in after a `TIMING.phaseTextEnterDelay` wait (400ms) — long enough for the container to nearly finish its slide-in
 

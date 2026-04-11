@@ -295,14 +295,10 @@
         20px 20px 0px #e9019a,
         25px 25px 0px #f40468,
         45px 45px 10px #482896;
-      transition: all 0.5s;
-    }
-    #start-logo:hover {
-      font-variation-settings: "wght" 100, "ital" 0;
-      text-shadow: none;
+      pointer-events: none;
     }
     #start-screen h1 {
-      font-size: 4rem;
+      font-size: 3rem;
       margin: 0;
       color: #C0C000;
       animation: start-prompt-pulse 2s ease-in-out infinite;
@@ -324,6 +320,18 @@
     #start-screen.dismissing {
       animation: start-screen-fade-out 0.4s ease forwards;
       pointer-events: none;
+    }
+
+    .copyright {
+      font-size: 1rem;
+      color: #fff;
+      font-family: 'futura-100', sans-serif;
+      text-transform: uppercase;
+      position: absolute;
+      bottom: 25px;
+      left: 0;
+      right: 0;
+      text-align: center;
     }
 
     /* ── CRT start screen — composite TV effect ───────────────────
@@ -547,7 +555,7 @@
     }
     /* Per-button size overrides */
     #setup-back-btn  { --tp-glyph-size: 2.5rem; --tp-label-size: 1.2rem; }
-    #setup-next-btn  { --tp-glyph-size: 1.8rem; --tp-label-size: 0.8rem; }
+    #setup-next-btn  { --tp-glyph-size: 2.5rem; --tp-label-size: 1.2rem; }
     #start-game-btn  { --tp-glyph-size: 5.8rem; --tp-label-size: 1.5rem; }
 
     /* Start-game container — mirrors #selected-rounds on the right */
@@ -610,15 +618,15 @@
     .rounds-btns { display: flex; gap: 16px; justify-content: center; }
     /* 3D isometric SVG round-select buttons */
     .rounds-svg {
-      width: 120px;
-      height: 120px;
+      width: 150px;
+      height: 150px;
       cursor: pointer;
       outline: none;
     }
     .rounds-svg .btn-number {
       font-family: 'Bitcount Single', sans-serif;
-      font-size: 2.5rem;
-      fill: rgba(255, 180, 180, 0.35);
+      font-size: 3.125rem;
+      fill: rgba(255, 255, 255, 0.3);
       text-anchor: middle;
       dominant-baseline: central;
       transition: filter 0.3s, fill 0.3s;
@@ -712,7 +720,7 @@
       display: flex; flex-direction: column; align-items: flex-end;
       transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    #menu-container.open { transform: translateX(-260px); }
+    #menu-container.open { transform: translateX(-220px); }
     #menu-backdrop {
       position: fixed; inset: 0; z-index: 998;
       background: rgba(0,0,0,0.3);
@@ -1039,7 +1047,7 @@
       border-radius: 0px 0px 30px 30px;
       overflow: hidden;
       background: color-mix(in srgb, var(--red-bg) 90%, black);
-      transition: background 0.3s ease;
+      /* transition is defined below (round-glow section) to include box-shadow */
       /* Initial off-canvas state — JS removes .offscreen to slide in */
     }
     #phase-indicator.offscreen { transform: translateY(-160%); }
@@ -1055,6 +1063,14 @@
     }
     #phase-indicator.team-red  { background: color-mix(in srgb, var(--red-bg)  90%, black); }
     #phase-indicator.team-blue { background: color-mix(in srgb, var(--blue-bg) 90%, black); }
+    /* Round-result glow — transition-based to avoid conflicting with
+       the slide-in/slide-out animation property on #phase-indicator */
+    #phase-indicator {
+      transition: background 0.3s ease, box-shadow 0.4s ease;
+    }
+    #phase-indicator.round-glow {
+      box-shadow: 0 0 30px rgba(255,255,255,0.6), 0 0 60px rgba(255,255,255,0.3);
+    }
 
     /* Phase spans — each sits flush with the container, only one visible at a
        time (driven by data-phase). Absolute positioning allows the "knock"
@@ -1113,6 +1129,22 @@
     }
     #sq-zone-input.offscreen-below { transform: translateY(400%); }
     #sq-zone-input.input-enter     { animation: input-slide-up 0.5s cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
+    /* Round-end exit animations — reverse of the entry animations */
+    #sq-zone-input.input-exit      { animation: input-slide-down 0.4s ease-in forwards; }
+    @keyframes input-slide-down {
+      from { transform: translateY(0); }
+      to   { transform: translateY(400%); }
+    }
+    #cat-label.slide-out-left      { animation: cat-label-slide-out-left 0.4s ease-in forwards; }
+    @keyframes cat-label-slide-out-left {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-150%); }
+    }
+    #question-box.exit-up          { animation: question-box-exit-up 0.35s ease-in forwards; }
+    @keyframes question-box-exit-up {
+      from { transform: translateY(0); clip-path: inset(0 0 0 0); }
+      to   { transform: translateY(-100%); clip-path: inset(100% 0 0 0); }
+    }
 
     /* Right column (75%) */
     #zone-board-main {
@@ -1218,6 +1250,70 @@
     .btn-3d span:nth-child(2) { transform: rotateX(270deg) translateZ(25px); }
     .btn-3d span:nth-child(3) { transform: rotateX(180deg) translateZ(25px); }
     .btn-3d span:nth-child(4) { transform: rotateX(90deg)  translateZ(25px); }
+
+    /* 3D input-area buttons — same prism as .btn-3d but #111 faces */
+    .input-btn {
+      position: relative;
+      height: 38px;
+      transform-style: preserve-3d;
+      animation: btn3d-tilt 25s ease-in-out infinite;
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin: 10px 0;
+      overflow: visible;
+      cursor: pointer;
+      width: 98%;
+      margin-top: 10px;
+    }
+    .input-btn.input-btn-sm span {
+      font-size: 1rem;
+      background: #fff;
+      color: #111;
+    }
+    .input-btn.input-btn-sm:hover span {
+      background: #e0e0e0;
+      color: #111;
+    }
+    .input-btn.input-btn-xs span {
+      font-size: 0.9rem;
+    }
+    .input-btn.input-btn-fm span {
+      font-size: 1.2rem;
+    }
+    .input-btn span {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(17, 17, 17, 0.9);
+      color: #fff;
+      font-family: 'Bitcount Single', sans-serif;
+      font-weight: 300;
+      text-transform: uppercase;
+      font-size: 22px;
+      letter-spacing: 2px;
+      transition: background 0.5s, color 0.5s;
+      border: 2px solid #333;
+      box-sizing: border-box;
+      box-shadow: inset 0 20px 50px rgba(0, 0, 0, 0.2);
+      border-radius: 0;
+      opacity: 0.95;
+    }
+    .input-btn:hover span {
+      background: #222;
+    }
+    .input-btn span:nth-child(1) { transform: rotateX(0deg)   translateZ(19px); }
+    .input-btn span:nth-child(2) { transform: rotateX(270deg) translateZ(19px); }
+    .input-btn span:nth-child(3) { transform: rotateX(180deg) translateZ(19px); }
+    .input-btn span:nth-child(4) { transform: rotateX(90deg)  translateZ(19px); }
+    /* Stagger sibling input-btns */
+    .input-btn:nth-child(1) { animation-delay: 0s; }
+    .input-btn:nth-child(2) { animation-delay: -1.6s; }
+    .input-btn:nth-child(3) { animation-delay: -3.2s; }
+
     /* Category color classes — sets CSS vars that span inherits */
     .cat-science    { --cat-face: color-mix(in srgb, var(--cat-science)    90%, transparent); --cat-solid: var(--cat-science);    --cat-text: #fff; --cat-text-hover: #fff; }
     .cat-geography  { --cat-face: color-mix(in srgb, var(--cat-geography)  90%, transparent); --cat-solid: var(--cat-geography);  --cat-text: #fff; --cat-text-hover: #fff; }
@@ -2318,7 +2414,7 @@
     }
 
     /* Input */
-    #input-area { width: 100%; border-radius: 10px; border: 3px solid transparent; overflow: hidden; box-sizing: border-box; font-family: "futura-100"; text-transform: uppercase;}
+    #input-area { width: 100%; border-radius: 10px; border: 3px solid transparent; overflow: hidden; box-sizing: border-box; font-family: "futura-100"; text-transform: uppercase; min-height: 250px; max-height: 250px; display: flex; flex-direction: column;}
     #input-area.team-red  { border-color: var(--red-bg);  background: color-mix(in srgb, var(--red-bg)  80%, black); }
     #input-area.team-blue { border-color: var(--blue-bg); background: color-mix(in srgb, var(--blue-bg) 80%, black); }
     #input-area.hidden { display: none; }
@@ -2347,6 +2443,9 @@
     /* Unified turn + input box */
     #turn-input-box {
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
     }
 
     #turn-header {
@@ -2359,13 +2458,19 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      flex: 1;
+      justify-content: space-between;
     }
     #turn-subtext {
       --fit-base: 2rem;
       font-size: calc(var(--fit-base) * var(--fit-scale, 1));
       font-weight: bold;
       margin: 0;
+      height: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
     #input-area.team-red  #turn-subtext { color: var(--red-text); }
     #input-area.team-blue #turn-subtext { color: var(--blue-text); }
@@ -2385,17 +2490,19 @@
     .turn-input-row {
       display: flex;
       flex-direction: column;
+      align-items: center;
       gap: 8px;
       width: 100%;
+      flex-shrink: 0;
     }
     .turn-input-row input[type="text"] {
       width: 100%;
       box-sizing: border-box;
+      align-self: stretch;
     }
-    .turn-input-row .btn {
-      width: 100%;
+    .turn-input-row .input-btn {
+      width: 98%;
       box-sizing: border-box;
-      margin: 0;
     }
 
     /* Message */
@@ -2436,7 +2543,7 @@
     #historyList { list-style: none; padding: 8px 12px 12px; margin: 0; }
 
     /* End round */
-    #endRound { padding: 10px; }
+    #endRound { padding: 10px; font-family: 'futura-100'; font-weight: 700; color: white; }
     #endRound:empty { background: none; padding: 0; margin: 0; }
     .score-edit-details { display: inline-block; color: white; }
     .score-edit-details summary {
@@ -3074,6 +3181,7 @@
       <div id="start-logo">GOOD<br>ANSWER</div>
       <h1>Click anywhere to start</h1>
     </div>
+    <div class="copyright">© Buffano Games</div>
   </div>
 
   <!-- Title row (reserved for in-game header content) -->
@@ -3096,10 +3204,10 @@
               <!-- Default SVG state is "raised" (top at y=43, side strip 16 tall).
                    JS setButtonDepressed() pushes selected button to y=51/height=8. -->
               <svg class="rounds-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" tabindex="0" onclick="selectRounds(2, this)">
-                <rect class="buttonSides btn-side-face" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 59)" fill="#7A0000"/>
-                <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#7A0000"/>
+                <rect class="buttonSides btn-side-face" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 59)" fill="#b87800"/>
+                <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#b87800"/>
                 <g clip-path="url(#clip-r2)">
-                  <rect class="buttonTop" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="#C00000"/>
+                  <rect class="buttonTop" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="#fba300"/>
                   <text class="btn-number" x="28.5" y="30" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)">2</text>
                 </g>
                 <defs>
@@ -3109,10 +3217,10 @@
                 </defs>
               </svg>
               <svg class="rounds-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" tabindex="0" onclick="selectRounds(4, this)">
-                <rect class="buttonSides btn-side-face" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 59)" fill="#7A0000"/>
-                <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#7A0000"/>
+                <rect class="buttonSides btn-side-face" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 59)" fill="#b87800"/>
+                <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#b87800"/>
                 <g clip-path="url(#clip-r4)">
-                  <rect class="buttonTop" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="#C00000"/>
+                  <rect class="buttonTop" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="#fba300"/>
                   <text class="btn-number" x="28.5" y="30" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)">4</text>
                 </g>
                 <defs>
@@ -3122,10 +3230,10 @@
                 </defs>
               </svg>
               <svg class="rounds-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" tabindex="0" onclick="selectRounds(6, this)">
-                <rect class="buttonSides btn-side-face" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 59)" fill="#7A0000"/>
-                <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#7A0000"/>
+                <rect class="buttonSides btn-side-face" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 59)" fill="#b87800"/>
+                <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#b87800"/>
                 <g clip-path="url(#clip-r6)">
-                  <rect class="buttonTop" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="#C00000"/>
+                  <rect class="buttonTop" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="#fba300"/>
                   <text class="btn-number" x="28.5" y="30" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)">6</text>
                 </g>
                 <defs>
@@ -3276,7 +3384,7 @@
                   <div id="turn-subtext">Player is up</div>
                   <div class="turn-input-row">
                     <input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" />
-                    <button class="btn" onclick="submitGuess()">Submit</button>
+                    <button class="input-btn" onclick="submitGuess()"><span>Submit</span><span>Submit</span><span>Submit</span><span>Submit</span></button>
                   </div>
                 </div>
               </div>
@@ -3598,6 +3706,14 @@
     const sfxGoodAnswer  = new Audio("goodanswer.mp3");
     const sfxButtonClick = new Audio("analogbuttonclick.mp3");
     const sfxSurveySays  = new Audio("surveysays.mp3");
+    const sfxRoundEnd    = new Audio("roundend.wav");
+    const sfxDecreaseBlip = new Audio("decreaseblip.mp3");
+    const sfxNeutralBeep = new Audio("neutralbeep.wav");
+    // Per-track base volume (multiplied with master × sfx gain)
+    sfxCorrect.baseVolume    = 0.6;
+    sfxWrong.baseVolume      = 0.6;
+    sfxGoodAnswer.baseVolume = 0.6;
+    sfxSurveySays.baseVolume = 0.6;
 
     // ── Tick SFX — Web Audio API for rapid-fire scoring ticks ─────
     let tickAudioCtx = null;
@@ -3695,7 +3811,7 @@
     }
 
     const bgTracks = [bgMusic];
-    const sfxTracks = [sfxCorrect, sfxWrong, sfxGoodAnswer, sfxSurveySays];
+    const sfxTracks = [sfxCorrect, sfxWrong, sfxGoodAnswer, sfxSurveySays, sfxRoundEnd, sfxDecreaseBlip, sfxNeutralBeep];
 
     let soundEnabled = true;
     let volumeMaster = 1, volumeMusic = 1, volumeSfx = 1;
@@ -3704,7 +3820,7 @@
       const gain = soundEnabled ? volumeMaster : 0;
       // Only set the active bg track volume (avoid overriding crossfade ratios)
       if (bgPlaying) bgMusic.volume = gain * volumeMusic;
-      sfxTracks.forEach(t => t.volume = gain * volumeSfx);
+      sfxTracks.forEach(t => t.volume = gain * volumeSfx * (t.baseVolume || 1));
     }
     applyVolumes();
 
@@ -4050,6 +4166,15 @@ document.addEventListener('keydown', e => {
           outgoing.classList.remove(exitClass);
         }
       }
+      // Round-result glow + sound + silver blobs
+      if (newPhase === "round-result") {
+        pi.classList.add("round-glow");
+        playSound(sfxRoundEnd);
+        document.getElementById("game-root").style.setProperty("--bg-blob-base", "#c0c0c0");
+      } else if (current === "round-result") {
+        pi.classList.remove("round-glow");
+        // Blob color restored by updateBlobColor via updateTurn in advanceRound
+      }
       pi.setAttribute("data-phase", newPhase);
     }
     function showPhaseIndicator() {
@@ -4091,6 +4216,12 @@ document.addEventListener('keydown', e => {
       teamPlayers[1] = Array.from(document.querySelectorAll(".bluePlayer")).map(i=>i.value.trim()).filter(Boolean);
       if (teamPlayers[0].length === 0) teamPlayers[0] = [teamNames[0]];
       if (teamPlayers[1].length === 0) teamPlayers[1] = [teamNames[1]];
+
+      // Clear start-screen inline blob fills so --bg-blob-base (set by
+      // updateBlobColor in advanceRound) takes over. The CSS transition on
+      // fill (1.5s) crossfades from start colors directly to team color.
+      ['.bg-out-top', '.bg-in-top', '.bg-out-bottom', '.bg-in-bottom']
+        .forEach(sel => { const el = document.querySelector(sel); if (el) el.style.fill = ''; });
 
       document.getElementById("setup").style.display = "none";
       document.getElementById("game").style.display = "flex";
@@ -4150,12 +4281,12 @@ document.addEventListener('keydown', e => {
       // hidden states so the entry sequence replays cleanly next round
       const qb = document.getElementById("question-box");
       if (qb) {
-        qb.classList.remove("reveal-drop");
+        qb.classList.remove("reveal-drop", "exit-up");
         qb.classList.add("hidden-behind");
       }
       const szi = document.getElementById("sq-zone-input");
       if (szi) {
-        szi.classList.remove("input-enter");
+        szi.classList.remove("input-enter", "input-exit");
         szi.classList.add("offscreen-below");
       }
       const qEl = document.getElementById("question");
@@ -4173,23 +4304,70 @@ document.addEventListener('keydown', e => {
         <div id="turn-subtext"></div>
         <div class="turn-input-row">
           <input type="text" id="guess" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" />
-          <button class="btn" onclick="submitGuess()">Submit</button>
+          ${make3dBtn('Submit', 'submitGuess()')}
         </div>`;
+      setup3dBtns();
       updateBoard(); updateScores(); updateStrikes(); updateStreakDisplay(); updateHistory(); updateTurn();
     }
 
-    function advanceRound() {
+    async function advanceRound() {
       if (roundNumber === 0) teamTurn = startingTeam;
       else { teamTurn = 1 - startingTeam; startingTeam = teamTurn; }
       roundNumber++;
       document.getElementById("roundCounter").textContent = roundNumber;
+
+      // Animate sidebar + board elements out in reverse entry order
+      // before changing colors or resetting state.
+      const catLabel = document.getElementById("cat-label");
+      const qBox = document.getElementById("question-box");
+      const szInput = document.getElementById("sq-zone-input");
+      const bw = document.getElementById("board-wrapper");
+
+      // Board slides out in parallel with the sidebar sequence
+      if (bw && bw.classList.contains("slide-in")) {
+        bw.classList.remove("slide-in");
+        bw.classList.add("offscreen");
+      }
+
+      await anim.sequence([
+        // 1. Input area slides down
+        async () => {
+          if (szInput && szInput.classList.contains("input-enter")) {
+            szInput.classList.remove("input-enter");
+            await anim.play(szInput, "input-exit");
+          }
+        },
+        // 2. Question-box retracts up into cat-label
+        async () => {
+          if (qBox && qBox.classList.contains("reveal-drop")) {
+            qBox.classList.remove("reveal-drop");
+            await anim.play(qBox, "exit-up");
+          }
+        },
+        // 3. Cat-label slides out left
+        async () => {
+          if (catLabel && !catLabel.classList.contains("offscreen-left")) {
+            await anim.play(catLabel, "slide-out-left");
+          }
+        },
+      ]);
+
+      // Now safe to update turn colors and reset state
       updateTurn();
       initRoundState();
       showCategorySelection();
     }
 
+    function make3dBtn(text, onclick, extraClass) {
+      const s = `<span>${text}</span>`.repeat(4);
+      const cls = 'input-btn' + (extraClass ? ' ' + extraClass : '');
+      return `<button class="${cls}" onclick="${onclick}">${s}</button>`;
+    }
+
     function setup3dBtns() {
-      document.querySelectorAll('.btn-3d').forEach(btn => {
+      document.querySelectorAll('.btn-3d, .input-btn').forEach(btn => {
+        if (btn._has3dHover) return;
+        btn._has3dHover = true;
         btn.addEventListener('mouseenter', function() {
           // Clean up any pending resume from a previous mouseleave
           if (this._resumeTimer) { clearTimeout(this._resumeTimer); this._resumeTimer = null; }
@@ -4949,6 +5127,7 @@ document.addEventListener('keydown', e => {
       chev.className = `stat-chevron ${dir}`;
       chev.textContent = dir === "up" ? "▲" : "▼";
       el.appendChild(chev);
+      if (dir === "down") playSound(sfxDecreaseBlip);
       // Self-cleanup after animation ends
       chev.addEventListener("animationend", () => chev.remove(), { once: true });
     }
@@ -4983,9 +5162,18 @@ document.addEventListener('keydown', e => {
       _prevMultiplier = answerMultiplier;
     }
 
-    function updateStreakDisplay() {
-      updateStreakValue();
-      updateMultValue();
+    function updateStreakDisplay(opts = {}) {
+      if (opts.afterStrike) {
+        // Wait for strike animation to finish, then sequence streak → gap → mult
+        anim.wait(1400).then(async () => {
+          await updateStreakValue();
+          await anim.wait(500);
+          await updateMultValue();
+        });
+      } else {
+        updateStreakValue();
+        updateMultValue();
+      }
     }
 
     const BG_BLOB_DEFAULT = '#513f6d';
@@ -5161,7 +5349,15 @@ document.addEventListener('keydown', e => {
     }
 
     async function submitGuess(){const input=document.getElementById("guess");const guess=input.value.trim();input.value="";if(!guess||!currentQuestion)return;
-      if(guessHistory.some(e=>normalize(e.guess)===normalize(guess))){const msgEl=document.getElementById("message");msgEl.textContent="⚠️ Already guessed!";msgEl.style.opacity="1";clearTimeout(msgEl._fadeTimer);msgEl._fadeTimer=setTimeout(()=>{msgEl.style.opacity="0";},2000);return;}
+      if(guessHistory.some(e=>normalize(e.guess)===normalize(guess))){
+        playSound(sfxNeutralBeep);
+        input.placeholder="Answer already submitted";
+        input.classList.remove('input-shake');
+        void input.offsetWidth;
+        input.classList.add('input-shake');
+        clearTimeout(input._dupeTimer);
+        input._dupeTimer=setTimeout(()=>{input.placeholder="Enter your guess";},2000);
+        return;}
       const playerName=stealPhase?teamNames[teamTurn]:teamPlayers[teamTurn][playerIndex[teamTurn]%teamPlayers[teamTurn].length]||teamNames[teamTurn];
       if(stealPhase){
         const idx=currentQuestion.answers.findIndex((ans,i)=>!revealed[i]&&answerMatches(guess,ans));
@@ -5225,7 +5421,7 @@ document.addEventListener('keydown', e => {
         if(submitBtn) submitBtn.disabled=false;
         if(!revealed.every(r=>r)) animateTurnSwap();
       }else{
-        updateBoard();updateScores();updateStrikes();updateStreakDisplay();updateHistory();
+        updateBoard();updateScores();updateStrikes();updateStreakDisplay({ afterStrike: true });updateHistory();
         if(strikes>=3){updateTurn();}else{animateTurnSwap();}
       }
       document.getElementById("guess")?.focus();
@@ -5286,11 +5482,10 @@ document.addEventListener('keydown', e => {
       header.innerHTML = msg;
       const isLastRound = gameMode === 'rounds' && roundNumber >= maxRounds;
       body.innerHTML = `
-        <button class="btn" onclick="revealAll()">Reveal All Answers</button>
-        <button class="btn" onclick="${isLastRound ? 'endGameByRounds()' : 'advanceRound()'}">
-          ${isLastRound ? 'Conclude Final Round' : 'Next Round'}
-        </button>
+        ${make3dBtn('Reveal All Answers', 'revealAll()', 'input-btn-sm')}
+        ${make3dBtn(isLastRound ? 'Conclude Final Round' : 'Next Round', isLastRound ? 'endGameByRounds()' : 'advanceRound()', isLastRound ? 'input-btn-xs' : '')}
       `;
+      setup3dBtns();
 
       document.getElementById("endRound").innerHTML = `
         <details class="score-edit-details">
@@ -5322,41 +5517,12 @@ document.addEventListener('keydown', e => {
     function endGame(msg, winnerOverride = null) {
       const winner = winnerOverride !== null ? winnerOverride : (teamScores[0] >= teamScores[1] ? 0 : 1);
       document.getElementById("endRound").innerHTML=`
-        <h2>🏆 ${msg}</h2>
-        <button class="btn" onclick="startFastMoney(${winner})">⚡ Fast Money Round</button>
-        <button class="btn" onclick="resetGameConfirm()">Play Again</button>
-        <button class="btn" onclick="exportGameCSV()">Export Results (CSV)</button>`;
+        ${msg}
+        ${make3dBtn('Fast Money Round', `startFastMoney(${winner})`, 'input-btn-fm')}
+        ${make3dBtn('Play Again', 'resetGameConfirm()')}`;
+      setup3dBtns();
       document.getElementById("turn-input-box").style.display="none";
       document.getElementById("questionActions").style.display="none";
-    }
-
-    function exportGameCSV() {
-      function escCSV(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }
-
-      // Sheet 1: Summary
-      const summaryRows = [
-        ['Rounds Played', 'Win Condition', 'Team', 'Players', 'Final Score'],
-        [roundNumber, gameMode === 'rounds' ? `${maxRounds} rounds` : `${targetScore} pts`, teamNames[0], teamPlayers[0].join('; ') || teamNames[0], teamScores[0]],
-        ['', '', teamNames[1], teamPlayers[1].join('; ') || teamNames[1], teamScores[1]],
-      ];
-
-      // Sheet 2: Guess log
-      const logRows = [['Player', 'Team', 'Guess', 'Result']];
-      guessHistory.forEach(e => {
-        logRows.push([e.player, teamNames[e.team], e.guess, e.result]);
-      });
-
-      const summaryCSV = summaryRows.map(r => r.map(escCSV).join(',')).join('\n');
-      const logCSV = logRows.map(r => r.map(escCSV).join(',')).join('\n');
-      const combined = '=== GAME SUMMARY ===\n' + summaryCSV + '\n\n=== GUESS LOG ===\n' + logCSV;
-
-      const blob = new Blob([combined], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'feud_results.csv';
-      a.click();
-      URL.revokeObjectURL(url);
     }
 
     function resetGameConfirm() {
@@ -5778,7 +5944,6 @@ document.addEventListener('keydown', e => {
       const fmBodyFinal = document.getElementById('fm-input-body');
       fmBodyFinal.style.textAlign = 'center';
       fmBodyFinal.innerHTML = `
-          <button class="btn" onclick="exportFMCSV()">Export Results (CSV)</button>
           <button class="btn" onclick="resetGame()">Play Again</button>
           <details class="score-edit-details" style="margin-top:10px;">
             <summary>Score edits needed?</summary>
@@ -5963,40 +6128,6 @@ document.addEventListener('keydown', e => {
       });
     }
 
-    function exportFMCSV() {
-      function escCSV(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }
-      const totalA = fm.scoresA.reduce((s,v) => s+v, 0) + fm.extraA;
-      const totalB = fm.scoresB.reduce((s,v) => s+v, 0) + fm.extraB;
-      const combined   = totalA + totalB;
-      const gameScore  = teamScores[fm.winningTeam];
-      const grandTotal = gameScore + combined;
-      const summaryRows = [
-        ['Rounds Played','Win Condition','Team','Players','Game Score','Fast Money Score','Grand Total'],
-        [roundNumber, gameMode === 'rounds' ? `${maxRounds} rounds` : `${targetScore} pts`, teamNames[fm.winningTeam], teamPlayers[fm.winningTeam].join('; ')||teamNames[fm.winningTeam], gameScore, combined, grandTotal],
-        ['','', teamNames[1-fm.winningTeam], teamPlayers[1-fm.winningTeam].join('; ')||teamNames[1-fm.winningTeam], teamScores[1-fm.winningTeam], 'N/A','N/A'],
-      ];
-      const fmRows = [['Question',`${fm.playerA} Answer`,`${fm.playerA} Points`,`${fm.playerB} Answer`,`${fm.playerB} Points`]];
-      fm.questions.forEach((q,i) => fmRows.push([q.question, fm.answersA[i]||'', fm.scoresA[i], fm.answersB[i]||'', fm.scoresB[i]]));
-      if (fm.extraA || fm.extraB) fmRows.push(['','Manual adjustment',fm.extraA,'Manual adjustment',fm.extraB]);
-      fmRows.push(['','Total',totalA,'Total',totalB]);
-      fmRows.push(['','Combined Fast Money',combined,'','']);
-      fmRows.push(['','Grand Total',grandTotal,'','']);
-      const guessRows = [['Player','Team','Guess','Result']];
-      guessHistory.forEach(e => guessRows.push([e.player, teamNames[e.team], e.guess, e.result]));
-      const csv = [
-        '=== GAME SUMMARY ===',
-        summaryRows.map(r => r.map(escCSV).join(',')).join('\n'),
-        '','=== FAST MONEY ===',
-        fmRows.map(r => r.map(escCSV).join(',')).join('\n'),
-        '','=== GUESS LOG ===',
-        guessRows.map(r => r.map(escCSV).join(',')).join('\n'),
-      ].join('\n');
-      const blob = new Blob([csv], {type:'text/csv'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'feud_results.csv'; a.click();
-      URL.revokeObjectURL(url);
-    }
     // ── End Fast Money ────────────────────────────────────────────
 
     // Split wave-title text into per-character spans with staggered delays
@@ -6040,7 +6171,7 @@ document.addEventListener('keydown', e => {
       const START_BLOB_COLORS = ['#0000c0', '#00c000', '#c000c0', '#00c0c0'];
       const blobEls = ['.bg-out-top', '.bg-in-top', '.bg-out-bottom', '.bg-in-bottom']
         .map(sel => document.querySelector(sel));
-      gameRoot.style.setProperty('--bg-blob-base', '#000000');
+      gameRoot.style.setProperty('--bg-blob-base', '#C00000');
       blobEls.forEach((el, i) => { if (el) el.style.fill = START_BLOB_COLORS[i]; });
 
       // Shared cleanup: crossfade inline blob fills to the default purple,
@@ -6062,8 +6193,7 @@ document.addEventListener('keydown', e => {
       // Shared dismiss sequence: crossfade blobs → TV-off logo → fade screen.
       // Used by both normal click and dev mode.
       window._dismissStartScreen = function() {
-        // 1. Crossfade blobs (1.5s) + drop prompt text immediately
-        _restoreStartBlobs();
+        // 1. Drop prompt text immediately (blob colors persist through setup)
 
         const logo = document.getElementById('start-logo');
         const h1   = startScreen.querySelector('h1');

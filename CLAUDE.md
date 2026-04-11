@@ -5,7 +5,7 @@ Family Feud-inspired game with original features and styling. Working title: **G
 - Main game file: `feud.html`
 - Question bank: `master_question_bank.json` (active file, includes variants — see below)
 - Pre-variants backup: `question_bank_pre-variants.json`
-- Sound files alongside feud.html: `correct.mp3`, `wrong.mp3`, `goodanswer.mp3`, `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX), `phonetype.wav` (typewriter keystroke SFX), `balbg.mp3` (background music, looping)
+- Sound files alongside feud.html: `correct.mp3`, `wrong.mp3`, `goodanswer.mp3`, `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX), `phonetype.wav` (typewriter keystroke SFX), `balbg.mp3` (background music, looping), `roundend.wav` (round winner determined), `decreaseblip.mp3` (streak/mult decrease), `neutralbeep.wav` (duplicate answer rejection)
 
 ### Branch structure
 - **`main`** — active development (formerly `viewport-redesign`)
@@ -459,6 +459,8 @@ The element was changed from `<ul>` to `<div>` at the outer level so we could ne
 - **End-of-round state** repurposes the turn-input-box: header shows the round result message, body shows Reveal All / Next Round buttons. Score edits live in a separate `<details>` element outside the box.
 - **Score edits** use a `<details>` element labeled "Score edits needed?" to keep them collapsed by default.
 - **Player/team name limit** — 18 characters max (`maxlength="18"` on all setup inputs). No explicit error message; the input shakes (CSS `input-shake` animation, 0.3s) when a keystroke is rejected at the limit. Backspace, arrows, and modifier shortcuts pass through normally.
+- **Duplicate answer** — if a guess matches a previously submitted guess (normalized), the input field shakes (`input-shake`), placeholder text changes to "Answer already submitted" for 2s, and `neutralbeep.wav` plays. No message element used.
+- **Export CSV** — removed. Was a Coyne Feud feature, not relevant for Good Answer.
 
 ---
 
@@ -551,7 +553,7 @@ The sidebar during gameplay is split between the persistent `#phase-indicator` a
 
 ### Zone 2: Input (`#sq-zone-input`)
 - Answer history tray at top (collapsed by default)
-- `#input-area` — full width, no max-width. `#turn-header` is hidden (redundant with phase indicator). Input field and submit button are stacked vertically, each 100% width.
+- `#input-area` — full width, locked height (`min-height: 250px; max-height: 250px`), flex column. `#turn-header` is hidden (redundant with phase indicator). `#turn-input-box` fills parent height (`flex: 1`), `#turn-body` uses `justify-content: space-between` to pin the input row at the bottom. `#turn-subtext` has a fixed `height: 2.5rem` with `flex-shrink: 0` so font-size changes from `fitByCharCount` don't shift the input field. Buttons use `.input-btn` 3D prism class (see "3D Input-Area Buttons").
 
 ### Board Wrapper
 - 70% width, centered via `margin: 0 auto`
@@ -631,12 +633,12 @@ Hidden-tab caveat: Chrome throttles `setTimeout` in background tabs, so the type
 
 `#board-streak` and `#board-mult` (`.board-stat-value` elements) show directional chevron indicators when their values change:
 
-- **`flashChevron(el, dir)`** — creates a `<span class="stat-chevron up|down">` with `▲` or `▼`, appends to the stat element, self-removes on `animationend`.
+- **`flashChevron(el, dir)`** — creates a `<span class="stat-chevron up|down">` with `▲` or `▼`, appends to the stat element, self-removes on `animationend`. Plays `decreaseblip.mp3` when direction is `"down"`.
 - **Up** (value increased): green `#4caf50`, starts at `bottom: 6px`, animates upward 45px.
-- **Down** (value decreased): red `var(--red-text)`, starts at `top: 10px`, animates downward 45px.
+- **Down** (value decreased): red `var(--red-text)`, starts at `top: 10px`, animates downward 45px. Plays `decreaseblip.mp3` once per field.
 - Both animations: 0.75s, 3 keyframe stops, opacity stays 1 until 99.9% then snaps to 0 (abrupt disappear, no fade).
 - **`_prevStreak` / `_prevMultiplier`** track previous values for direction detection. Reset in `initRoundState()`.
-- **`updateStreakValue()`** and **`updateMultValue()`** are separate async functions that each handle their own count-up + chevron and return a Promise. `updateStreakDisplay()` is a synchronous wrapper that calls both (used by the wrong-answer path where sequencing doesn't matter).
+- **`updateStreakValue()`** and **`updateMultValue()`** are separate async functions that each handle their own count-up + chevron and return a Promise. `updateStreakDisplay(opts)` calls both — with `{ afterStrike: true }`, it waits 1400ms (strike animation duration), then sequences streak → 500ms gap → mult. See "Strike → Decrease Sequencing" section.
 - On the first correct answer (transitioning from "—"), streak counts up from 0 and multiplier counts up from 1.0 (not instant).
 
 ---
@@ -794,12 +796,62 @@ Single looping track (`balbg.mp3`) via `<audio>` element with `loop = true`. No 
 
 Setup step 1 uses inline SVG buttons (`.rounds-svg`) for round count selection (2/4/6):
 
-- **Structure**: isometric projected rhombus (top face `#C00000`, sides `#7A0000`) with `<text>` numbers sharing the same isometric `transform="matrix(0.866025 -0.5 0.866025 0.5 ...)"` as the face so they appear on the 3D surface.
+- **Structure**: isometric projected rhombus (top face `#fba300`, sides `#b87800`) with `<text>` numbers sharing the same isometric `transform="matrix(0.866025 -0.5 0.866025 0.5 ...)"` as the face so they appear on the 3D surface. Size: 150×150px, font 3.125rem.
 - **Height states**: `setButtonDepressed(svg, bool)` modifies SVG attributes directly (transform matrix Y offset, side strip y/height, clip-path) — CSS transforms can't be used because clip-paths need to stay in sync. Raised = y=43, height=16. Depressed = y=51, height=8.
-- **Glow**: CSS `filter: drop-shadow()` on `.btn-number` for hover/selected states. Dormant LED look (`fill: rgba(255,180,180,0.35)`) for non-active state.
+- **Glow**: CSS `filter: drop-shadow()` on `.btn-number` for hover/selected states. Dormant LED look (`fill: rgba(255,255,255,0.3)`) for non-active state.
 - **Sound**: `analogbuttonclick.mp3` plays on selection via `playSound(sfxButtonClick)`.
 - **Unique SVG IDs**: each button uses suffixed IDs (`clip-r2`/`clip-r4`/`clip-r6`) to avoid conflicts in shared DOM.
 - **`selectRounds(n, el)`** uses `el.closest('.rounds-svg')` to handle clicks on child SVG elements.
+
+---
+
+## 3D Input-Area Buttons (`.input-btn`)
+
+Buttons inside `#input-area` (Submit, Reveal All, Next Round, game-over actions) use a 4-face rotating prism matching the category select `.btn-3d` pattern but with `#111` faces.
+
+- **`make3dBtn(text, onclick, extraClass)`** — JS helper that returns button HTML with 4 `<span>` children. Optional `extraClass` for size variants.
+- **Structure**: same `btn3d-tilt` keyframes as `.btn-3d`. Height: 38px, `translateZ(19px)` (half height). Width: 98%. Faces: `rgba(17,17,17,0.9)`, border `#333`, opacity 0.95.
+- **Hover**: `setup3dBtns()` targets both `.btn-3d` and `.input-btn` with a `_has3dHover` guard to prevent duplicate listeners. Must be called after any innerHTML update that creates `.input-btn` elements.
+- **Size variants**: `.input-btn-sm` (1rem font, white background — used for Reveal All), `.input-btn-xs` (0.9rem — Conclude Final Round), `.input-btn-fm` (1.2rem — Fast Money Round).
+- **Stagger**: sibling `.input-btn` elements get staggered `animation-delay` (0s / -1.6s / -3.2s).
+- **Not applied to**: score edit +/- buttons, fast money buttons, setup buttons — these remain flat `.btn` class.
+
+---
+
+## Round-End Sequence
+
+When a round winner is determined (`setPhase("round-result")`), three simultaneous effects fire:
+
+1. **Phase indicator glow** — `.round-glow` class adds `box-shadow: 0 0 30px rgba(255,255,255,0.6), 0 0 60px rgba(255,255,255,0.3)`. Uses CSS `transition: box-shadow 0.4s ease` (not keyframe animation) to avoid conflicting with the slide-in/slide-out `animation` property. Removed when phase transitions away from `round-result`.
+2. **Round-end SFX** — `roundend.wav` plays via `playSound()`.
+3. **Silver blob crossfade** — `--bg-blob-base` set to `#c0c0c0`. Restored to team color by `updateBlobColor()` via `updateTurn()` at the start of `advanceRound()`.
+
+---
+
+## Round Exit Animations (`advanceRound`)
+
+`advanceRound()` is `async`. Before resetting state, it animates sidebar elements out in **reverse entry order** (matching the extrude pattern — what came out last goes back first):
+
+1. **`#sq-zone-input`** slides down (`input-exit`, 0.4s)
+2. **`#question-box`** retracts up into cat-label (`exit-up`, 0.35s — reverse of `question-box-drop`)
+3. **`#cat-label`** slides out left (`slide-out-left`, 0.4s)
+4. **`#board-wrapper`** slides out in parallel (CSS transition via `.offscreen` class, 0.5s)
+
+**Color change is deferred**: `updateTurn()` (which sets team colors on input-area, blobs, phase indicator) runs *after* all exit animations complete, not before. This prevents jarring color snaps during the exit sequence.
+
+**Exit class cleanup**: `initRoundState()` removes `exit-up` from `#question-box` and `input-exit` from `#sq-zone-input` alongside the entry classes, preventing stale `forwards` fill conflicts when entry animations replay.
+
+---
+
+## Per-Track Base Volume
+
+Individual SFX tracks can have a `baseVolume` property (0–1) that multiplies with master × SFX gain in `applyVolumes()`. Default is 1 if unset. Currently reduced to 0.6: `sfxCorrect`, `sfxWrong`, `sfxGoodAnswer`, `sfxSurveySays`.
+
+---
+
+## Strike → Decrease Sequencing
+
+When a wrong answer triggers a strike, the streak and multiplier decrease animations are delayed until the strike-x-slam overlay completes (1.4s). `updateStreakDisplay({ afterStrike: true })` sequences: wait 1400ms → streak update + chevron + decrease blip → 500ms gap → multiplier update + chevron + decrease blip. Without `afterStrike`, both fire immediately (used by `initRoundState` resets).
 
 ---
 
@@ -863,11 +915,13 @@ The `.crt-start-screen` class applies a composite TV effect to `#start-screen`:
 - **`::before`** — animated white noise (same SVG turbulence as cat-label, `tv-static` keyframes, `overlay` blend at 0.12 opacity)
 - **`::after`** — rolling scanlines (`scanline-roll` keyframes) + diagonal glare gradient (125deg white highlight)
 - **Vignette** — `box-shadow: inset 0 0 120px rgba(0,0,0,0.5)`
-- **Blob colors** — per-blob inline `fill` overrides set distinct colors on load; `--bg-blob-base` set to black. On dismiss, `_restoreStartBlobs()` crossfades each blob's inline fill to `BG_BLOB_DEFAULT` and transitions `--bg-blob-base` back. SVG blob elements have `transition: fill 1.5s ease`. After 1.6s, inline fills are cleared so blobs respond to future `--bg-blob-base` changes.
+- **Blob colors** — per-blob inline `fill` overrides set distinct colors on load; `--bg-blob-base` set to `#C00000`. These colors **persist through all setup screens** — they do not crossfade on start-screen dismiss. Inline fills are cleared in `startGame()` so `updateBlobColor()` (called via `updateTurn()`) can set `--bg-blob-base` to the first team's color. SVG blob elements have `transition: fill 1.5s ease` for smooth crossfades.
+- **Copyright** — `.copyright` is a direct child of `#start-screen` (not `#start-content`), positioned absolutely at `bottom: 10px` to anchor to the canvas bottom.
+- **Logo** — `#start-logo` has `pointer-events: none` (no hover effect).
 
 ### Dismiss sequence (`_dismissStartScreen()`)
 Shared by both normal click and dev mode:
-1. **0ms**: blob crossfade starts (1.5s) + `h1.drop-out` animation (drops off bottom)
+1. **0ms**: `h1.drop-out` animation (drops off bottom). Blob colors are **not** changed.
 2. **1500ms**: logo gets `.tv-off` (`logo-tv-off` keyframes, 0.5s — adapted from `crt-power-off`)
 3. **1800ms**: start screen fades out (`.dismissing`), setup slides in
 

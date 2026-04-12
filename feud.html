@@ -107,6 +107,7 @@
       overflow: hidden;
       position: relative;
       transition: --bg-blob-base 1.5s ease, background 1.5s ease;
+      opacity: 0; /* hidden until fonts load — see document.fonts.ready */
     }
 
     /* CSS-only animated blob background — replaces SVG blobs.
@@ -517,13 +518,7 @@
     .transport-glyphs .tp-arrow {
       display: inline-block;
     }
-    /* Rewind (◀◀) — back button */
-    .transport-glyphs.tp-rewind .tp-arrow:nth-child(1) { animation: tp-grow 2s ease-in-out infinite; }
-    .transport-glyphs.tp-rewind .tp-arrow:nth-child(2) { margin-left: -0.45em; animation: tp-grow 2s ease-in-out 0.4s infinite; }
-    /* Fast-forward (▶▶) — next button */
-    .transport-glyphs.tp-ffwd .tp-arrow:nth-child(1) { animation: tp-grow 2s ease-in-out infinite; }
-    .transport-glyphs.tp-ffwd .tp-arrow:nth-child(2) { margin-left: -0.45em; animation: tp-grow 2s ease-in-out 0.4s infinite; }
-    /* Play (▶) — start button */
+    /* Play (▶ / ◀) — transport buttons */
     .transport-glyphs.tp-play .tp-arrow { animation: tp-grow 2s ease-in-out infinite; }
     @keyframes tp-grow {
       0%, 100% { transform: scale(1); }
@@ -665,6 +660,7 @@
     #player-columns {
       display: flex;
       justify-content: center;
+      align-items: flex-start;
       gap: 40px;
       margin: 20px auto;
       flex-wrap: wrap;
@@ -676,6 +672,7 @@
       min-width: 180px;
       font-family: 'futura-100', sans-serif;
       letter-spacing: .02em;
+      position: relative;
     }
     .player-col-header {
       display: flex;
@@ -695,25 +692,38 @@
       80% { transform: translateX(3px); }
     }
     .input-shake { animation: input-shake 0.3s ease; }
+    @keyframes col-nudge {
+      0%, 100% { transform: translateY(0); }
+      25% { transform: translateY(-2px); }
+      50% { transform: translateY(2px); }
+      75% { transform: translateY(-1px); }
+    }
+    .col-nudge { animation: col-nudge 0.3s ease; }
     .player-col-body {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 10px 16px 14px;
+      padding: 10px 16px 24px;
       background: #333;
-      border-top: 2px solid #555;
+      border-top: none;
+      margin-top: -1px;
       border-radius: 0 0 10px 10px;
       overflow: visible;
+      --notch-r: 16px; /* button radius (14) + gap (2) */
+      -webkit-mask-image: radial-gradient(circle var(--notch-r) at center bottom, transparent 100%, black 100%);
+      mask-image: radial-gradient(circle var(--notch-r) at center bottom, transparent 100%, black 100%);
     }
     .player-col-body .players-label {
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: #888;
+      color: #fff;
       margin-bottom: 8px;
     }
-    .player-col.red-col .player-col-header { background: var(--red-bg); }
-    .player-col.blue-col .player-col-header { background: var(--blue-bg); }
+    .player-col.red-col .player-col-header,
+    .player-col.red-col .player-col-body { background: var(--red-bg); }
+    .player-col.blue-col .player-col-header,
+    .player-col.blue-col .player-col-body { background: var(--blue-bg); }
     .player-col #redPlayers,
     .player-col #bluePlayers {
       display: flex;
@@ -751,16 +761,20 @@
     .player-row:only-child .player-remove-btn { display: none; }
     .player-add-btn {
       width: 28px; height: 28px; border-radius: 50%;
-      border: 2px solid #555; background: inherit;
-      color: #999; font-size: 1.2rem; line-height: 1;
-      cursor: pointer; padding: 0 0 3.7px 0; margin-top: 8px;
+      border: none;
+      color: #fff; font-size: 1.2rem; line-height: 1;
+      cursor: pointer; padding: 0 0 3.7px 0;
       display: flex; align-items: center; justify-content: center;
-      transition: color 0.15s, border-color 0.15s;
-      /* Hang off bottom edge of player-col-body by 50% */
-      position: relative; top: 19px; margin-bottom: -6px;
+      transition: color 0.15s;
+      /* Center at bottom edge of player-col, outside the masked body */
+      position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%);
+      z-index: 1;
     }
-    .player-add-btn:hover { color: #fba300; border-color: #fba300; }
-    .player-add-btn.hidden { display: none; }
+    .red-col .player-add-btn { background: var(--red-bg); }
+    .blue-col .player-add-btn { background: var(--blue-bg); }
+    .player-add-btn:hover { color: #fba300; }
+    .player-add-btn.maxed { color: #555; cursor: default; }
+    .player-add-btn.maxed:hover { color: #555; }
     #bg-animation {
       position: absolute;
       top: 0; left: 0;
@@ -1918,27 +1932,31 @@
 
     /* Question actions */
     #questionActions { display: none; margin: 10px auto; max-width: 88%; }
-    .question-options {
-      display: inline-block;
-      vertical-align: top;
-    }
-    .question-options summary {
+    .question-options-link {
       font-size: 0.6rem;
       color: #555;
       cursor: pointer;
       user-select: none;
-      margin-bottom: 4px;
-    }
-    #questionActions .flag-links {
-      font-size: 0.6rem;
-      color: #555;
-    }
-    #questionActions .flag-links a {
-      color: #555;
-      cursor: pointer;
       text-decoration: underline;
     }
-    #questionActions .flag-links a:hover { color: #000; }
+    .question-options-link:hover { color: #888; }
+    .dialog-option-list {
+      list-style: none; padding: 0; margin: 0;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .dialog-option-list li a {
+      display: block; padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer; text-decoration: none;
+      font-size: 0.9rem;
+      transition: background 0.15s;
+    }
+    .dialog-option-list li a:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
 
     /* Scoreboard: 5-col grid — #222 frame with #111 value fields */
     #scoreboard {
@@ -2634,47 +2652,63 @@
     /* Message */
     #message { margin-top: 8px; font-weight: bold; color: #cc0000; transition: opacity 0.5s ease; }
 
-    /* History tray */
+    /* History link */
     #history { max-width: 88%; margin: 8px auto 0; color: #fff; }
     #history.hidden { display: none; }
-    #history-tray-handle {
-      background: #111;
-      border-radius: 8px 8px 0 0;
-      padding: 8px 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 0.8rem;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      user-select: none;
+    .history-list { list-style: none; padding: 0; margin: 0; }
+    .history-list li {
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      font-size: 0.85rem;
     }
-    #history-tray-handle .tray-arrow {
-      font-family: "Helvetica", sans-serif;
-      transition: transform 0.25s ease;
+    .history-list li:last-child { border-bottom: none; }
+    .history-empty {
+      text-align: center; padding: 20px 0;
+      color: rgba(255,255,255,0.4); font-style: italic;
     }
-    #history.open #history-tray-handle .tray-arrow { transform: rotate(180deg); }
-    #history-tray-panel {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease;
-      background: #111;
-      border-radius: 0 0 8px 8px;
-    }
-    #history.open #history-tray-panel {
-      max-height: 240px;
-      overflow-y: auto;
-    }
-    #historyList { list-style: none; padding: 8px 12px 12px; margin: 0; }
 
     /* End round */
     #endRound { padding: 10px; font-family: 'futura-100'; font-weight: 700; color: white; }
     #endRound:empty { background: none; padding: 0; margin: 0; }
-    .score-edit-details { display: inline-block; color: white; }
-    .score-edit-details summary {
+    .score-edit-link {
+      color: #fff; cursor: pointer;
+      user-select: none; text-decoration: none;
+    }
+    .score-edit-link:hover { color: #ccc; }
+    .score-edit-form {
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .score-edit-team {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .score-edit-team-name { font-weight: 700; font-size: 1rem; }
+    .score-edit-controls {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .score-edit-controls .adj-btn {
+      width: 34px; height: 34px; padding: 0 0 4px 0;
+      font-size: 1.2em; line-height: 1;
+      background: #333; color: #fff;
+      border: none; border-radius: 6px;
       cursor: pointer;
-      user-select: none;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .score-edit-controls .adj-btn.adj-minus:hover { background: #b71c1c; }
+    .score-edit-controls .adj-btn.adj-plus:hover { background: #2e7d32; }
+    .score-edit-controls input[type="number"] {
+      width: 60px; text-align: center; font-size: 1em; padding: 6px;
+      background: rgba(255,255,255,0.1); border: none;
+      border-radius: 6px; color: #fff;
+      outline: none;
+      -moz-appearance: textfield;
+    }
+    .score-edit-controls input[type="number"]:focus {
+      border: 0.5px solid #fff;
+    }
+    .score-edit-controls input[type="number"]::-webkit-inner-spin-button,
+    .score-edit-controls input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none; margin: 0;
     }
 
     /* ── Fast Money Round ── */
@@ -3138,9 +3172,158 @@
     }
     /* ── TIME'S UP overlay variant ──────────────────────────────── */
     #top-answer-overlay.times-up #top-answer-text { --ta-color: #ff3333; }
+
+    /* ── Custom dialog / modal — shared styles ───────────────── */
+    .dlg-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .dlg-backdrop.active { opacity: 1; pointer-events: all; }
+    .dlg-panel {
+      background: rgba(17, 17, 17, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 28px 32px;
+      min-width: 320px; max-width: 480px; width: 90vw;
+      color: #fff;
+      font-family: "futura-100", sans-serif;
+    }
+    .dlg-title {
+      font-family: "dazzle-unicase", sans-serif;
+      font-size: 1.1rem; color: #fba300;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 12px;
+    }
+    .dlg-title:empty { display: none; }
+    .dlg-body {
+      font-size: 0.95rem; line-height: 1.5;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 20px;
+      max-height: 60vh; overflow-y: auto;
+    }
+    .dlg-body:empty { display: none; }
+    .dlg-actions {
+      display: flex; gap: 10px; justify-content: flex-end;
+    }
+    .dlg-actions:empty { display: none; }
+    .dialog-btn {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700; font-size: 0.85rem;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      border: none; border-radius: 8px;
+      padding: 10px 24px; cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .dialog-btn:active { transform: scale(0.97); }
+    .dialog-btn-confirm {
+      background: #fba300; color: #111;
+    }
+    .dialog-btn-confirm:hover { background: #ffb724; }
+    .dialog-btn-cancel,
+    .dialog-btn-close {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .dialog-btn-cancel:hover,
+    .dialog-btn-close:hover { background: rgba(255, 255, 255, 0.18); }
+
+    /* ── Content dialog — fly in from bottom, no opacity ────── */
+    #dialog-backdrop { z-index: 10000; }
+    #dialog-backdrop .dlg-panel {
+      transform: translateY(100vh);
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    #dialog-backdrop.active .dlg-panel {
+      transform: translateY(0);
+    }
+
+    /* ── Confirm dialog — fade + subtle slide, stacks above ── */
+    #confirm-backdrop { z-index: 10001; }
+    #confirm-backdrop .dlg-panel {
+      transform: translateY(40px);
+      opacity: 0;
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.35s ease;
+    }
+    #confirm-backdrop.active .dlg-panel {
+      transform: translateY(0); opacity: 1;
+    }
+
+    /* ── Tooltip ────────────────────────────────────────────── */
+    #tooltip {
+      --tip-bg: #f0f0f0;
+      position: fixed; z-index: 10002;
+      background: var(--tip-bg);
+      border-radius: 10px;
+      padding: 12px 16px;
+      max-width: 280px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      font-family: "futura-100", sans-serif;
+    }
+    #tooltip.visible { opacity: 1; }
+    #tooltip-flavor {
+      font-family: "futura-100", sans-serif;
+      font-size: 1rem; color: #fba300;
+      font-style: italic;
+      margin-bottom: 6px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+    }
+    #tooltip-flavor:empty { display: none; }
+    #tooltip::after {
+      content: ''; position: absolute;
+      width: 0; height: 0;
+      border: 6px solid transparent;
+    }
+    #tooltip[data-placement="above"]::after {
+      bottom: -12px; left: 50%; transform: translateX(-50%);
+      border-top-color: var(--tip-bg);
+    }
+    #tooltip[data-placement="below"]::after {
+      top: -12px; left: 50%; transform: translateX(-50%);
+      border-bottom-color: var(--tip-bg);
+    }
+    #tooltip[data-placement="right"]::after {
+      left: -12px; top: 50%; transform: translateY(-50%);
+      border-right-color: var(--tip-bg);
+    }
+    #tooltip[data-placement="left"]::after {
+      right: -12px; top: 50%; transform: translateY(-50%);
+      border-left-color: var(--tip-bg);
+    }
+    #tooltip-desc {
+      font-size: 1.2rem; line-height: 1.4;
+      font-weight: 300;
+      color: #111;
+    }
   </style>
 </head>
 <body>
+  <div id="dialog-backdrop" class="dlg-backdrop">
+    <div class="dlg-panel">
+      <div class="dlg-title"></div>
+      <div class="dlg-body"></div>
+      <div class="dlg-actions"></div>
+    </div>
+  </div>
+  <div id="confirm-backdrop" class="dlg-backdrop">
+    <div class="dlg-panel">
+      <div class="dlg-title"></div>
+      <div class="dlg-body"></div>
+      <div class="dlg-actions"></div>
+    </div>
+  </div>
+  <div id="tooltip">
+    <div id="tooltip-flavor"></div>
+    <div id="tooltip-desc"></div>
+  </div>
   <div id="menu-backdrop"></div>
   <div id="settings-tray">
     <div class="tray-section">
@@ -3149,12 +3332,12 @@
     <div class="tray-section">
       <div class="tray-heading">Volume</div>
       <div class="tray-row-label"><label>Master</label></div>
-      <div class="tray-row-slider"><input type="range" id="vol-master" min="0" max="1" step="0.01" value="1" oninput="volumeMaster=+this.value;applyVolumes()"></div>
+      <div class="tray-row-slider"><input type="range" id="vol-master" min="0" max="1" step="0.01" value="1" oninput="volumeMaster=+this.value;applyVolumes()" data-tip="vol-master"></div>
       <div class="tray-row-label"><label>Music</label></div>
-      <div class="tray-row-slider"><input type="range" id="vol-music" min="0" max="1" step="0.01" value="1" oninput="volumeMusic=+this.value;applyVolumes()"></div>
+      <div class="tray-row-slider"><input type="range" id="vol-music" min="0" max="1" step="0.01" value="1" oninput="volumeMusic=+this.value;applyVolumes()" data-tip="vol-music"></div>
       <div class="tray-row-label"><label>SFX</label></div>
-      <div class="tray-row-slider"><input type="range" id="vol-sfx" min="0" max="1" step="0.01" value="1" oninput="volumeSfx=+this.value;applyVolumes()"></div>
-      <div class="tray-row">
+      <div class="tray-row-slider"><input type="range" id="vol-sfx" min="0" max="1" step="0.01" value="1" oninput="volumeSfx=+this.value;applyVolumes()" data-tip="vol-sfx"></div>
+      <div class="tray-row" data-tip="mute-toggle">
         <label>Mute</label>
         <label class="toggle-switch">
           <input type="checkbox" id="mute-toggle" onchange="toggleSound()">
@@ -3167,13 +3350,24 @@
       <div class="tray-heading">Options</div>
       <div class="tray-row-label"><label>Game Speed</label></div>
       <div class="speed-slider-wrap">
-        <input type="range" id="speed-slider" min="0" max="1" step="1" value="1" oninput="applySpeedFromSlider(+this.value)">
+        <input type="range" id="speed-slider" min="0" max="1" step="1" value="1" oninput="applySpeedFromSlider(+this.value)" data-tip="speed-slider">
         <div class="speed-notch-labels" id="speed-notch-labels"></div>
       </div>
-      <div class="tray-row">
+      <div class="tray-row" data-tip="crt-toggle">
         <label>CRT Effect</label>
         <label class="toggle-switch">
           <input type="checkbox" id="crt-checkbox" onchange="toggleCRT()">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="tray-row-label"><label>Tooltip Delay <span id="tip-delay-value" style="opacity:0.5">400ms</span></label></div>
+      <div class="tray-row-slider">
+        <input type="range" id="tip-delay-slider" min="0" max="1000" step="100" value="400" oninput="setTooltipDelay(+this.value)">
+      </div>
+      <div class="tray-row">
+        <label>Hide Help Tips</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="hide-help-toggle" onchange="hideHelpTips=this.checked; hideTooltip()">
           <span class="toggle-track"></span>
         </label>
       </div>
@@ -3250,7 +3444,7 @@
                    IDs per button (suffix -r2/-r4/-r6) avoid conflicts in shared DOM. -->
               <!-- Default SVG state is "raised" (top at y=43, side strip 16 tall).
                    JS setButtonDepressed() pushes selected button to y=51/height=8. -->
-              <svg class="rounds-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" tabindex="0" onclick="selectRounds(2, this)">
+              <svg class="rounds-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" tabindex="0" onclick="selectRounds(2, this)" data-tip="rounds-2">
                 <rect class="buttonSides btn-side-face" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 59)" fill="#b87800"/>
                 <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#b87800"/>
                 <g clip-path="url(#clip-r2)">
@@ -3263,7 +3457,7 @@
                   </clipPath>
                 </defs>
               </svg>
-              <svg class="rounds-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" tabindex="0" onclick="selectRounds(4, this)">
+              <svg class="rounds-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" tabindex="0" onclick="selectRounds(4, this)" data-tip="rounds-4">
                 <rect class="buttonSides btn-side-face" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 59)" fill="#b87800"/>
                 <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#b87800"/>
                 <g clip-path="url(#clip-r4)">
@@ -3276,7 +3470,7 @@
                   </clipPath>
                 </defs>
               </svg>
-              <svg class="rounds-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" tabindex="0" onclick="selectRounds(6, this)">
+              <svg class="rounds-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" tabindex="0" onclick="selectRounds(6, this)" data-tip="rounds-6">
                 <rect class="buttonSides btn-side-face" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 59)" fill="#b87800"/>
                 <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#b87800"/>
                 <g clip-path="url(#clip-r6)">
@@ -3294,7 +3488,7 @@
           </div>
           <div class="win-option-sub">
             <label>Game Speed:</label>
-            <div class="speed-stepper">
+            <div class="speed-stepper" data-tip="speed-stepper">
               <span class="speed-stepper-arrow arrow-left disabled" id="speed-arrow-left" onclick="stepSpeed(-1)">◀</span>
               <span class="speed-stepper-value" id="speed-stepper-label"><span>1</span></span>
               <span class="speed-stepper-arrow arrow-right" id="speed-arrow-right" onclick="stepSpeed(1)">▶</span>
@@ -3303,55 +3497,55 @@
           </div>
         </div>
       </div>
-      <button id="setup-next-btn" class="transport-btn" onclick="proceedToTeamSetup()">
-        <span class="transport-glyphs tp-ffwd"><span class="tp-arrow">▶</span><span class="tp-arrow">▶</span></span>
+      <button id="setup-next-btn" class="transport-btn" onclick="proceedToTeamSetup()" data-tip="setup-next">
+        <span class="transport-glyphs tp-play"><span class="tp-arrow">▶</span></span>
         <span class="transport-label">Next</span>
       </button>
     </div>
 
     <!-- Step 2: Team setup -->
     <div id="setup-step-2">
-      <button id="setup-back-btn" class="transport-btn" onclick="backToRoundSelect()">
-        <span class="transport-glyphs tp-rewind"><span class="tp-arrow">◀</span><span class="tp-arrow">◀</span></span>
+      <button id="setup-back-btn" class="transport-btn" onclick="backToRoundSelect()" data-tip="setup-back">
+        <span class="transport-glyphs tp-play"><span class="tp-arrow">◀</span></span>
         <span class="transport-label">Back</span>
       </button>
       <div id="player-columns">
         <div class="player-col red-col">
           <div class="player-col-header">
             <h3><span class="red">Red Team</span></h3>
-            <input type="text" id="redTeamName" placeholder="Team name" maxlength="18">
+            <input type="text" id="redTeamName" placeholder="Team name" maxlength="18" data-tip="team-name-input">
           </div>
           <div class="player-col-body">
             <div class="players-label">Players</div>
             <div id="redPlayers">
               <div class="player-row">
-                <input type="text" class="redPlayer" placeholder="Player name" maxlength="18">
-                <button class="player-remove-btn" onclick="removePlayerRow(this)">−</button>
+                <input type="text" class="redPlayer" placeholder="Player name" maxlength="18" data-tip="player-name-input">
+                <button class="player-remove-btn" onclick="removePlayerRow(this)" data-tip="player-remove">−</button>
               </div>
             </div>
-            <button class="player-add-btn" onclick="addPlayerRow(this)">+</button>
           </div>
+          <button class="player-add-btn" onclick="addPlayerRow(this)" data-tip="player-add">+</button>
         </div>
         <div class="player-col blue-col">
           <div class="player-col-header">
             <h3><span class="blue">Blue Team</span></h3>
-            <input type="text" id="blueTeamName" placeholder="Team name" maxlength="18">
+            <input type="text" id="blueTeamName" placeholder="Team name" maxlength="18" data-tip="team-name-input">
           </div>
           <div class="player-col-body">
             <div class="players-label">Players</div>
             <div id="bluePlayers">
               <div class="player-row">
-                <input type="text" class="bluePlayer" placeholder="Player name" maxlength="18">
-                <button class="player-remove-btn" onclick="removePlayerRow(this)">−</button>
+                <input type="text" class="bluePlayer" placeholder="Player name" maxlength="18" data-tip="player-name-input">
+                <button class="player-remove-btn" onclick="removePlayerRow(this)" data-tip="player-remove">−</button>
               </div>
             </div>
-            <button class="player-add-btn" onclick="addPlayerRow(this)">+</button>
           </div>
+          <button class="player-add-btn" onclick="addPlayerRow(this)" data-tip="player-add">+</button>
         </div>
       </div>
       <div id="selected-rounds"></div>
       <div id="start-game-container">
-        <button id="start-game-btn" class="transport-btn" onclick="beginStartGameExit()">
+        <button id="start-game-btn" class="transport-btn" onclick="beginStartGameExit()" data-tip="start-game">
           <span class="transport-glyphs tp-play"><span class="tp-arrow">▶</span></span>
           <span class="transport-label">Start Game</span>
         </button>
@@ -3381,7 +3575,7 @@
         <!-- Persistent phase-indicator header (sits above panel-swap area).
              Slides in once at game start, out only at resetGame. Content is
              driven by phase spans inside; the container stays put. -->
-        <div id="phase-indicator" class="team-red">
+        <div id="phase-indicator" class="team-red" data-tip="phase-indicator">
           <span class="ph-span ph-category-select"></span>
           <span class="ph-span ph-gameplay"></span>
           <span class="ph-span ph-steal-chance"></span>
@@ -3401,33 +3595,15 @@
               <div id="category"></div>
               <div id="question"></div>
               <div id="questionActions">
-                <details class="question-options">
-                  <summary>Advanced question options</summary>
-                  <div class="flag-links">
-                    <a onclick="getNewQuestion()">Get new question (resets the round)</a>
-                    &nbsp;|&nbsp;
-                    <a onclick="removeQuestion()">Flag question for removal</a>
-                    &nbsp;|&nbsp;
-                    <a onclick="flagFactCheck()">Flag question for fact check</a>
-                    &nbsp;|&nbsp;
-                    <a onclick="copyAnswersToClipboard()">Copy answers for judge</a>
-                    <span id="copyConfirm" style="margin-left:6px;color:#2e7d32;opacity:0;transition:opacity 0.4s;font-size:0.95em;">Copied!</span>
-                  </div>
-                </details>
+                <a class="question-options-link" onclick="showQuestionOptions()" data-tip="question-options">Advanced question options</a>
               </div>
             </div>
           </div>
           <!-- Row 3: Input area -->
           <div id="sq-zone-input" class="offscreen-below">
-            <!-- Answer history tray -->
-            <div id="history" class="hidden">
-              <div id="history-tray-handle" onclick="toggleHistoryTray()">
-                <span>Answer History</span>
-                <span class="tray-arrow">&#9650;</span>
-              </div>
-              <div id="history-tray-panel">
-                <ul id="historyList"></ul>
-              </div>
+            <!-- Answer history link -->
+            <div id="history" class="hidden" style="text-align:center; padding: 4px 0;">
+              <a class="question-options-link" onclick="showAnswerHistory()" data-tip="answer-history">Answer History</a>
             </div>
             <div id="input-area">
               <div id="turn-input-box" class="team-red">
@@ -3435,7 +3611,7 @@
                 <div id="turn-body">
                   <div id="turn-subtext">Player is up</div>
                   <div class="turn-input-row">
-                    <input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" />
+                    <input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" data-tip="guess-input" />
                     <button class="input-btn" onclick="submitGuess()"><span>Submit</span><span>Submit</span><span>Submit</span><span>Submit</span></button>
                   </div>
                 </div>
@@ -3459,11 +3635,11 @@
               <div class="players-panel-header">Turn Order</div>
               <div id="red-players-list" class="players-list"></div>
             </div>
-            <div class="team-score-box" id="red-score-box">
+            <div class="team-score-box" id="red-score-box" data-tip="scoreboard-red">
               <div class="team-label"><h4>Red Team</h4></div>
               <div class="team-points" id="red-score">0</div>
             </div>
-            <div id="round-display">
+            <div id="round-display" data-tip="round-counter">
               <div id="round-label">Round</div>
               <div id="round-info">
                 <span id="roundCounter">0</span>
@@ -3471,7 +3647,7 @@
                 <span id="roundTarget">—</span>
               </div>
             </div>
-            <div class="team-score-box" id="blue-score-box">
+            <div class="team-score-box" id="blue-score-box" data-tip="scoreboard-blue">
               <div class="team-label"><h4>Blue Team</h4></div>
               <div class="team-points" id="blue-score">0</div>
             </div>
@@ -3498,19 +3674,19 @@
               <div id="board"></div>
               <div class="board-footer" style="position: relative;">
                 <span class="footer-label">Round Total</span>
-                <span class="footer-value" id="board-round-total">0</span>
+                <span class="footer-value" id="board-round-total" data-tip="board-round-total">0</span>
                 <span class="cat-mult-indicator" id="cat-mult-indicator" style="display:none;"></span>
               </div>
               <div class="board-stats">
-                <div class="board-stat">
+                <div class="board-stat" data-tip="board-streak">
                   <div class="board-stat-label">Streak</div>
                   <div class="board-stat-value" id="board-streak">—</div>
                 </div>
-                <div class="board-stat">
+                <div class="board-stat" data-tip="board-mult">
                   <div class="board-stat-label">Multiplier</div>
                   <div class="board-stat-value" id="board-mult">—</div>
                 </div>
-                <div class="board-stat">
+                <div class="board-stat" data-tip="board-strikes">
                   <div class="board-stat-label">Strikes</div>
                   <div class="board-stat-value">
                     <div id="strikes"></div>
@@ -4052,6 +4228,208 @@
     }
     applyVolumes();
 
+    // ── Custom dialog system ─────────────────────────────────────
+    // Two independent layers: content dialogs (#dialog) and confirm dialogs (#confirm).
+    // Confirms stack above content dialogs so both can be visible simultaneously.
+    function _initLayer(id) {
+      const backdrop = document.getElementById(id);
+      const panel = backdrop.querySelector('.dlg-panel');
+      return {
+        backdrop, panel,
+        title:   panel.querySelector('.dlg-title'),
+        body:    panel.querySelector('.dlg-body'),
+        actions: panel.querySelector('.dlg-actions'),
+        _resolve: null, _onClose: null,
+      };
+    }
+    let _dlg, _cfm;
+    function _ensureLayers() {
+      if (!_dlg) _dlg = _initLayer('dialog-backdrop');
+      if (!_cfm) _cfm = _initLayer('confirm-backdrop');
+    }
+
+    function _openLayer(layer, { title = '', body = '', actions = '' }) {
+      layer.title.textContent = title;
+      if (typeof body === 'string') layer.body.innerHTML = body;
+      else { layer.body.innerHTML = ''; layer.body.appendChild(body); }
+      layer.actions.innerHTML = actions;
+      layer.backdrop.onclick = (e) => {
+        if (e.target === layer.backdrop) {
+          if (layer === _cfm) closeConfirm(false);
+          else closeDialog();
+        }
+      };
+      layer.backdrop.classList.add('active');
+    }
+
+    // ── Content dialog layer ──────────────────────────────────
+    function showContentDialog(title, htmlContent, { closeText = 'Close' } = {}) {
+      _ensureLayers();
+      const actions = `<button class="dialog-btn dialog-btn-close" onclick="closeDialog()">${closeText}</button>`;
+      _openLayer(_dlg, { title, body: htmlContent, actions });
+    }
+    function closeDialog() {
+      _ensureLayers();
+      _dlg.backdrop.classList.remove('active');
+      if (_dlg._onClose) { _dlg._onClose(); _dlg._onClose = null; }
+    }
+
+    // ── Confirm dialog layer (stacks above content) ───────────
+    function showConfirm(message, { title = 'Confirm', confirmText = 'Yes', cancelText = 'Cancel' } = {}) {
+      _ensureLayers();
+      return new Promise(resolve => {
+        if (_cfm._resolve) { _cfm._resolve(false); _cfm._resolve = null; }
+        const actions =
+          `<button class="dialog-btn dialog-btn-cancel" onclick="closeConfirm(false)">${cancelText}</button>` +
+          `<button class="dialog-btn dialog-btn-confirm" onclick="closeConfirm(true)">${confirmText}</button>`;
+        _openLayer(_cfm, { title, body: `<p style="margin:0">${message}</p>`, actions });
+        _cfm._resolve = resolve;
+        setTimeout(() => _cfm.actions.querySelector('.dialog-btn-confirm')?.focus(), 50);
+      });
+    }
+    function closeConfirm(result) {
+      _ensureLayers();
+      _cfm.backdrop.classList.remove('active');
+      if (_cfm._resolve) { _cfm._resolve(result); _cfm._resolve = null; }
+    }
+
+    // Escape closes the topmost open layer
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      _ensureLayers();
+      if (_cfm.backdrop.classList.contains('active')) closeConfirm(false);
+      else if (_dlg.backdrop.classList.contains('active')) closeDialog();
+    });
+
+    // ── Tooltip system (CSV-driven) ──────────────────────────
+    // CSV format: id,class,flavor,description
+    // class: "help" (hideable) or "evergreen" (always shown)
+    const tooltipData = new Map();
+    function parseCSVLine(line) {
+      const fields = []; let field = ''; let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') {
+          if (inQuotes && line[i + 1] === '"') { field += '"'; i++; } // "" → literal "
+          else { inQuotes = !inQuotes; }
+        }
+        else if (c === ',' && !inQuotes) { fields.push(field.trim()); field = ''; }
+        else { field += c; }
+      }
+      fields.push(field.trim());
+      return fields;
+    }
+    fetch('tooltips.csv')
+      .then(r => r.text())
+      .then(csv => {
+        csv.split('\n').slice(1).forEach(line => {
+          if (!line.trim()) return;
+          const fields = parseCSVLine(line);
+          const [id, cls, flavor, ...descParts] = fields;
+          if (id) tooltipData.set(id.trim(), {
+            cls: (cls || 'evergreen').trim(),
+            flavor: (flavor || '').trim(),
+            description: descParts.join(', ').trim()
+          });
+        });
+      })
+      .catch(() => {}); // silent fail — tooltips are optional
+
+    let tooltipDelay = 400; // ms before tooltip appears (adjustable in settings)
+    let hideHelpTips = false; // when true, "help" class tooltips are suppressed
+
+    const _tip = {
+      el: null, flavor: null, desc: null,
+      timer: null, activeTarget: null,
+    };
+    function _tipEls() {
+      if (!_tip.el) {
+        _tip.el     = document.getElementById('tooltip');
+        _tip.flavor = document.getElementById('tooltip-flavor');
+        _tip.desc   = document.getElementById('tooltip-desc');
+      }
+    }
+    function showTooltip(target, id) {
+      _tipEls();
+      const data = tooltipData.get(id);
+      if (!data) return;
+      if (hideHelpTips && data.cls === 'help') return;
+      _tip.flavor.textContent = data.flavor || '';
+      _tip.desc.textContent   = data.description || '';
+      _tip.activeTarget = target;
+      // Position relative to game canvas, not viewport
+      const gameRoot = document.getElementById('game-root');
+      const canvasRect = gameRoot.getBoundingClientRect();
+      const rect = target.getBoundingClientRect();
+      // Measure tooltip size
+      _tip.el.style.left = '0'; _tip.el.style.top = '0';
+      _tip.el.classList.add('visible');
+      const tipRect = _tip.el.getBoundingClientRect();
+      // Element position within canvas determines placement
+      const elCenterX = rect.left + rect.width / 2;
+      const elCenterY = rect.top + rect.height / 2;
+      let x, y, placement;
+      if (elCenterY < canvasRect.top + canvasRect.height * 0.1) {
+        // Top 10% — place below
+        placement = 'below';
+        x = rect.left + rect.width / 2 - tipRect.width / 2;
+        y = rect.bottom + 8;
+      } else if (elCenterY > canvasRect.top + canvasRect.height * 0.9) {
+        // Bottom 10% — place above
+        placement = 'above';
+        x = rect.left + rect.width / 2 - tipRect.width / 2;
+        y = rect.top - tipRect.height - 8;
+      } else if (elCenterX < canvasRect.left + canvasRect.width * 0.2) {
+        // Left 20% — place right
+        placement = 'right';
+        x = rect.right + 8;
+        y = rect.top + rect.height / 2 - tipRect.height / 2;
+      } else {
+        // Default — place left
+        placement = 'left';
+        x = rect.left - tipRect.width - 8;
+        y = rect.top + rect.height / 2 - tipRect.height / 2;
+      }
+      // Clamp to viewport
+      x = Math.max(4, Math.min(x, window.innerWidth - tipRect.width - 4));
+      y = Math.max(4, Math.min(y, window.innerHeight - tipRect.height - 4));
+      _tip.el.style.left = x + 'px';
+      _tip.el.style.top  = y + 'px';
+      _tip.el.dataset.placement = placement;
+    }
+    function hideTooltip() {
+      _tipEls();
+      _tip.el.classList.remove('visible');
+      _tip.activeTarget = null;
+      if (_tip.timer) { clearTimeout(_tip.timer); _tip.timer = null; }
+    }
+    // Event delegation — mouseover/mouseout (bubble naturally, unlike enter/leave)
+    document.addEventListener('mouseover', (e) => {
+      const target = e.target.closest('[data-tip]');
+      if (!target) return;
+      // Already tracking this element — don't restart timer
+      if (_tip.activeTarget === target || (_tip.timer && _tip._pendingTarget === target)) return;
+      hideTooltip();
+      _tip._pendingTarget = target;
+      _tip.timer = setTimeout(() => {
+        _tip._pendingTarget = null;
+        showTooltip(target, target.dataset.tip);
+      }, tooltipDelay);
+    });
+    document.addEventListener('mouseout', (e) => {
+      const from = e.target.closest('[data-tip]');
+      if (!from) return;
+      // Only hide if the cursor actually left the [data-tip] boundary
+      const to = e.relatedTarget?.closest?.('[data-tip]');
+      if (to === from) return; // moved to a child — stay visible
+      hideTooltip();
+    });
+
+    function setTooltipDelay(ms) {
+      tooltipDelay = ms;
+      document.getElementById('tip-delay-value').textContent = ms + 'ms';
+    }
+
     function playSound(sfx) {
       if (!soundEnabled) return;
       sfx.currentTime = 0;
@@ -4093,8 +4471,19 @@ document.addEventListener('keydown', e => {
     }
     function toggleMenu() { setMenuState(!menuOpen); }
 
-    function toggleHistoryTray() {
-      document.getElementById("history").classList.toggle("open");
+    function showAnswerHistory() {
+      if (guessHistory.length === 0) {
+        showContentDialog('Answer History', '<p class="history-empty">No answers have been submitted yet this round</p>');
+        return;
+      }
+      const items = guessHistory.map(e => {
+        const teamClass = e.team === 0 ? "red" : "blue";
+        const isCorrect = e.result.includes("✓");
+        const isWrong = e.result.includes("✗");
+        const resultHtml = isCorrect ? `<span style="color:#2e7d32">${e.result}</span>` : isWrong ? `<span style="color:#cc0000">${e.result}</span>` : e.result;
+        return `<li><span class="${teamClass}">${e.player}</span> guessed "${e.guess}" — ${resultHtml}</li>`;
+      }).join('');
+      showContentDialog('Answer History', `<ul class="history-list">${items}</ul>`);
     }
     document.addEventListener('click', e => {
       if (menuOpen &&
@@ -4223,8 +4612,8 @@ document.addEventListener('keydown', e => {
       // Pre-fill player names — add rows as needed (starts with 1 row each)
       const redNames = ['Roy Donk', 'Paul Buffano'];
       const blueNames = ['Jamie Taco', 'Wagoo'];
-      const redAddBtn = document.querySelector('#redPlayers').closest('.player-col-body').querySelector('.player-add-btn');
-      const blueAddBtn = document.querySelector('#bluePlayers').closest('.player-col-body').querySelector('.player-add-btn');
+      const redAddBtn = document.querySelector('#redPlayers').closest('.player-col').querySelector('.player-add-btn');
+      const blueAddBtn = document.querySelector('#bluePlayers').closest('.player-col').querySelector('.player-add-btn');
       // Add extra rows (skip animation in dev mode)
       for (let i = 1; i < redNames.length; i++) addPlayerRow(redAddBtn);
       for (let i = 1; i < blueNames.length; i++) addPlayerRow(blueAddBtn);
@@ -4248,18 +4637,24 @@ document.addEventListener('keydown', e => {
     const MAX_PLAYERS = 5;
 
     function addPlayerRow(btn) {
-      const body = btn.closest('.player-col-body');
-      const container = body.querySelector('#redPlayers, #bluePlayers');
+      const col = btn.closest('.player-col');
+      const container = col.querySelector('#redPlayers, #bluePlayers');
       const rows = container.querySelectorAll('.player-row');
-      if (rows.length >= MAX_PLAYERS) return;
+      if (rows.length >= MAX_PLAYERS) {
+        const col = btn.closest('.player-col');
+        col.classList.remove('col-nudge');
+        void col.offsetWidth;
+        col.classList.add('col-nudge');
+        return;
+      }
 
       // Determine player class from existing inputs
       const playerClass = container.id === 'redPlayers' ? 'redPlayer' : 'bluePlayer';
 
       const row = document.createElement('div');
       row.className = 'player-row entering';
-      row.innerHTML = `<input type="text" class="${playerClass}" placeholder="Player name" maxlength="18">`
-                    + `<button class="player-remove-btn" onclick="removePlayerRow(this)">−</button>`;
+      row.innerHTML = `<input type="text" class="${playerClass}" placeholder="Player name" maxlength="18" data-tip="player-name-input">`
+                    + `<button class="player-remove-btn" onclick="removePlayerRow(this)" data-tip="player-remove">−</button>`;
       container.appendChild(row);
 
       // Trigger enter animation on next frame
@@ -4267,8 +4662,8 @@ document.addEventListener('keydown', e => {
         requestAnimationFrame(() => row.classList.remove('entering'));
       });
 
-      // Hide + button at max
-      if (rows.length + 1 >= MAX_PLAYERS) btn.classList.add('hidden');
+      // Gray out + button at max
+      if (rows.length + 1 >= MAX_PLAYERS) btn.classList.add('maxed');
       playKeystroke(1.5);
     }
 
@@ -4283,9 +4678,9 @@ document.addEventListener('keydown', e => {
       // Fallback for hidden tabs
       setTimeout(() => { if (row.parentElement) row.remove(); }, 350);
 
-      // Show + button if it was hidden
-      const addBtn = container.closest('.player-col-body').querySelector('.player-add-btn');
-      if (addBtn) addBtn.classList.remove('hidden');
+      // Restore + button if it was maxed
+      const addBtn = container.closest('.player-col').querySelector('.player-add-btn');
+      if (addBtn) addBtn.classList.remove('maxed');
       playKeystroke(1.5);
     }
 
@@ -4296,11 +4691,11 @@ document.addEventListener('keydown', e => {
         if (!container) return;
         const playerClass = id === 'redPlayers' ? 'redPlayer' : 'bluePlayer';
         container.innerHTML = `<div class="player-row">`
-          + `<input type="text" class="${playerClass}" placeholder="Player name" maxlength="18">`
-          + `<button class="player-remove-btn" onclick="removePlayerRow(this)">−</button>`
+          + `<input type="text" class="${playerClass}" placeholder="Player name" maxlength="18" data-tip="player-name-input">`
+          + `<button class="player-remove-btn" onclick="removePlayerRow(this)" data-tip="player-remove">−</button>`
           + `</div>`;
-        const addBtn = container.closest('.player-col-body').querySelector('.player-add-btn');
-        if (addBtn) addBtn.classList.remove('hidden');
+        const addBtn = container.closest('.player-col').querySelector('.player-add-btn');
+        if (addBtn) addBtn.classList.remove('maxed');
       });
     }
 
@@ -4628,15 +5023,14 @@ document.addEventListener('keydown', e => {
       document.getElementById("category").style.display = "";
       document.getElementById("question").textContent = "";
       document.getElementById("questionActions").style.display = "none";
-      document.querySelector(".question-options").removeAttribute("open");
       document.getElementById("message").textContent = "";
       document.getElementById("endRound").innerHTML = "";
       document.getElementById("turn-input-box").style.display = "";
       document.getElementById("turn-body").innerHTML = `
         <div id="turn-subtext"></div>
         <div class="turn-input-row">
-          <input type="text" id="guess" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" />
-          ${make3dBtn('Submit', 'submitGuess()')}
+          <input type="text" id="guess" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" data-tip="guess-input" />
+          ${make3dBtn('Submit', 'submitGuess()', '', 'submit-guess')}
         </div>`;
       setup3dBtns();
       updateBoard(); updateScores(); updateStrikes(); updateStreakDisplay(); updateHistory(); updateTurn();
@@ -4690,10 +5084,11 @@ document.addEventListener('keydown', e => {
       showCategorySelection();
     }
 
-    function make3dBtn(text, onclick, extraClass) {
+    function make3dBtn(text, onclick, extraClass, dataTip) {
       const s = `<span>${text}</span>`.repeat(4);
       const cls = 'input-btn' + (extraClass ? ' ' + extraClass : '');
-      return `<button class="${cls}" onclick="${onclick}">${s}</button>`;
+      const tip = dataTip ? ` data-tip="${dataTip}"` : '';
+      return `<button class="${cls}" onclick="${onclick}"${tip}>${s}</button>`;
     }
 
     function setup3dBtns() {
@@ -4779,11 +5174,12 @@ document.addEventListener('keydown', e => {
         const cc = getCategoryClass(cat);
         const cm = categoryMultipliers[cat] || 1;
         const coinClass = cm >= 3 ? 'coin-gold' : cm >= 2 ? 'coin-silver' : cm > 1 ? 'coin-bronze' : '';
-        const badge = cm > 1 ? `<div class="cat-mult-badge ${coinClass}" title="Points multiplied by ${cm}x this round">${cm}x</div>` : '';
+        const tipId = cm >= 3 ? 'cat-mult-3x' : cm >= 2 ? 'cat-mult-2x' : cm > 1 ? 'cat-mult-1-5x' : '';
+        const badge = cm > 1 ? `<div class="cat-mult-badge ${coinClass}" data-tip="${tipId}">${cm}x</div>` : '';
         // Category class on BOTH the row and the button so the row
         // inherits the `--cat-face` / `--cat-solid` CSS variables for
         // its own glow/CRT animations during Path B exit.
-        return `<div class="cat-row${cc ? ' ' + cc : ''}"><button class="cat-select-btn btn-3d${cc ? ' ' + cc : ''}" onclick="pickCategory('${cat.replace(/'/g,"\\'")}')">${s}</button>${badge}</div>`;
+        return `<div class="cat-row${cc ? ' ' + cc : ''}" data-tip="cat-pill"><button class="cat-select-btn btn-3d${cc ? ' ' + cc : ''}" onclick="pickCategory('${cat.replace(/'/g,"\\'")}')">${s}</button>${badge}</div>`;
       };
       let pillsHtml = '<div class="trivia-categories">';
       picks.forEach(c => { pillsHtml += makeBtn(c, c); });
@@ -5019,9 +5415,11 @@ document.addEventListener('keydown', e => {
         const boardFooter = document.querySelector(".board-footer");
         if (boardFooter) {
           const coinClass = categoryMultiplier >= 3 ? 'coin-gold' : categoryMultiplier >= 2 ? 'coin-silver' : 'coin-bronze';
+          const tipId = categoryMultiplier >= 3 ? 'cat-mult-3x' : categoryMultiplier >= 2 ? 'cat-mult-2x' : 'cat-mult-1-5x';
           const badge = document.createElement("div");
           badge.className = `cat-mult-badge ${coinClass}`;
           badge.textContent = categoryMultiplier + "x";
+          badge.dataset.tip = tipId;
           badge.style.cssText = "position:absolute; bottom:-28px; left:50%; transform:translateX(-50%); animation:coin-pulse 1.5s ease-in-out infinite;";
           boardFooter.appendChild(badge);
           // Hide the old text indicator
@@ -5119,12 +5517,21 @@ document.addEventListener('keydown', e => {
       ]);
     }
 
-    function getNewQuestion() {
+    async function getNewQuestion() {
       if (!currentQuestion) return;
-      if (confirm("Are you sure you want a new question?")) { initRoundState(); showCategorySelection(); }
+      if (await showConfirm("Are you sure you want a new question?", { title: 'New Question' })) { closeDialog(); initRoundState(); showCategorySelection(); }
     }
     function removeQuestion(){ if (currentQuestion) console.log("Remove:", currentQuestion.question); }
     function flagFactCheck(){ if (currentQuestion) console.log("FactCheck:", currentQuestion.question); }
+    function showQuestionOptions() {
+      const html = `<ul class="dialog-option-list">
+        <li><a onclick="getNewQuestion()">Get new question (resets the round)</a></li>
+        <li><a onclick="closeDialog(); removeQuestion()">Flag question for removal</a></li>
+        <li><a onclick="closeDialog(); flagFactCheck()">Flag question for fact check</a></li>
+        <li><a onclick="copyAnswersToClipboard()">Copy answers for judge</a></li>
+      </ul>`;
+      showContentDialog('Question Options', html);
+    }
     function copyAnswersToClipboard() {
       if (!currentQuestion) return;
       const lines = [`Q: ${currentQuestion.question}`, ""];
@@ -5132,9 +5539,8 @@ document.addEventListener('keydown', e => {
         lines.push(`${i + 1}. ${ans.display || ans.text} (${ans.points} pts)`);
       });
       navigator.clipboard.writeText(lines.join("\n")).then(() => {
-        const confirm = document.getElementById("copyConfirm");
-        confirm.style.opacity = "1";
-        setTimeout(() => { confirm.style.opacity = "0"; }, 2000);
+        const copyLink = _dlg.body?.querySelector('.dialog-option-list li:last-child a');
+        if (copyLink) { copyLink.textContent = 'Copied!'; setTimeout(() => { copyLink.textContent = 'Copy answers for judge'; }, 2000); }
       });
     }
 
@@ -5689,18 +6095,8 @@ document.addEventListener('keydown', e => {
       });
     }
 
-    function updateHistory(){
-      const l=document.getElementById("historyList");
-      l.innerHTML="";
-      guessHistory.forEach(e=>{
-        const li=document.createElement("li");
-        const teamClass=e.team===0?"red":"blue";
-        const isCorrect=e.result.includes("✓");
-        const isWrong=e.result.includes("✗");
-        const resultHtml=isCorrect?`<span style="color:#2e7d32">${e.result}</span>`:isWrong?`<span style="color:#cc0000">${e.result}</span>`:e.result;
-        li.innerHTML=`<span class="${teamClass}">${e.player}</span> guessed "${e.guess}" — ${resultHtml}`;
-        l.appendChild(li);
-      });
+    function updateHistory() {
+      // No-op: answer history is now rendered on demand via showAnswerHistory()
     }
 
     async function submitGuess(){const input=document.getElementById("guess");const guess=input.value.trim();input.value="";if(!guess||!currentQuestion)return;
@@ -5837,37 +6233,42 @@ document.addEventListener('keydown', e => {
       header.innerHTML = msg;
       const isLastRound = gameMode === 'rounds' && roundNumber >= maxRounds;
       body.innerHTML = `
-        ${make3dBtn('Reveal All Answers', 'revealAll()', 'input-btn-sm')}
-        ${make3dBtn(isLastRound ? 'Conclude Final Round' : 'Next Round', isLastRound ? 'endGameByRounds()' : 'advanceRound()', isLastRound ? 'input-btn-xs' : '')}
+        ${make3dBtn('Reveal All Answers', 'revealAll()', 'input-btn-sm', 'reveal-all')}
+        ${make3dBtn(isLastRound ? 'Conclude Final Round' : 'Next Round', isLastRound ? 'endGameByRounds()' : 'advanceRound()', isLastRound ? 'input-btn-xs' : '', 'next-round')}
       `;
       setup3dBtns();
 
       document.getElementById("endRound").innerHTML = `
-        <details class="score-edit-details">
-          <summary>Score edits needed?</summary>
-          <div style="margin-top:10px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span class="red">${teamNames[0]}</span>
-              <button class="btn" onclick="adjustEdit(0,-1)">−</button>
-              <input type="number" id="editRed" value="0" style="width:60px;text-align:center;font-size:1em;padding:4px;">
-              <button class="btn" onclick="adjustEdit(0,1)">+</button>
-              <button class="btn" onclick="submitEdit(0)">Submit</button>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span class="blue">${teamNames[1]}</span>
-              <button class="btn" onclick="adjustEdit(1,-1)">−</button>
-              <input type="number" id="editBlue" value="0" style="width:60px;text-align:center;font-size:1em;padding:4px;">
-              <button class="btn" onclick="adjustEdit(1,1)">+</button>
-              <button class="btn" onclick="submitEdit(1)">Submit</button>
-            </div>
-          </div>
-        </details>`;
+        <a class="score-edit-link" onclick="showScoreEdits()" data-tip="score-edit">Score edits needed?</a>`;
     }
 
+    function showScoreEdits() {
+      const html = `<div class="score-edit-form">
+        <div class="score-edit-team">
+          <span class="score-edit-team-name red">${teamNames[0]}</span>
+          <div class="score-edit-controls">
+            <button class="adj-btn adj-minus" onclick="adjustEdit(0,-1)">−</button>
+            <input type="number" id="editRed" value="0">
+            <button class="adj-btn adj-plus" onclick="adjustEdit(0,1)">+</button>
+            <button class="dialog-btn dialog-btn-confirm" style="padding:8px 16px;" onclick="submitEdit(0)">Apply</button>
+          </div>
+        </div>
+        <div class="score-edit-team">
+          <span class="score-edit-team-name blue">${teamNames[1]}</span>
+          <div class="score-edit-controls">
+            <button class="adj-btn adj-minus" onclick="adjustEdit(1,-1)">−</button>
+            <input type="number" id="editBlue" value="0">
+            <button class="adj-btn adj-plus" onclick="adjustEdit(1,1)">+</button>
+            <button class="dialog-btn dialog-btn-confirm" style="padding:8px 16px;" onclick="submitEdit(1)">Apply</button>
+          </div>
+        </div>
+      </div>`;
+      showContentDialog('Score Edits', html);
+    }
     function adjustEdit(team,delta){const id=team===0?'editRed':'editBlue';const el=document.getElementById(id);el.value=(parseInt(el.value)||0)+delta;}
-    function submitEdit(team){const id=team===0?'editRed':'editBlue';const el=document.getElementById(id);const val=parseInt(el.value)||0;if(val===0)return;
+    async function submitEdit(team){const id=team===0?'editRed':'editBlue';const el=document.getElementById(id);const val=parseInt(el.value)||0;if(val===0)return;
       const name=teamNames[team];const sign=val>0?'+':'';
-      if(confirm(`Apply ${sign}${val} points to ${name}?`)){teamScores[team]+=val;el.value=0;updateScores();checkForWinner();}}
+      if(await showConfirm(`Apply ${sign}${val} points to ${name}?`, { title: 'Edit Score' })){teamScores[team]+=val;el.value=0;updateScores();checkForWinner();}}
 
     function endGame(msg, winnerOverride = null) {
       const winner = winnerOverride !== null ? winnerOverride : (teamScores[0] >= teamScores[1] ? 0 : 1);
@@ -5880,8 +6281,8 @@ document.addEventListener('keydown', e => {
       document.getElementById("questionActions").style.display="none";
     }
 
-    function resetGameConfirm() {
-      if (confirm("You haven't played Fast Money yet. Are you sure you want to reset the game?")) {
+    async function resetGameConfirm() {
+      if (await showConfirm("You haven't played Fast Money yet. Are you sure you want to reset the game?", { title: 'Reset Game' })) {
         resetGame();
       }
     }
@@ -6302,25 +6703,7 @@ document.addEventListener('keydown', e => {
       fmBodyFinal.style.textAlign = 'center';
       fmBodyFinal.innerHTML = `
           <button class="btn" onclick="resetGame()">Play Again</button>
-          <details class="score-edit-details" style="margin-top:10px;">
-            <summary>Score edits needed?</summary>
-            <div style="margin-top:10px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-              <div style="display:flex;align-items:center;gap:6px;">
-                <span>${fm.playerA}</span>
-                <button class="btn" onclick="fmAdjustFM('A',-1)">−</button>
-                <input type="number" id="fm-editA" value="0" style="width:60px;text-align:center;font-size:1em;padding:4px;">
-                <button class="btn" onclick="fmAdjustFM('A',1)">+</button>
-                <button class="btn" onclick="fmSubmitFM('A')">Submit</button>
-              </div>
-              <div style="display:flex;align-items:center;gap:6px;">
-                <span>${fm.playerB}</span>
-                <button class="btn" onclick="fmAdjustFM('B',-1)">−</button>
-                <input type="number" id="fm-editB" value="0" style="width:60px;text-align:center;font-size:1em;padding:4px;">
-                <button class="btn" onclick="fmAdjustFM('B',1)">+</button>
-                <button class="btn" onclick="fmSubmitFM('B')">Submit</button>
-              </div>
-            </div>
-          </details>`;
+          <a class="score-edit-link" style="display:block;margin-top:10px;" onclick="showFmScoreEdits()">Score edits needed?</a>`;
       const final = document.getElementById('fm-final');
       final.style.display = 'block';
       final.innerHTML = `
@@ -6330,19 +6713,42 @@ document.addEventListener('keydown', e => {
         <div class="fm-final-row"><span>Grand Total</span><span id="fm-final-grand">${grandTotal}</span></div>`;
     }
 
+    function showFmScoreEdits() {
+      const html = `<div class="score-edit-form">
+        <div class="score-edit-team">
+          <span class="score-edit-team-name">${fm.playerA}</span>
+          <div class="score-edit-controls">
+            <button class="adj-btn adj-minus" onclick="fmAdjustFM('A',-1)">−</button>
+            <input type="number" id="fm-editA" value="0">
+            <button class="adj-btn adj-plus" onclick="fmAdjustFM('A',1)">+</button>
+            <button class="dialog-btn dialog-btn-confirm" style="padding:8px 16px;" onclick="fmSubmitFM('A')">Apply</button>
+          </div>
+        </div>
+        <div class="score-edit-team">
+          <span class="score-edit-team-name">${fm.playerB}</span>
+          <div class="score-edit-controls">
+            <button class="adj-btn adj-minus" onclick="fmAdjustFM('B',-1)">−</button>
+            <input type="number" id="fm-editB" value="0">
+            <button class="adj-btn adj-plus" onclick="fmAdjustFM('B',1)">+</button>
+            <button class="dialog-btn dialog-btn-confirm" style="padding:8px 16px;" onclick="fmSubmitFM('B')">Apply</button>
+          </div>
+        </div>
+      </div>`;
+      showContentDialog('Score Edits', html);
+    }
     function fmAdjustFM(player, delta) {
       const el = document.getElementById(player === 'A' ? 'fm-editA' : 'fm-editB');
       if (el) el.value = (parseInt(el.value) || 0) + delta;
     }
 
-    function fmSubmitFM(player) {
+    async function fmSubmitFM(player) {
       const el = document.getElementById(player === 'A' ? 'fm-editA' : 'fm-editB');
       if (!el) return;
       const val = parseInt(el.value) || 0;
       if (val === 0) return;
       const name = player === 'A' ? fm.playerA : fm.playerB;
       const sign = val > 0 ? '+' : '';
-      if (confirm(`Apply ${sign}${val} points to ${name}?`)) {
+      if (await showConfirm(`Apply ${sign}${val} points to ${name}?`, { title: 'Edit Score' })) {
         if (player === 'A') fm.extraA += val; else fm.extraB += val;
         el.value = 0;
         const totalA     = fm.scoresA.reduce((s,v) => s+v, 0) + fm.extraA;
@@ -6589,6 +6995,11 @@ document.addEventListener('keydown', e => {
     // Initialize speed stepper + settings slider
     syncSpeedStepper();
     buildSpeedSlider();
+
+    // ── Font-ready gate — prevent FOUT ───────────────────────
+    document.fonts.ready.then(() => {
+      document.getElementById('game-root').style.opacity = '1';
+    });
   </script>
 </body>
 </html>

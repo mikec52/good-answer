@@ -464,9 +464,10 @@ The element was changed from `<ul>` to `<div>` at the outer level so we could ne
   - Use plain text symbols `✓` / `✗`, not emoji variants — emoji variation selectors break CSS color
 - **Steal attempts** log the **team name**, not an individual player name
 - **Board renders only the number of rows needed** for the current question's answers (no blank padding rows).
-- **"Advanced question options"** — question admin links (get new question, flag for removal, fact check, copy answers) are collapsed under a `<details>` element during a round. This element must be explicitly closed when a new question loads (`removeAttribute("open")`).
-- **End-of-round state** repurposes the turn-input-box: header shows the round result message, body shows Reveal All / Next Round buttons. Score edits live in a separate `<details>` element outside the box.
-- **Score edits** use a `<details>` element labeled "Score edits needed?" to keep them collapsed by default.
+- **"Advanced question options"** — opens a content dialog (`showQuestionOptions()`) with option rows for: get new question, flag for removal, flag for fact check, copy answers for judge. "Get new question" opens a confirm dialog stacked on top without dismissing the options dialog.
+- **End-of-round state** repurposes the turn-input-box: header shows the round result message, body shows Reveal All / Next Round buttons.
+- **Score edits** — a "Score edits needed?" link opens a content dialog (`showScoreEdits()` / `showFmScoreEdits()`) with +/−/input/Apply controls per team. Apply triggers a confirm dialog stacked on top.
+- **Answer history** — an "Answer History" link opens a content dialog (`showAnswerHistory()`) that reads from `guessHistory` on demand. Empty state shows italicized "No answers have been submitted yet this round".
 - **Player/team name limit** — 18 characters max (`maxlength="18"` on all setup inputs). No explicit error message; the input shakes (CSS `input-shake` animation, 0.3s) when a keystroke is rejected at the limit. Backspace, arrows, and modifier shortcuts pass through normally.
 - **Duplicate answer** — if a guess matches a previously submitted guess (normalized), the input field shakes (`input-shake`), placeholder text changes to "Answer already submitted" for 2s, and `neutralbeep.wav` plays. No message element used.
 - **Export CSV** — removed. Was a Coyne Feud feature, not relevant for Good Answer.
@@ -970,12 +971,16 @@ Each player row is a `.player-row` div (position: relative) containing:
 - `<input>` — full-width, `padding-right: 28px` to clear the remove button
 - `.player-remove-btn` — absolutely positioned inside the input (right: 4px), circular − button
 
-A `.player-add-btn` (circular + button) sits below the rows inside `.player-col-body`, hanging off the bottom edge by ~50% (`position: relative; top: 18px`). Background is `inherit` from `.player-col-body`.
+A `.player-add-btn` (circular + button) is a sibling of `.player-col-body` inside `.player-col`, positioned absolutely at the bottom center (`bottom: -14px; left: 50%; transform: translateX(-50%)`). It sits outside the body to avoid being clipped by the body's `mask-image` cutout — a `radial-gradient` mask punches a 16px-radius semicircle notch at the bottom center of `.player-col-body`, creating a transparent gap (2px) between the body edge and the button. The button background uses explicit team colors (`.red-col .player-add-btn { background: var(--red-bg); }`), not `inherit`.
+
+JS references to the add button use `.closest('.player-col').querySelector('.player-add-btn')` (not `.closest('.player-col-body')`) since the button is outside the body.
+
+`#player-columns` uses `align-items: flex-start` so columns size independently — adding rows to one column doesn't stretch the other.
 
 ### Constraints
 
 - **Minimum**: 1 row per team (cannot remove the last row)
-- **Maximum**: 5 rows per team (`MAX_PLAYERS` constant). + button gets `.hidden` at max.
+- **Maximum**: 5 rows per team (`MAX_PLAYERS` constant). At max, button gets `.maxed` class (gray `#555`, no hover effect). Clicking when maxed triggers `col-nudge` animation (subtle y-axis wiggle) on the parent `.player-col`.
 - **− button visibility**: hidden via `.player-row:only-child .player-remove-btn { display: none }` when only 1 row exists
 
 ### Animations
@@ -1108,3 +1113,96 @@ The selected category **does not move**. Instead, two sequential phases transfor
 
 ### Cleanup
 `initRoundState()` removes stale elements at the start of each new round: `#cat-label`, `.cat-row` remnants in `#sq-zone-content`, `.cat-mult-badge` in `.board-footer`. Re-shows `#category` element. Removes entrance animation classes so they replay next round. The `.selected-glow` and `.crt-off` classes are naturally cleared because the entire pills area's `innerHTML` is rebuilt each round.
+
+---
+
+## Custom Dialog System
+
+Two independent dialog layers for modals and confirms. Both use frosted glass panels (`rgba(17,17,17,0.75)` + `backdrop-filter: blur(20px)`), positioned outside `#game-root` (fixed to viewport, unaffected by canvas scaling).
+
+### Two layers
+
+- **`#dialog-backdrop`** (z-index 10000) — content dialogs. Fly-in from bottom (`translateY(100vh) → 0`), no opacity transition. Used by `showContentDialog(title, html)` / `closeDialog()`.
+- **`#confirm-backdrop`** (z-index 10001) — confirm dialogs. Fade + subtle slide (`translateY(40px) → 0` with opacity). Used by `showConfirm(message, opts)` → `Promise<boolean>` / `closeConfirm(result)`. Stacks above content dialogs.
+
+### Shared CSS classes
+
+`.dlg-backdrop`, `.dlg-panel`, `.dlg-title` (gold dazzle-unicase), `.dlg-body` (`max-height: 60vh; overflow-y: auto`), `.dlg-actions`, `.dialog-btn` variants (`-confirm` gold, `-cancel`/`-close` subtle gray).
+
+### Nesting behavior
+
+Content and confirm layers are independent. "Get new question" from the options dialog opens a confirm on top without dismissing options. Cancel → only confirm closes. Yes → both close.
+
+### Escape key
+
+Closes topmost open layer first (confirm before content).
+
+### Where dialogs replaced old UI
+
+- **Advanced question options** — was `<details>` dropdown, now `showContentDialog` with `.dialog-option-list` rows
+- **Score edits** — was `<details>` dropdown, now `showScoreEdits()` / `showFmScoreEdits()` with `.score-edit-form` layout (team name above, +/−/input/Apply row)
+- **Answer history** — was collapsible tray (`#history-tray-handle`), now `showAnswerHistory()` reading from `guessHistory` on demand
+- **4 native `confirm()` calls** — all replaced with `await showConfirm()` (`getNewQuestion`, `submitEdit`, `resetGameConfirm`, `fmSubmitFM`)
+
+---
+
+## Tooltip System — CSV-Driven
+
+Hover tooltips loaded from `tooltips.csv` at page load. Content is editable in any spreadsheet app.
+
+### CSV format
+
+```
+id,class,flavor,description
+rounds-2,help,Quick game,Play a 2-round game
+board-streak,evergreen,On a roll,Consecutive correct answers
+```
+
+- `id` — matches `data-tip="id"` attribute on the target element
+- `class` — `"help"` (hideable via settings toggle) or `"evergreen"` (always shown)
+- `flavor` — short playful text (gold italic, above the rule). Leave blank to omit.
+- `description` — informative explanation (dark text below the rule)
+- Fields with commas must be quoted. Literal quotes use `""` (standard CSV escaping).
+
+### Rendering
+
+- Off-white panel (`#f0f0f0`), `border-radius: 10px`, `max-width: 280px`
+- Flavor: `#fba300`, futura-100, 1rem, italic, with `border-bottom: 1px solid rgba(0,0,0,0.5)` separator. Hidden via `:empty { display: none }` when blank.
+- Description: `#111`, futura-100, 1.2rem, weight 300
+- Pointer arrow (`::after` triangle) points toward the element, direction set via `data-placement` attribute
+
+### Positioning logic (canvas-aware)
+
+1. Default: appear **left** of the element
+2. Element in **left 20%** of canvas → appear on right
+3. Element in **bottom 10%** of canvas → appear above
+4. Element in **top 10%** of canvas → appear below
+
+All positions clamped to viewport edges.
+
+### JS API
+
+- `showTooltip(target, id)` — look up CSV data, position, show
+- `hideTooltip()` — hide and clear timer
+- Event delegation via `mouseover`/`mouseout` on `document` — works for static and dynamic elements
+- Hover persistence: tracks `activeTarget` and `_pendingTarget` to prevent tooltip from flickering when cursor moves between child elements within the same `[data-tip]` boundary
+- `tooltipDelay` (default 400ms) — adjustable via settings slider (0–1000ms)
+- `hideHelpTips` — boolean toggled by "Hide Help Tips" setting, suppresses `help` class tooltips
+
+### Adding tooltips to elements
+
+Static HTML: add `data-tip="id"` directly. Dynamic JS: include in template literal or use `el.dataset.tip = "id"`. For `make3dBtn`, use the optional 4th parameter: `make3dBtn('Submit', 'submitGuess()', '', 'submit-guess')`.
+
+---
+
+## Font-Ready Gate
+
+`#game-root` starts with `opacity: 0` in CSS. At the end of the `<script>` block:
+
+```js
+document.fonts.ready.then(() => {
+  document.getElementById('game-root').style.opacity = '1';
+});
+```
+
+Prevents FOUT (Flash of Unstyled Text) — the start screen only renders after all web fonts (Typekit, Google Fonts, custom `@font-face`) have loaded. No transition on the opacity change — the start screen's own CRT entrance handles the visual reveal.

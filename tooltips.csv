@@ -1,0 +1,26 @@
+id,class,flavor,description
+rounds-2,evergreen,When you gotta get back to the zipline fast,Play a 2-round game — great for a fast session
+rounds-4,evergreen,Standard game,Play a 4-round game — the classic experience
+rounds-6,evergreen,"Six Seven, heh heh",Play a 6-round game — settle it once and for all
+speed-stepper,evergreen,"""We're the ones who run!""",Controls how fast some animations and scoring sequences play out
+player-add,evergreen,"""Puttin' ya down, bitch!""",Add another player to this team (max 5)
+player-remove,evergreen,"""Back away, banana-breath""",Remove this player from the roster
+cat-pill,help,Pick wisely,Choose a category for this round — each has different question types
+cat-mult-1-5x,evergreen,Bonus zone,Round total will be multiplied by 1.5 when the round winner is determined
+cat-mult-2x,evergreen,Bonus zone,Round total will be multiplied by 2 when the round winner is determined
+cat-mult-3x,evergreen,Bonus zone,Round total will be multiplied by 3 when the round winner is determined
+question-options,help,"If you ain't cheating, you ain't trying",Open the question management panel
+answer-history,help,Look back at that dumb answer your teammate gave,View all guesses submitted so far this round
+submit-guess,help,Pressing Enter also submits your answer,Submit your current guess
+board-streak,evergreen,,Consecutive correct answers — resets on a strike
+board-mult,evergreen,,Current answer multiplier — grows with your streak
+board-strikes,evergreen,,Wrong answers this round — three strikes and the other team can steal
+board-round-total,evergreen,,Total points earned this round before the category multiplier
+scoreboard-red,help,Red team score,Total accumulated points for the red team
+scoreboard-blue,help,Blue team score,Total accumulated points for the blue team
+round-counter,help,Progress,Shows which round you're on out of the total
+reveal-all,evergreen,,Reveal any remaining hidden answers on the board
+next-round,evergreen,,Move on to the next round
+score-edit,evergreen,"""Ya gotta give""",Manually add or subtract points to correct a scoring error
+speed-slider,evergreen,"""We're the ones who run!""",Controls how fast some animations and scoring sequences play out
+crt-toggle,evergreen,See the world wildly in a wild way,Toggle the CRT scanline overlay effect

@@ -5,7 +5,7 @@ Family Feud-inspired game with original features and styling. Working title: **G
 - Main game file: `feud.html`
 - Question bank: `master_question_bank.json` (active file, includes variants — see below)
 - Pre-variants backup: `question_bank_pre-variants.json`
-- Sound files alongside feud.html: `correct.mp3`, `wrong.mp3`, `goodanswer.mp3`, `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX), `phonetype.wav` (typewriter keystroke SFX), `balbg.mp3` (background music, looping), `roundend.wav` (round winner determined), `decreaseblip.mp3` (streak/mult decrease), `neutralbeep.wav` (duplicate answer rejection), `chime.wav` (badge bounce SFX)
+- Sound files alongside feud.html: `correct.mp3`, `wrong.mp3`, `goodanswer.mp3`, `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX), `phonetype.wav` (typewriter keystroke SFX), `balbg.mp3` (background music, looping), `roundend.wav` (round winner determined), `decreaseblip.mp3` (streak/mult decrease), `neutralbeep.wav` (duplicate answer rejection), `chime.wav` (badge bounce SFX), `zoop.wav` (speed stepper SFX)
 
 ### Branch structure
 - **`main`** — active development (formerly `viewport-redesign`)
@@ -866,54 +866,141 @@ When a wrong answer triggers a strike, the streak and multiplier decrease animat
 
 ## Setup Step Transitions
 
-Three navigation flows between setup screens. All use `async`/`await` with `anim.play`/`anim.done` — no raw `animationend` listeners (see animation rule 8).
+Two-step setup flow with ticker-style slide transitions. All use `async`/`await` with `anim.play`/`anim.done`. Both `#setup-step-1` and `#setup-step-2` have `flex: 1` to fill the remaining height below the title, with `justify-content: center` for vertical centering.
 
-### `#selected-rounds` — round count display
+### Step 1: Game settings
 
-Absolutely positioned on the left side of `#setup-step-2`. Contains:
-- `.game-length` label ("GAME LENGTH") — Futura weight 100
-- `.rounds-number` — large round count (Futura 700, 6rem, `#fba300`)
-- `.rounds-label` — "ROUNDS" (Futura 700, 1.4rem, `#fba300`)
-- `#setup-back-btn` — rewind icon (two overlapping `◀` glyphs with staggered `rw-grow` scale animation, 2s cycle, always running) + "BACK" label. All `#fba300`.
+- **Round count**: 3D isometric SVG buttons (2/4/6) — same pattern as before
+- **Game speed stepper**: `◀ [value] ▶` arrow stepper. Futura 700, 3rem. Arrows have subtle CSS nudge animations (`speed-arrow-nudge-left/right`, 1.2s cycle). Arrows disable (no animation, dimmed color) at min/max bounds. Value label slides in/out on change with 125px fixed-width container and `overflow: hidden` clipping.
+- **Next button** (`#setup-next-btn`): absolutely positioned right side, vertically centered (`right: 0%; top: 50%; transform: translateY(-50%)`). Uses `transport-btn` style with 5.8rem glyphs.
 
-Fade-in: 2s. Fade-out: 1s. Both via `.fade-in` / `.fade-out` classes with `forwards` fill.
+### Step 2: Team configuration
+
+- **Back button** (`#setup-back-btn`): absolutely positioned left side, same size as Next/Start Game buttons
+- **Player columns** (`#player-columns`): two team cards with dynamic player rows (see "Dynamic Player Rows" below)
+- **`#selected-rounds`**: simple text line below player columns — "[X] Round Game" in Futura 700, 1.2rem, `#fba300`
+- **Start Game button** (`#start-game-container`): absolutely positioned right side, always visible (no fade-in/out)
 
 ### Forward: Step 1 → Step 2 (`proceedToTeamSetup`)
 
+Ticker-style: content slides **left** (user is navigating right).
+
 | Step | Action | Duration |
 |------|--------|----------|
-| 1 | Step 1 flies out right (`setup-fly-out`) | 0.28s |
-| 2 | Step 1 hidden, step 2 shown, flies in from left (`setup-fly-in`) | 0.30s |
-| 3 | `#selected-rounds` fades in | 2s |
+| 1 | Step 1 flies out left (`setup-fly-out`, translateX → -120%) | 0.28s |
+| 2 | Step 1 hidden, step 2 shown, flies in from right (`setup-fly-in`, translateX 120% → 0) | 0.30s |
 
 ### Back: Step 2 → Step 1 (`backToRoundSelect`)
 
+Reverse ticker: content slides **right**.
+
 | Step | Action | Duration |
 |------|--------|----------|
-| 1 | `#selected-rounds` fades out | 1s |
-| 2 | Step 2 flies out left (`setup-fly-out-left`) | 0.28s |
-| 3 | Step 2 hidden, step 1 shown, flies in from right (`setup-fly-in-right`) | 0.30s |
+| 1 | Step 2 flies out right (`setup-fly-out-left`, translateX → 120%) | 0.28s |
+| 2 | Step 2 hidden, step 1 shown, flies in from left (`setup-fly-in-right`, translateX -120% → 0) | 0.30s |
 
-Team names and player inputs are preserved across back/forward navigation (DOM state is untouched). Round selection SVG button state is also preserved.
+**No opacity transitions** on any fly animations — pure slide for consistent ticker aesthetic.
+
+Team names, player rows, and speed/round selections are preserved across back/forward navigation.
 
 ### Game start: Step 2 → Game (`beginStartGameExit`)
 
-Two parallel tracks, `startGame()` fires after both complete:
-
-| Time | Track 1: beat sequence | Track 2: selected-rounds |
-|------|----------------------|--------------------------|
-| 0ms | Start Game btn slides down (0.14s) | Fade-out begins (1s) |
-| 190ms | Player columns slide right (0.14s) | ...fading... |
-| 380ms | Title slides up (0.14s) | ...fading... |
-| 520ms | *Track 1 done* | ...fading... |
-| 1000ms | *(waiting)* | *Track 2 done* |
-| 1000ms | `startGame()` fires | |
-
-`TIMING.setupExitBeatGap` (50ms) controls the pause between beats. Track 2 (1s fade-out) currently gates the transition.
+Simple fade of the entire `#setup` container (opacity 1 → 0, 0.5s ease). `startGame()` fires on `transitionend`.
 
 ### Dev mode dismiss
 
-`activateDevMode()` calls `_dismissStartScreen()` — the same animated sequence as a normal start screen click (blob crossfade → logo TV-off → screen fade). No instant skip.
+`activateDevMode()` calls `_dismissStartScreen()` — the same animated sequence as a normal start screen click (text fade → logo TV-off → screen fade). Pre-fills 2 players per team by programmatically calling `addPlayerRow()`.
+
+---
+
+## Game Speed System
+
+Global speed multiplier that scales all gameplay animations uniformly. Two coordinated mechanisms:
+
+### CSS: `--speed` custom property
+
+Set on `:root` via `setGameSpeed()`. All gameplay animations use `calc(duration / var(--speed))` in their `animation-duration`. Ambient animations (blobs, button tilt, scanlines, cursor blink, marquees) are **not** scaled.
+
+### JS: `gameSpeed` divisor
+
+`anim.wait(ms)` and `anim.setDelay(el, ms)` divide by `gameSpeed` internally. `animateCountUp` divides its computed duration by `gameSpeed`. `typewriter()` divides `charMs` by `gameSpeed`. This means callers pass base timing values and scaling is automatic.
+
+### Speed notch table
+
+```js
+const SPEED_NOTCHES = [
+  { value: 0.5, label: "0.5" },
+  { value: 1,   label: "1" },
+  { value: 2,   label: "2" },
+  { value: 3,   label: "3" },
+];
+```
+
+To add a new speed tier, append an entry. The setup stepper, settings slider, and all notch labels auto-adjust.
+
+### Two UIs, synced
+
+- **Setup screen stepper** (`stepSpeed(dir)`): arrow-based ◀/▶ with sliding number label. Plays `zoop.wav` with pitch modulated by notch index (0.7× at 0.5 speed → 1.4× at 3 speed).
+- **Settings tray slider** (`applySpeedFromSlider(index)`): range input with clickable notch labels. Applies speed changes immediately (live mid-game). `syncSpeedSlider()` and `syncSpeedStepper()` keep both UIs in sync.
+
+### Spacebar fast-forward
+
+While the guess input is disabled (scoring sequence in progress), holding Space temporarily doubles the effective speed (capped at 4×). Releasing restores `gameSpeedSetting`.
+
+### What does NOT scale
+
+- Fast Money countdown timer (real-time 1000ms ticks)
+- Ambient/decorative CSS animations
+- Cleanup/feedback timeouts (message fades, copy confirmations)
+- Sound pitch/volume (ticks naturally speed up because count-ups run faster)
+
+### Reset
+
+`resetGame()` sets `gameSpeedSetting = 1`, calls `setGameSpeed(1)`, and resets both UIs.
+
+---
+
+## Dynamic Player Rows
+
+Team setup starts with 1 player input per team. Players add/remove rows dynamically.
+
+### Structure
+
+Each player row is a `.player-row` div (position: relative) containing:
+- `<input>` — full-width, `padding-right: 28px` to clear the remove button
+- `.player-remove-btn` — absolutely positioned inside the input (right: 4px), circular − button
+
+A `.player-add-btn` (circular + button) sits below the rows inside `.player-col-body`, hanging off the bottom edge by ~50% (`position: relative; top: 18px`). Background is `inherit` from `.player-col-body`.
+
+### Constraints
+
+- **Minimum**: 1 row per team (cannot remove the last row)
+- **Maximum**: 5 rows per team (`MAX_PLAYERS` constant). + button gets `.hidden` at max.
+- **− button visibility**: hidden via `.player-row:only-child .player-remove-btn { display: none }` when only 1 row exists
+
+### Animations
+
+- **Enter**: new row starts with `.entering` class (`max-height: 0; opacity: 0; margin-bottom: -6px`), removed on next rAF to trigger transition to full size
+- **Exit**: `.exiting` class applied, same properties transition to 0, row removed on `transitionend` (with 350ms setTimeout fallback for hidden tabs)
+
+### SFX
+
+`phonetype.wav` plays at 1.5× volume on both add and remove via `playKeystroke(1.5)`.
+
+### Player name fallback logic (`startGame()`)
+
+- **Single empty row** (default state): falls back to team name — preserves original behavior
+- **Multiple rows**: each row = an active player. Empty inputs get `"Player N"` fallback names (1-indexed by row position)
+
+### CSS inheritance
+
+`.player-col input, .player-col button` sets `font-family: inherit; text-transform: inherit; letter-spacing: inherit` — form elements don't inherit these by default.
+
+### Functions
+
+- `addPlayerRow(btn)` — creates and appends a new `.player-row` with enter animation
+- `removePlayerRow(btn)` — animates out and removes the row
+- `resetPlayerRows()` — resets both teams to 1 empty row (called by `resetSetupSteps()`)
 
 ---
 
@@ -930,9 +1017,9 @@ The `.crt-start-screen` class applies a composite TV effect to `#start-screen`:
 
 ### Dismiss sequence (`_dismissStartScreen()`)
 Shared by both normal click and dev mode:
-1. **0ms**: `h1.drop-out` animation (drops off bottom). Blob colors are **not** changed.
-2. **1500ms**: logo gets `.tv-off` (`logo-tv-off` keyframes, 0.5s — adapted from `crt-power-off`)
-3. **1800ms**: start screen fades out (`.dismissing`), setup slides in
+1. **0ms**: h1 + `.copyright` fade out together (`.start-fade-out`, 1s). Blob colors are **not** changed.
+2. **1000ms**: logo gets `.tv-off` (`logo-tv-off` keyframes, 0.5s — adapted from `crt-power-off`)
+3. **1300ms**: start screen fades out (`.dismissing`), setup slides in
 
 ---
 

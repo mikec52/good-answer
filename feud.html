@@ -322,12 +322,11 @@
       color: #C0C000;
       animation: start-prompt-pulse 2s ease-in-out infinite;
     }
-    #start-screen h1.drop-out {
-      animation: start-h1-drop 0.6s ease-in forwards;
+    #start-screen .start-fade-out {
+      animation: start-text-fade 1s ease forwards;
     }
-    @keyframes start-h1-drop {
-      0%   { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(200px); opacity: 0; }
+    @keyframes start-text-fade {
+      to { opacity: 0; }
     }
     @keyframes start-prompt-pulse {
       0%, 100% { opacity: 1; }
@@ -481,69 +480,27 @@
     }
     #setup input { padding: 6px; margin: 4px; }
 
-    /* Setup two-step containers */
+    /* Setup two-step containers — fill remaining height below title */
     #setup-step-1, #setup-step-2 {
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       width: 100%;
       max-width: 80%;
+      position: relative;
+      flex: 1;
     }
-    #setup-step-2 { display: none; position: relative; }
+    #setup-step-2 { display: none; }
     #selected-rounds {
-      position: absolute;
-      left: 0%;
-      top: 50%;
-      transform: translateY(-50%);
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      color: #fba300;
+      letter-spacing: 0.08em;
       text-align: center;
-      opacity: 0;
-    }
-    #selected-rounds.fade-in {
-      animation: selected-rounds-fade-in 2s ease forwards;
-    }
-    #selected-rounds.fade-out {
-      animation: selected-rounds-fade-out 1s ease forwards;
-    }
-    @keyframes selected-rounds-fade-in {
-      from { opacity: 0; }
-      to   { opacity: 1; }
-    }
-    @keyframes selected-rounds-fade-out {
-      from { opacity: 1; }
-      to   { opacity: 0; }
-    }
-
-    #selected-rounds .game-length {
-      font-family: "futura-100", sans-serif;
-      font-weight: 100;
-      font-size: 1rem;
-      text-transform: uppercase;
-      color: #fba300;
-    }
-
-    #selected-rounds .rounds-number {
-      font-family: "futura-100", sans-serif;
-      font-weight: 700;
-      font-size: 6rem;
-      text-transform: uppercase;
-      color: #fba300;
-      line-height: 1;
-    }
-    #selected-rounds .rounds-label {
-      font-family: "futura-100", sans-serif;
-      font-weight: 700;
-      font-size: 1.4rem;
-      text-transform: uppercase;
-      color: #fba300;
-      letter-spacing: 0.1em;
-    }
-    #selected-rounds .speed-display {
-      font-family: "futura-100", sans-serif;
-      font-weight: 100;
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      color: rgba(251, 163, 0, 0.6);
-      margin-top: 0.8rem;
+      margin-top: 16px;
     }
     /* Shared transport-button style (back, next, start) */
     .transport-btn {
@@ -581,24 +538,23 @@
       letter-spacing: 0.1em;
     }
     /* Per-button size overrides */
-    #setup-back-btn  { --tp-glyph-size: 2.5rem; --tp-label-size: 1.2rem; }
-    #setup-next-btn  { --tp-glyph-size: 2.5rem; --tp-label-size: 1.2rem; }
+    #setup-back-btn {
+      --tp-glyph-size: 5.8rem; --tp-label-size: 1.5rem;
+      position: absolute; left: 0%; top: 50%; transform: translateY(-50%);
+    }
+    #setup-next-btn  {
+      --tp-glyph-size: 5.8rem; --tp-label-size: 1.5rem;
+      position: absolute; right: 0%; top: 50%; transform: translateY(-50%);
+    }
     #start-game-btn  { --tp-glyph-size: 5.8rem; --tp-label-size: 1.5rem; }
 
-    /* Start-game container — mirrors #selected-rounds on the right */
+    /* Start-game container — positioned on right side of step 2 */
     #start-game-container {
       position: absolute;
       right: 0%;
       top: 50%;
       transform: translateY(-50%);
       text-align: center;
-      opacity: 0;
-    }
-    #start-game-container.fade-in {
-      animation: selected-rounds-fade-in 2s ease forwards;
-    }
-    #start-game-container.fade-out {
-      animation: selected-rounds-fade-out 1s ease forwards;
     }
 
     /* Setup exit animations (when starting game) */
@@ -611,23 +567,23 @@
 
     /* Setup step animations */
     @keyframes setup-fly-out {
-      from { transform: translateX(0);     opacity: 1; }
-      to   { transform: translateX(120%);  opacity: 0; }
+      from { transform: translateX(0); }
+      to   { transform: translateX(-120%); }
     }
     @keyframes setup-fly-in {
-      from { transform: translateX(-120%); opacity: 0; }
-      to   { transform: translateX(0);     opacity: 1; }
+      from { transform: translateX(120%); }
+      to   { transform: translateX(0); }
     }
     .setup-fly-out { animation: setup-fly-out calc(0.28s / var(--speed)) cubic-bezier(0.4, 0, 1, 1) forwards; }
     .setup-fly-in  { animation: setup-fly-in  calc(0.30s / var(--speed)) cubic-bezier(0, 0, 0.3, 1) forwards; }
     /* Reverse direction — back from step 2 to step 1 */
     @keyframes setup-fly-out-left {
-      from { transform: translateX(0);    opacity: 1; }
-      to   { transform: translateX(-120%); opacity: 0; }
+      from { transform: translateX(0); }
+      to   { transform: translateX(120%); }
     }
     @keyframes setup-fly-in-right {
-      from { transform: translateX(120%); opacity: 0; }
-      to   { transform: translateX(0);    opacity: 1; }
+      from { transform: translateX(-120%); }
+      to   { transform: translateX(0); }
     }
     .setup-fly-out-left { animation: setup-fly-out-left calc(0.28s / var(--speed)) cubic-bezier(0.4, 0, 1, 1) forwards; }
     .setup-fly-in-right { animation: setup-fly-in-right calc(0.30s / var(--speed)) cubic-bezier(0, 0, 0.3, 1) forwards; }
@@ -663,27 +619,49 @@
       fill: white;
       filter: drop-shadow(0 0 10px white) drop-shadow(0 0 22px rgba(255, 255, 255, 0.5));
     }
-    /* Speed selector — smaller isometric buttons, same style as rounds */
-    .speed-btns { display: flex; gap: 12px; justify-content: center; }
-    .speed-svg {
-      width: 100px;
-      height: 100px;
-      cursor: pointer;
-      outline: none;
+    /* Speed stepper — arrow ◀ | value | ▶ layout */
+    .speed-stepper {
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      user-select: none;
     }
-    .speed-svg .btn-number {
-      font-family: 'Bitcount Single', sans-serif;
-      font-size: 2rem;
-      fill: rgba(255, 255, 255, 0.3);
-      text-anchor: middle;
-      dominant-baseline: central;
-      transition: filter 0.3s, fill 0.3s;
+    .speed-stepper-arrow {
+      color: #fba300; font-size: 2.5rem; cursor: pointer;
+      line-height: 1;
     }
-    .speed-svg:hover .btn-number,
-    .speed-svg.selected .btn-number {
-      fill: white;
-      filter: drop-shadow(0 0 10px white) drop-shadow(0 0 22px rgba(255, 255, 255, 0.5));
+    .speed-stepper-arrow.arrow-left  { animation: speed-arrow-nudge-left  1.2s ease-in-out infinite; }
+    .speed-stepper-arrow.arrow-right { animation: speed-arrow-nudge-right 1.2s ease-in-out infinite; }
+    @keyframes speed-arrow-nudge-left  {
+      0%, 100% { transform: translateX(0); }
+      50%      { transform: translateX(-4px); }
     }
+    @keyframes speed-arrow-nudge-right {
+      0%, 100% { transform: translateX(0); }
+      50%      { transform: translateX(4px); }
+    }
+    .speed-stepper-arrow.disabled {
+      color: rgba(251, 163, 0, 0.2); pointer-events: none; animation: none;
+    }
+    .speed-stepper-value {
+      font-family: "futura-100", sans-serif; font-weight: 700;
+      font-size: 3rem; color: #fba300; line-height: 1;
+      width: 125px; min-width: 125px; text-align: center;
+      overflow: hidden; position: relative;
+      height: 3rem; /* lock height so abs-positioned spans don't collapse it */
+      margin-bottom: 8px;
+    }
+    .speed-stepper-value span {
+      position: absolute; left: 0; right: 0;
+    }
+    /* Slide transitions — fixed 125px travel matches the container width.
+       Old and new spans overlap during the crossover for a smooth slide. */
+    @keyframes speed-slide-out-left  { from { transform: translateX(0); } to { transform: translateX(-125px); } }
+    @keyframes speed-slide-in-right  { from { transform: translateX(125px); } to { transform: translateX(0); } }
+    @keyframes speed-slide-out-right { from { transform: translateX(0); } to { transform: translateX(125px); } }
+    @keyframes speed-slide-in-left   { from { transform: translateX(-125px); } to { transform: translateX(0); } }
+    .speed-slide-out-left  { animation: speed-slide-out-left  0.25s ease-in-out forwards; }
+    .speed-slide-in-right  { animation: speed-slide-in-right  0.25s ease-in-out forwards; }
+    .speed-slide-out-right { animation: speed-slide-out-right 0.25s ease-in-out forwards; }
+    .speed-slide-in-left   { animation: speed-slide-in-left   0.25s ease-in-out forwards; }
     #player-columns {
       display: flex;
       justify-content: center;
@@ -695,16 +673,18 @@
       display: flex;
       flex-direction: column;
       align-items: stretch;
-      border-radius: 10px;
-      overflow: hidden;
       min-width: 180px;
+      font-family: 'futura-100', sans-serif;
+      letter-spacing: .02em;
     }
     .player-col-header {
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 10px 16px 12px;
+      border-radius: 10px 10px 0 0;
     }
+    .player-col input, .player-col button { font-family: inherit; text-transform: inherit; letter-spacing: inherit; }
     .player-col-header h3 { margin: 0 0 8px; }
     .player-col-header input { text-align: center; width: 100%; box-sizing: border-box; }
     @keyframes input-shake {
@@ -720,8 +700,10 @@
       flex-direction: column;
       align-items: center;
       padding: 10px 16px 14px;
-      background: #f2ebdf;
-      border-top: 2px solid #444;
+      background: #333;
+      border-top: 2px solid #555;
+      border-radius: 0 0 10px 10px;
+      overflow: visible;
     }
     .player-col-body .players-label {
       font-size: 0.75rem;
@@ -738,6 +720,47 @@
       flex-direction: column;
       gap: 6px;
     }
+    /* Dynamic player rows — add/remove */
+    .player-row {
+      position: relative;
+      max-height: 40px; opacity: 1;
+      transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.25s ease;
+      overflow: hidden;
+    }
+    .player-row.entering {
+      max-height: 0; opacity: 0; margin-bottom: -6px;
+    }
+    .player-row.exiting {
+      max-height: 0; opacity: 0; margin-bottom: -6px;
+    }
+    #setup .player-row input {
+      width: 100%; box-sizing: border-box; padding-right: 28px;
+      margin: 0; border: 1px solid #ccc; border-radius: 4px;
+    }
+    .player-remove-btn {
+      position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 1.5px solid #ccc; background: transparent;
+      color: #aaa; font-size: 0.85rem; line-height: 1;
+      cursor: pointer; padding: 0 0 4px 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .player-remove-btn:hover { color: #c00; border-color: #c00; }
+    /* Hide - button when there's only one row */
+    .player-row:only-child .player-remove-btn { display: none; }
+    .player-add-btn {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 2px solid #555; background: inherit;
+      color: #999; font-size: 1.2rem; line-height: 1;
+      cursor: pointer; padding: 0 0 3.7px 0; margin-top: 8px;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.15s, border-color 0.15s;
+      /* Hang off bottom edge of player-col-body by 50% */
+      position: relative; top: 19px; margin-bottom: -6px;
+    }
+    .player-add-btn:hover { color: #fba300; border-color: #fba300; }
+    .player-add-btn.hidden { display: none; }
     #bg-animation {
       position: absolute;
       top: 0; left: 0;
@@ -877,15 +900,39 @@
       width: 16px; height: 16px; border-radius: 50%;
       background: #fba300; box-shadow: 0 0 0 2px var(--tray-bg); cursor: pointer;
     }
-    /* Speed slider — notch tick marks + clickable labels */
+    /* Speed slider — wrapper keeps slider + labels in the same width context */
+    .speed-slider-wrap {
+      margin-top: 8px; margin-bottom: 10px;
+    }
+    .speed-slider-wrap input[type="range"] {
+      width: 100%; cursor: pointer; margin: 0; padding: 0;
+      -webkit-appearance: none; appearance: none;
+    }
+    .speed-slider-wrap input[type="range"]::-webkit-slider-runnable-track {
+      height: 4px; border-radius: 2px; background: #ddd;
+    }
+    .speed-slider-wrap input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      position: relative; z-index: 1;
+      width: 16px; height: 16px; border-radius: 50%;
+      margin-top: -6px;
+      background: #fba300; box-shadow: 0 0 0 2px var(--tray-bg); cursor: pointer;
+    }
+    .speed-slider-wrap input[type="range"]::-moz-range-thumb {
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #fba300; box-shadow: 0 0 0 2px var(--tray-bg); cursor: pointer;
+    }
+    /* Notch tick marks + clickable labels — padding matches thumb half-width
+       so labels align with the thumb center at each discrete stop. */
     .speed-notch-labels {
       display: flex; justify-content: space-between;
-      font-size: 0.7rem; color: #999; margin-top: -2px; margin-bottom: 10px;
-      padding: 0 8px; user-select: none; /* 8px = half of 16px thumb width */
+      font-size: 0.7rem; color: #999; margin-top: 0; padding: 0 8px;
+      user-select: none;
     }
     .speed-notch-labels span {
       display: flex; flex-direction: column; align-items: center;
       cursor: pointer; gap: 2px;
+      width: 0; overflow: visible; white-space: nowrap;
     }
     .speed-notch-labels span::before {
       content: ''; display: block;
@@ -3119,10 +3166,10 @@
     <div class="tray-section">
       <div class="tray-heading">Options</div>
       <div class="tray-row-label"><label>Game Speed</label></div>
-      <div class="tray-row-slider speed-slider-row">
+      <div class="speed-slider-wrap">
         <input type="range" id="speed-slider" min="0" max="1" step="1" value="1" oninput="applySpeedFromSlider(+this.value)">
+        <div class="speed-notch-labels" id="speed-notch-labels"></div>
       </div>
-      <div class="speed-notch-labels" id="speed-notch-labels"></div>
       <div class="tray-row">
         <label>CRT Effect</label>
         <label class="toggle-switch">
@@ -3247,33 +3294,10 @@
           </div>
           <div class="win-option-sub">
             <label>Game Speed:</label>
-            <div class="speed-btns">
-              <svg class="speed-svg selected" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" tabindex="0" onclick="selectSpeed(1, this)">
-                <rect class="buttonSides btn-side-face" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 59)" fill="#b87800"/>
-                <rect class="buttonSides btn-strip" x="5.05" y="51" width="90.62" height="8" fill="#b87800"/>
-                <g clip-path="url(#clip-s1)">
-                  <rect class="buttonTop" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 51)" fill="#fba300"/>
-                  <text class="btn-number" x="28.5" y="30" dx="0.1em" transform="matrix(0.866025 -0.5 0.866025 0.5 1 51)">1x</text>
-                </g>
-                <defs>
-                  <clipPath id="clip-s1">
-                    <rect width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 51)" fill="white"/>
-                  </clipPath>
-                </defs>
-              </svg>
-              <svg class="speed-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" tabindex="0" onclick="selectSpeed(2, this)">
-                <rect class="buttonSides btn-side-face" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 59)" fill="#b87800"/>
-                <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#b87800"/>
-                <g clip-path="url(#clip-s2)">
-                  <rect class="buttonTop" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="#fba300"/>
-                  <text class="btn-number" x="28.5" y="30" dx="0.1em" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)">2x</text>
-                </g>
-                <defs>
-                  <clipPath id="clip-s2">
-                    <rect width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="white"/>
-                  </clipPath>
-                </defs>
-              </svg>
+            <div class="speed-stepper">
+              <span class="speed-stepper-arrow arrow-left disabled" id="speed-arrow-left" onclick="stepSpeed(-1)">◀</span>
+              <span class="speed-stepper-value" id="speed-stepper-label"><span>1</span></span>
+              <span class="speed-stepper-arrow arrow-right" id="speed-arrow-right" onclick="stepSpeed(1)">▶</span>
             </div>
             <input type="hidden" id="speedInput" value="1">
           </div>
@@ -3287,16 +3311,10 @@
 
     <!-- Step 2: Team setup -->
     <div id="setup-step-2">
-      <div id="selected-rounds">
-        <div class="game-length">GAME LENGTH</div>
-        <div class="rounds-number"></div>
-        <div class="rounds-label">Rounds</div>
-        <div class="speed-display"></div>
-        <button id="setup-back-btn" class="transport-btn" onclick="backToRoundSelect()">
-          <span class="transport-glyphs tp-rewind"><span class="tp-arrow">◀</span><span class="tp-arrow">◀</span></span>
-          <span class="transport-label">Back</span>
-        </button>
-      </div>
+      <button id="setup-back-btn" class="transport-btn" onclick="backToRoundSelect()">
+        <span class="transport-glyphs tp-rewind"><span class="tp-arrow">◀</span><span class="tp-arrow">◀</span></span>
+        <span class="transport-label">Back</span>
+      </button>
       <div id="player-columns">
         <div class="player-col red-col">
           <div class="player-col-header">
@@ -3306,12 +3324,12 @@
           <div class="player-col-body">
             <div class="players-label">Players</div>
             <div id="redPlayers">
-              <input type="text" class="redPlayer" placeholder="Player name" maxlength="18">
-              <input type="text" class="redPlayer" placeholder="Player name" maxlength="18">
-              <input type="text" class="redPlayer" placeholder="Player name" maxlength="18">
-              <input type="text" class="redPlayer" placeholder="Player name" maxlength="18">
-              <input type="text" class="redPlayer" placeholder="Player name" maxlength="18">
+              <div class="player-row">
+                <input type="text" class="redPlayer" placeholder="Player name" maxlength="18">
+                <button class="player-remove-btn" onclick="removePlayerRow(this)">−</button>
+              </div>
             </div>
+            <button class="player-add-btn" onclick="addPlayerRow(this)">+</button>
           </div>
         </div>
         <div class="player-col blue-col">
@@ -3322,15 +3340,16 @@
           <div class="player-col-body">
             <div class="players-label">Players</div>
             <div id="bluePlayers">
-              <input type="text" class="bluePlayer" placeholder="Player name">
-              <input type="text" class="bluePlayer" placeholder="Player name">
-              <input type="text" class="bluePlayer" placeholder="Player name">
-              <input type="text" class="bluePlayer" placeholder="Player name">
-              <input type="text" class="bluePlayer" placeholder="Player name">
+              <div class="player-row">
+                <input type="text" class="bluePlayer" placeholder="Player name" maxlength="18">
+                <button class="player-remove-btn" onclick="removePlayerRow(this)">−</button>
+              </div>
             </div>
+            <button class="player-add-btn" onclick="addPlayerRow(this)">+</button>
           </div>
         </div>
       </div>
+      <div id="selected-rounds"></div>
       <div id="start-game-container">
         <button id="start-game-btn" class="transport-btn" onclick="beginStartGameExit()">
           <span class="transport-glyphs tp-play"><span class="tp-arrow">▶</span></span>
@@ -3751,10 +3770,10 @@
        Index position maps to the slider's integer value.
        To add 3x/4x: just append { value: 3, label: "3x" }, etc. */
     const SPEED_NOTCHES = [
-      { value: 0.5, label: "0.5x" },
-      { value: 1,   label: "1x" },
-      { value: 2,   label: "2x" },
-      { value: 3,   label: "3x" },
+      { value: 0.5, label: "0.5" },
+      { value: 1,   label: "1" },
+      { value: 2,   label: "2" },
+      { value: 3,   label: "3" },
     ];
     const SPEED_DEFAULT_INDEX = 1; // index of 1x in the table
 
@@ -3777,14 +3796,10 @@
       if (!notch) return;
       gameSpeedSetting = notch.value;
       setGameSpeed(notch.value);
-      // Sync the setup-screen buttons if visible
+      // Sync the setup-screen stepper if visible
       const speedInput = document.getElementById('speedInput');
       if (speedInput) speedInput.value = notch.value;
-      document.querySelectorAll('.speed-svg').forEach(s => {
-        const btnVal = parseFloat(s.querySelector('.btn-number')?.textContent);
-        s.classList.toggle('selected', btnVal === notch.value);
-        setButtonDepressed(s, btnVal === notch.value);
-      });
+      syncSpeedStepper();
     }
 
     /** Build the speed slider's range and notch labels from SPEED_NOTCHES. */
@@ -3868,12 +3883,12 @@
       }
     }
 
-    function playKeystroke() {
+    function playKeystroke(volume = 1.0) {
       if (!keystrokeBuffer || !tickAudioCtx || !soundEnabled) return;
       const source = tickAudioCtx.createBufferSource();
       source.buffer = keystrokeBuffer;
       const gainNode = tickAudioCtx.createGain();
-      gainNode.gain.value = 1.0 * (soundEnabled ? volumeMaster : 0) * volumeSfx;
+      gainNode.gain.value = volume * (soundEnabled ? volumeMaster : 0) * volumeSfx;
       source.connect(gainNode);
       gainNode.connect(tickAudioCtx.destination);
       source.start();
@@ -3912,6 +3927,38 @@
     }
 
     initChimeSfx("chime.wav");
+
+    // ── Zoop SFX — speed stepper sound with pitch modulation ──
+    let zoopBuffer = null;
+
+    async function initZoopSfx(url) {
+      try {
+        if (!tickAudioCtx) tickAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const response = await fetch(url);
+        const arrayBuf = await response.arrayBuffer();
+        zoopBuffer = await tickAudioCtx.decodeAudioData(arrayBuf);
+      } catch (e) {
+        console.warn("Zoop SFX failed to load:", e);
+      }
+    }
+
+    /** Play zoop with pitch mapped to speed notch index (low → high). */
+    function playZoop(notchIndex) {
+      if (!zoopBuffer || !tickAudioCtx || !soundEnabled) return;
+      // Map notch index 0..N-1 to playback rate 0.7..1.4
+      const t = SPEED_NOTCHES.length > 1 ? notchIndex / (SPEED_NOTCHES.length - 1) : 0.5;
+      const rate = 0.7 + t * 0.7;
+      const source = tickAudioCtx.createBufferSource();
+      source.buffer = zoopBuffer;
+      source.playbackRate.value = rate;
+      const gainNode = tickAudioCtx.createGain();
+      gainNode.gain.value = 0.5 * (soundEnabled ? volumeMaster : 0) * volumeSfx;
+      source.connect(gainNode);
+      gainNode.connect(tickAudioCtx.destination);
+      source.start();
+    }
+
+    initZoopSfx("zoop.wav");
 
     /**
      * Emit sparkle particles from a badge's edge outward.
@@ -4173,13 +4220,17 @@ document.addEventListener('keydown', e => {
       document.getElementById('redTeamName').value = 'Turbo Team';
       document.getElementById('blueTeamName').value = 'Chubby Buddies';
 
-      // Pre-fill player names
-      const redPlayers = document.querySelectorAll('.redPlayer');
-      const bluePlayers = document.querySelectorAll('.bluePlayer');
+      // Pre-fill player names — add rows as needed (starts with 1 row each)
       const redNames = ['Roy Donk', 'Paul Buffano'];
       const blueNames = ['Jamie Taco', 'Wagoo'];
-      redNames.forEach((name, i) => { if (redPlayers[i]) redPlayers[i].value = name; });
-      blueNames.forEach((name, i) => { if (bluePlayers[i]) bluePlayers[i].value = name; });
+      const redAddBtn = document.querySelector('#redPlayers').closest('.player-col-body').querySelector('.player-add-btn');
+      const blueAddBtn = document.querySelector('#bluePlayers').closest('.player-col-body').querySelector('.player-add-btn');
+      // Add extra rows (skip animation in dev mode)
+      for (let i = 1; i < redNames.length; i++) addPlayerRow(redAddBtn);
+      for (let i = 1; i < blueNames.length; i++) addPlayerRow(blueAddBtn);
+      // Fill values
+      document.querySelectorAll('.redPlayer').forEach((inp, i) => { if (redNames[i]) inp.value = redNames[i]; });
+      document.querySelectorAll('.bluePlayer').forEach((inp, i) => { if (blueNames[i]) inp.value = blueNames[i]; });
     }
 
     // Shake input when maxlength reached
@@ -4193,50 +4244,93 @@ document.addEventListener('keydown', e => {
       }
     });
 
+    /* ── Dynamic player rows — add / remove ─────────────────────── */
+    const MAX_PLAYERS = 5;
+
+    function addPlayerRow(btn) {
+      const body = btn.closest('.player-col-body');
+      const container = body.querySelector('#redPlayers, #bluePlayers');
+      const rows = container.querySelectorAll('.player-row');
+      if (rows.length >= MAX_PLAYERS) return;
+
+      // Determine player class from existing inputs
+      const playerClass = container.id === 'redPlayers' ? 'redPlayer' : 'bluePlayer';
+
+      const row = document.createElement('div');
+      row.className = 'player-row entering';
+      row.innerHTML = `<input type="text" class="${playerClass}" placeholder="Player name" maxlength="18">`
+                    + `<button class="player-remove-btn" onclick="removePlayerRow(this)">−</button>`;
+      container.appendChild(row);
+
+      // Trigger enter animation on next frame
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => row.classList.remove('entering'));
+      });
+
+      // Hide + button at max
+      if (rows.length + 1 >= MAX_PLAYERS) btn.classList.add('hidden');
+      playKeystroke(1.5);
+    }
+
+    function removePlayerRow(btn) {
+      const row = btn.closest('.player-row');
+      const container = row.parentElement;
+      const rows = container.querySelectorAll('.player-row');
+      if (rows.length <= 1) return;
+
+      row.classList.add('exiting');
+      row.addEventListener('transitionend', () => row.remove(), { once: true });
+      // Fallback for hidden tabs
+      setTimeout(() => { if (row.parentElement) row.remove(); }, 350);
+
+      // Show + button if it was hidden
+      const addBtn = container.closest('.player-col-body').querySelector('.player-add-btn');
+      if (addBtn) addBtn.classList.remove('hidden');
+      playKeystroke(1.5);
+    }
+
+    /** Reset both player containers to a single empty row. */
+    function resetPlayerRows() {
+      ['redPlayers', 'bluePlayers'].forEach(id => {
+        const container = document.getElementById(id);
+        if (!container) return;
+        const playerClass = id === 'redPlayers' ? 'redPlayer' : 'bluePlayer';
+        container.innerHTML = `<div class="player-row">`
+          + `<input type="text" class="${playerClass}" placeholder="Player name" maxlength="18">`
+          + `<button class="player-remove-btn" onclick="removePlayerRow(this)">−</button>`
+          + `</div>`;
+        const addBtn = container.closest('.player-col-body').querySelector('.player-add-btn');
+        if (addBtn) addBtn.classList.remove('hidden');
+      });
+    }
+
     function setGameMode(mode) {
       const roundsOpt = document.getElementById('rounds-option');
       if (roundsOpt) roundsOpt.classList.toggle('selected', mode === 'rounds');
     }
 
-    // Step 1 → Step 2: fly out right → fly in left → fade in flanking elements
+    // Step 1 → Step 2: fly out left → fly in from right (ticker effect)
     async function proceedToTeamSetup() {
       const step1 = document.getElementById('setup-step-1');
       const step2 = document.getElementById('setup-step-2');
-      const sr = document.getElementById('selected-rounds');
-      const sgc = document.getElementById('start-game-container');
-      // Populate round count + speed
-      sr.querySelector('.rounds-number').textContent = document.getElementById('roundsInput').value;
+      // Populate round info + apply speed
+      const rounds = document.getElementById('roundsInput').value;
+      document.getElementById('selected-rounds').textContent = `${rounds} Round Game`;
       const speedVal = parseFloat(document.getElementById('speedInput').value) || 1;
       gameSpeedSetting = speedVal;
       setGameSpeed(speedVal);
       syncSpeedSlider();
-      const speedDisp = sr.querySelector('.speed-display');
-      if (speedDisp) speedDisp.textContent = speedVal !== 1 ? `Speed: ${speedVal}x` : '';
-      sr.classList.remove('fade-in', 'fade-out');
-      sgc.classList.remove('fade-in', 'fade-out');
 
       await anim.play(step1, 'setup-fly-out');
       step1.style.display = 'none';
       step2.style.display = 'flex';
       await anim.play(step2, 'setup-fly-in');
-      sr.classList.add('fade-in');
-      sgc.classList.add('fade-in');
     }
 
-    // Step 2 → Step 1: fade out flanking elements → fly out left → fly in right
+    // Step 2 → Step 1: fly out right → fly in from left (ticker)
     async function backToRoundSelect() {
       const step1 = document.getElementById('setup-step-1');
       const step2 = document.getElementById('setup-step-2');
-      const sr = document.getElementById('selected-rounds');
-      const sgc = document.getElementById('start-game-container');
-
-      sr.classList.remove('fade-in');
-      sr.classList.add('fade-out');
-      sgc.classList.remove('fade-in');
-      sgc.classList.add('fade-out');
-      await anim.parallel([() => anim.done(sr), () => anim.done(sgc)]);
-      sr.classList.remove('fade-out');
-      sgc.classList.remove('fade-out');
 
       await anim.play(step2, 'setup-fly-out-left');
       step2.style.display = 'none';
@@ -4255,37 +4349,25 @@ document.addEventListener('keydown', e => {
       step1.classList.remove('setup-fly-out', 'setup-fly-in', 'setup-fly-in-right');
       step2.style.display = 'none';
       step2.classList.remove('setup-fly-out', 'setup-fly-in', 'setup-fly-out-left');
-      document.getElementById('selected-rounds').classList.remove('fade-in', 'fade-out');
-      document.getElementById('start-game-container').classList.remove('fade-in', 'fade-out');
       document.getElementById('player-columns').classList.remove('exit-right');
       document.getElementById('setup-title').classList.remove('exit-up');
-      // Reset speed button UI to match gameSpeedSetting = 1
-      selectSpeed(1, document.querySelector('.speed-svg'));
+      // Reset speed stepper UI to match gameSpeedSetting = 1
+      document.getElementById('speedInput').value = 1;
+      syncSpeedStepper();
+      // Reset player rows to 1 empty row per team
+      resetPlayerRows();
     }
 
     function beginStartGameExit() {
-      const columns = document.getElementById('player-columns');
-      const title   = document.getElementById('setup-title');
-      const sr      = document.getElementById('selected-rounds');
-      const sgc     = document.getElementById('start-game-container');
-      const gap = TIMING.setupExitBeatGap;
-
-      // Fade out both flanking containers in parallel with the beat sequence.
-      // The 1s fade-outs gate the transition (slower than the beat sequence).
-      sr.classList.remove('fade-in');
-      sr.classList.add('fade-out');
-      sgc.classList.remove('fade-in');
-      sgc.classList.add('fade-out');
-
-      anim.parallel([
-        () => anim.done(sr),
-        () => anim.done(sgc),
-        () => anim.sequence([
-          () => anim.play(columns, 'exit-right'),
-          () => anim.wait(gap),
-          () => anim.play(title, 'exit-up'),
-        ]),
-      ]).then(() => startGame());
+      const setup = document.getElementById('setup');
+      // Fade all on-screen setup elements away
+      setup.style.transition = 'opacity 0.5s ease';
+      setup.style.opacity = '0';
+      setup.addEventListener('transitionend', () => {
+        setup.style.transition = '';
+        setup.style.opacity = '';
+        startGame();
+      }, { once: true });
     }
 
     /** Set an isometric SVG button to raised (tall) or depressed (flat) state.
@@ -4316,19 +4398,58 @@ document.addEventListener('keydown', e => {
       playSound(sfxButtonClick);
     }
 
-    function selectSpeed(n, el) {
-      document.getElementById('speedInput').value = n;
-      const svg = el.closest('.speed-svg') || el;
-      document.querySelectorAll('.speed-svg').forEach(s => {
-        s.classList.remove('selected');
-        setButtonDepressed(s, false);
-      });
-      svg.classList.add('selected');
-      setButtonDepressed(svg, true);
-      playSound(sfxButtonClick);
-      // Sync settings-tray slider
-      gameSpeedSetting = n;
+    /** Step the setup-screen speed stepper by +1 or -1 notch. */
+    /** Step the setup-screen speed stepper by +1 or -1 notch.
+     *  Animates the label sliding out/in based on direction. */
+    function stepSpeed(dir) {
+      const curIdx = SPEED_NOTCHES.findIndex(n => n.value === gameSpeedSetting);
+      const newIdx = Math.max(0, Math.min(SPEED_NOTCHES.length - 1, curIdx + dir));
+      if (newIdx === curIdx) return;
+      const notch = SPEED_NOTCHES[newIdx];
+      gameSpeedSetting = notch.value;
+      document.getElementById('speedInput').value = notch.value;
+
+      // Slide animation: old text exits in the direction of travel,
+      // new text enters from the opposite side
+      const container = document.getElementById('speed-stepper-label');
+      if (container) {
+        const exitClass = dir > 0 ? 'speed-slide-out-left' : 'speed-slide-out-right';
+        const enterClass = dir > 0 ? 'speed-slide-in-right' : 'speed-slide-in-left';
+        // Animate current span(s) out — strip any lingering enter classes first
+        container.querySelectorAll('span').forEach(s => {
+          s.classList.remove('speed-slide-in-right', 'speed-slide-in-left',
+                             'speed-slide-out-left', 'speed-slide-out-right');
+          void s.offsetWidth; // reflow so the new exit animation starts fresh
+          s.classList.add(exitClass);
+          // anim.done tracks the animation's internal timeline (WAAPI),
+          // so it stays in sync with DevTools speed. No wall-clock fallback.
+          anim.done(s).then(() => s.remove());
+        });
+        const newSpan = document.createElement('span');
+        newSpan.textContent = notch.value;
+        newSpan.classList.add(enterClass);
+        container.appendChild(newSpan);
+        newSpan.addEventListener('animationend', () => newSpan.classList.remove(enterClass), { once: true });
+      }
+
+      // Update arrows + sync settings slider
+      const left = document.getElementById('speed-arrow-left');
+      const right = document.getElementById('speed-arrow-right');
+      if (left) left.classList.toggle('disabled', newIdx <= 0);
+      if (right) right.classList.toggle('disabled', newIdx >= SPEED_NOTCHES.length - 1);
       syncSpeedSlider();
+      playZoop(newIdx);
+    }
+
+    /** Sync the setup-screen speed stepper arrows + label to gameSpeedSetting (no animation). */
+    function syncSpeedStepper() {
+      const idx = SPEED_NOTCHES.findIndex(n => n.value === gameSpeedSetting);
+      const container = document.getElementById('speed-stepper-label');
+      const left = document.getElementById('speed-arrow-left');
+      const right = document.getElementById('speed-arrow-right');
+      if (container) container.innerHTML = `<span>${gameSpeedSetting}</span>`;
+      if (left) left.classList.toggle('disabled', idx <= 0);
+      if (right) right.classList.toggle('disabled', idx >= SPEED_NOTCHES.length - 1);
     }
 
     /* Phase indicator helpers — one persistent container, four phase spans.
@@ -4417,10 +4538,16 @@ document.addEventListener('keydown', e => {
       fitByCharCount(redLabelH4, 10);
       fitByCharCount(blueLabelH4, 10);
 
-      teamPlayers[0] = Array.from(document.querySelectorAll(".redPlayer")).map(i=>i.value.trim()).filter(Boolean);
-      teamPlayers[1] = Array.from(document.querySelectorAll(".bluePlayer")).map(i=>i.value.trim()).filter(Boolean);
-      if (teamPlayers[0].length === 0) teamPlayers[0] = [teamNames[0]];
-      if (teamPlayers[1].length === 0) teamPlayers[1] = [teamNames[1]];
+      // Each row = an active player. Empty inputs get fallback names.
+      // Special case: a single empty row falls back to team name (original behavior).
+      [0, 1].forEach(t => {
+        const inputs = Array.from(document.querySelectorAll(t === 0 ? ".redPlayer" : ".bluePlayer"));
+        if (inputs.length <= 1 && !inputs[0]?.value.trim()) {
+          teamPlayers[t] = [teamNames[t]];
+        } else {
+          teamPlayers[t] = inputs.map((inp, i) => inp.value.trim() || `Player ${i + 1}`);
+        }
+      });
 
       // Clear start-screen inline blob fills so --bg-blob-base (set by
       // updateBlobColor in advanceRound) takes over. The CSS transition on
@@ -6423,23 +6550,25 @@ document.addEventListener('keydown', e => {
       // Shared dismiss sequence: crossfade blobs → TV-off logo → fade screen.
       // Used by both normal click and dev mode.
       window._dismissStartScreen = function() {
-        // 1. Drop prompt text immediately (blob colors persist through setup)
+        const logo      = document.getElementById('start-logo');
+        const h1        = startScreen.querySelector('h1');
+        const copyright = startScreen.querySelector('.copyright');
 
-        const logo = document.getElementById('start-logo');
-        const h1   = startScreen.querySelector('h1');
-        if (h1) h1.classList.add('drop-out');
+        // 1. Fade out h1 + copyright together (0.5s)
+        if (h1) h1.classList.add('start-fade-out');
+        if (copyright) copyright.classList.add('start-fade-out');
 
-        // 2. After blob crossfade, TV-off the logo
+        // 2. After fade completes (1s), TV-off the logo
         setTimeout(() => {
           if (logo) logo.classList.add('tv-off');
-        }, 1500);
+        }, 1000);
 
         // 3. After TV-off completes (~500ms anim), fade CRT screen + slide setup
         setTimeout(() => {
           startScreen.classList.add('dismissing');
           setup.style.transition = 'transform 0.5s cubic-bezier(0.2, 0, 0.3, 1)';
           setup.style.transform  = 'translateX(0)';
-        }, 1800);
+        }, 1300);
 
         startScreen.addEventListener('animationend', function(e) {
           if (e.target !== startScreen) return;
@@ -6457,8 +6586,8 @@ document.addEventListener('keydown', e => {
 
     // Set default round selection (button "2" starts depressed/selected)
     selectRounds(2, document.querySelector('.rounds-svg'));
-    // Set default speed selection (button "1x" starts depressed/selected)
-    selectSpeed(1, document.querySelector('.speed-svg'));
+    // Initialize speed stepper + settings slider
+    syncSpeedStepper();
     buildSpeedSlider();
   </script>
 </body>

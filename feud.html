@@ -40,6 +40,10 @@
       --cat-popculture: #c000c0;
       --cat-survey: #00c0c0;
       --cat-sports: #c0c000;
+
+      /* Game speed — set by JS via setGameSpeed(). 1 = normal, 2 = double speed.
+         CSS gameplay animations use calc(duration / var(--speed)) so they scale. */
+      --speed: 1;
     }
 
     html { height: 100%; }
@@ -533,6 +537,14 @@
       color: #fba300;
       letter-spacing: 0.1em;
     }
+    #selected-rounds .speed-display {
+      font-family: "futura-100", sans-serif;
+      font-weight: 100;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      color: rgba(251, 163, 0, 0.6);
+      margin-top: 0.8rem;
+    }
     /* Shared transport-button style (back, next, start) */
     .transport-btn {
       --tp-glyph-size: 1.8rem;
@@ -593,9 +605,9 @@
     @keyframes exit-slide-down  { to { transform: translateY(800px);  opacity: 0; } }
     @keyframes exit-slide-right { to { transform: translateX(1400px); opacity: 0; } }
     @keyframes exit-slide-up    { to { transform: translateY(-800px); opacity: 0; } }
-    .exit-down  { animation: exit-slide-down  0.14s ease-in forwards; }
-    .exit-right { animation: exit-slide-right 0.14s ease-in forwards; }
-    .exit-up    { animation: exit-slide-up    0.14s ease-in forwards; }
+    .exit-down  { animation: exit-slide-down  calc(0.14s / var(--speed)) ease-in forwards; }
+    .exit-right { animation: exit-slide-right calc(0.14s / var(--speed)) ease-in forwards; }
+    .exit-up    { animation: exit-slide-up    calc(0.14s / var(--speed)) ease-in forwards; }
 
     /* Setup step animations */
     @keyframes setup-fly-out {
@@ -606,8 +618,8 @@
       from { transform: translateX(-120%); opacity: 0; }
       to   { transform: translateX(0);     opacity: 1; }
     }
-    .setup-fly-out { animation: setup-fly-out 0.28s cubic-bezier(0.4, 0, 1, 1) forwards; }
-    .setup-fly-in  { animation: setup-fly-in  0.30s cubic-bezier(0, 0, 0.3, 1) forwards; }
+    .setup-fly-out { animation: setup-fly-out calc(0.28s / var(--speed)) cubic-bezier(0.4, 0, 1, 1) forwards; }
+    .setup-fly-in  { animation: setup-fly-in  calc(0.30s / var(--speed)) cubic-bezier(0, 0, 0.3, 1) forwards; }
     /* Reverse direction — back from step 2 to step 1 */
     @keyframes setup-fly-out-left {
       from { transform: translateX(0);    opacity: 1; }
@@ -617,8 +629,8 @@
       from { transform: translateX(120%); opacity: 0; }
       to   { transform: translateX(0);    opacity: 1; }
     }
-    .setup-fly-out-left { animation: setup-fly-out-left 0.28s cubic-bezier(0.4, 0, 1, 1) forwards; }
-    .setup-fly-in-right { animation: setup-fly-in-right 0.30s cubic-bezier(0, 0, 0.3, 1) forwards; }
+    .setup-fly-out-left { animation: setup-fly-out-left calc(0.28s / var(--speed)) cubic-bezier(0.4, 0, 1, 1) forwards; }
+    .setup-fly-in-right { animation: setup-fly-in-right calc(0.30s / var(--speed)) cubic-bezier(0, 0, 0.3, 1) forwards; }
     /* Win condition two-column layout */
     #win-condition { display: flex; align-items: stretch; justify-content: center; margin: 16px auto; background: none; border-radius: 20px; max-width: 100%; }
     .win-option { flex: 1; max-width: 45%; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; }
@@ -648,6 +660,27 @@
     }
     .rounds-svg:hover .btn-number,
     .rounds-svg.selected .btn-number {
+      fill: white;
+      filter: drop-shadow(0 0 10px white) drop-shadow(0 0 22px rgba(255, 255, 255, 0.5));
+    }
+    /* Speed selector — smaller isometric buttons, same style as rounds */
+    .speed-btns { display: flex; gap: 12px; justify-content: center; }
+    .speed-svg {
+      width: 100px;
+      height: 100px;
+      cursor: pointer;
+      outline: none;
+    }
+    .speed-svg .btn-number {
+      font-family: 'Bitcount Single', sans-serif;
+      font-size: 2rem;
+      fill: rgba(255, 255, 255, 0.3);
+      text-anchor: middle;
+      dominant-baseline: central;
+      transition: filter 0.3s, fill 0.3s;
+    }
+    .speed-svg:hover .btn-number,
+    .speed-svg.selected .btn-number {
       fill: white;
       filter: drop-shadow(0 0 10px white) drop-shadow(0 0 22px rgba(255, 255, 255, 0.5));
     }
@@ -793,7 +826,7 @@
     .tray-section:last-child { margin-bottom: 0; }
     .tray-row {
       display: flex; align-items: center; justify-content: space-between;
-      gap: 10px; margin: 10px 0;
+      gap: 10px; margin: 20px 0;
     }
     .tray-row:last-child { margin-bottom: 0; }
     .tray-row > label:first-child { flex-shrink: 0; }
@@ -844,6 +877,22 @@
       width: 16px; height: 16px; border-radius: 50%;
       background: #fba300; box-shadow: 0 0 0 2px var(--tray-bg); cursor: pointer;
     }
+    /* Speed slider — notch tick marks + clickable labels */
+    .speed-notch-labels {
+      display: flex; justify-content: space-between;
+      font-size: 0.7rem; color: #999; margin-top: -2px; margin-bottom: 10px;
+      padding: 0 8px; user-select: none; /* 8px = half of 16px thumb width */
+    }
+    .speed-notch-labels span {
+      display: flex; flex-direction: column; align-items: center;
+      cursor: pointer; gap: 2px;
+    }
+    .speed-notch-labels span::before {
+      content: ''; display: block;
+      width: 1px; height: 6px; background: #999;
+    }
+    .speed-notch-labels span:hover { color: #fba300; }
+    .speed-notch-labels span:hover::before { background: #fba300; }
     .tray-bottom { margin-top: auto; text-align: center; padding-top: 16px; }
     /* Dev panel link */
     .tray-link {
@@ -938,7 +987,7 @@
     }
     /* Initial off-canvas state (left of canvas). JS removes .offscreen-left + adds .slide-in-left to animate. */
     #cat-label.offscreen-left { transform: translateX(-150%); }
-    #cat-label.slide-in-left  { animation: cat-label-slide-in-left 0.5s cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
+    #cat-label.slide-in-left  { animation: cat-label-slide-in-left calc(0.5s / var(--speed)) cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
     @keyframes cat-label-slide-in-left {
       from { transform: translateX(-150%); }
       to   { transform: translateX(0); }
@@ -1027,7 +1076,7 @@
       100% { transform: scale(1, 1);       opacity: 1; filter: brightness(1) saturate(1); }
     }
     #cat-label > span.tv-on {
-      animation: tv-on 0.7s ease-out forwards;
+      animation: tv-on calc(0.7s / var(--speed)) ease-out forwards;
     }
     /* Horizontal marquee scroll — starts after tv-on completes.
        Text is duplicated by JS; translateX(-50%) loops one copy seamlessly. */
@@ -1066,8 +1115,8 @@
       /* Initial off-canvas state — JS removes .offscreen to slide in */
     }
     #phase-indicator.offscreen { transform: translateY(-160%); }
-    #phase-indicator.slide-in  { animation: phase-slide-in  0.45s cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
-    #phase-indicator.slide-out { animation: phase-slide-out 0.4s  cubic-bezier(0.4, 0, 1, 1) forwards; }
+    #phase-indicator.slide-in  { animation: phase-slide-in  calc(0.45s / var(--speed)) cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
+    #phase-indicator.slide-out { animation: phase-slide-out calc(0.4s / var(--speed))  cubic-bezier(0.4, 0, 1, 1) forwards; }
     @keyframes phase-slide-in {
       from { transform: translateY(-160%); }
       to   { transform: translateY(0); }
@@ -1108,18 +1157,18 @@
     #phase-indicator[data-phase="round-result"]    .ph-round-result {
       display: flex;
       opacity: 1;
-      animation: ph-text-slide-in 0.35s cubic-bezier(0.2, 0.8, 0.25, 1) backwards;
+      animation: ph-text-slide-in calc(0.35s / var(--speed)) cubic-bezier(0.2, 0.8, 0.25, 1) backwards;
     }
     /* Exit state — JS adds .ph-exiting to the outgoing span to animate it out.
        Uses display:flex so it stays visible during exit. */
     #phase-indicator .ph-span.ph-exiting {
       display: flex;
-      animation: ph-text-slide-out 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+      animation: ph-text-slide-out calc(0.3s / var(--speed)) cubic-bezier(0.4, 0, 1, 1) forwards;
     }
     /* Steal "knock" — the outgoing span falls past the container bottom */
     #phase-indicator .ph-span.ph-knocked {
       display: flex;
-      animation: ph-text-knock-out 0.5s cubic-bezier(0.55, 0, 0.85, 0.2) forwards;
+      animation: ph-text-knock-out calc(0.5s / var(--speed)) cubic-bezier(0.55, 0, 0.85, 0.2) forwards;
     }
     @keyframes ph-text-slide-in {
       /* Drops DOWN from above the container into its resting spot */
@@ -1143,19 +1192,19 @@
       to   { transform: translateY(0); }
     }
     #sq-zone-input.offscreen-below { transform: translateY(400%); }
-    #sq-zone-input.input-enter     { animation: input-slide-up 0.5s cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
+    #sq-zone-input.input-enter     { animation: input-slide-up calc(0.5s / var(--speed)) cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
     /* Round-end exit animations — reverse of the entry animations */
-    #sq-zone-input.input-exit      { animation: input-slide-down 0.4s ease-in forwards; }
+    #sq-zone-input.input-exit      { animation: input-slide-down calc(0.4s / var(--speed)) ease-in forwards; }
     @keyframes input-slide-down {
       from { transform: translateY(0); }
       to   { transform: translateY(400%); }
     }
-    #cat-label.slide-out-left      { animation: cat-label-slide-out-left 0.4s ease-in forwards; }
+    #cat-label.slide-out-left      { animation: cat-label-slide-out-left calc(0.4s / var(--speed)) ease-in forwards; }
     @keyframes cat-label-slide-out-left {
       from { transform: translateX(0); }
       to   { transform: translateX(-150%); }
     }
-    #question-box.exit-up          { animation: question-box-exit-up 0.35s ease-in forwards; }
+    #question-box.exit-up          { animation: question-box-exit-up calc(0.35s / var(--speed)) ease-in forwards; }
     @keyframes question-box-exit-up {
       from { transform: translateY(0); clip-path: inset(0 0 0 0); }
       to   { transform: translateY(-100%); clip-path: inset(100% 0 0 0); }
@@ -1349,7 +1398,7 @@
       width: 70%;
       height: 80px;
       box-sizing: border-box;
-      animation: cat-slide-in 0.4s ease-out backwards;
+      animation: cat-slide-in calc(0.4s / var(--speed)) ease-out backwards;
     }
     /* Slide-in keyframes */
     @keyframes cat-slide-in {
@@ -1376,13 +1425,13 @@
       to { opacity: 0; }
     }
     .cat-exit {
-      animation: cat-slide-out-left 0.3s ease-in forwards;
+      animation: cat-slide-out-left calc(0.3s / var(--speed)) ease-in forwards;
     }
     .badge-exit {
-      animation: badge-spin-out 0.4s ease-in forwards !important;
+      animation: badge-spin-out calc(0.4s / var(--speed)) ease-in forwards !important;
     }
     .divider-exit {
-      animation: divider-fade-out 0.25s ease-out forwards;
+      animation: divider-fade-out calc(0.25s / var(--speed)) ease-out forwards;
     }
     /* ─── Path B: Selected category — glow ramp + CRT power-off ───
        Two-phase no-movement exit for the clicked category.
@@ -1412,7 +1461,7 @@
        one place, both stay in sync. Should match Path A total duration
        (~700ms) so the glow peaks as the last unselected item finishes. */
     .cat-row.selected-glow {
-      --tv-glow-duration: 700ms;
+      --tv-glow-duration: calc(700ms / var(--speed));
       animation: cat-glow-ramp var(--tv-glow-duration) ease-in both;
       /* Sit above siblings so the glow halo isn't clipped by them */
       z-index: 5;
@@ -1473,7 +1522,7 @@
       to   { left: -400px;  right: 400px; }
     }
     #category-pills-area.pills-exit::before {
-      animation: pills-bg-slide-out 0.3s ease-in 0.5s both;
+      animation: pills-bg-slide-out calc(0.3s / var(--speed)) ease-in calc(0.5s / var(--speed)) both;
     }
 
     /* Phase 2 — CRT power-off sequence.
@@ -1488,7 +1537,7 @@
 
        The 0% keyframe intentionally mirrors cat-glow-ramp's end state. */
     .cat-row.crt-off {
-      animation: crt-power-off 490ms cubic-bezier(0.55, 0, 0.9, 0.6) both;
+      animation: crt-power-off calc(490ms / var(--speed)) cubic-bezier(0.55, 0, 0.9, 0.6) both;
       /* Transform origin at the row's geometric center so the collapse
          implodes inward from all sides, like a real tube TV. */
       transform-origin: center center;
@@ -1618,7 +1667,7 @@
       border: 2px solid var(--coin-border, #333);
       box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.4);
       cursor: default;
-      animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-1 1.6s ease-out backwards;
+      animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-1 calc(1.6s / var(--speed)) ease-out backwards;
       transition: transform 0.3s ease;
       z-index: 10;
       overflow: visible;
@@ -1639,7 +1688,7 @@
       --coin-border: #555;
       --coin-text: #111;
       --coin-glow: rgba(192, 192, 192, 0.6);
-      animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-2 2.24s ease-out backwards;
+      animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-2 calc(2.24s / var(--speed)) ease-out backwards;
     }
     /* Gold — 3x: 3 bounces, proportionally longer */
     .coin-gold {
@@ -1647,7 +1696,7 @@
       --coin-border: #6b5210;
       --coin-text: #2a1f00;
       --coin-glow: rgba(212, 168, 48, 0.6);
-      animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-3 2.88s ease-out backwards;
+      animation: coin-pulse 1.5s ease-in-out infinite, badge-slide-3 calc(2.88s / var(--speed)) ease-out backwards;
     }
     @keyframes coin-pulse {
       0%, 100% { box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.4), 0 0 6px var(--coin-glow, rgba(200,200,200,0.4)); }
@@ -1658,7 +1707,7 @@
       position: absolute;
       pointer-events: none;
       clip-path: polygon(50% 0%, 62% 35%, 100% 50%, 62% 65%, 50% 100%, 38% 65%, 0% 50%, 38% 35%);
-      animation: sparkle-burst 0.55s ease-out forwards;
+      animation: sparkle-burst calc(0.55s / var(--speed)) ease-out forwards;
       z-index: 20;
     }
     @keyframes sparkle-burst {
@@ -1686,7 +1735,7 @@
       white-space: nowrap;
     }
     .cat-mult-indicator.mult-activate {
-      animation: mult-activate-flash 0.8s ease-in-out;
+      animation: mult-activate-flash calc(0.8s / var(--speed)) ease-in-out;
       transform: translateX(-50%) scale(1.3);
     }
     @keyframes mult-activate-flash {
@@ -1709,7 +1758,7 @@
                      once all cat-rows have slid into position */
     }
     .pills-divider.fade-in {
-      animation: pills-divider-fade-in 0.35s ease-out forwards;
+      animation: pills-divider-fade-in calc(0.35s / var(--speed)) ease-out forwards;
     }
     @keyframes pills-divider-fade-in {
       from { opacity: 0; }
@@ -1777,7 +1826,7 @@
        extrude from cat-label's bottom edge. The clip-path prevents the
        translated box from ever peeking above cat-label. */
     #question-box.hidden-behind { transform: translateY(-100%); clip-path: inset(100% 0 0 0); }
-    #question-box.reveal-drop   { animation: question-box-drop 0.45s cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
+    #question-box.reveal-drop   { animation: question-box-drop calc(0.45s / var(--speed)) cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
     @keyframes question-box-drop {
       from { transform: translateY(-100%); clip-path: inset(100% 0 0 0); }
       to   { transform: translateY(0);     clip-path: inset(0 0 0 0); }
@@ -1861,7 +1910,7 @@
     }
     /* Scoreboard entry — starts above canvas, slides down at game start */
     #scoreboard.offscreen { transform: translateY(-110%); }
-    #scoreboard.slide-in  { animation: scoreboard-slide-down 0.5s cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
+    #scoreboard.slide-in  { animation: scoreboard-slide-down calc(0.5s / var(--speed)) cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
     @keyframes scoreboard-slide-down {
       from { transform: translateY(-110%); }
       to   { transform: translateY(0); }
@@ -2056,7 +2105,7 @@
       width: 70%;
       margin: 0 auto;
       box-sizing: border-box;
-      transition: transform 0.5s ease;
+      transition: transform calc(0.5s / var(--speed)) ease;
     }
     #board-wrapper.offscreen {
       transform: translateY(-120%);
@@ -2066,7 +2115,7 @@
       to   { transform: translateY(0); }
     }
     #board-wrapper.slide-in {
-      animation: board-slide-in-top 0.5s ease forwards;
+      animation: board-slide-in-top calc(0.5s / var(--speed)) ease forwards;
     }
 
     /* Board header row — labels on the frame */
@@ -2211,7 +2260,7 @@
       100% { transform: translateX(105%); opacity: 0; }
     }
     .tile-cover.revealed {
-      animation: tile-cover-slide-right 0.4s ease-in forwards;
+      animation: tile-cover-slide-right calc(0.4s / var(--speed)) ease-in forwards;
       pointer-events: none;
     }
     .tile-inner {
@@ -2394,12 +2443,12 @@
     .stat-chevron.up {
       bottom: 6px;
       color: #4caf50;
-      animation: chevron-up 0.75s ease-out forwards;
+      animation: chevron-up calc(0.75s / var(--speed)) ease-out forwards;
     }
     .stat-chevron.down {
       top: 10px;
       color: var(--red-text, #ff5555);
-      animation: chevron-down 0.75s ease-out forwards;
+      animation: chevron-down calc(0.75s / var(--speed)) ease-out forwards;
     }
     @keyframes chevron-up {
       0%   { opacity: 1; transform: translateY(0); }
@@ -2507,7 +2556,7 @@
     /* Turn swap animation — current player pops up, slams back down,
        text swaps to next player mid-flight with a scale pop on landing. */
     #turn-subtext.turn-swapping {
-      animation: turn-swap 0.45s ease-in-out;
+      animation: turn-swap calc(0.45s / var(--speed)) ease-in-out;
     }
     @keyframes turn-swap {
       0%   { transform: translateY(0) scale(1); }
@@ -2946,7 +2995,7 @@
       opacity: 0;
     }
     #strike-overlay.active {
-      animation: strike-bg 1.4s ease forwards;
+      animation: strike-bg calc(1.4s / var(--speed)) ease forwards;
     }
     #strike-x-graphic {
       font-family: 'Arial Black', Arial, sans-serif;
@@ -2971,7 +3020,7 @@
       transform: scale(3) translateY(-40px);
     }
     #strike-overlay.active #strike-x-graphic {
-      animation: strike-x-slam 1.4s forwards;
+      animation: strike-x-slam calc(1.4s / var(--speed)) forwards;
     }
     @keyframes strike-bg {
       0%   { opacity: 0; background: rgba(180, 0, 0, 0); }
@@ -3002,7 +3051,7 @@
       opacity: 0;
     }
     #top-answer-overlay.active {
-      animation: ta-overlay 2s ease forwards;
+      animation: ta-overlay calc(2s / var(--speed)) ease forwards;
     }
     #top-answer-text {
       --ta-color: #00c44f;
@@ -3022,7 +3071,7 @@
       letter-spacing: 0.04em;
     }
     #top-answer-overlay.active #top-answer-text {
-      animation: ta-text 2s forwards;
+      animation: ta-text calc(2s / var(--speed)) forwards;
     }
     @keyframes ta-overlay {
       0%   { opacity: 0; background: rgba(255, 210, 0, 0); }
@@ -3069,6 +3118,11 @@
     <div class="tray-divider"></div>
     <div class="tray-section">
       <div class="tray-heading">Options</div>
+      <div class="tray-row-label"><label>Game Speed</label></div>
+      <div class="tray-row-slider speed-slider-row">
+        <input type="range" id="speed-slider" min="0" max="1" step="1" value="1" oninput="applySpeedFromSlider(+this.value)">
+      </div>
+      <div class="speed-notch-labels" id="speed-notch-labels"></div>
       <div class="tray-row">
         <label>CRT Effect</label>
         <label class="toggle-switch">
@@ -3191,6 +3245,38 @@
             </div>
             <input type="hidden" id="roundsInput" value="2">
           </div>
+          <div class="win-option-sub">
+            <label>Game Speed:</label>
+            <div class="speed-btns">
+              <svg class="speed-svg selected" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" tabindex="0" onclick="selectSpeed(1, this)">
+                <rect class="buttonSides btn-side-face" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 59)" fill="#b87800"/>
+                <rect class="buttonSides btn-strip" x="5.05" y="51" width="90.62" height="8" fill="#b87800"/>
+                <g clip-path="url(#clip-s1)">
+                  <rect class="buttonTop" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 51)" fill="#fba300"/>
+                  <text class="btn-number" x="28.5" y="30" dx="0.1em" transform="matrix(0.866025 -0.5 0.866025 0.5 1 51)">1x</text>
+                </g>
+                <defs>
+                  <clipPath id="clip-s1">
+                    <rect width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 51)" fill="white"/>
+                  </clipPath>
+                </defs>
+              </svg>
+              <svg class="speed-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" tabindex="0" onclick="selectSpeed(2, this)">
+                <rect class="buttonSides btn-side-face" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 59)" fill="#b87800"/>
+                <rect class="buttonSides btn-strip" x="5.05" y="43" width="90.62" height="16" fill="#b87800"/>
+                <g clip-path="url(#clip-s2)">
+                  <rect class="buttonTop" width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="#fba300"/>
+                  <text class="btn-number" x="28.5" y="30" dx="0.1em" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)">2x</text>
+                </g>
+                <defs>
+                  <clipPath id="clip-s2">
+                    <rect width="57" height="57" rx="8" transform="matrix(0.866025 -0.5 0.866025 0.5 1 43)" fill="white"/>
+                  </clipPath>
+                </defs>
+              </svg>
+            </div>
+            <input type="hidden" id="speedInput" value="1">
+          </div>
         </div>
       </div>
       <button id="setup-next-btn" class="transport-btn" onclick="proceedToTeamSetup()">
@@ -3205,6 +3291,7 @@
         <div class="game-length">GAME LENGTH</div>
         <div class="rounds-number"></div>
         <div class="rounds-label">Rounds</div>
+        <div class="speed-display"></div>
         <button id="setup-back-btn" class="transport-btn" onclick="backToRoundSelect()">
           <span class="transport-glyphs tp-rewind"><span class="tp-arrow">◀</span><span class="tp-arrow">◀</span></span>
           <span class="transport-label">Back</span>
@@ -3608,15 +3695,17 @@
       }
 
       // Promise-wrapped setTimeout. Use inside sequences for pure
-      // time-based waits.
+      // time-based waits. Divides by gameSpeed so all sequenced waits
+      // scale uniformly with the global speed setting.
       function wait(ms) {
-        return new Promise(r => setTimeout(r, ms));
+        return new Promise(r => setTimeout(r, ms / gameSpeed));
       }
 
       // Set inline animation-delay on an element, in ms.
+      // Divides by gameSpeed so staggered CSS animations stay in sync.
       function setDelay(el, ms) {
         el = resolveEl(el);
-        if (el) el.style.animationDelay = (ms / 1000) + "s";
+        if (el) el.style.animationDelay = (ms / gameSpeed / 1000) + "s";
       }
 
       return { done, play, replay, stagger, sequence, parallel, wait, setDelay };
@@ -3646,6 +3735,71 @@
       // Question phase entry animations are strictly serial via anim.done;
       // their durations live in CSS and don't need TIMING constants here.
     };
+
+    /* ── Game Speed ────────────────────────────────────────────────
+       gameSpeedSetting = user's chosen speed from setup (persists).
+       gameSpeed = effective speed (may differ during spacebar hold).
+       setGameSpeed() is the single point of control — updates the JS
+       variable AND the CSS custom property so both systems stay in sync.
+       CSS gameplay animations use calc(duration / var(--speed)).
+       JS helpers (anim.wait, anim.setDelay, animateCountUp, typewriter)
+       divide their ms values by gameSpeed internally. */
+    let gameSpeedSetting = 1;
+    let gameSpeed = 1;
+
+    /* Speed notch table — add entries here to unlock new speeds.
+       Index position maps to the slider's integer value.
+       To add 3x/4x: just append { value: 3, label: "3x" }, etc. */
+    const SPEED_NOTCHES = [
+      { value: 0.5, label: "0.5x" },
+      { value: 1,   label: "1x" },
+      { value: 2,   label: "2x" },
+      { value: 3,   label: "3x" },
+    ];
+    const SPEED_DEFAULT_INDEX = 1; // index of 1x in the table
+
+    function setGameSpeed(speed) {
+      gameSpeed = speed;
+      document.documentElement.style.setProperty('--speed', speed);
+    }
+
+    /** Sync the settings-tray speed slider to the current gameSpeedSetting. */
+    function syncSpeedSlider() {
+      const slider = document.getElementById('speed-slider');
+      if (!slider) return;
+      const idx = SPEED_NOTCHES.findIndex(n => n.value === gameSpeedSetting);
+      if (idx >= 0) slider.value = idx;
+    }
+
+    /** Called by the slider's oninput — maps notch index to speed value. */
+    function applySpeedFromSlider(index) {
+      const notch = SPEED_NOTCHES[index];
+      if (!notch) return;
+      gameSpeedSetting = notch.value;
+      setGameSpeed(notch.value);
+      // Sync the setup-screen buttons if visible
+      const speedInput = document.getElementById('speedInput');
+      if (speedInput) speedInput.value = notch.value;
+      document.querySelectorAll('.speed-svg').forEach(s => {
+        const btnVal = parseFloat(s.querySelector('.btn-number')?.textContent);
+        s.classList.toggle('selected', btnVal === notch.value);
+        setButtonDepressed(s, btnVal === notch.value);
+      });
+    }
+
+    /** Build the speed slider's range and notch labels from SPEED_NOTCHES. */
+    function buildSpeedSlider() {
+      const slider = document.getElementById('speed-slider');
+      const labelsEl = document.getElementById('speed-notch-labels');
+      if (!slider || !labelsEl) return;
+      slider.min = 0;
+      slider.max = SPEED_NOTCHES.length - 1;
+      slider.step = 1;
+      slider.value = SPEED_DEFAULT_INDEX;
+      labelsEl.innerHTML = SPEED_NOTCHES.map((n, i) =>
+        `<span onclick="document.getElementById('speed-slider').value=${i};applySpeedFromSlider(${i})">${n.label}</span>`
+      ).join('');
+    }
 
     const sfxCorrect     = new Audio("correct.mp3");
     const sfxWrong       = new Audio("wrong.mp3");
@@ -3866,6 +4020,22 @@ document.addEventListener('keydown', e => {
       if (e.shiftKey && e.key === 'D') toggleDevPanel();
     });
 
+    /* ── Spacebar speed boost ─────────────────────────────────────
+       While the guess input is disabled (scoring sequence in progress),
+       holding Space temporarily doubles the effective game speed.
+       Releasing Space restores the user's chosen speed setting. */
+    document.addEventListener('keydown', e => {
+      if (e.code !== 'Space' || e.repeat) return;
+      const guessInput = document.getElementById('guess');
+      if (!guessInput || !guessInput.disabled) return;
+      e.preventDefault();
+      setGameSpeed(Math.min(gameSpeedSetting * 2, 4));
+    });
+    document.addEventListener('keyup', e => {
+      if (e.code !== 'Space') return;
+      setGameSpeed(gameSpeedSetting);
+    });
+
     let menuOpen = false;
     function setMenuState(open) {
       menuOpen = open;
@@ -4034,8 +4204,14 @@ document.addEventListener('keydown', e => {
       const step2 = document.getElementById('setup-step-2');
       const sr = document.getElementById('selected-rounds');
       const sgc = document.getElementById('start-game-container');
-      // Populate round count
+      // Populate round count + speed
       sr.querySelector('.rounds-number').textContent = document.getElementById('roundsInput').value;
+      const speedVal = parseFloat(document.getElementById('speedInput').value) || 1;
+      gameSpeedSetting = speedVal;
+      setGameSpeed(speedVal);
+      syncSpeedSlider();
+      const speedDisp = sr.querySelector('.speed-display');
+      if (speedDisp) speedDisp.textContent = speedVal !== 1 ? `Speed: ${speedVal}x` : '';
       sr.classList.remove('fade-in', 'fade-out');
       sgc.classList.remove('fade-in', 'fade-out');
 
@@ -4083,6 +4259,8 @@ document.addEventListener('keydown', e => {
       document.getElementById('start-game-container').classList.remove('fade-in', 'fade-out');
       document.getElementById('player-columns').classList.remove('exit-right');
       document.getElementById('setup-title').classList.remove('exit-up');
+      // Reset speed button UI to match gameSpeedSetting = 1
+      selectSpeed(1, document.querySelector('.speed-svg'));
     }
 
     function beginStartGameExit() {
@@ -4136,6 +4314,21 @@ document.addEventListener('keydown', e => {
       svg.classList.add('selected');
       setButtonDepressed(svg, true);
       playSound(sfxButtonClick);
+    }
+
+    function selectSpeed(n, el) {
+      document.getElementById('speedInput').value = n;
+      const svg = el.closest('.speed-svg') || el;
+      document.querySelectorAll('.speed-svg').forEach(s => {
+        s.classList.remove('selected');
+        setButtonDepressed(s, false);
+      });
+      svg.classList.add('selected');
+      setButtonDepressed(svg, true);
+      playSound(sfxButtonClick);
+      // Sync settings-tray slider
+      gameSpeedSetting = n;
+      syncSpeedSlider();
     }
 
     /* Phase indicator helpers — one persistent container, four phase spans.
@@ -4506,7 +4699,7 @@ document.addEventListener('keydown', e => {
       badges.forEach((badge, i) => {
         const delay = badgeBaseDelay + i * 1000;
         anim.setDelay(badge, delay);
-        // Schedule chime for each bounce
+        // Schedule chime for each bounce — times scale with gameSpeed
         const tier = badge.classList.contains("coin-gold") ? "coin-gold"
                    : badge.classList.contains("coin-silver") ? "coin-silver"
                    : "coin-bronze";
@@ -4515,7 +4708,7 @@ document.addEventListener('keydown', e => {
           // Pitch and volume escalate per successive bounce
           const rate = 1.0 + bi * 0.15;
           const vol = 0.3 + bi * 0.2;   // 0.3 → 0.5 → 0.7
-          setTimeout(() => { playChime(rate, vol); emitSparkles(badge); }, delay + t);
+          setTimeout(() => { playChime(rate, vol); emitSparkles(badge); }, (delay + t) / gameSpeed);
         });
       });
 
@@ -4589,16 +4782,18 @@ document.addEventListener('keydown', e => {
       const exitItems = exitSequence.filter(el => el !== selectedRow);
 
       // Leading pause (100ms) before any item starts exiting
-      let delay = 0.1;
+      let delay = 0.1 / gameSpeed;
 
       // Stagger each item sliding out to the left. Fill mode `both` is
       // critical for the divider (see cat-slide-out-left keyframe notes).
-      const stepSeconds = TIMING.catRowExitStagger / 1000;
+      const stepSeconds = TIMING.catRowExitStagger / 1000 / gameSpeed;
+      const durExit = (0.3 / gameSpeed).toFixed(3);
+      const durSpin = (0.4 / gameSpeed).toFixed(3);
       exitItems.forEach(el => {
-        el.style.animation = `cat-slide-out-left 0.3s ease-in ${delay}s both`;
+        el.style.animation = `cat-slide-out-left ${durExit}s ease-in ${delay}s both`;
         const badge = el.querySelector(".cat-mult-badge");
         if (badge) {
-          badge.style.animation = `badge-spin-out 0.4s ease-in ${delay}s forwards`;
+          badge.style.animation = `badge-spin-out ${durSpin}s ease-in ${delay}s forwards`;
         }
         delay += stepSeconds;
       });
@@ -4956,7 +5151,7 @@ document.addEventListener('keydown', e => {
           : Math.abs(Math.round(diff));
         // Duration scales with increments: small changes are leisurely, large are faster per-tick
         const minDur = 1000, maxDur = 3000, diffCeil = 100;
-        const duration = minDur + (maxDur - minDur) * Math.min(increments / diffCeil, 1);
+        const duration = (minDur + (maxDur - minDur) * Math.min(increments / diffCeil, 1)) / gameSpeed;
         const steps = Math.min(increments, 100);
         const stepTime = Math.min(Math.max(duration / steps, 16), 500);
         let step = 0;
@@ -4996,7 +5191,7 @@ document.addEventListener('keydown', e => {
         if (indicator) indicator.classList.add("mult-activate");
         const startVal = roundScore;
         const steps = 20;
-        const stepTime = 40;
+        const stepTime = 40 / gameSpeed;
         let step = 0;
         const countUp = setInterval(() => {
           step++;
@@ -5010,7 +5205,7 @@ document.addEventListener('keydown', e => {
             teamScores[team] += finalScore;
             updateScores();
             if (indicator) indicator.classList.remove("mult-activate");
-            setTimeout(() => callback(finalScore), 400);
+            setTimeout(() => callback(finalScore), 400 / gameSpeed);
           }
         }, stepTime);
       } else {
@@ -5039,7 +5234,7 @@ document.addEventListener('keydown', e => {
       const cover = tile.querySelector('.tile-cover');
       if (type !== 'correct' || earnedTotal == null) {
         // Missed / no-data: instant reveal, no scoring sequence
-        if (cover) { cover.classList.add('revealed'); setTimeout(() => cover.remove(), 400); }
+        if (cover) { cover.classList.add('revealed'); setTimeout(() => cover.remove(), 400 / gameSpeed); }
         updateBoardRoundTotal();
         return;
       }
@@ -5105,7 +5300,7 @@ document.addEventListener('keydown', e => {
         }
       }
       toReveal.forEach((idx, order) => {
-        setTimeout(() => flipTile(idx, 'missed'), order * 1000);
+        setTimeout(() => flipTile(idx, 'missed'), order * 1000 / gameSpeed);
       });
     }
 
@@ -5276,7 +5471,7 @@ document.addEventListener('keydown', e => {
       subtext.classList.add("turn-swapping");
 
       // Swap text at the top of the jump (~35% of 450ms ≈ 160ms)
-      setTimeout(() => { subtext.textContent = newText; fitByCharCount(subtext, 12); }, 160);
+      setTimeout(() => { subtext.textContent = newText; fitByCharCount(subtext, 12); }, 160 / gameSpeed);
 
       subtext.addEventListener("animationend", () => {
         subtext.classList.remove("turn-swapping");
@@ -5314,7 +5509,7 @@ document.addEventListener('keydown', e => {
           i++;
           el.textContent = text.slice(0, i);
           playKeystroke();
-          setTimeout(tick, charMs);
+          setTimeout(tick, charMs / gameSpeed);
         };
         tick();
       });
@@ -5568,6 +5763,8 @@ document.addEventListener('keydown', e => {
       updateBlobColor();
       // Slide phase indicator out of view — stays hidden until next startGame
       hidePhaseIndicator();
+      gameSpeedSetting = 1;
+      setGameSpeed(1);
       teamScores=[0,0];usedQuestions=[];roundNumber=0;playerIndex=[0,0];startingTeam=0;
       gameMode='rounds';maxRounds=0;lastRoundWinner=-1;
       resetSetupSteps();
@@ -6260,6 +6457,9 @@ document.addEventListener('keydown', e => {
 
     // Set default round selection (button "2" starts depressed/selected)
     selectRounds(2, document.querySelector('.rounds-svg'));
+    // Set default speed selection (button "1x" starts depressed/selected)
+    selectSpeed(1, document.querySelector('.speed-svg'));
+    buildSpeedSlider();
   </script>
 </body>
 </html>

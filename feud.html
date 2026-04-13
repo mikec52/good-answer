@@ -498,6 +498,319 @@
       color: rgba(255,255,255,0.85);
     }
 
+    /* ── Mode select screen ─────────────────────────────────────── */
+    #mode-select {
+      position: absolute;
+      inset: 0;
+      z-index: 15;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+    }
+    #mode-select h1 {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 2.5rem;
+      text-transform: uppercase;
+      color: #fff;
+      letter-spacing: 0.06em;
+    }
+    .mode-buttons {
+      display: flex;
+      gap: 40px;
+    }
+    .mode-btn {
+      width: 220px;
+      padding: 32px 24px;
+      background: rgba(17,17,17,0.75);
+      backdrop-filter: blur(12px);
+      border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    }
+    .mode-btn:hover {
+      border-color: #fba300;
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(251,163,0,0.2);
+    }
+    .mode-btn-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .mode-btn-title {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.4rem;
+      text-transform: uppercase;
+      color: #fff;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+    .mode-btn-desc {
+      font-family: "futura-100", sans-serif;
+      font-weight: 400;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.5);
+    }
+    #mode-select.fade-in {
+      animation: mode-fade-in 0.4s ease both;
+    }
+    #mode-select.fade-out {
+      animation: mode-fade-out 0.3s ease forwards;
+    }
+    @keyframes mode-fade-in {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes mode-fade-out {
+      from { opacity: 1; }
+      to   { opacity: 0; }
+    }
+
+    /* ── Lobby screen ─────────────────────────────────────────────── */
+    #lobby {
+      position: absolute;
+      inset: 0;
+      z-index: 15;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 0;
+    }
+    #lobby.fade-in {
+      animation: mode-fade-in 0.4s ease both;
+    }
+    #lobby.fade-out {
+      animation: mode-fade-out 0.3s ease forwards;
+    }
+    #lobby h1 {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 2rem;
+      text-transform: uppercase;
+      color: #fff;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+    .lobby-code-display {
+      font-family: "Bitcount Single", monospace;
+      font-size: 4rem;
+      color: #fba300;
+      letter-spacing: 0.2em;
+      text-align: center;
+      margin-bottom: 4px;
+      cursor: pointer;
+      transition: text-shadow 0.3s;
+    }
+    .lobby-code-display:hover {
+      text-shadow: 0 0 16px rgba(251,163,0,0.5);
+    }
+    .lobby-code-hint {
+      font-family: "futura-100", sans-serif;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 24px;
+    }
+    .lobby-teams {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 24px;
+      width: 80%;
+      max-width: 600px;
+    }
+    .lobby-team {
+      flex: 1;
+      background: rgba(17,17,17,0.75);
+      backdrop-filter: blur(12px);
+      border-radius: 12px;
+      padding: 16px;
+      border: 2px solid rgba(255,255,255,0.1);
+      min-height: 200px;
+    }
+    .lobby-team.team-red { border-color: var(--red-bg); }
+    .lobby-team.team-blue { border-color: var(--blue-bg); }
+    .lobby-team-header {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .team-red .lobby-team-header { color: var(--red-text); }
+    .team-blue .lobby-team-header { color: var(--blue-text); }
+    .lobby-player-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .lobby-player-list li {
+      font-family: "futura-100", sans-serif;
+      font-size: 1rem;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .lobby-player-list li.is-me {
+      background: rgba(251,163,0,0.15);
+    }
+    .lobby-player-host-badge {
+      font-size: 0.7rem;
+      background: #fba300;
+      color: #111;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .lobby-join-team-btn {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-family: "futura-100", sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .lobby-join-team-btn:hover {
+      background: rgba(255,255,255,0.18);
+    }
+    .lobby-settings {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 20px;
+      font-family: "futura-100", sans-serif;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.9rem;
+    }
+    .lobby-settings span {
+      color: #fba300;
+      font-weight: 700;
+    }
+    .lobby-start-btn {
+      padding: 14px 48px;
+      background: #fba300;
+      color: #111;
+      border: none;
+      border-radius: 10px;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .lobby-start-btn:hover {
+      background: #ffb733;
+      transform: translateY(-2px);
+    }
+    .lobby-start-btn:disabled {
+      background: #555;
+      color: #999;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .lobby-waiting {
+      font-family: "futura-100", sans-serif;
+      font-size: 1rem;
+      color: rgba(255,255,255,0.4);
+      font-style: italic;
+    }
+
+    /* Join dialog (overlaid on mode-select) */
+    .join-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      background: rgba(17,17,17,0.85);
+      backdrop-filter: blur(16px);
+      border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      padding: 32px 40px;
+      max-width: 340px;
+    }
+    .join-form h2 {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.5rem;
+      text-transform: uppercase;
+      color: #fff;
+      margin: 0;
+    }
+    .join-form input {
+      width: 100%;
+      padding: 10px 14px;
+      background: #111;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-family: "futura-100", sans-serif;
+      font-size: 1.1rem;
+      text-align: center;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .join-form input::placeholder {
+      text-transform: none;
+      letter-spacing: normal;
+      color: rgba(255,255,255,0.3);
+    }
+    .join-form-actions {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+    }
+    .join-form .join-btn {
+      flex: 1;
+      padding: 10px;
+      background: #fba300;
+      color: #111;
+      border: none;
+      border-radius: 8px;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .join-form .join-btn:hover { background: #ffb733; }
+    .join-form .cancel-btn {
+      padding: 10px 16px;
+      background: none;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: rgba(255,255,255,0.6);
+      font-family: "futura-100", sans-serif;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .join-form .cancel-btn:hover { border-color: rgba(255,255,255,0.5); }
+    .join-form .join-error {
+      color: var(--red-text);
+      font-size: 0.85rem;
+      min-height: 1.2em;
+    }
+
     /* Setup screen */
     #setup {
       flex: 1;
@@ -3646,6 +3959,28 @@
     <div class="copyright">© Buffano Games</div>
   </div>
 
+  <!-- Mode select screen (Local vs Online) -->
+  <div id="mode-select">
+    <h1>Choose Game Mode</h1>
+    <div class="mode-buttons">
+      <div class="mode-btn" onclick="selectLocalMode()">
+        <span class="mode-btn-icon">&#127968;</span>
+        <div class="mode-btn-title">Local Game</div>
+        <div class="mode-btn-desc">Same room, one screen</div>
+      </div>
+      <div class="mode-btn" onclick="selectOnlineMode()">
+        <span class="mode-btn-icon">&#127760;</span>
+        <div class="mode-btn-title">Online Game</div>
+        <div class="mode-btn-desc">Friends join from their devices</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Online lobby -->
+  <div id="lobby">
+    <!-- Populated dynamically by showLobby() -->
+  </div>
+
   <!-- Title row (reserved for in-game header content) -->
   <div id="title-row"></div>
 
@@ -4020,6 +4355,45 @@
     </div>
   </div>
   </div><!-- /game-root -->
+
+  <!-- Firebase SDK (module) — exposes instances to the global scope
+       so the main non-module <script> block can use them. -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+    import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, linkWithPopup, onAuthStateChanged }
+      from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, deleteDoc, serverTimestamp, arrayUnion }
+      from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { firebaseConfig } from "./firebase-config.js";
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    // Expose to the main (non-module) script via globals
+    window._fb = {
+      app, auth, db,
+      // Auth helpers
+      signInAnonymously: () => signInAnonymously(auth),
+      signInWithGoogle: () => signInWithPopup(auth, new GoogleAuthProvider()),
+      linkGoogle: () => linkWithPopup(auth.currentUser, new GoogleAuthProvider()),
+      onAuthStateChanged: (cb) => onAuthStateChanged(auth, cb),
+      // Firestore helpers
+      doc: (...args) => doc(db, ...args),
+      getDoc,
+      setDoc,
+      updateDoc,
+      onSnapshot,
+      collection: (...args) => collection(db, ...args),
+      deleteDoc,
+      serverTimestamp,
+      arrayUnion,
+    };
+
+    // Signal that Firebase is ready
+    window._fbReady = true;
+    window.dispatchEvent(new Event("firebase-ready"));
+  </script>
 
   <script>
     /* ═══════════════════════════════════════════════════════════════
@@ -5577,6 +5951,272 @@ document.addEventListener('keydown', e => {
     let teamPlayers = [[], []];
     let playerIndex = [0, 0];
 
+    // ── Multiplayer state ──────────────────────────────────────────
+    let isMultiplayer = false;   // gates all Firebase sync behavior
+    let myUid = null;            // Firebase Auth UID (set on auth state change)
+    let myName = null;           // display name (set during join flow)
+    let gameCode = null;         // Firestore game document ID
+    let gameRef = null;          // Firestore DocumentReference for active game
+    let unsubGameSnap = null;    // onSnapshot unsubscribe function
+    let isHost = false;          // true if this client created the game
+
+    // Wait for Firebase module to load, then wire up auth listener
+    function initFirebase() {
+      return new Promise(resolve => {
+        const go = () => {
+          window._fb.onAuthStateChanged(user => {
+            if (user) { myUid = user.uid; }
+          });
+          resolve();
+        };
+        if (window._fbReady) go();
+        else window.addEventListener("firebase-ready", go, { once: true });
+      });
+    }
+    initFirebase();
+
+    // Get the UID of the currently active player (for multiplayer)
+    function getActivePlayerUid() {
+      if (!isMultiplayer) return null;
+      const team = teamTurn;
+      const idx = playerIndex[team] % teamPlayerUids[team].length;
+      return teamPlayerUids[team][idx] || null;
+    }
+
+    // Check if this client is the active player
+    function amIActivePlayer() {
+      return isMultiplayer && myUid === getActivePlayerUid();
+    }
+
+    // ── Multiplayer Sync Layer ─────────────────────────────────────
+    // syncState: write game state changes to Firestore.
+    // Only call when this client is authoritative (active player or host).
+    let _lastWriteId = 0;     // monotonic counter to detect self-echoes
+    let _prevSnapshot = null; // last Firestore snapshot data for diffing
+
+    async function syncState(updates) {
+      if (!isMultiplayer || !gameRef) return;
+      _lastWriteId++;
+      updates._writeId = _lastWriteId;
+      updates._writerUid = myUid;
+      try {
+        await window._fb.updateDoc(gameRef, updates);
+      } catch (e) {
+        console.error('syncState failed:', e);
+      }
+    }
+
+    // Start listening for game state changes (called after lobby → game transition)
+    function startGameListener() {
+      if (!isMultiplayer || !gameRef) return;
+      if (unsubGameSnap) unsubGameSnap();
+      _prevSnapshot = null;
+      unsubGameSnap = window._fb.onSnapshot(gameRef, (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        // Skip self-echoes: if this write came from us, we already applied it
+        if (data._writerUid === myUid && data._writeId === _lastWriteId) {
+          _prevSnapshot = data;
+          return;
+        }
+        reconcileLocalState(data, _prevSnapshot);
+        _prevSnapshot = data;
+      });
+    }
+
+    // Stop listening (called on game reset / return to lobby)
+    function stopGameListener() {
+      if (unsubGameSnap) { unsubGameSnap(); unsubGameSnap = null; }
+      _prevSnapshot = null;
+    }
+
+    // reconcileLocalState: process an incoming Firestore snapshot.
+    // Diffs against prev to determine what changed and triggers
+    // appropriate UI updates — including animations for reveals,
+    // score changes, strikes, and phase transitions.
+    function reconcileLocalState(data, prev) {
+      if (!data) return;
+
+      // ── Scores ──
+      if (data.teamScores) {
+        const changed = !prev || data.teamScores[0] !== prev.teamScores?.[0]
+                                || data.teamScores[1] !== prev.teamScores?.[1];
+        if (changed) {
+          teamScores = [...data.teamScores];
+          updateScores();
+        }
+      }
+
+      // ── Strikes ──
+      if (data.strikes !== undefined && data.strikes !== (prev?.strikes ?? 0)) {
+        strikes = data.strikes;
+        updateStrikes();
+      }
+
+      // ── Streak / multiplier ──
+      if (data.currentStreak !== undefined) {
+        currentStreak = data.currentStreak;
+        answerMultiplier = data.answerMultiplier ?? 1.0;
+        updateStreakDisplay();
+      }
+
+      // ── Round score ──
+      if (data.roundScore !== undefined) {
+        roundScore = data.roundScore;
+        updateBoardRoundTotal();
+      }
+
+      // ── Revealed answers ──
+      if (data.revealed && prev?.revealed) {
+        // Find newly revealed tiles
+        data.revealed.forEach((r, i) => {
+          if (r && !prev.revealed[i]) {
+            // A new tile was revealed by the active player
+            revealed[i] = true;
+            if (data.revealedData?.[i]) revealedData[i] = data.revealedData[i];
+            const lastResult = data.lastResult;
+            if (lastResult && lastResult.tileIdx === i) {
+              flipTile(i, 'correct', lastResult.points, lastResult.mult);
+            } else {
+              // Rebuild board to show the reveal (missed tiles, etc.)
+              updateBoard();
+            }
+          }
+        });
+      }
+
+      // ── Steal phase ──
+      if (data.stealPhase !== undefined && data.stealPhase !== (prev?.stealPhase ?? false)) {
+        stealPhase = data.stealPhase;
+        if (stealPhase) {
+          teamTurn = data.teamTurn ?? teamTurn;
+          updateTurn();
+        }
+      }
+
+      // ── Team turn ──
+      if (data.teamTurn !== undefined && data.teamTurn !== (prev?.teamTurn ?? 0)) {
+        teamTurn = data.teamTurn;
+        updateTurn();
+      }
+
+      // ── Phase transitions ──
+      if (data.phase && data.phase !== prev?.phase) {
+        handlePhaseTransition(data);
+      }
+
+      // ── Current question (new round / category picked) ──
+      if (data.currentQuestion && !prev?.currentQuestion) {
+        currentQuestion = data.currentQuestion;
+        revealed = data.revealed || new Array(currentQuestion.answers.length).fill(false);
+        revealedData = data.revealedData || new Array(currentQuestion.answers.length).fill(null);
+        categoryMultiplier = data.categoryMultiplier || 1;
+        updateBoard();
+      }
+
+      // ── Guess history ──
+      if (data.guessHistory) {
+        guessHistory = [...data.guessHistory];
+      }
+
+      // ── Match log ──
+      if (data.matchLog) {
+        matchLog = [...data.matchLog];
+      }
+
+      // ── Round number ──
+      if (data.roundNumber !== undefined && data.roundNumber !== (prev?.roundNumber ?? 0)) {
+        roundNumber = data.roundNumber;
+      }
+
+      // ── Active player ──
+      if (data.activePlayerUid) {
+        updateRoleUI(data.activePlayerUid);
+      }
+    }
+
+    // Handle phase transitions received from Firestore
+    function handlePhaseTransition(data) {
+      switch (data.phase) {
+        case 'category-select':
+          // Another player should see category selection
+          if (data.activePlayerUid !== myUid) {
+            showCategorySelection();
+          }
+          break;
+        case 'gameplay':
+          // Category was picked — update board and question
+          if (data.currentQuestion) {
+            currentQuestion = data.currentQuestion;
+            revealed = data.revealed || new Array(currentQuestion.answers.length).fill(false);
+            revealedData = new Array(currentQuestion.answers.length).fill(null);
+            categoryMultiplier = data.categoryMultiplier || 1;
+          }
+          break;
+        case 'steal':
+          stealPhase = true;
+          teamTurn = data.teamTurn;
+          updateTurn();
+          break;
+        case 'round-result':
+          // Round ended — show results
+          if (data.roundResultMsg) {
+            endRound(data.roundResultMsg, data.roundWinner);
+          }
+          break;
+      }
+    }
+
+    // Update UI based on whether this client is the active player
+    function updateRoleUI(activeUid) {
+      if (!isMultiplayer) return;
+      const isActive = (activeUid === myUid);
+      const guessInput = document.getElementById('guess');
+      const inputArea = document.getElementById('input-area');
+      const turnSubtext = document.getElementById('turn-subtext');
+
+      if (guessInput) {
+        guessInput.disabled = !isActive;
+        guessInput.placeholder = isActive ? 'Enter your guess' : 'Waiting for other player...';
+      }
+
+      // Toggle submit button visibility
+      const submitBtns = inputArea?.querySelectorAll('.input-btn');
+      if (submitBtns) {
+        submitBtns.forEach(btn => {
+          btn.style.pointerEvents = isActive ? '' : 'none';
+          btn.style.opacity = isActive ? '' : '0.4';
+        });
+      }
+
+      // Category pills interactivity
+      const catRows = document.querySelectorAll('.cat-row');
+      catRows.forEach(row => {
+        row.style.pointerEvents = isActive ? '' : 'none';
+        row.style.opacity = isActive ? '' : '0.6';
+      });
+
+      // Show waiting message for spectators
+      if (turnSubtext && !isActive) {
+        const activePlayer = findPlayerName(activeUid);
+        if (activePlayer) {
+          turnSubtext.textContent = `${activePlayer}'s turn`;
+        }
+      }
+    }
+
+    // Look up a player name from teamPlayers by UID
+    // (teamPlayers in multiplayer stores {uid, name} objects)
+    function findPlayerName(uid) {
+      if (!isMultiplayer) return null;
+      for (const team of teamPlayers) {
+        for (const p of team) {
+          if (typeof p === 'object' && p.uid === uid) return p.name;
+        }
+      }
+      return null;
+    }
+
     async function loadQuestions() {
       try {
         const res = await fetch("master_question_bank.json");
@@ -5610,7 +6250,13 @@ document.addEventListener('keydown', e => {
 
       // Dismiss start screen with full animated sequence
       startBgMusic();
+      isMultiplayer = false;
       if (typeof _dismissStartScreen === 'function') _dismissStartScreen();
+      // Dev mode skips mode-select — auto-select local after a short delay
+      setTimeout(() => {
+        const modeSelect = document.getElementById('mode-select');
+        if (modeSelect && modeSelect.style.display === 'flex') selectLocalMode();
+      }, 1800);
 
       // Pre-select Rounds mode with 2 rounds
       setGameMode('rounds');
@@ -6095,6 +6741,27 @@ document.addEventListener('keydown', e => {
       // Now safe to update turn colors and reset state
       updateTurn();
       initRoundState();
+
+      // Sync round advancement to Firestore
+      if (isMultiplayer) {
+        syncState({
+          roundNumber,
+          teamTurn,
+          startingTeam,
+          phase: 'category-select',
+          currentQuestion: null,
+          revealed: [],
+          revealedData: [],
+          roundScore: 0,
+          strikes: 0,
+          currentStreak: 0,
+          answerMultiplier: 1.0,
+          stealPhase: false,
+          lastResult: null,
+          activePlayerUid: getActivePlayerUid(),
+        });
+      }
+
       showCategorySelection();
     }
 
@@ -6483,6 +7150,31 @@ document.addEventListener('keydown', e => {
       setPhaseText("gameplay", `${teamNames[teamTurn]} has the board`);
       setPhaseTeamColor(teamTurn);
       setPhase("gameplay");
+
+      // Sync category pick to Firestore so other clients see the question
+      if (isMultiplayer) {
+        syncState({
+          currentQuestion: {
+            question: currentQuestion.question,
+            category: currentQuestion.category,
+            answers: currentQuestion.answers.map(a => ({
+              text: a.text, display: a.display, points: a.points,
+              variants: a.variants || []
+            }))
+          },
+          revealed: [...revealed],
+          revealedData: new Array(currentQuestion.answers.length).fill(null),
+          usedQuestions: [...usedQuestions],
+          categoryMultiplier,
+          phase: 'gameplay',
+          roundScore: 0,
+          strikes: 0,
+          currentStreak: 0,
+          answerMultiplier: 1.0,
+          stealPhase: false,
+          activePlayerUid: getActivePlayerUid(),
+        });
+      }
 
       const questionEl = document.getElementById("question");
       // Pre-compute fit scale against the full final text so the layout is
@@ -7010,6 +7702,9 @@ document.addEventListener('keydown', e => {
       document.getElementById("red-score-box").classList.toggle("active-team", teamTurn === 0);
       document.getElementById("blue-score-box").classList.toggle("active-team", teamTurn === 1);
       updatePlayerPanels();
+
+      // In multiplayer, update role-based UI (enable/disable controls)
+      if (isMultiplayer) updateRoleUI(getActivePlayerUid());
     }
 
     /** Animated turn transition — pops the current player name up, slams it
@@ -7184,6 +7879,7 @@ document.addEventListener('keydown', e => {
               setPhaseText("round-result", `${teamNames[stealingTeam]} stole ${final} points!`);
               setPhaseTeamColor(stealingTeam);
               setPhase("round-result");
+              syncAfterGuess({ outcome: 'steal_success', tileIdx: idx, points: stealTotal, mult: stealMult });
               if(!checkForWinner())endRound(`🎉 <span class="${stealingTeam===0?"red":"blue"}">${teamNames[stealingTeam]}</span> stole ${final} points!`,stealingTeam);
             });
           } else {
@@ -7211,6 +7907,7 @@ document.addEventListener('keydown', e => {
               setPhaseText("round-result", `${teamNames[keepTeam]} wins the round and keeps ${final} points!`);
               setPhaseTeamColor(keepTeam);
               setPhase("round-result");
+              syncAfterGuess({ outcome: 'steal_fail' });
               if(!checkForWinner())endRound(`✅ <span class="${keepTeam===0?"red":"blue"}">${teamNames[keepTeam]}</span> keeps ${final} points!`,keepTeam);
             });
           }
@@ -7236,6 +7933,7 @@ document.addEventListener('keydown', e => {
         if(guessInput) guessInput.disabled=false;
         if(submitBtn) submitBtn.disabled=false;
         deactivateSpeedBoost();
+        syncAfterGuess({ outcome: 'correct', tileIdx: foundIdx, points: foundTotal, mult: foundMult });
         if(!revealed.every(r=>r)) animateTurnSwap();
       }else{
         updateBoard();updateScores();updateStrikes();updateStreakDisplay({ afterStrike: true });updateHistory();
@@ -7247,13 +7945,40 @@ document.addEventListener('keydown', e => {
         setPhaseText("steal-chance", `${teamNames[teamTurn]} can steal!`);
         setPhaseTeamColor(teamTurn);
         setPhase("steal-chance", { knock: true });
+        syncAfterGuess({ outcome: 'wrong_steal' });
         return;}
+      if(!found && strikes < 3) { syncAfterGuess({ outcome: 'wrong' }); }
       if(revealed.every(r=>r)&&!stealPhase){awardRoundScore(teamTurn, (final) => {
         // Phase indicator: gameplay → round-result
         setPhaseText("round-result", `${teamNames[teamTurn]} won the round with ${final} points!`);
         setPhaseTeamColor(teamTurn);
         setPhase("round-result");
         if(!checkForWinner())endRound(`🎉 <span class="${teamTurn===0?"red":"blue"}">${teamNames[teamTurn]}</span> revealed all answers! They win ${final} points.`,teamTurn);});}}
+
+    // Sync current game state to Firestore after a guess is processed.
+    // Called at the end of submitGuess() after all local state + animations.
+    function syncAfterGuess(result) {
+      if (!isMultiplayer) return;
+      syncState({
+        revealed: [...revealed],
+        revealedData: revealedData.map(d => d ? { mult: d.mult, earnedTotal: d.earnedTotal } : null),
+        roundScore,
+        strikes,
+        currentStreak,
+        answerMultiplier,
+        teamTurn,
+        stealPhase,
+        teamScores: [...teamScores],
+        guessHistory: guessHistory.map(e => ({ ...e })),
+        matchLog: matchLog.map(e => ({ ...e })),
+        playerIndex: [...playerIndex],
+        lastResult: result || null,
+        activePlayerUid: getActivePlayerUid(),
+        phase: stealPhase ? 'steal'
+             : revealed.every(r => r) ? 'round-result'
+             : 'gameplay',
+      });
+    }
 
     function checkForWinner() {
       if (gameMode === 'rounds') return false;
@@ -7990,6 +8715,374 @@ document.addEventListener('keydown', e => {
     loadQuestions();
     loadFMQuestions();
 
+    // ── Mode Select & Lobby ─────────────────────────────────────────
+
+    // Fade out an element (with hidden-tab fallback), then call cb
+    function fadeOutScreen(el, cb) {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        el.style.display = 'none';
+        el.classList.remove('fade-out', 'fade-in');
+        if (cb) cb();
+      };
+      el.classList.remove('fade-in');
+      el.classList.add('fade-out');
+      el.addEventListener('animationend', finish, { once: true });
+      setTimeout(finish, 400); // fallback for hidden tabs
+    }
+
+    function selectLocalMode() {
+      isMultiplayer = false;
+      const modeSelect = document.getElementById('mode-select');
+      const setup = document.getElementById('setup');
+      playTap(1);
+      fadeOutScreen(modeSelect, () => {
+        setup.style.transform = 'translateX(110%)';
+        setup.style.display = '';
+        // Use double-rAF with setTimeout fallback to ensure reflow
+        const slideIn = () => {
+          setup.style.transition = 'transform 0.5s cubic-bezier(0.2, 0, 0.3, 1)';
+          setup.style.transform  = 'translateX(0)';
+          setTimeout(() => { setup.style.transition = ''; }, 600);
+        };
+        requestAnimationFrame(() => requestAnimationFrame(slideIn));
+        setTimeout(slideIn, 50); // fallback for hidden tabs
+      });
+    }
+
+    function selectOnlineMode() {
+      isMultiplayer = true;
+      const modeSelect = document.getElementById('mode-select');
+      playTap(1);
+      // Show create/join choice
+      modeSelect.querySelector('.mode-buttons').innerHTML = `
+        <div class="mode-btn" onclick="showCreateGame()">
+          <span class="mode-btn-icon">&#x2795;</span>
+          <div class="mode-btn-title">Create Game</div>
+          <div class="mode-btn-desc">Host a new session</div>
+        </div>
+        <div class="mode-btn" onclick="showJoinForm()">
+          <span class="mode-btn-icon">&#x1F517;</span>
+          <div class="mode-btn-title">Join Game</div>
+          <div class="mode-btn-desc">Enter a game code</div>
+        </div>
+      `;
+      modeSelect.querySelector('h1').textContent = 'Online Game';
+    }
+
+    // Generate a short alphanumeric game code
+    function generateGameCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/1/O/0 confusion
+      let code = '';
+      for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
+      return code;
+    }
+
+    async function showCreateGame() {
+      playTap(1);
+      const modeSelect = document.getElementById('mode-select');
+      // Sign in anonymously
+      if (!myUid) await window._fb.signInAnonymously();
+      // Wait for auth state to propagate
+      if (!myUid) await new Promise(r => { const i = setInterval(() => { if (myUid) { clearInterval(i); r(); } }, 50); });
+
+      gameCode = generateGameCode();
+      isHost = true;
+      myName = 'Host';
+
+      // Write game document to Firestore
+      gameRef = window._fb.doc('games', gameCode);
+      await window._fb.setDoc(gameRef, {
+        hostUid: myUid,
+        status: 'lobby',
+        createdAt: window._fb.serverTimestamp(),
+        maxRounds: parseInt(document.getElementById('roundsInput').value) || 4,
+        gameSpeed: gameSpeedSetting || 1,
+        teamNames: ['Red Team', 'Blue Team'],
+        teamScores: [0, 0],
+        players: {
+          [myUid]: { name: myName, team: null, isHost: true, online: true }
+        }
+      });
+
+      // Transition to lobby
+      fadeOutScreen(modeSelect, () => showLobby());
+    }
+
+    function showJoinForm() {
+      playTap(1);
+      const modeSelect = document.getElementById('mode-select');
+      modeSelect.querySelector('h1').textContent = 'Join Game';
+      modeSelect.querySelector('.mode-buttons').innerHTML = `
+        <div class="join-form">
+          <h2>Enter Code</h2>
+          <input type="text" id="join-code-input" placeholder="Game code" maxlength="5"
+                 style="text-transform: uppercase; letter-spacing: 0.2em; font-size: 1.5rem;">
+          <input type="text" id="join-name-input" placeholder="Your name" maxlength="18">
+          <div class="join-error" id="join-error"></div>
+          <div class="join-form-actions">
+            <button class="cancel-btn" onclick="backToModeSelect()">Back</button>
+            <button class="join-btn" onclick="submitJoinGame()">Join</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('join-code-input').focus();
+      // Allow Enter key to submit
+      const form = modeSelect.querySelector('.join-form');
+      form.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submitJoinGame();
+      });
+    }
+
+    function backToModeSelect() {
+      playTap(1);
+      const modeSelect = document.getElementById('mode-select');
+      modeSelect.querySelector('h1').textContent = 'Choose Game Mode';
+      modeSelect.querySelector('.mode-buttons').innerHTML = `
+        <div class="mode-btn" onclick="selectLocalMode()">
+          <span class="mode-btn-icon">&#127968;</span>
+          <div class="mode-btn-title">Local Game</div>
+          <div class="mode-btn-desc">Same room, one screen</div>
+        </div>
+        <div class="mode-btn" onclick="selectOnlineMode()">
+          <span class="mode-btn-icon">&#127760;</span>
+          <div class="mode-btn-title">Online Game</div>
+          <div class="mode-btn-desc">Friends join from their devices</div>
+        </div>
+      `;
+      isMultiplayer = false;
+    }
+
+    async function submitJoinGame() {
+      const codeInput = document.getElementById('join-code-input');
+      const nameInput = document.getElementById('join-name-input');
+      const errorEl   = document.getElementById('join-error');
+      const code = (codeInput.value || '').trim().toUpperCase();
+      const name = (nameInput.value || '').trim();
+
+      errorEl.textContent = '';
+
+      if (!code || code.length < 5) { errorEl.textContent = 'Enter a 5-character game code'; return; }
+      if (!name) { errorEl.textContent = 'Enter your name'; return; }
+
+      // Sign in anonymously
+      if (!myUid) await window._fb.signInAnonymously();
+      if (!myUid) await new Promise(r => { const i = setInterval(() => { if (myUid) { clearInterval(i); r(); } }, 50); });
+
+      // Check game exists
+      gameRef = window._fb.doc('games', code);
+      const snap = await window._fb.getDoc(gameRef);
+      if (!snap.exists()) { errorEl.textContent = 'Game not found'; gameRef = null; return; }
+      const data = snap.data();
+      if (data.status !== 'lobby') { errorEl.textContent = 'Game already in progress'; gameRef = null; return; }
+
+      gameCode = code;
+      isHost = false;
+      myName = name;
+
+      // Add self to players map
+      await window._fb.updateDoc(gameRef, {
+        [`players.${myUid}`]: { name: myName, team: null, isHost: false, online: true }
+      });
+
+      // Transition to lobby
+      fadeOutScreen(document.getElementById('mode-select'), () => showLobby());
+    }
+
+    function showLobby() {
+      const lobby = document.getElementById('lobby');
+      lobby.style.display = 'flex';
+      lobby.classList.add('fade-in');
+      renderLobby();
+      // Listen for real-time updates
+      if (unsubGameSnap) unsubGameSnap();
+      unsubGameSnap = window._fb.onSnapshot(gameRef, (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        // If game started, transition out of lobby
+        if (data.status === 'playing' && !isHost) {
+          transitionFromLobbyToGame(data);
+          return;
+        }
+        renderLobbyFromData(data);
+      });
+    }
+
+    function renderLobby() {
+      // Initial render — subsequent updates come from onSnapshot → renderLobbyFromData
+      const lobby = document.getElementById('lobby');
+      lobby.innerHTML = `
+        <h1>Game Lobby</h1>
+        <div class="lobby-code-display" onclick="copyGameCode()" title="Click to copy">${gameCode}</div>
+        <div class="lobby-code-hint">Share this code with your friends</div>
+        <div class="lobby-teams" id="lobby-teams">
+          <div class="lobby-team team-red">
+            <div class="lobby-team-header">Red Team</div>
+            <ul class="lobby-player-list" id="lobby-red-players"></ul>
+            <button class="lobby-join-team-btn" onclick="joinTeam(0)">Join Red</button>
+          </div>
+          <div class="lobby-team team-blue">
+            <div class="lobby-team-header">Blue Team</div>
+            <ul class="lobby-player-list" id="lobby-blue-players"></ul>
+            <button class="lobby-join-team-btn" onclick="joinTeam(1)">Join Blue</button>
+          </div>
+        </div>
+        <div class="lobby-settings" id="lobby-settings"></div>
+        ${isHost
+          ? '<button class="lobby-start-btn" id="lobby-start-btn" onclick="lobbyStartGame()" disabled>Waiting for players...</button>'
+          : '<div class="lobby-waiting">Waiting for host to start the game...</div>'}
+      `;
+    }
+
+    function renderLobbyFromData(data) {
+      const players = data.players || {};
+      const redList = document.getElementById('lobby-red-players');
+      const blueList = document.getElementById('lobby-blue-players');
+      if (!redList || !blueList) return;
+
+      redList.innerHTML = '';
+      blueList.innerHTML = '';
+
+      let redCount = 0, blueCount = 0;
+      for (const [uid, p] of Object.entries(players)) {
+        if (p.team === 0 || p.team === 1) {
+          const li = document.createElement('li');
+          if (uid === myUid) li.classList.add('is-me');
+          li.innerHTML = `${p.name}${p.isHost ? ' <span class="lobby-player-host-badge">Host</span>' : ''}`;
+          if (p.team === 0) { redList.appendChild(li); redCount++; }
+          else { blueList.appendChild(li); blueCount++; }
+        }
+      }
+
+      // Show unassigned players as a hint
+      const unassigned = Object.entries(players).filter(([, p]) => p.team === null);
+      if (unassigned.length > 0) {
+        const hint = document.createElement('li');
+        hint.style.color = 'rgba(255,255,255,0.4)';
+        hint.style.fontStyle = 'italic';
+        hint.textContent = `${unassigned.length} player${unassigned.length > 1 ? 's' : ''} waiting to pick a team`;
+        (redCount <= blueCount ? redList : blueList).appendChild(hint);
+      }
+
+      // Update settings display
+      const settingsEl = document.getElementById('lobby-settings');
+      if (settingsEl) {
+        settingsEl.innerHTML = `
+          <div>Rounds: <span>${data.maxRounds || 4}</span></div>
+          <div>Speed: <span>${data.gameSpeed || 1}x</span></div>
+          <div>Players: <span>${Object.keys(players).length}</span></div>
+        `;
+      }
+
+      // Enable start button if both teams have players
+      if (isHost) {
+        const btn = document.getElementById('lobby-start-btn');
+        if (btn) {
+          const canStart = redCount > 0 && blueCount > 0;
+          btn.disabled = !canStart;
+          btn.textContent = canStart ? 'Start Game' : 'Waiting for players...';
+        }
+      }
+    }
+
+    async function joinTeam(teamIdx) {
+      if (!gameRef || !myUid) return;
+      playTap(1);
+      await window._fb.updateDoc(gameRef, {
+        [`players.${myUid}.team`]: teamIdx
+      });
+    }
+
+    function copyGameCode() {
+      navigator.clipboard.writeText(gameCode).then(() => {
+        const hint = document.querySelector('.lobby-code-hint');
+        if (hint) {
+          hint.textContent = 'Copied!';
+          setTimeout(() => { hint.textContent = 'Share this code with your friends'; }, 1500);
+        }
+      });
+    }
+
+    async function lobbyStartGame() {
+      if (!isHost || !gameRef) return;
+      playTap(1);
+
+      // Read current lobby state and build team arrays
+      const snap = await window._fb.getDoc(gameRef);
+      const data = snap.data();
+      const players = data.players || {};
+
+      const redPlayers = [], bluePlayers = [];
+      for (const [uid, p] of Object.entries(players)) {
+        if (p.team === 0) redPlayers.push({ uid, name: p.name });
+        else if (p.team === 1) bluePlayers.push({ uid, name: p.name });
+      }
+
+      // Write game start state
+      await window._fb.updateDoc(gameRef, {
+        status: 'playing',
+        teamPlayers: { 0: redPlayers, 1: bluePlayers },
+        maxRounds: data.maxRounds || 4,
+        gameSpeed: data.gameSpeed || 1,
+      });
+
+      // Host transitions to game
+      transitionFromLobbyToGame(data);
+    }
+
+    // Parallel UID array for multiplayer player lookups
+    let teamPlayerUids = [[], []];
+
+    function transitionFromLobbyToGame(data) {
+      if (unsubGameSnap) { unsubGameSnap(); unsubGameSnap = null; }
+      fadeOutScreen(document.getElementById('lobby'), () => {
+        // Apply lobby settings to game state
+        const players = data.players || {};
+        const redNames = [], blueNames = [], redUids = [], blueUids = [];
+        for (const [uid, p] of Object.entries(players)) {
+          if (p.team === 0) { redNames.push(p.name); redUids.push(uid); }
+          else if (p.team === 1) { blueNames.push(p.name); blueUids.push(uid); }
+        }
+        teamNames = [data.teamNames?.[0] || 'Red Team', data.teamNames?.[1] || 'Blue Team'];
+        teamPlayers = [redNames, blueNames];
+        teamPlayerUids = [redUids, blueUids];
+        maxRounds = data.maxRounds || 4;
+        setGameSpeed(data.gameSpeed || 1);
+        startGameFromLobby();
+      });
+    }
+
+    function startGameFromLobby() {
+      // Mirror startGame() but with state already populated from Firestore.
+      // teamNames and teamPlayers are already set by transitionFromLobbyToGame.
+      const setup = document.getElementById('setup');
+      setup.style.display = 'none';
+      document.getElementById('game').style.display = '';
+      gameMode = 'rounds';
+      roundNumber = 0;
+      teamScores = [0, 0];
+      gameEnded = false;
+      matchLog = [];
+      startingTeam = Math.random() < 0.5 ? 0 : 1;
+      teamTurn = startingTeam;
+      playerIndex = [0, 0];
+      usedQuestions = [];
+      // Clear start-screen inline blob fills so updateBlobColor works
+      ['.bg-out-top', '.bg-in-top', '.bg-out-bottom', '.bg-in-bottom']
+        .map(s => document.querySelector(s))
+        .forEach(el => { if (el) el.style.fill = ''; });
+
+      // In multiplayer, start listening for game state changes
+      if (isMultiplayer) {
+        startGameListener();
+      }
+
+      updateScores();
+      advanceRound();
+    }
+
     // ── Start screen dismiss ───────────────────────────────────────
     (function() {
       const startScreen = document.getElementById('start-screen');
@@ -8029,6 +9122,7 @@ document.addEventListener('keydown', e => {
         const logo      = document.getElementById('start-logo');
         const h1        = startScreen.querySelector('h1');
         const copyright = startScreen.querySelector('.copyright');
+        const modeSelect = document.getElementById('mode-select');
 
         // 1. Fade out h1 + copyright together (0.5s)
         if (h1) h1.classList.add('start-fade-out');
@@ -8040,17 +9134,16 @@ document.addEventListener('keydown', e => {
           playPowerdown(0.5);
         }, 1000);
 
-        // 3. After TV-off completes (~500ms anim), fade CRT screen + slide setup
+        // 3. After TV-off completes (~500ms anim), fade CRT screen + show mode select
         setTimeout(() => {
           startScreen.classList.add('dismissing');
-          setup.style.transition = 'transform 0.5s cubic-bezier(0.2, 0, 0.3, 1)';
-          setup.style.transform  = 'translateX(0)';
+          modeSelect.style.display = 'flex';
+          modeSelect.classList.add('fade-in');
         }, 1300);
 
         startScreen.addEventListener('animationend', function(e) {
           if (e.target !== startScreen) return;
           startScreen.style.display = 'none';
-          setup.style.transition    = '';
         }, { once: true });
       };
 

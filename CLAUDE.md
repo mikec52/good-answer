@@ -5,7 +5,7 @@ Family Feud-inspired game with original features and styling. Working title: **G
 - Main game file: `feud.html`
 - Question bank: `master_question_bank.json` (active file, includes variants — see below)
 - Pre-variants backup: `question_bank_pre-variants.json`
-- Sound files alongside feud.html: `correct.mp3`, `wrong.mp3`, `goodanswer.mp3`, `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX), `phonetype.wav` (typewriter keystroke SFX), `balbg.mp3` (background music, looping), `roundend.wav` (round winner determined), `decreaseblip.mp3` (streak/mult decrease), `neutralbeep.wav` (duplicate answer rejection), `chime.wav` (badge bounce SFX), `zoop.wav` (speed stepper SFX)
+- Sound files alongside feud.html: `ding.mp3` (correct answer reveal), `wrong.mp3`, `goodanswer.mp3`, `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX + board-wrapper slide), `phonetype.wav` (typewriter keystroke SFX + tile-cover hover), `balbg.mp3` (background music, looping), `roundend.wav` (round winner determined), `decreaseblip.mp3` (streak/mult decrease), `neutralbeep.wav` (duplicate answer rejection), `chime.wav` (badge bounce SFX), `zoop.wav` (speed stepper SFX), `slit.wav` (fly-in/out whoosh — cat-row entry/exit, dialog open/close), `tap1.wav` (button click — setup nav, menu, confirm), `tap2.wav` (element landing — input area fly in/out), `tvon.wav` (CRT power-on), `powerdown.wav` (CRT power-off)
 
 ### Branch structure
 - **`main`** — active development (formerly `viewport-redesign`)
@@ -244,6 +244,11 @@ await anim.parallel([
 
 // Promise-wrapped setTimeout — use inside sequences for pure time waits
 await anim.wait(200);
+
+// Schedule a callback on the animation timeline (not wall-clock).
+// Uses a throwaway WAAPI animation so DevTools animation speed
+// control affects timing. At 100% speed, identical to setTimeout.
+anim.timer(el, 350, () => playSfx());
 ```
 
 ### `TIMING` constants
@@ -775,6 +780,80 @@ Single looping track (`balbg.mp3`) via `<audio>` element with `loop = true`. No 
 
 ---
 
+## SFX System — Web Audio Buffers
+
+All rapid-fire and animation-synced SFX use the Web Audio API (not `new Audio()`). A shared `AudioContext` (`tickAudioCtx`) is created once; each sound file is decoded into an `AudioBuffer` on load. Per-play: a disposable `AudioBufferSourceNode` is created, connected through a `GainNode` (volume = per-call × master × SFX gain), and started.
+
+### Sound files and their buffers
+
+| Buffer | File | Player function | Used for |
+|--------|------|----------------|----------|
+| `tickBuffer` | `flick.wav` | `playTick(progress, opts)` | Scoring count-ups, board-wrapper slide |
+| `keystrokeBuffer` | `phonetype.wav` | `playKeystroke(volume)` | Typewriter chars, player row add/remove, tile-cover hover |
+| `chimeBuffer` | `chime.wav` | `playChime(rate, volume)` | Badge bounce apex |
+| `zoopBuffer` | `zoop.wav` | `playZoop(notchIndex)` | Speed stepper |
+| `slitBuffer` | `slit.wav` | `playSlit(rate, volume)` | Cat-row entry/exit stagger, dialog open/close |
+| `tap1Buffer` | `tap1.wav` | `playTap(1, volume)` | Setup nav buttons, menu toggle, confirm dialog |
+| `tap2Buffer` | `tap2.wav` | `playTap(2, volume)` | Input area fly in/out |
+| `tvonBuffer` | `tvon.wav` | `playTvOn(volume)` | Content-TV CRT power-on |
+| `powerdownBuffer` | `powerdown.wav` | `playPowerdown(volume)` | CRT power-off (category select + start screen) |
+
+### Audio offset and fade
+
+- **`slit.wav`**: `source.start(0, 0.24)` — skips 240ms of silence + harsh beep transient at the start
+- **`powerdown.wav`**: `source.start(0, 0.18)` — skips initial thump + quiet gap, starts at the rising drone
+- **`tvon.wav`**: `linearRampToValueAtTime` fades gain to 0 over the final 900ms (sound is 1.6s, animation is 0.7s)
+- **`powerdown.wav` timing**: sound starts 75ms before the CRT animation (`anim.wait(75)` between `playPowerdown()` and `.crt-off` class add) so the crescendo aligns with the visual collapse
+
+### `anim.timer` — animation-synced SFX scheduling
+
+SFX timed to land at a specific point in an animation (e.g. 70% through a slide-in) use `anim.timer(el, ms, fn)` instead of `setTimeout`. This creates a throwaway WAAPI animation with empty keyframes (`[{}, {}]`) so Chrome DevTools' animation speed control affects the timer's duration — at 10% speed, a 350ms timer takes 3500ms, keeping SFX in sync with slowed-down CSS animations.
+
+**Critical: empty keyframes required.** The timer animation MUST use `[{}, {}]` (no properties). If any CSS property is specified (e.g. `{ opacity: 1 }`), the WAAPI animation overrides CSS animation values on the same element. This caused a major bug where `opacity: 1` in the timer overrode the `backwards` fill `opacity: 0` on cat-row slide-in animations, making buttons visible before their stagger delay.
+
+### `<audio>` element SFX (non-Web Audio)
+
+These use `new Audio()` and `playSound()`: `sfxCorrect` (`ding.mp3`), `sfxWrong`, `sfxGoodAnswer`, `sfxSurveySays`, `sfxRoundEnd`, `sfxDecreaseBlip`, `sfxNeutralBeep`, `sfxButtonClick`. Volume: `volumeMaster × volumeSfx × baseVolume`. `baseVolume` is 0.6 for correct/wrong/goodanswer/surveysays, 1.0 (default) for others.
+
+---
+
+## Liftable Hover Effect
+
+A reusable pick-up-and-set-down hover interaction for game elements. Currently applied to tile covers; designed to be extended to items, rewards, and other interactive elements.
+
+### CSS classes
+
+- **`.liftable`** — base class: `transition: transform 0.3s ease, box-shadow 0.3s ease`
+- **`.lift-hover`** (applied by JS) — `transform: perspective(600px) rotateX(-4deg) translateY(-2px)`, dark drop shadow, `lift-nudge` wiggle animation (subtle ±0.5° rotation oscillation over 0.3s, staying in the lifted state throughout — no snap to flat)
+- **`.lift-area`** — stable hit-zone parent. The `.liftable` element's transform shifts its edges, which can cause hover flicker at boundaries. Wrapping it in a `.lift-area` parent means hover is tracked on the non-moving parent.
+
+### JS delegation
+
+A single `mouseover` listener on `document` finds `.liftable` elements, tracks hover state on the nearest `.lift-area` (or the element itself if none), adds `.lift-hover`, plays `phonetype.wav`, and cleans up on `mouseleave`. Tile covers are gated on `.board-ready` to prevent interaction during the board slide-in animation.
+
+### Hover flicker prevention — lessons learned
+
+- **`lift-nudge` keyframes must stay in the lifted state throughout.** An earlier version started from `transform: none` at 0%, which snapped the element back to its original position mid-animation. This shifted the hit area, causing the cursor to leave and re-enter, triggering a hover feedback loop.
+- **Hit area must be stable.** For tile covers, hover is tracked on the `.answer` row (40px, never transforms) rather than the `.tile-cover` itself. The `_liftHover` flag on the area element prevents re-triggering while already hovered.
+
+---
+
+## Board-Wrapper Category Badge
+
+When a category has a multiplier, a coin badge (`.cat-mult-badge.board-badge`) is placed in `.board-footer` (which has `position: relative` inline). Positioned with `right: -50px; top: 115%; transform: translateY(-50%)` to sit just right of the round total value. Starts with `opacity: 0`, fades in via `.badge-visible` class after `anim.done(bwEl)` (board slide-in complete).
+
+Cleanup: `document.querySelectorAll(".board-footer > .cat-mult-badge").forEach(el => el.remove())` in `initRoundState()`.
+
+---
+
+## `transitionend` Bubbling — Gotcha
+
+`transitionend` events bubble. A `{ once: true }` listener on a parent that guards with `e.target !== parent` will silently consume the listener when a child's transition ends first — the guard returns early but `{ once: true }` already removed the listener. The parent's own transition then has no listener.
+
+Fix: use a named function listener without `{ once: true }`, and manually `removeEventListener` inside the guard's success branch. See `beginStartGameExit()` for the canonical example.
+
+---
+
 ## Turn Swap Animation
 
 `animateTurnSwap()` provides visual feedback when the active player changes after a guess:
@@ -819,7 +898,7 @@ When a round winner is determined (`setPhase("round-result")`), three simultaneo
 
 1. **Phase indicator glow** — `.round-glow` class adds `box-shadow: 0 0 30px rgba(255,255,255,0.6), 0 0 60px rgba(255,255,255,0.3)`. Uses CSS `transition: box-shadow 0.4s ease` (not keyframe animation) to avoid conflicting with the slide-in/slide-out `animation` property. Removed when phase transitions away from `round-result`.
 2. **Round-end SFX** — `roundend.wav` plays via `playSound()`.
-3. **Silver blob crossfade** — `--bg-blob-base` set to `#c0c0c0`. Restored to team color by `updateBlobColor()` via `updateTurn()` at the start of `advanceRound()`.
+3. **Purple blob crossfade** — `--bg-blob-base` set to `#513f6d` (default purple, neutral between red/blue team colors). Restored to team color by `updateBlobColor()` via `updateTurn()` at the start of `advanceRound()`.
 
 ---
 

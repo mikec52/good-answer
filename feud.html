@@ -50,6 +50,35 @@
 
     * { box-sizing: border-box; }
 
+    /* ── Utility: liftable hover effect ──────────────────────────
+       Add .liftable to any element for a pick-up-and-set-down hover.
+       Wrap in a .lift-area parent for a stable hit zone (prevents
+       hover flicker from transform shifts). JS delegation handles
+       adding/removing .lift-hover and playing the SFX.
+
+       Usage:
+         <div class="lift-area">
+           <div class="liftable">I lift on hover</div>
+         </div>
+    ────────────────────────────────────────────────────────────── */
+    .liftable {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .liftable.lift-hover {
+      transform: perspective(600px) rotateX(-4deg) translateY(-2px);
+      animation: lift-nudge 0.3s ease;
+      box-shadow:
+        0 4px 8px rgba(0,0,0,0.7),
+        0 2px 3px rgba(0,0,0,0.5);
+    }
+    @keyframes lift-nudge {
+      0%   { transform: perspective(600px) rotateX(-4deg) translateY(-2px) rotate(0deg); }
+      25%  { transform: perspective(600px) rotateX(-4deg) translateY(-2px) rotate(-0.5deg); }
+      55%  { transform: perspective(600px) rotateX(-4deg) translateY(-2px) rotate(0.4deg); }
+      80%  { transform: perspective(600px) rotateX(-4deg) translateY(-2px) rotate(-0.2deg); }
+      100% { transform: perspective(600px) rotateX(-4deg) translateY(-2px) rotate(0deg); }
+    }
+
     /* ── Utility: multiply-blended background ─────────────────────
        Apply .blend-multiply to any container. Set the desired
        background color via --blend-bg (defaults to white).
@@ -1738,9 +1767,6 @@
       z-index: 10;
       overflow: visible;
     }
-    .cat-mult-badge:hover {
-      transform: perspective(500px) rotateY(15deg) rotateX(-5deg);
-    }
     /* Bronze — 1.5x */
     .coin-bronze {
       --coin-bg: radial-gradient(circle at 35% 35%, #d4a574, #cd7f32 40%, #8c5a2a);
@@ -1767,6 +1793,9 @@
     @keyframes coin-pulse {
       0%, 100% { box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.4), 0 0 6px var(--coin-glow, rgba(200,200,200,0.4)); }
       50%      { box-shadow: inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.4), 0 0 16px var(--coin-glow, rgba(200,200,200,0.9)); }
+    }
+    .cat-mult-badge:hover {
+      transform: perspective(500px) rotateY(22.5deg) rotateX(-7.5deg);
     }
     /* Badge sparkle particles — emitted from cat-row at badge center */
     .sparkle {
@@ -2241,7 +2270,7 @@
       height: 40px;
       font-size: 1.5rem;
       position: relative;
-      overflow: hidden;
+      overflow: visible;
     }
 
     /* Tile cover — glossy black overlay until revealed */
@@ -2267,6 +2296,14 @@
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.15),
         inset 0 -1px 0 rgba(0,0,0,0.3);
+    }
+    /* Tile covers preserve their existing inset box-shadow when lifted */
+    .tile-cover.lift-hover {
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.15),
+        inset 0 -1px 0 rgba(0,0,0,0.3),
+        0 4px 8px rgba(0,0,0,0.7),
+        0 2px 3px rgba(0,0,0,0.5);
     }
     .tile-cover::before {
       content: '';
@@ -2494,6 +2531,25 @@
       font-weight: 400;
       background-color: #111;
       border-radius: 6px;
+    }
+
+    /* Board badge — child of .board-footer (position:relative in HTML).
+       Hangs off the right edge, vertically centered on the row. */
+    .cat-mult-badge.board-badge {
+      position: absolute;
+      right: -50px;
+      top: 115%;
+      transform: translateY(-50%);
+      opacity: 0;
+      animation: coin-pulse 1.5s ease-in-out infinite;
+      transition: opacity 0.4s ease, transform 0.3s ease;
+    }
+    .cat-mult-badge.board-badge.badge-visible {
+      opacity: 1;
+      transform: translateY(-50%);
+    }
+    .cat-mult-badge.board-badge:hover {
+      transform: translateY(-50%) perspective(500px) rotateY(22.5deg) rotateX(-7.5deg);
     }
 
     /* Board stats — streak, mult, category mult */
@@ -3258,7 +3314,8 @@
       font-size: 0.95rem; line-height: 1.5;
       color: rgba(255, 255, 255, 0.85);
       margin-bottom: 20px;
-      max-height: 60vh; overflow-y: auto;
+      padding: 2px 0;
+      max-height: 80vh; overflow-y: auto;
     }
     .dlg-body:empty { display: none; }
     .dlg-actions {
@@ -3963,7 +4020,20 @@
         if (el) el.style.animationDelay = (ms / gameSpeed / 1000) + "s";
       }
 
-      return { done, play, replay, stagger, sequence, parallel, wait, setDelay };
+      /** Schedule a callback on the animation timeline rather than wall-clock.
+       *  Uses a throwaway WAAPI animation so Chrome DevTools' animation speed
+       *  control affects timing — at 10% speed, a 350ms timer takes 3500ms,
+       *  matching the CSS animation it's synced to. At 100% speed the behavior
+       *  is identical to setTimeout. */
+      function timer(el, ms, fn) {
+        if (!el) { setTimeout(fn, ms); return; }
+        // Empty keyframes — no properties animated, so this can't interfere
+        // with CSS animations on the element (e.g. backwards-fill opacity).
+        el.animate([{}, {}], ms)
+          .finished.then(fn).catch(() => {});
+      }
+
+      return { done, play, replay, stagger, sequence, parallel, wait, setDelay, timer };
     })();
 
     /* Central timing constants — tune animation feel in one place.
@@ -4052,7 +4122,7 @@
       ).join('');
     }
 
-    const sfxCorrect     = new Audio("correct.mp3");
+    const sfxCorrect     = new Audio("ding.mp3");
     const sfxWrong       = new Audio("wrong.mp3");
     const sfxGoodAnswer  = new Audio("goodanswer.mp3");
     const sfxButtonClick = new Audio("analogbuttonclick.mp3");
@@ -4196,6 +4266,120 @@
 
     initZoopSfx("zoop.wav");
 
+    // ── Slit SFX — fly-in whoosh sound ────────────────────────
+    let slitBuffer = null;
+
+    async function initSlitSfx(url) {
+      try {
+        if (!tickAudioCtx) tickAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const response = await fetch(url);
+        const arrayBuf = await response.arrayBuffer();
+        slitBuffer = await tickAudioCtx.decodeAudioData(arrayBuf);
+      } catch (e) {
+        console.warn("Slit SFX failed to load:", e);
+      }
+    }
+
+    /**
+     * Play the slit/whoosh sound for fly-in animations.
+     * @param {number} [rate=1] — playback rate
+     * @param {number} [volume=0.5] — per-play volume
+     */
+    function playSlit(rate = 1, volume = 0.5) {
+      if (!slitBuffer || !tickAudioCtx || !soundEnabled) return;
+      const source = tickAudioCtx.createBufferSource();
+      source.buffer = slitBuffer;
+      source.playbackRate.value = rate;
+      const gainNode = tickAudioCtx.createGain();
+      gainNode.gain.value = volume * (soundEnabled ? volumeMaster : 0) * volumeSfx;
+      source.connect(gainNode);
+      gainNode.connect(tickAudioCtx.destination);
+      // Skip initial beep transient (0–240ms is silence + harsh attack)
+      source.start(0, 0.24);
+    }
+
+    initSlitSfx("slit.wav");
+
+    // ── Tap SFX — landing/impact sounds for fly-in/out elements ──
+    let tap1Buffer = null;
+    let tap2Buffer = null;
+
+    async function initTapSfx(url, which) {
+      try {
+        if (!tickAudioCtx) tickAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const response = await fetch(url);
+        const arrayBuf = await response.arrayBuffer();
+        const buf = await tickAudioCtx.decodeAudioData(arrayBuf);
+        if (which === 1) tap1Buffer = buf;
+        else tap2Buffer = buf;
+      } catch (e) {
+        console.warn(`Tap${which} SFX failed to load:`, e);
+      }
+    }
+
+    function playTap(which = 2, volume = 0.5) {
+      const buf = which === 1 ? tap1Buffer : tap2Buffer;
+      if (!buf || !tickAudioCtx || !soundEnabled) return;
+      const source = tickAudioCtx.createBufferSource();
+      source.buffer = buf;
+      const gainNode = tickAudioCtx.createGain();
+      gainNode.gain.value = volume * (soundEnabled ? volumeMaster : 0) * volumeSfx;
+      source.connect(gainNode);
+      gainNode.connect(tickAudioCtx.destination);
+      source.start();
+    }
+
+    initTapSfx("tap1.wav", 1);
+    initTapSfx("tap2.wav", 2);
+
+    // ── TV on/off SFX ─────────────────────────────────────────
+    let tvonBuffer = null;
+    let powerdownBuffer = null;
+
+    async function initTvSfx(url, which) {
+      try {
+        if (!tickAudioCtx) tickAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const response = await fetch(url);
+        const arrayBuf = await response.arrayBuffer();
+        const buf = await tickAudioCtx.decodeAudioData(arrayBuf);
+        if (which === 'on') tvonBuffer = buf;
+        else powerdownBuffer = buf;
+      } catch (e) {
+        console.warn(`TV ${which} SFX failed to load:`, e);
+      }
+    }
+
+    function playTvOn(volume = 0.5) {
+      if (!tvonBuffer || !tickAudioCtx || !soundEnabled) return;
+      const source = tickAudioCtx.createBufferSource();
+      source.buffer = tvonBuffer;
+      const masterGain = volume * (soundEnabled ? volumeMaster : 0) * volumeSfx;
+      const gainNode = tickAudioCtx.createGain();
+      gainNode.gain.value = masterGain;
+      // Fade out over the final 900ms (sound is 1.6s, animation is 0.7s)
+      const fadeStart = tvonBuffer.duration - 0.9;
+      gainNode.gain.setValueAtTime(masterGain, tickAudioCtx.currentTime + fadeStart);
+      gainNode.gain.linearRampToValueAtTime(0, tickAudioCtx.currentTime + tvonBuffer.duration);
+      source.connect(gainNode);
+      gainNode.connect(tickAudioCtx.destination);
+      source.start();
+    }
+
+    function playPowerdown(volume = 0.5) {
+      if (!powerdownBuffer || !tickAudioCtx || !soundEnabled) return;
+      const source = tickAudioCtx.createBufferSource();
+      source.buffer = powerdownBuffer;
+      const gainNode = tickAudioCtx.createGain();
+      gainNode.gain.value = volume * (soundEnabled ? volumeMaster : 0) * volumeSfx;
+      source.connect(gainNode);
+      gainNode.connect(tickAudioCtx.destination);
+      // Skip the initial thump + quiet gap (0–180ms) — start at the rising drone
+      source.start(0, 0.18);
+    }
+
+    initTvSfx("tvon.wav", "on");
+    initTvSfx("powerdown.wav", "off");
+
     /**
      * Emit sparkle particles from a badge's edge outward.
      * Appended to the parent .cat-row (not the badge itself) so they
@@ -4327,10 +4511,12 @@
       _ensureLayers();
       const actions = `<button class="dialog-btn dialog-btn-close" onclick="closeDialog()">${closeText}</button>`;
       _openLayer(_dlg, { title, body: htmlContent, actions });
+      playSlit(1, 0.35);
     }
     function closeDialog() {
       _ensureLayers();
       _dlg.backdrop.classList.remove('active');
+      playSlit(1, 0.35);
       if (_dlg._onClose) { _dlg._onClose(); _dlg._onClose = null; }
     }
 
@@ -4349,6 +4535,7 @@
     }
     function closeConfirm(result) {
       _ensureLayers();
+      playTap(1, 0.4);
       _cfm.backdrop.classList.remove('active');
       if (_cfm._resolve) { _cfm._resolve(result); _cfm._resolve = null; }
     }
@@ -4485,6 +4672,28 @@
       hideTooltip();
     });
 
+    // Liftable hover — generic pick-up-and-set-down effect.
+    // If the .liftable element is inside a .lift-area, the hit zone is
+    // the stable parent (prevents flicker from transform shifts).
+    // Otherwise the element itself is the hit zone.
+    document.addEventListener('mouseover', (e) => {
+      const el = e.target.closest('.liftable');
+      if (!el || el.classList.contains('lift-hover')) return;
+      // Gate tile-covers on board-ready (skip during slide-in)
+      if (el.classList.contains('tile-cover')) {
+        if (!el.closest('#board-wrapper')?.classList.contains('board-ready')) return;
+      }
+      const area = el.closest('.lift-area') || el;
+      if (area._liftHover) return;
+      area._liftHover = true;
+      el.classList.add('lift-hover');
+      playKeystroke(0.8);
+      area.addEventListener('mouseleave', () => {
+        el.classList.remove('lift-hover');
+        area._liftHover = false;
+      }, { once: true });
+    });
+
     function setTooltipDelay(ms) {
       tooltipDelay = ms;
       document.getElementById('tip-delay-value').textContent = ms + 'ms';
@@ -4540,7 +4749,7 @@ document.addEventListener('keydown', e => {
       document.getElementById('menu-btn').classList.toggle('open', open);
       document.getElementById('menu-backdrop').classList.toggle('active', open);
     }
-    function toggleMenu() { setMenuState(!menuOpen); }
+    function toggleMenu() { playTap(1, 0.4); setMenuState(!menuOpen); }
 
     function showAnswerHistory() {
       if (guessHistory.length === 0) {
@@ -4649,13 +4858,8 @@ document.addEventListener('keydown', e => {
     }
 
     function computeDevModeQuestions() {
-      const catCount = {};
-      devModeAllowedQuestions = new Set();
-      for (let i = 0; i < questions.length; i++) {
-        const cat = questions[i].category;
-        catCount[cat] = (catCount[cat] || 0) + 1;
-        if (catCount[cat] <= 3) devModeAllowedQuestions.add(i);
-      }
+      // Full question bank — no per-category limit
+      devModeAllowedQuestions = null;
     }
 
     function activateDevMode() {
@@ -4777,6 +4981,7 @@ document.addEventListener('keydown', e => {
 
     // Step 1 → Step 2: fly out left → fly in from right (ticker effect)
     async function proceedToTeamSetup() {
+      playTap(1, 0.4);
       const step1 = document.getElementById('setup-step-1');
       const step2 = document.getElementById('setup-step-2');
       // Populate round info + apply speed
@@ -4795,6 +5000,7 @@ document.addEventListener('keydown', e => {
 
     // Step 2 → Step 1: fly out right → fly in from left (ticker)
     async function backToRoundSelect() {
+      playTap(1, 0.4);
       const step1 = document.getElementById('setup-step-1');
       const step2 = document.getElementById('setup-step-2');
 
@@ -4825,15 +5031,19 @@ document.addEventListener('keydown', e => {
     }
 
     function beginStartGameExit() {
+      playTap(1, 0.4);
       const setup = document.getElementById('setup');
       // Fade all on-screen setup elements away
       setup.style.transition = 'opacity 0.5s ease';
       setup.style.opacity = '0';
-      setup.addEventListener('transitionend', () => {
+      function onSetupFaded(e) {
+        if (e.target !== setup) return;       // ignore bubbled child transitions
+        setup.removeEventListener('transitionend', onSetupFaded);
         setup.style.transition = '';
         setup.style.opacity = '';
         startGame();
-      }, { once: true });
+      }
+      setup.addEventListener('transitionend', onSetupFaded);
     }
 
     /** Set an isometric SVG button to raised (tall) or depressed (flat) state.
@@ -4962,7 +5172,7 @@ document.addEventListener('keydown', e => {
       if (newPhase === "round-result") {
         pi.classList.add("round-glow");
         playSound(sfxRoundEnd);
-        document.getElementById("game-root").style.setProperty("--bg-blob-base", "#c0c0c0");
+        document.getElementById("game-root").style.setProperty("--bg-blob-base", "#513f6d");
       } else if (current === "round-result") {
         pi.classList.remove("round-glow");
         // Blob color restored by updateBlobColor via updateTurn in advanceRound
@@ -5073,7 +5283,7 @@ document.addEventListener('keydown', e => {
       document.querySelectorAll("#sq-zone-content > .cat-row").forEach(el => el.remove());
       const oldCatLabel = document.getElementById("cat-label");
       if (oldCatLabel) oldCatLabel.remove();
-      document.querySelectorAll(".board-footer .cat-mult-badge").forEach(el => el.remove());
+      document.querySelectorAll(".board-footer > .cat-mult-badge").forEach(el => el.remove());
       // Reset content-tv + question-box + input-area to hidden states
       // so the entry sequence replays cleanly next round
       const ctv = document.getElementById("content-tv");
@@ -5120,6 +5330,8 @@ document.addEventListener('keydown', e => {
       if (bw && bw.classList.contains("slide-in")) {
         bw.classList.remove("slide-in");
         bw.classList.add("offscreen");
+        // tap2 near exit (70% of 0.5s transition = ~350ms)
+        anim.timer(bw, 350 / gameSpeed, () => playTick(0, { volume: 0.5 }));
       }
 
       await anim.sequence([
@@ -5127,6 +5339,8 @@ document.addEventListener('keydown', e => {
         async () => {
           if (szInput && szInput.classList.contains("input-enter")) {
             szInput.classList.remove("input-enter");
+            // tap2 near exit (70% of 0.4s = ~280ms)
+            anim.timer(szInput, 280 / gameSpeed, () => playTap(2, 0.375));
             await anim.play(szInput, "input-exit");
           }
         },
@@ -5262,9 +5476,18 @@ document.addEventListener('keydown', e => {
       pillsArea.innerHTML = pillsHtml;
       setup3dBtns();
 
-      // Stagger cat-row slide-ins (rows have cat-slide-in animation in CSS)
+      // Stagger cat-row slide-ins (rows have cat-slide-in animation in CSS).
+      // Parent is still display:none here — CSS animations don't start on
+      // elements without a generated box (per spec). This means stagger
+      // delays are fully in place before the display toggle below causes
+      // the animations to begin.
       const rows = document.querySelectorAll("#category-pills-area .cat-row");
       anim.stagger(rows, { gap: TIMING.catRowStagger });
+
+      // Schedule slit SFX for each cat-row as it enters
+      rows.forEach((row, i) => {
+        anim.timer(row, (i * TIMING.catRowStagger) / gameSpeed, () => playSlit(1, 0.4));
+      });
 
       // Stagger coin badge slide-ins: start after the last row lands, then
       // space subsequent badges 1s apart so each plays out visibly.
@@ -5308,7 +5531,11 @@ document.addEventListener('keydown', e => {
       }
 
 
-      // Show category-select panel, hide question-answer panel
+      // Show category-select panel, hide question-answer panel.
+      // This display toggle is intentionally AFTER all animation setup above.
+      // While parent is display:none, CSS animations don't start (no box
+      // generated). Flipping to display:flex here causes all cat-row
+      // animations to begin with their stagger delays already in place.
       document.getElementById("sidebar-category-select").style.display = "flex";
       document.getElementById("sidebar-question-answer").style.display = "none";
       document.getElementById("input-area").classList.add("hidden");
@@ -5371,12 +5598,14 @@ document.addEventListener('keydown', e => {
       const stepSeconds = TIMING.catRowExitStagger / 1000 / gameSpeed;
       const durExit = (0.3 / gameSpeed).toFixed(3);
       const durSpin = (0.4 / gameSpeed).toFixed(3);
-      exitItems.forEach(el => {
+      exitItems.forEach((el, i) => {
         el.style.animation = `cat-slide-out-left ${durExit}s ease-in ${delay}s both`;
         const badge = el.querySelector(".cat-mult-badge");
         if (badge) {
           badge.style.animation = `badge-spin-out ${durSpin}s ease-in ${delay}s forwards`;
         }
+        // Slit SFX as each item exits
+        anim.timer(el, delay * 1000, () => playSlit(1, 0.4));
         delay += stepSeconds;
       });
 
@@ -5419,11 +5648,15 @@ document.addEventListener('keydown', e => {
       // tuning holds up when the user is inspecting at slower speeds.
       await anim.done(selectedRow);
 
-      // Phase 2: Classic CRT power-off. The glow's forwards fill is
-      // discarded when `.crt-off` is added (it replaces the animation
-      // property), but the crt-power-off keyframe 0% state is
-      // intentionally identical to the glow's 100% state, so the handoff
-      // is seamless thanks to fill-mode `both`.
+      // Phase 2: Classic CRT power-off. Sound starts first — 150ms lead-in
+      // lets the rising drone build before the visual implosion begins,
+      // aligning the crescendo peak with the dot collapse.
+      playPowerdown(0.5);
+      await anim.wait(75);
+      // The glow's forwards fill is discarded when `.crt-off` is added
+      // (it replaces the animation property), but the crt-power-off
+      // keyframe 0% state is intentionally identical to the glow's 100%
+      // state, so the handoff is seamless thanks to fill-mode `both`.
       selectedRow.classList.add("crt-off");
       await anim.done(selectedRow);
 
@@ -5480,18 +5713,21 @@ document.addEventListener('keydown', e => {
         contentTv.insertBefore(label, questionBox);
       }
 
-      // Place coin badge in board footer if category has a multiplier
+      // Place coin badge in .board-footer, hanging off the right edge.
+      // CSS handles all positioning (right:-35px, top:50%, translateY(-50%)).
       if (categoryMultiplier > 1) {
         const boardFooter = document.querySelector(".board-footer");
-        if (boardFooter) {
+        const bwEl = document.getElementById("board-wrapper");
+        if (boardFooter && bwEl) {
           const coinClass = categoryMultiplier >= 3 ? 'coin-gold' : categoryMultiplier >= 2 ? 'coin-silver' : 'coin-bronze';
           const tipId = categoryMultiplier >= 3 ? 'cat-mult-3x' : categoryMultiplier >= 2 ? 'cat-mult-2x' : 'cat-mult-1-5x';
           const badge = document.createElement("div");
-          badge.className = `cat-mult-badge ${coinClass}`;
+          badge.className = `cat-mult-badge board-badge ${coinClass}`;
           badge.textContent = categoryMultiplier + "x";
           badge.dataset.tip = tipId;
-          badge.style.cssText = "position:absolute; bottom:-28px; left:50%; transform:translateX(-50%); animation:coin-pulse 1.5s ease-in-out infinite;";
           boardFooter.appendChild(badge);
+          // Fade in after board slide-in completes
+          anim.done(bwEl).then(() => badge.classList.add("badge-visible"));
           // Hide the old text indicator
           const oldIndicator = document.getElementById("cat-mult-indicator");
           if (oldIndicator) oldIndicator.style.display = "none";
@@ -5521,8 +5757,11 @@ document.addEventListener('keydown', e => {
       // Slide board wrapper in (starts immediately alongside content-tv)
       const bw = document.getElementById("board-wrapper");
       if (bw) {
-        bw.classList.remove("offscreen");
+        bw.classList.remove("offscreen", "board-ready");
         bw.classList.add("slide-in");
+        // tap2 near landing (70% of 0.5s = ~350ms)
+        anim.timer(bw, 350 / gameSpeed, () => playTick(0, { volume: 0.5 }));
+        anim.done(bw).then(() => bw.classList.add("board-ready"));
       }
 
       // Question-phase entry sequence — strictly serial:
@@ -5537,6 +5776,7 @@ document.addEventListener('keydown', e => {
           if (!contentTv) return;
           contentTv.classList.remove("ct-hidden");
           contentTv.classList.add("tv-on");
+          playTvOn(1.0);
           await anim.done(contentTv);
         },
         // 2. question text typewriters in
@@ -5546,6 +5786,8 @@ document.addEventListener('keydown', e => {
           if (!sziEl) return;
           sziEl.classList.remove("offscreen-below");
           sziEl.classList.add("input-enter");
+          // tap2 near landing (70% of 0.5s = ~350ms)
+          anim.timer(sziEl, 350 / gameSpeed, () => playTap(2, 0.375));
           await anim.done(sziEl);
         },
         () => { document.getElementById("guess")?.focus(); },
@@ -5593,7 +5835,7 @@ document.addEventListener('keydown', e => {
       for (let i = 0; i < answerCount; i++) {
         const ans = currentQuestion.answers[i];
         const d = document.createElement("div");
-        d.classList.add("answer");
+        d.classList.add("answer", "lift-area");
         d.dataset.tileIndex = i;
         {
           const inner = document.createElement("div");
@@ -5638,7 +5880,7 @@ document.addEventListener('keydown', e => {
           // Tile cover — glossy overlay with pixelated circle
           if (!revealed[i]) {
             const cover = document.createElement("div");
-            cover.classList.add("tile-cover");
+            cover.classList.add("tile-cover", "liftable");
             const circle = document.createElement("div");
             circle.classList.add("tile-cover-circle");
             const coverNum = document.createElement("span");
@@ -5652,7 +5894,7 @@ document.addEventListener('keydown', e => {
         b.appendChild(d);
         if (revealed[i]) applyTileMarquee(d.querySelector('.tile-back .tile-text'));
       }
-      updateBoardRoundTotal();
+      updateBoardRoundTotal(false);
     }
 
     function buildTileBack(back, i, ans, opts) {
@@ -5743,11 +5985,15 @@ document.addEventListener('keydown', e => {
       });
     }
 
-    function updateBoardRoundTotal() {
+    function updateBoardRoundTotal(animate = true) {
       const el = document.getElementById("board-round-total");
       if (!el) return;
       const oldVal = parseInt(el.textContent, 10) || 0;
-      animateCountUp(el, oldVal, roundScore, { tick: false });
+      if (!animate || oldVal === roundScore) {
+        el.textContent = roundScore;
+      } else {
+        animateCountUp(el, oldVal, roundScore, { tick: false });
+      }
     }
 
     function awardRoundScore(team, callback) {
@@ -7003,6 +7249,7 @@ document.addEventListener('keydown', e => {
         // 2. After fade completes (1s), TV-off the logo
         setTimeout(() => {
           if (logo) logo.classList.add('tv-off');
+          playPowerdown(0.5);
         }, 1000);
 
         // 3. After TV-off completes (~500ms anim), fade CRT screen + slide setup

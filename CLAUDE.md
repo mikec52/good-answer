@@ -10,8 +10,14 @@ Family Feud-inspired game with original features and styling. Working title: **G
 - Sound files alongside feud.html: `ding.mp3` (correct answer reveal), `newstrike.wav` (incorrect answer), `goodanswer.mp3` (top answer reveal, 300ms delayed, baseVolume 0.35), `negativebeep.wav` (failed steal attempt), `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX + board-wrapper slide), `phonetype.wav` (typewriter keystroke SFX + tile-cover hover), `balbg.mp3` (background music, looping), `roundend.wav` (round winner determined), `decreaseblip.mp3` (streak/mult decrease), `neutralbeep.wav` (duplicate answer rejection), `chime.wav` (badge bounce SFX), `zoop.wav` (speed stepper SFX), `slit.wav` (fly-in/out whoosh — cat-row entry/exit, dialog open/close), `tap1.wav` (button click — setup nav, menu, confirm), `tap2.wav` (element landing — input area fly in/out), `tvon.wav` (CRT power-on), `powerdown.wav` (CRT power-off)
 
 ### Branch structure
-- **`main`** — active development (formerly `viewport-redesign`)
+- **`main`** — pre-Firebase local-only version, not under active development during multiplayer work
+- **`multi`** — active multiplayer development (Firebase/Firestore integration)
 - **`coyne-feud-classic`** — the original Coyne Feud family game night tool (formerly `main`). Finished product, not under active development. Do not merge between branches — they are effectively different games.
+
+### Firebase project
+- Project: `good-answer-game` (Firestore in `us-east1`, test-mode rules expire 2026-05-13)
+- Services enabled: Firestore, Anonymous Auth, Google Auth
+- Currently on **Spark (free) plan** with client-authoritative architecture. Mike is willing to upgrade to **Blaze (pay-as-you-go)** if Cloud Functions (server-authoritative) proves to be the better path for the prototype. Migration from client-authoritative to Cloud Functions is straightforward — same Firestore schema, game logic just moves from the active player's browser to a server function.
 
 ### Hosting & Deployment
 - **GitHub Pages** serves the game at **https://mikec52.github.io/good-answer/feud.html**

@@ -5479,7 +5479,7 @@
     const sfxTracks = [sfxCorrect, sfxWrong, sfxGoodAnswer, sfxSurveySays, sfxRoundEnd, sfxDecreaseBlip, sfxNeutralBeep, sfxNegativeBeep];
 
     let soundEnabled = true;
-    let volumeMaster = 1, volumeMusic = 1, volumeSfx = 1;
+    let volumeMaster = 1, volumeMusic = 0, volumeSfx = 1;
 
     function applyVolumes() {
       const gain = soundEnabled ? volumeMaster : 0;
@@ -5979,6 +5979,10 @@ document.addEventListener('keydown', e => {
     function getActivePlayerUid() {
       if (!isMultiplayer) return null;
       const team = teamTurn;
+      if (!teamPlayerUids[team] || teamPlayerUids[team].length === 0) {
+        console.warn('getActivePlayerUid: no UIDs for team', team, teamPlayerUids);
+        return null;
+      }
       const idx = playerIndex[team] % teamPlayerUids[team].length;
       return teamPlayerUids[team][idx] || null;
     }
@@ -5999,10 +6003,35 @@ document.addEventListener('keydown', e => {
       _lastWriteId++;
       updates._writeId = _lastWriteId;
       updates._writerUid = myUid;
+      // Firestore rejects `undefined` values — strip them recursively.
+      // Uses for-loop on arrays (not .map) because .map skips sparse holes.
+      const clean = (obj) => {
+        if (Array.isArray(obj)) {
+          const out = [];
+          for (let i = 0; i < obj.length; i++) {
+            const v = obj[i];
+            if (v === undefined || v === void 0) out.push(null);
+            else if (typeof v === 'object' && v !== null) out.push(clean(v));
+            else out.push(v);
+          }
+          return out;
+        }
+        if (obj && typeof obj === 'object') {
+          const out = {};
+          for (const [k, v] of Object.entries(obj)) {
+            if (v === undefined) out[k] = null;
+            else if (typeof v === 'object' && v !== null) out[k] = clean(v);
+            else out[k] = v;
+          }
+          return out;
+        }
+        return obj;
+      };
+      const cleaned = clean(updates);
       try {
-        await window._fb.updateDoc(gameRef, updates);
+        await window._fb.updateDoc(gameRef, cleaned);
       } catch (e) {
-        console.error('syncState failed:', e);
+        console.error('syncState failed:', e, cleaned);
       }
     }
 
@@ -6014,8 +6043,18 @@ document.addEventListener('keydown', e => {
       unsubGameSnap = window._fb.onSnapshot(gameRef, (snap) => {
         if (!snap.exists()) return;
         const data = snap.data();
-        // Skip self-echoes: if this write came from us, we already applied it
-        if (data._writerUid === myUid && data._writeId === _lastWriteId) {
+        console.log('[multi] snapshot:', {
+          phase: data.phase,
+          writerUid: data._writerUid?.substring(0,8),
+          writeId: data._writeId,
+          isSelfEcho: data._writerUid === myUid,
+          myLastWriteId: _lastWriteId,
+        });
+        // Skip ALL self-echoes: if this write came from us, we already
+        // applied the changes locally. The old check (matching _writeId)
+        // broke when stale echoes arrived after _lastWriteId had advanced,
+        // causing the active player to re-process its own old state.
+        if (data._writerUid === myUid) {
           _prevSnapshot = data;
           return;
         }
@@ -6036,6 +6075,13 @@ document.addEventListener('keydown', e => {
     // score changes, strikes, and phase transitions.
     function reconcileLocalState(data, prev) {
       if (!data) return;
+      console.log('[multi] reconcile:', {
+        phase: data.phase, prevPhase: prev?.phase,
+        hasQuestion: !!data.currentQuestion,
+        hasCatPicks: !!data.categoryPicks,
+        writerUid: data._writerUid?.substring(0,8),
+        writeId: data._writeId,
+      });
 
       // ── Scores ──
       if (data.teamScores) {
@@ -6139,24 +6185,37 @@ document.addEventListener('keydown', e => {
     function handlePhaseTransition(data) {
       switch (data.phase) {
         case 'category-select':
-          // Another player should see category selection
-          if (data.activePlayerUid !== myUid) {
-            showCategorySelection();
+          // Spectator: show category selection using synced picks from Firestore
+          if (data.activePlayerUid !== myUid && data.categoryPicks) {
+            // Update round state before showing categories
+            if (data.roundNumber !== undefined) roundNumber = data.roundNumber;
+            if (data.teamTurn !== undefined) teamTurn = data.teamTurn;
+            if (data.startingTeam !== undefined) startingTeam = data.startingTeam;
+            initRoundState();
+            updateTurn();
+            document.getElementById("roundCounter").textContent = roundNumber;
+            showCategorySelection(data.categoryPicks);
           }
           break;
         case 'gameplay':
-          // Category was picked — update board and question
-          if (data.currentQuestion) {
+          // Category was picked — spectator needs to build the full question screen
+          if (data.currentQuestion && data.activePlayerUid !== myUid) {
             currentQuestion = data.currentQuestion;
             revealed = data.revealed || new Array(currentQuestion.answers.length).fill(false);
             revealedData = new Array(currentQuestion.answers.length).fill(null);
             categoryMultiplier = data.categoryMultiplier || 1;
+            if (data.usedQuestions) usedQuestions = [...data.usedQuestions];
+            // Build the question screen on the spectator side
+            setupQuestionScreenForSpectator();
           }
           break;
         case 'steal':
           stealPhase = true;
           teamTurn = data.teamTurn;
           updateTurn();
+          setPhaseText("steal-chance", `${teamNames[teamTurn]} can steal!`);
+          setPhaseTeamColor(teamTurn);
+          setPhase("steal-chance", { knock: true });
           break;
         case 'round-result':
           // Round ended — show results
@@ -6165,6 +6224,88 @@ document.addEventListener('keydown', e => {
           }
           break;
       }
+    }
+
+    // Set up the question/gameplay screen for a spectator who received
+    // the question via Firestore (mirrors the post-animation state of pickCategory)
+    function setupQuestionScreenForSpectator() {
+      if (!currentQuestion) return;
+
+      // Swap sidebar panels
+      document.getElementById("sidebar-category-select").style.display = "none";
+      document.getElementById("sidebar-question-answer").style.display = "flex";
+
+      // Phase indicator
+      setPhaseText("gameplay", `${teamNames[teamTurn]} has the board`);
+      setPhaseTeamColor(teamTurn);
+      setPhase("gameplay");
+
+      // Build cat-label inside content-tv
+      const contentTv = document.getElementById("content-tv");
+      const questionBox = document.getElementById("question-box");
+      if (contentTv) {
+        const catName = currentQuestion.category;
+        const cc = catName.toLowerCase();
+        const colorClass = cc === 'survey' ? 'cat-survey' : cc.includes('science') ? 'cat-science'
+          : cc.includes('geo') ? 'cat-geography' : (cc.includes('pop') || cc.includes('cult')) ? 'cat-popculture'
+          : cc.includes('sport') ? 'cat-sports' : '';
+        const label = document.createElement("div");
+        label.id = "cat-label";
+        if (colorClass) label.classList.add(colorClass);
+        const estCharWidth = 18, estGap = 27;
+        const estUnitWidth = catName.length * estCharWidth + estGap;
+        const halfCopies = Math.max(2, Math.ceil(300 / estUnitWidth) + 1);
+        const oneHalf = Array(halfCopies).fill(`<span>${catName}</span>`).join("");
+        label.innerHTML = `<span class="marquee-scroll">${oneHalf}${oneHalf}</span>`;
+        const duration = (halfCopies * estUnitWidth) / 30;
+        label.querySelector(".marquee-scroll").style.setProperty("--marquee-duration", `${duration.toFixed(1)}s`);
+        contentTv.insertBefore(label, questionBox);
+
+        // Show content-tv (skip CRT animation for spectator — just reveal)
+        contentTv.classList.remove("ct-hidden", "slide-out-left");
+        contentTv.classList.add("tv-on");
+      }
+
+      // Set question text (no typewriter for spectator — instant display)
+      const questionEl = document.getElementById("question");
+      if (questionEl) {
+        fitByCharCount(questionEl, 48, currentQuestion.question, 0.5);
+        questionEl.textContent = currentQuestion.question;
+        questionEl.classList.add("typed");
+      }
+      document.getElementById("questionActions").style.display = "flex";
+
+      // Category multiplier badge in board footer
+      if (categoryMultiplier > 1) {
+        const boardFooter = document.querySelector(".board-footer");
+        if (boardFooter) {
+          const coinClass = categoryMultiplier >= 3 ? 'coin-gold' : categoryMultiplier >= 2 ? 'coin-silver' : 'coin-bronze';
+          const tipId = categoryMultiplier >= 3 ? 'cat-mult-3x' : categoryMultiplier >= 2 ? 'cat-mult-2x' : 'cat-mult-1-5x';
+          const badge = document.createElement("div");
+          badge.className = `cat-mult-badge board-badge ${coinClass} badge-visible`;
+          badge.textContent = categoryMultiplier + "x";
+          badge.dataset.tip = tipId;
+          boardFooter.appendChild(badge);
+        }
+      }
+
+      // Show board
+      updateBoard(); updateScores(); updateStrikes(); updateStreakDisplay(); updateHistory(); updateTurn();
+      const bw = document.getElementById("board-wrapper");
+      if (bw) {
+        bw.classList.remove("offscreen");
+        bw.classList.add("slide-in", "board-ready");
+      }
+
+      // Show input area — rebuild turn body with proper 3D buttons
+      const szi = document.getElementById("sq-zone-input");
+      if (szi) {
+        szi.classList.remove("offscreen-below");
+        szi.classList.add("input-enter");
+      }
+      document.getElementById("input-area").classList.remove("hidden");
+      // Re-init 3D button hover listeners (DOM was rebuilt by initRoundState)
+      setup3dBtns();
     }
 
     // Update UI based on whether this client is the active player
@@ -6180,12 +6321,12 @@ document.addEventListener('keydown', e => {
         guessInput.placeholder = isActive ? 'Enter your guess' : 'Waiting for other player...';
       }
 
-      // Toggle submit button visibility
+      // Hide submit button for spectators (opacity on 3D buttons breaks face rendering)
       const submitBtns = inputArea?.querySelectorAll('.input-btn');
       if (submitBtns) {
         submitBtns.forEach(btn => {
           btn.style.pointerEvents = isActive ? '' : 'none';
-          btn.style.opacity = isActive ? '' : '0.4';
+          btn.style.visibility = isActive ? '' : 'hidden';
         });
       }
 
@@ -6742,24 +6883,24 @@ document.addEventListener('keydown', e => {
       updateTurn();
       initRoundState();
 
-      // Sync round advancement to Firestore
+      // In multiplayer, only the active player generates and syncs categories.
+      // The spectator waits for Firestore to deliver the picks via reconcileLocalState.
       if (isMultiplayer) {
-        syncState({
-          roundNumber,
-          teamTurn,
-          startingTeam,
-          phase: 'category-select',
-          currentQuestion: null,
-          revealed: [],
-          revealedData: [],
-          roundScore: 0,
-          strikes: 0,
-          currentStreak: 0,
-          answerMultiplier: 1.0,
-          stealPhase: false,
-          lastResult: null,
-          activePlayerUid: getActivePlayerUid(),
+        console.log('[multi] advanceRound gate:', {
+          myUid: myUid?.substring(0,8),
+          activeUid: getActivePlayerUid()?.substring(0,8),
+          amActive: amIActivePlayer(),
+          teamTurn, teamPlayerUids: teamPlayerUids.map(t => t.map(u => u.substring(0,8))),
         });
+      }
+      if (isMultiplayer && !amIActivePlayer()) {
+        // Spectator: show a waiting state until category picks arrive
+        document.getElementById("sidebar-category-select").style.display = "flex";
+        document.getElementById("sidebar-question-answer").style.display = "none";
+        document.getElementById("input-area").classList.add("hidden");
+        const bw = document.getElementById("board-wrapper");
+        if (bw) { bw.classList.remove("slide-in"); bw.classList.add("offscreen"); }
+        return;
       }
 
       showCategorySelection();
@@ -6812,23 +6953,58 @@ document.addEventListener('keydown', e => {
       });
     }
 
-    function showCategorySelection() {
-      const remainingIdx = questions.map((q, idx) => !usedQuestions.includes(idx) && (!devModeAllowedQuestions || devModeAllowedQuestions.has(idx)) ? idx : null).filter(i => i !== null);
-      const hasSurvey = remainingIdx.some(i => questions[i].category === 'Survey');
-      const objCats = [...new Set(remainingIdx.filter(i => questions[i].category !== 'Survey').map(i => questions[i].category))];
-      if (objCats.length === 0 && !hasSurvey) { endGame("No more questions available."); return; }
-      const picks = [];
-      const catsCopy = objCats.slice();
-      while (picks.length < 3 && catsCopy.length > 0) {
-        const r = Math.floor(Math.random() * catsCopy.length);
-        picks.push(catsCopy.splice(r,1)[0]);
-      }
+    // Shared data for synced category display in multiplayer
+    let _syncedCategoryPicks = null; // { picks: [...], hasSurvey, multipliers: {} }
 
-      // Roll category multipliers for each option
-      categoryMultipliers = {};
-      const allPicks = picks.slice();
-      if (hasSurvey) allPicks.push('Survey');
-      allPicks.forEach(cat => { categoryMultipliers[cat] = rollCategoryMultiplier(); });
+    function showCategorySelection(syncedData) {
+      let picks, hasSurvey;
+
+      if (syncedData) {
+        // Spectator path: use data from Firestore
+        picks = syncedData.picks;
+        hasSurvey = syncedData.hasSurvey;
+        categoryMultipliers = syncedData.multipliers || {};
+      } else {
+        // Active player (or local mode): generate randomly
+        const remainingIdx = questions.map((q, idx) => !usedQuestions.includes(idx) && (!devModeAllowedQuestions || devModeAllowedQuestions.has(idx)) ? idx : null).filter(i => i !== null);
+        hasSurvey = remainingIdx.some(i => questions[i].category === 'Survey');
+        const objCats = [...new Set(remainingIdx.filter(i => questions[i].category !== 'Survey').map(i => questions[i].category))];
+        if (objCats.length === 0 && !hasSurvey) { endGame("No more questions available."); return; }
+        picks = [];
+        const catsCopy = objCats.slice();
+        while (picks.length < 3 && catsCopy.length > 0) {
+          const r = Math.floor(Math.random() * catsCopy.length);
+          picks.push(catsCopy.splice(r,1)[0]);
+        }
+
+        // Roll category multipliers for each option
+        categoryMultipliers = {};
+        const allPicks = picks.slice();
+        if (hasSurvey) allPicks.push('Survey');
+        allPicks.forEach(cat => { categoryMultipliers[cat] = rollCategoryMultiplier(); });
+
+        // In multiplayer, sync picks + round state so spectators see the same categories
+        if (isMultiplayer) {
+          _syncedCategoryPicks = { picks, hasSurvey, multipliers: { ...categoryMultipliers } };
+          syncState({
+            categoryPicks: _syncedCategoryPicks,
+            phase: 'category-select',
+            activePlayerUid: getActivePlayerUid(),
+            roundNumber,
+            teamTurn,
+            startingTeam,
+            currentQuestion: null,
+            revealed: [],
+            revealedData: [],
+            roundScore: 0,
+            strikes: 0,
+            currentStreak: 0,
+            answerMultiplier: 1.0,
+            stealPhase: false,
+            lastResult: null,
+          });
+        }
+      }
 
       // Populate team prompt via phase indicator
       const teamName = teamNames[teamTurn];
@@ -6953,6 +7129,9 @@ document.addEventListener('keydown', e => {
         bw.classList.remove("slide-in");
         bw.classList.add("offscreen");
       }
+
+      // Re-apply role UI after pills are rendered (dims/disables for spectators)
+      if (isMultiplayer) updateRoleUI(getActivePlayerUid());
     }
 
     async function animateCategoryTransition(category) {
@@ -7077,6 +7256,7 @@ document.addEventListener('keydown', e => {
       const choice = pool[Math.floor(Math.random() * pool.length)];
       currentQuestion = choice.q; usedQuestions.push(choice.idx);
       revealed = Array(currentQuestion.answers.length).fill(false);
+      revealedData = Array(currentQuestion.answers.length).fill(null);
       categoryMultiplier = categoryMultipliers[category] || 1;
       const catMultEl = document.getElementById("cat-mult-indicator");
       if (catMultEl) {
@@ -9020,12 +9200,15 @@ document.addEventListener('keydown', e => {
         else if (p.team === 1) bluePlayers.push({ uid, name: p.name });
       }
 
-      // Write game start state
+      // Write game start state — host determines startingTeam
+      const _startingTeam = Math.floor(Math.random() * 2);
+      _lobbyStartingTeam = _startingTeam; // host saves its own value directly
       await window._fb.updateDoc(gameRef, {
         status: 'playing',
         teamPlayers: { 0: redPlayers, 1: bluePlayers },
         maxRounds: data.maxRounds || 4,
         gameSpeed: data.gameSpeed || 1,
+        startingTeam: _startingTeam,
       });
 
       // Host transitions to game
@@ -9050,36 +9233,80 @@ document.addEventListener('keydown', e => {
         teamPlayerUids = [redUids, blueUids];
         maxRounds = data.maxRounds || 4;
         setGameSpeed(data.gameSpeed || 1);
+        // Use host-determined startingTeam if available
+        if (data.startingTeam !== undefined) {
+          _lobbyStartingTeam = data.startingTeam;
+        }
         startGameFromLobby();
       });
     }
 
+    let _lobbyStartingTeam = null; // set by transitionFromLobbyToGame from Firestore
+
     function startGameFromLobby() {
       // Mirror startGame() but with state already populated from Firestore.
-      // teamNames and teamPlayers are already set by transitionFromLobbyToGame.
-      const setup = document.getElementById('setup');
-      setup.style.display = 'none';
-      document.getElementById('game').style.display = '';
+      // teamNames, teamPlayers, maxRounds, gameSpeed already set by
+      // transitionFromLobbyToGame.
       gameMode = 'rounds';
+      targetScore = Infinity;
+      lastRoundWinner = -1;
       roundNumber = 0;
       teamScores = [0, 0];
       gameEnded = false;
       matchLog = [];
-      startingTeam = Math.random() < 0.5 ? 0 : 1;
+      // Use host-determined startingTeam so both clients agree
+      startingTeam = _lobbyStartingTeam !== null ? _lobbyStartingTeam : Math.floor(Math.random() * 2);
+      _lobbyStartingTeam = null;
       teamTurn = startingTeam;
       playerIndex = [0, 0];
       usedQuestions = [];
+
+      // Set scoreboard team labels
+      const redLabelH4 = document.querySelector("#red-score-box .team-label h4");
+      const blueLabelH4 = document.querySelector("#blue-score-box .team-label h4");
+      if (redLabelH4) { redLabelH4.textContent = teamNames[0]; fitByCharCount(redLabelH4, 10); }
+      if (blueLabelH4) { blueLabelH4.textContent = teamNames[1]; fitByCharCount(blueLabelH4, 10); }
+
       // Clear start-screen inline blob fills so updateBlobColor works
       ['.bg-out-top', '.bg-in-top', '.bg-out-bottom', '.bg-in-bottom']
-        .map(s => document.querySelector(s))
-        .forEach(el => { if (el) el.style.fill = ''; });
+        .forEach(sel => { const el = document.querySelector(sel); if (el) el.style.fill = ''; });
+
+      // Show game, hide setup + ribbon
+      document.getElementById("setup").style.display = "none";
+      document.getElementById("game").style.display = "flex";
+      document.getElementById("ribbon-scroller").style.display = "none";
+
+      // Hide sidebar panels until showCategorySelection populates and reveals
+      document.getElementById("sidebar-category-select").style.display = "none";
+      document.getElementById("input-area").classList.add("hidden");
+      document.getElementById("roundTarget").textContent = maxRounds || '—';
+
+      // Phase indicator: start offscreen, slide in
+      const pi = document.getElementById("phase-indicator");
+      if (pi) {
+        pi.classList.add("offscreen");
+        pi.removeAttribute("data-phase");
+      }
+      showPhaseIndicator();
+
+      // Scoreboard: slides down from above the canvas
+      const sb = document.getElementById("scoreboard");
+      if (sb) {
+        sb.classList.remove("slide-in");
+        sb.classList.add("offscreen");
+        requestAnimationFrame(() => {
+          sb.classList.remove("offscreen");
+          sb.classList.add("slide-in");
+        });
+      }
+
+      updateScores();
 
       // In multiplayer, start listening for game state changes
       if (isMultiplayer) {
         startGameListener();
       }
 
-      updateScores();
       advanceRound();
     }
 

@@ -137,7 +137,8 @@ Evolved from a simple 3-zone vertical stack to a **sidebar + main column** model
       #sidebar-category-select  ← during category selection
         #category-pills-area (.trivia-categories, .pills-divider, .survey-categories)
       #sidebar-question-answer  ← during gameplay
-        #question-box, #questionActions, #input-area, #message, #history
+        #sq-zone-content → #content-tv (cat-label + question-box + vignette)
+        #sq-zone-input → #input-area, #message
     #zone-board-main (75%)
       #header-zone
         #scoreboard (5-col CSS grid: player panels + score boxes + round display)
@@ -345,9 +346,9 @@ Defined in `:root`. Use these variables everywhere team color appears — do not
 
 Both `#board-wrapper` and `#scoreboard` follow a consistent frame/field pattern:
 
-- **`#222` frame** — the background color of the wrapper. All labels (column headers, stat labels, team names, "Turn Order", "Round") sit directly on this frame.
+- **Scoreboard frame** — industrial noise texture (SVG turbulence grain over vertical gradient, `inset` bevel highlights). All labels sit directly on this frame.
 - **`#111` value fields** — data cells (player lists, round info, stat values, answer tiles) have `background: #111` with `border-radius: 6px`.
-- **Team-colored exception** — `.team-points` fields use `var(--red-bg)` / `var(--blue-bg)` instead of `#111`.
+- **Team-colored exception** — `.team-points` fields use `var(--red-bg)` / `var(--blue-bg)` instead of `#111`. These have CRT overlay effects: `::before` (combined white noise + scanlines at opacity 0.3, z-index 1), `box-shadow: inset` vignette, and `overflow: hidden` to contain effects within border-radius. Active-team arrow `::after` has `z-index: 2` to render above the CRT layer.
 - **`6px` gutters** — consistent `gap: 6px` between all cells. No padding on individual cells for spacing; the gap property handles all gutters. Wrappers retain outer padding for the border inset.
 - **Answer rows** are fixed at `40px` height. Each row has a `.tile-cover` (glossy black with pixelated 8-bit circle) that slides right to reveal the answer. Correct = green (`#1b5e20`), missed = red (`#7b0000`). The old flip animation was removed; cover-slide is the only reveal mechanism.
 - **Board wrapper** slides in from below the canvas when a category is picked (`board-slide-in` animation), hidden during category selection (`.offscreen` class).
@@ -467,7 +468,7 @@ The element was changed from `<ul>` to `<div>` at the outer level so we could ne
 - **"Advanced question options"** — opens a content dialog (`showQuestionOptions()`) with option rows for: get new question, flag for removal, flag for fact check, copy answers for judge. "Get new question" opens a confirm dialog stacked on top without dismissing the options dialog.
 - **End-of-round state** repurposes the turn-input-box: header shows the round result message, body shows Reveal All / Next Round buttons.
 - **Score edits** — a "Score edits needed?" link opens a content dialog (`showScoreEdits()` / `showFmScoreEdits()`) with +/−/input/Apply controls per team. Apply triggers a confirm dialog stacked on top.
-- **Answer history** — an "Answer History" link opens a content dialog (`showAnswerHistory()`) that reads from `guessHistory` on demand. Empty state shows italicized "No answers have been submitted yet this round".
+- **Answer history** — "Answer History" link in `#questionActions` (right-aligned, alongside "Advanced question options") opens a content dialog (`showAnswerHistory()`) that reads from `guessHistory` on demand. Empty state shows italicized "No answers have been submitted yet this round".
 - **Player/team name limit** — 18 characters max (`maxlength="18"` on all setup inputs). No explicit error message; the input shakes (CSS `input-shake` animation, 0.3s) when a keystroke is rejected at the limit. Backspace, arrows, and modifier shortcuts pass through normally.
 - **Duplicate answer** — if a guess matches a previously submitted guess (normalized), the input field shakes (`input-shake`), placeholder text changes to "Answer already submitted" for 2s, and `neutralbeep.wav` plays. No message element used.
 - **Export CSV** — removed. Was a Coyne Feud feature, not relevant for Good Answer.
@@ -558,11 +559,18 @@ hidePhaseIndicator();          // slide container out (resetGame)
 The sidebar during gameplay is split between the persistent `#phase-indicator` at the top (see previous section) and `#sidebar-question-answer` below it, which is a flex column stack with two zones:
 
 ### Zone 1: Content (`#sq-zone-content`)
-- `#cat-label` — CRT "screen" header using the selected category's color. 80px tall, 3rem Bitcount font, `border-radius: 14px`, `border: 3px solid var(--cat-solid)`, `overflow: hidden`, `box-shadow: inset` for vignette. Three stacked layers: `::before` = animated white noise (SVG turbulence + `tv-static` keyframes, `hard-light` blend), `::after` = CRT scanlines (repeating-linear-gradient). Text entrance uses `tv-on` animation (inverse CRT power-on: dot → line → full), then switches to horizontal marquee scroll (`cat-label-marquee` keyframes, `translateX(-50%)` on doubled text with `padding-right` gap).
-- `#question-box` — sits directly below cat-label. Contains `#category` (hidden — cat-label replaces it), `#question`, and `#questionActions`.
+
+Contains a single child: `#content-tv`, a 300×300px "TV screen" container with CRT overlay.
+
+- **`#content-tv`** — fixed 300×300, `border-radius: 50px`, `overflow: hidden`, centered via `margin: 30px auto 10px auto`. Flex column layout. `perspective: 500px` + `transform-style: preserve-3d` for subtle 3D CRT bulge. Three overlay layers above children:
+  - `::before` (z-index 10) — animated white noise (SVG turbulence + `tv-static` keyframes, `soft-light` blend, opacity 0.5)
+  - `::after` (z-index 11) — CRT scanlines (repeating-linear-gradient, opacity 0.2)
+  - `#content-tv-vignette` (z-index 12) — dedicated div for `box-shadow: inset` vignette (separate from scanlines so opacity is independent)
+  Starts hidden with `.ct-hidden` class (opacity 0, scale 0). TV-on animation (`.tv-on` class) reveals it with CRT power-on effect.
+- **`#cat-label`** — category ticker band inside content-tv. 50px tall, 1.8rem Bitcount font, `border-radius: 0`, no border, `z-index: 5` (above question-box, below CRT overlays). Background uses `var(--cat-face)` with category color classes. Marquee is pre-configured at creation — text repeats enough times to fill the 300px container (computed from char-count estimate), already scrolling when content-tv reveals. Created dynamically by `pickCategory()` and inserted into `#content-tv` before `#question-box`.
+- **`#question-box`** — `position: absolute; inset: 0` fills the full 300×300 of content-tv, behind cat-label (`z-index: 1`). `padding-top: 60px` pushes content below the 50px cat-label. `display: grid; grid-template-rows: 85% 15%`: row 1 = `#question` (centered text), row 2 = `#questionActions` (flex row with `justify-content: space-between` — "Advanced question options" left, "Answer History" right). `transform: translateZ(20px)` pushes content forward within the 3D perspective. `#category` element has been removed.
 
 ### Zone 2: Input (`#sq-zone-input`)
-- Answer history tray at top (collapsed by default)
 - `#input-area` — full width, locked height (`min-height: 250px; max-height: 250px`), flex column. `#turn-header` is hidden (redundant with phase indicator). `#turn-input-box` fills parent height (`flex: 1`), `#turn-body` uses `justify-content: space-between` to pin the input row at the bottom. `#turn-subtext` has a fixed `height: 2.5rem` with `flex-shrink: 0` so font-size changes from `fitByCharCount` don't shift the input field. Buttons use `.input-btn` 3D prism class (see "3D Input-Area Buttons").
 
 ### Board Wrapper
@@ -577,46 +585,23 @@ The sidebar during gameplay is split between the persistent `#phase-indicator` a
 `#game-root` has `overflow: hidden` and is the primary clipping boundary. Overflow settings down the sidebar chain:
 
 - **`#sidebar-zone`** — `overflow: visible`, `min-width: 0`. Visible overflow is needed for category multiplier badges that hang off `.cat-row` edges. `min-width: 0` prevents flex expansion from nowrap marquee content.
-- **`#sidebar-question-answer`** — `overflow: hidden`. Clips the cat-label marquee and question content.
+- **`#sidebar-question-answer`** — `overflow: hidden`. Clips content-tv's fly-in and sq-zone-input's off-canvas slide.
 - **`#sq-zone-content`** — `overflow: hidden`. Additional clipping layer.
-- **`#cat-label`** — `overflow: hidden`. Clips its own horizontal marquee scroll.
-
-`question-box`'s extrude animation uses its own `clip-path` for containment, not a parent `overflow`.
+- **`#content-tv`** — `overflow: hidden`. Clips cat-label marquee and question content.
 
 ---
 
-## Question Phase — Entry Animations (locked in)
+## Question Phase — Entry Animations
 
-The full sequence from "category picked → ready-to-play" state. Like the category phase entry section above, these are **committed and should not be changed without explicit instruction**.
+The full sequence from "category picked → ready-to-play" state. Orchestrated in `pickCategory()` via `anim.sequence`.
 
 ### Order — strictly serial
 
-Each step `await`s the previous animation's completion via `anim.done` before the next begins. Orchestrated in `pickCategory()` via `anim.sequence`:
+1. **`#content-tv`** plays tv-on CRT effect (`.ct-hidden` → `.tv-on`, `tv-on` keyframes, 700ms — dot → line → full screen). Cat-label and question-box are already loaded inside — the screen reveals fully populated content.
+2. **`#question`** text streams in via `typewriter()` (default 30ms per char; cursor blinks during `.typing`, steady during `.typed`)
+3. **`#sq-zone-input`** slides up from below the canvas (`.offscreen-below` → `.input-enter`, `input-slide-up` keyframes, 500ms)
 
-1. **`#cat-label`** slides in from the left (`.offscreen-left` → `.slide-in-left`, `cat-label-slide-in-left` keyframes, 500ms)
-2. **`#cat-label > span`** TV-on effect (`.tv-on` class, `tv-on` keyframes, 700ms) — dot → line → full screen. Uses `forwards` fill; 100% keyframe explicitly sets `opacity: 1`, `transform: scale(1,1)`, `filter: brightness(1) saturate(1)`.
-2b. **Marquee starts** — JS removes `.tv-on`, sets inline `opacity: 1`, duplicates text into two inner `<span>` elements (each with `padding-right: 3em` for gap), adds `.marquee-scroll`. The marquee keyframes include `scale(1)` to prevent base `scale(0)` from reasserting. `:has(> span.marquee-scroll)` switches cat-label to `justify-content: flex-start`.
-3. **`#question-box`** extrudes from under cat-label (`.hidden-behind` → `.reveal-drop`, `question-box-drop` keyframes, 450ms)
-4. **`#question`** text streams in via `typewriter()` (default 30ms per char; cursor blinks during `.typing`, steady during `.typed`)
-5. **`#sq-zone-input`** slides up from below the canvas (`.offscreen-below` → `.input-enter`, `input-slide-up` keyframes, 500ms)
-
-After step 5, `#guess` is focused. The board wrapper's `slide-in` from above starts in parallel at the very beginning of this sequence (separate from `anim.sequence`) so the main game area fills in while the sidebar steps play out.
-
-### The question-box extrude technique
-
-`#question-box` must appear to emerge from cat-label's bottom edge — not slide down from above the canvas, and not wipe in place. The trick is combining two transforms that animate in parallel:
-
-- **`transform: translateY(-100%)` → `translateY(0)`** — the box physically moves downward from its "hidden behind cat-label" position into its natural position. This provides the motion illusion.
-- **`clip-path: inset(100% 0 0 0)` → `inset(0)`** — the top inset shrinks from 100% to 0, revealing the box from its own top edge downward. This prevents the translated box from ever being visible above cat-label during the slide.
-
-Without the clip-path, the box peeks through the gap above cat-label (cat-label's 30px `margin-top`) and looks like a drop-in from the top. Without the translate, it's a pure wipe reveal with no motion. Both together = extrusion. Keyframes:
-
-```css
-@keyframes question-box-drop {
-  from { transform: translateY(-100%); clip-path: inset(100% 0 0 0); }
-  to   { transform: translateY(0);     clip-path: inset(0 0 0 0); }
-}
-```
+After step 3, `#guess` is focused. The board wrapper's `slide-in` from above starts in parallel at the very beginning of this sequence (separate from `anim.sequence`) so the main game area fills in while the sidebar steps play out.
 
 ### `typewriter()` helper
 
@@ -631,11 +616,11 @@ Hidden-tab caveat: Chrome throttles `setTimeout` in background tabs, so the type
 
 ### Cleanup between rounds
 
-`initRoundState()` resets all of these back to their off-canvas / hidden states so the sequence replays cleanly:
-- `#question-box`: remove `.reveal-drop`, add `.hidden-behind`
+`initRoundState()` resets all elements to their pre-animation states so the sequence replays cleanly:
+- `#content-tv`: remove `.slide-out-left`, `.tv-on`, add `.ct-hidden`
 - `#sq-zone-input`: remove `.input-enter`, add `.offscreen-below`
 - `#question`: remove `.typing`, `.typed`
-- `#cat-label`: the entire element is removed (the next round recreates it with `.offscreen-left` applied at insertion)
+- `#cat-label`: the entire element is removed (the next round recreates it in `pickCategory()`)
 
 ---
 
@@ -840,16 +825,13 @@ When a round winner is determined (`setPhase("round-result")`), three simultaneo
 
 ## Round Exit Animations (`advanceRound`)
 
-`advanceRound()` is `async`. Before resetting state, it animates sidebar elements out in **reverse entry order** (matching the extrude pattern — what came out last goes back first):
+`advanceRound()` is `async`. Before resetting state, it animates sidebar elements out:
 
 1. **`#sq-zone-input`** slides down (`input-exit`, 0.4s)
-2. **`#question-box`** retracts up into cat-label (`exit-up`, 0.35s — reverse of `question-box-drop`)
-3. **`#cat-label`** slides out left (`slide-out-left`, 0.4s)
-4. **`#board-wrapper`** slides out in parallel (CSS transition via `.offscreen` class, 0.5s)
+2. **`#content-tv`** slides out left (`slide-out-left`, 0.4s) — takes cat-label + question-box with it as a unit
+3. **`#board-wrapper`** slides out in parallel (CSS transition via `.offscreen` class, 0.5s)
 
 **Color change is deferred**: `updateTurn()` (which sets team colors on input-area, blobs, phase indicator) runs *after* all exit animations complete, not before. This prevents jarring color snaps during the exit sequence.
-
-**Exit class cleanup**: `initRoundState()` removes `exit-up` from `#question-box` and `input-exit` from `#sq-zone-input` alongside the entry classes, preventing stale `forwards` fill conflicts when entry animations replay.
 
 ---
 
@@ -946,7 +928,7 @@ To add a new speed tier, append an entry. The setup stepper, settings slider, an
 
 ### Spacebar fast-forward
 
-While the guess input is disabled (scoring sequence in progress), holding Space temporarily doubles the effective speed (capped at 4×). Releasing restores `gameSpeedSetting`.
+While the guess input is disabled (scoring sequence in progress), pressing Space toggles a 2× speed boost (capped at 4×). Press again to deactivate, or it auto-deactivates when the scoring sequence completes (input re-enables). A pulsing `▶▶` indicator (CSS triangle arrows, `#speed-boost-indicator`) appears centered on the game canvas while active.
 
 ### What does NOT scale
 
@@ -1112,7 +1094,7 @@ The selected category **does not move**. Instead, two sequential phases transfor
 `makeBtn()` applies the category class (`cat-science` etc.) to **both the cat-row and the button**. This lets the row inherit `--cat-face` / `--cat-solid` CSS variables for its Path B animations. The category classes only define variables, so putting them on the row has no side effects beyond enabling the cascade.
 
 ### Cleanup
-`initRoundState()` removes stale elements at the start of each new round: `#cat-label`, `.cat-row` remnants in `#sq-zone-content`, `.cat-mult-badge` in `.board-footer`. Re-shows `#category` element. Removes entrance animation classes so they replay next round. The `.selected-glow` and `.crt-off` classes are naturally cleared because the entire pills area's `innerHTML` is rebuilt each round.
+`initRoundState()` removes stale elements at the start of each new round: `#cat-label`, `.cat-row` remnants in `#sq-zone-content`, `.cat-mult-badge` in `.board-footer`. Resets `#content-tv` to `.ct-hidden`. Removes entrance animation classes so they replay next round. The `.selected-glow` and `.crt-off` classes are naturally cleared because the entire pills area's `innerHTML` is rebuilt each round.
 
 ---
 

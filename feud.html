@@ -1014,61 +1014,31 @@
       padding: 0 8px 0 0;
     }
     #sidebar-category-select { display: flex; flex-direction: column; flex: 1; }
-    /* overflow: hidden is safe here — the old pop-through animation that needed
-       visible overflow has been replaced by tv-on (which stays within bounds).
-       #cat-label clips its own marquee content. question-box uses clip-path
-       for extrusion. sq-zone-input's off-canvas slide is clipped by #game-root. */
+    /* overflow: hidden clips content-tv's fly-in and sq-zone-input's off-canvas slide. */
     #sidebar-question-answer { display: none; flex-direction: column; height: 100%; overflow: hidden; }
     #sq-zone-content { flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 0; }
     #sq-zone-input   { flex-shrink: 0; }
-    /* Category label header on question screen */
-    #cat-label {
-      width: 100%;
-      height: 80px;
-      font-family: 'Bitcount Single', sans-serif;
-      font-size: 3rem;
-      font-weight: 300;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 14px;
-      box-sizing: border-box;
-      background: var(--cat-face, #333);
-      border: 3px solid var(--cat-solid, #333);
+
+    /* Content TV — 300×300 "screen" that wraps cat-label + question-box */
+    #content-tv {
+      width: 300px;
+      height: 300px;
+      border-radius: 50px;
+      position: relative;
       overflow: hidden;
       flex-shrink: 0;
-      margin-top: 30px;
-      position: relative;
-      z-index: 2;
-      /* CRT screen inset — darkens edges to simulate curved glass tube */
-      box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.5);
+      margin: 30px auto 10px auto;
+      display: flex;
+      flex-direction: column;
+      /* Vignette shadow moved to ::after so it renders above children */
+      /* 3D CRT bulge — perspective on the container, subtle rotateX on children
+         makes the center appear to push toward the viewer like curved glass */
+      perspective: 500px;
+      transform-style: preserve-3d;
     }
-    /* Initial off-canvas state (left of canvas). JS removes .offscreen-left + adds .slide-in-left to animate. */
-    #cat-label.offscreen-left { transform: translateX(-150%); }
-    #cat-label.slide-in-left  { animation: cat-label-slide-in-left calc(0.5s / var(--speed)) cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
-    @keyframes cat-label-slide-in-left {
-      from { transform: translateX(-150%); }
-      to   { transform: translateX(0); }
-    }
-    #cat-label.cat-science    { background: var(--cat-science); }
-    #cat-label.cat-geography  { background: var(--cat-geography); }
-    #cat-label.cat-popculture { background: var(--cat-popculture); }
-    #cat-label.cat-survey     { background: var(--cat-survey); }
-    #cat-label.cat-sports     { background: var(--cat-sports); color: #000; }
-    /* Animated TV-static overlay on cat-label. The ::before sits above the
-       solid category background and below the text span. The SVG is a tiled
-       grayscale turbulence texture; we jitter background-position in
-       discrete steps (step-end) so the grain snaps to a new frame rather than
-       sliding, producing an old-CRT static hiss. Tuning knobs:
-         - opacity (overall intensity)
-         - mix-blend-mode (hard-light is contrasty, overlay softer, screen lighter)
-         - baseFrequency in the SVG (grain size; higher = finer)
-         - tv-static duration (faster = jitterier)
-         - number of keyframe steps (more = smoother flicker feel) */
-    #cat-label::before {
+    #content-tv.ct-hidden { opacity: 0; transform: scale(0); }
+    /* CRT noise overlay on content-tv */
+    #content-tv::before {
       content: "";
       position: absolute;
       inset: 0;
@@ -1076,9 +1046,9 @@
       border-radius: inherit;
       background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
       background-repeat: repeat;
-      opacity: 0.8;
+      opacity: 0.5;
       mix-blend-mode: soft-light;
-      z-index: 1;
+      z-index: 10;
       animation: tv-static 0.8s step-end infinite;
     }
     @keyframes tv-static {
@@ -1093,14 +1063,12 @@
       80%  { background-position:   8px  47px; }
       90%  { background-position:  73px  94px; }
     }
-    /* CRT scanlines — horizontal stripes on the glass surface (above text).
-       2px transparent + 2px dark = 4px period. Sits at z-index 3 (above text
-       at z-index 2) for authentic CRT look where lines cross over everything. */
-    #cat-label::after {
+    /* CRT scanlines on content-tv */
+    #content-tv::after {
       content: "";
       position: absolute;
       inset: 0;
-      opacity: .8;
+      opacity: 0.2;
       pointer-events: none;
       border-radius: inherit;
       background: repeating-linear-gradient(
@@ -1110,23 +1078,18 @@
         rgba(0, 0, 0, 0.12) 2px,
         rgba(0, 0, 0, 0.12) 4px
       );
-      z-index: 3;
+      z-index: 11;
     }
-    #cat-label > span {
-      position: relative;
-      z-index: 2;
-      display: inline-flex;
-      white-space: nowrap;
-      transform: scale(0);
-      opacity: 0;
+    /* CRT vignette — separate from scanlines so opacity is independent */
+    #content-tv-vignette {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
+      pointer-events: none;
+      z-index: 12;
     }
-    /* Each inner copy carries its own trailing gap so both halves are
-       identical — translateX(-50%) scrolls exactly one copy's worth. */
-    #cat-label > span > span {
-      padding-right: 3em;
-    }
-    /* "TV on" entrance — inverse of the CRT power-off used on category exit.
-       Dot appears → expands to horizontal line → fills vertically → settles. */
+    /* TV-on effect — plays on content-tv after fly-in, before children fade in */
     @keyframes tv-on {
       0%   { transform: scale(0, 0);       opacity: 0; filter: brightness(0); }
       15%  { transform: scale(0.02, 0.02); opacity: 1; filter: brightness(5) saturate(0); }
@@ -1136,14 +1099,61 @@
       75%  { transform: scale(1, 1);       opacity: 1; filter: brightness(1.8) saturate(0.7); }
       100% { transform: scale(1, 1);       opacity: 1; filter: brightness(1) saturate(1); }
     }
-    #cat-label > span.tv-on {
+    #content-tv.tv-on {
       animation: tv-on calc(0.7s / var(--speed)) ease-out forwards;
     }
-    /* Horizontal marquee scroll — starts after tv-on completes.
-       Text is duplicated by JS; translateX(-50%) loops one copy seamlessly. */
+    /* Shared fade-in for content-tv children */
+    @keyframes content-child-fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .fade-hidden { opacity: 0; }
+    .fade-in { animation: content-child-fade-in calc(0.4s / var(--speed)) ease forwards; }
+
+    /* Category label — ticker band inside content-tv */
+    #cat-label {
+      width: 100%;
+      height: 50px;
+      font-family: 'Bitcount Single', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 300;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0;
+      box-sizing: border-box;
+      background: var(--cat-face, #333);
+      border: none;
+      overflow: hidden;
+      flex-shrink: 0;
+      margin-top: 0;
+      position: relative;
+      z-index: 5;
+    }
+    #cat-label.cat-science    { background: var(--cat-science); }
+    #cat-label.cat-geography  { background: var(--cat-geography); }
+    #cat-label.cat-popculture { background: var(--cat-popculture); }
+    #cat-label.cat-survey     { background: var(--cat-survey); }
+    #cat-label.cat-sports     { background: var(--cat-sports); color: #000; }
+    #cat-label > span {
+      position: relative;
+      z-index: 2;
+      display: inline-flex;
+      white-space: nowrap;
+    }
+    /* Each inner copy carries its own trailing gap so both halves are
+       identical — translateX(-50%) scrolls exactly one copy's worth. */
+    #cat-label > span > span {
+      padding-right: 1.5em;
+    }
+    /* Horizontal marquee scroll — text is duplicated by JS;
+       translateX(-50%) loops one copy seamlessly. */
     @keyframes cat-label-marquee {
-      from { transform: scale(1) translateX(0); }
-      to   { transform: scale(1) translateX(-50%); }
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
     }
     #cat-label:has(> span.marquee-scroll) {
       justify-content: flex-start;
@@ -1260,15 +1270,10 @@
       from { transform: translateY(0); }
       to   { transform: translateY(400%); }
     }
-    #cat-label.slide-out-left      { animation: cat-label-slide-out-left calc(0.4s / var(--speed)) ease-in forwards; }
-    @keyframes cat-label-slide-out-left {
+    #content-tv.slide-out-left     { animation: content-tv-slide-out calc(0.4s / var(--speed)) ease-in forwards; }
+    @keyframes content-tv-slide-out {
       from { transform: translateX(0); }
       to   { transform: translateX(-150%); }
-    }
-    #question-box.exit-up          { animation: question-box-exit-up calc(0.35s / var(--speed)) ease-in forwards; }
-    @keyframes question-box-exit-up {
-      from { transform: translateY(0); clip-path: inset(0 0 0 0); }
-      to   { transform: translateY(-100%); clip-path: inset(100% 0 0 0); }
     }
 
     /* Right column (75%) */
@@ -1865,48 +1870,36 @@
       margin-top: 2px;
     }
 
-    /* Category + Question box */
+    /* Question box — fills full content-tv behind cat-label, 2-row grid */
     #question-box {
       background: #f9f9e8;
-      border-radius: 0 0 14px 14px;
-      padding: 20px 14px 14px 14px;
-      margin: -10px auto 10px auto;
-      width: 95%;
-      max-height: 200px;
-      min-height: 200px;
+      border-radius: 0;
+      padding: 60px 14px 14px 14px;
+      margin: 0;
+      position: absolute;
+      inset: 0;
       overflow: hidden;
       color: #111;
       font-family: "Bitcount Single", sans-serif;
       font-weight: 300;
-      position: relative;
       z-index: 1;
-    }
-    /* Initial state: translated up by its own height AND fully clipped from the
-       top. The animation runs both in parallel: the box slides down while its
-       visible region grows from the top, so the visible strip appears to
-       extrude from cat-label's bottom edge. The clip-path prevents the
-       translated box from ever peeking above cat-label. */
-    #question-box.hidden-behind { transform: translateY(-100%); clip-path: inset(100% 0 0 0); }
-    #question-box.reveal-drop   { animation: question-box-drop calc(0.45s / var(--speed)) cubic-bezier(0.2, 0.8, 0.25, 1) forwards; }
-    @keyframes question-box-drop {
-      from { transform: translateY(-100%); clip-path: inset(100% 0 0 0); }
-      to   { transform: translateY(0);     clip-path: inset(0 0 0 0); }
+      display: grid;
+      grid-template-rows: 85% 15%;
+      /* Push content plane forward within the 3D perspective — creates bulge */
+      transform: translateZ(20px);
     }
 
-    #category {
-      font-size: 1rem;
-      font-weight: bold;
-      color: #fba300;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
     #question {
       font-weight: normal;
       /* Shrink-to-fit by char count: fitByCharCount() sets --fit-scale when text is set. */
       --fit-base: 1.8rem;
       font-size: calc(var(--fit-base) * var(--fit-scale, 1));
       opacity: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
     }
     /* Typewriter reveal: .typing shows the element + a blinking cursor
        while text is streamed in char-by-char. .typed is the final
@@ -1916,6 +1909,8 @@
     #question.typing::after {
       content: '|';
       display: inline-block;
+      width: 0;
+      overflow: visible;
       margin-left: 2px;
       animation: cursor-blink 0.7s steps(1) infinite;
     }
@@ -1931,13 +1926,20 @@
     }
 
     /* Question actions */
-    #questionActions { display: none; margin: 10px auto; max-width: 88%; }
+    #questionActions {
+      display: none;
+      margin: 0;
+      padding: 0 4px;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
     .question-options-link {
       font-size: 0.6rem;
       color: #555;
       cursor: pointer;
       user-select: none;
-      text-decoration: underline;
+      text-decoration: none;
+      text-transform: uppercase;
     }
     .question-options-link:hover { color: #888; }
     .dialog-option-list {
@@ -1965,7 +1967,12 @@
       align-items: end; /* bottom-justify all columns so their bottom edges align */
       gap: 10px;
       width: 100%;
-      background: #222;
+      background:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/></svg>"),
+        linear-gradient(180deg, #282828 0%, #1a1a1a 50%, #202020 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        inset 0 -1px 0 rgba(0,0,0,0.4);
       color: white;
       font-family: 'Bitcount Single', sans-serif;
       font-weight: 300;
@@ -2123,6 +2130,29 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
+      box-shadow: inset 0 0 20px 4px rgba(0, 0, 0, 0.5);
+    }
+    /* CRT overlay on team score boxes — noise + scanlines */
+    .team-score-box .team-points::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      background:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"),
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0px,
+          transparent 2px,
+          rgba(0, 0, 0, 0.12) 2px,
+          rgba(0, 0, 0, 0.12) 4px
+        );
+      opacity: 0.3;
+      mix-blend-mode: soft-light;
+      z-index: 1;
+      animation: tv-static 0.8s step-end infinite;
     }
     #red-score-box  .team-points { background: var(--red-bg); }
     #blue-score-box .team-points { background: var(--blue-bg); }
@@ -2142,6 +2172,7 @@
       color: white;
       font-size: 1.6rem;
       font-family: "Helvetica", sans-serif;
+      z-index: 2;
       animation: score-arrow-float-red 1.5s ease-in-out infinite;
     }
     #blue-score-box.active-team .team-points::after {
@@ -2152,6 +2183,7 @@
       color: white;
       font-size: 1.6rem;
       font-family: "Helvetica", sans-serif;
+      z-index: 2;
       animation: score-arrow-float-blue 1.5s ease-in-out infinite;
     }
 
@@ -2653,8 +2685,30 @@
     #message { margin-top: 8px; font-weight: bold; color: #cc0000; transition: opacity 0.5s ease; }
 
     /* History link */
-    #history { max-width: 88%; margin: 8px auto 0; color: #fff; }
-    #history.hidden { display: none; }
+    /* Speed boost indicator — dead center of game canvas, CSS triangles */
+    #speed-boost-indicator {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      pointer-events: none;
+      animation: ff-pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes ff-pulse {
+      0%, 100% { opacity: 0.15; }
+      50%      { opacity: 0.6; }
+    }
+    .ff-arrow {
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-top: 14px solid transparent;
+      border-bottom: 14px solid transparent;
+      border-left: 20px solid #fff;
+      margin-right: -6px;
+    }
     .history-list { list-style: none; padding: 0; margin: 0; }
     .history-list li {
       padding: 6px 0;
@@ -3389,6 +3443,7 @@
     <button class="dev-btn" onclick="playCorrect(true)">▶ Top Answer</button>
     <button class="dev-btn" onclick="playWrong()">▶ Strike X</button>
   </div>
+  <!-- CRT curvature handled by CSS 3D perspective on #content-tv -->
   <!-- 16:9 letterbox canvas -->
   <div id="game-root">
 
@@ -3591,20 +3646,20 @@
         <div id="sidebar-question-answer">
           <!-- Row 2: Category + Question -->
           <div id="sq-zone-content">
-            <div id="question-box" class="hidden-behind">
-              <div id="category"></div>
-              <div id="question"></div>
-              <div id="questionActions">
-                <a class="question-options-link" onclick="showQuestionOptions()" data-tip="question-options">Advanced question options</a>
+            <div id="content-tv" class="ct-hidden">
+              <div id="question-box">
+                <div id="question"></div>
+                <div id="questionActions">
+                  <a class="question-options-link" onclick="showQuestionOptions()" data-tip="question-options">Advanced question options</a>
+                  <a class="question-options-link" id="history-link" onclick="showAnswerHistory()" data-tip="answer-history">Answer History</a>
+                </div>
               </div>
+              <div id="content-tv-vignette"></div>
             </div>
           </div>
           <!-- Row 3: Input area -->
           <div id="sq-zone-input" class="offscreen-below">
-            <!-- Answer history link -->
-            <div id="history" class="hidden" style="text-align:center; padding: 4px 0;">
-              <a class="question-options-link" onclick="showAnswerHistory()" data-tip="answer-history">Answer History</a>
-            </div>
+            <!-- Answer history link moved into #questionActions -->
             <div id="input-area">
               <div id="turn-input-box" class="team-red">
                 <div id="turn-header">Red Team has the board</div>
@@ -3693,6 +3748,7 @@
                   </div>
                 </div>
               </div>
+              <!-- speed boost indicator moved to #game-root level -->
             </div>
           </div>
 
@@ -3702,6 +3758,9 @@
     </div><!-- end #zone-board -->
 
   </div>
+
+  <!-- Speed boost indicator — centered on canvas -->
+  <div id="speed-boost-indicator"><span class="ff-arrow"></span><span class="ff-arrow"></span></div>
 
   <!-- Fast Money Round -->
   <div id="fast-money">
@@ -4447,18 +4506,29 @@ document.addEventListener('keydown', e => {
 
     /* ── Spacebar speed boost ─────────────────────────────────────
        While the guess input is disabled (scoring sequence in progress),
-       holding Space temporarily doubles the effective game speed.
-       Releasing Space restores the user's chosen speed setting. */
+       pressing Space toggles 2× speed boost. Auto-deactivates when the
+       scoring sequence completes (input re-enables). */
+    let speedBoostActive = false;
+    function activateSpeedBoost() {
+      speedBoostActive = true;
+      setGameSpeed(Math.min(gameSpeedSetting * 2, 4));
+      const ind = document.getElementById("speed-boost-indicator");
+      if (ind) ind.style.display = "block";
+    }
+    function deactivateSpeedBoost() {
+      if (!speedBoostActive) return;
+      speedBoostActive = false;
+      setGameSpeed(gameSpeedSetting);
+      const ind = document.getElementById("speed-boost-indicator");
+      if (ind) ind.style.display = "none";
+    }
     document.addEventListener('keydown', e => {
       if (e.code !== 'Space' || e.repeat) return;
       const guessInput = document.getElementById('guess');
       if (!guessInput || !guessInput.disabled) return;
       e.preventDefault();
-      setGameSpeed(Math.min(gameSpeedSetting * 2, 4));
-    });
-    document.addEventListener('keyup', e => {
-      if (e.code !== 'Space') return;
-      setGameSpeed(gameSpeedSetting);
+      if (speedBoostActive) deactivateSpeedBoost();
+      else activateSpeedBoost();
     });
 
     let menuOpen = false;
@@ -4956,7 +5026,6 @@ document.addEventListener('keydown', e => {
       // Hide sidebar panels until showCategorySelection populates and reveals
       document.getElementById("sidebar-category-select").style.display = "none";
       document.getElementById("input-area").classList.add("hidden");
-      document.getElementById("history").classList.add("hidden");
       document.getElementById("roundTarget").textContent = maxRounds || '—';
 
       // Phase indicator: start offscreen, slide in empty, then advanceRound()
@@ -5004,13 +5073,14 @@ document.addEventListener('keydown', e => {
       const oldCatLabel = document.getElementById("cat-label");
       if (oldCatLabel) oldCatLabel.remove();
       document.querySelectorAll(".board-footer .cat-mult-badge").forEach(el => el.remove());
-      // Reset question-box + input-area + question text to their off-canvas /
-      // hidden states so the entry sequence replays cleanly next round
-      const qb = document.getElementById("question-box");
-      if (qb) {
-        qb.classList.remove("reveal-drop", "exit-up");
-        qb.classList.add("hidden-behind");
+      // Reset content-tv + question-box + input-area to hidden states
+      // so the entry sequence replays cleanly next round
+      const ctv = document.getElementById("content-tv");
+      if (ctv) {
+        ctv.classList.remove("slide-out-left", "tv-on");
+        ctv.classList.add("ct-hidden");
       }
+      // question-box is always visible inside content-tv — no fade classes needed
       const szi = document.getElementById("sq-zone-input");
       if (szi) {
         szi.classList.remove("input-enter", "input-exit");
@@ -5019,8 +5089,6 @@ document.addEventListener('keydown', e => {
       const qEl = document.getElementById("question");
       if (qEl) { qEl.classList.remove("typing", "typed"); }
 
-      document.getElementById("category").textContent = "";
-      document.getElementById("category").style.display = "";
       document.getElementById("question").textContent = "";
       document.getElementById("questionActions").style.display = "none";
       document.getElementById("message").textContent = "";
@@ -5042,10 +5110,8 @@ document.addEventListener('keydown', e => {
       roundNumber++;
       document.getElementById("roundCounter").textContent = roundNumber;
 
-      // Animate sidebar + board elements out in reverse entry order
-      // before changing colors or resetting state.
-      const catLabel = document.getElementById("cat-label");
-      const qBox = document.getElementById("question-box");
+      // Animate sidebar + board elements out before changing colors or resetting state.
+      const contentTvExit = document.getElementById("content-tv");
       const szInput = document.getElementById("sq-zone-input");
       const bw = document.getElementById("board-wrapper");
 
@@ -5063,17 +5129,10 @@ document.addEventListener('keydown', e => {
             await anim.play(szInput, "input-exit");
           }
         },
-        // 2. Question-box retracts up into cat-label
+        // 2. Content-tv slides out left (takes cat-label + question-box with it)
         async () => {
-          if (qBox && qBox.classList.contains("reveal-drop")) {
-            qBox.classList.remove("reveal-drop");
-            await anim.play(qBox, "exit-up");
-          }
-        },
-        // 3. Cat-label slides out left
-        async () => {
-          if (catLabel && !catLabel.classList.contains("offscreen-left")) {
-            await anim.play(catLabel, "slide-out-left");
+          if (contentTvExit && !contentTvExit.classList.contains("ct-hidden")) {
+            await anim.play(contentTvExit, "slide-out-left");
           }
         },
       ]);
@@ -5252,7 +5311,6 @@ document.addEventListener('keydown', e => {
       document.getElementById("sidebar-category-select").style.display = "flex";
       document.getElementById("sidebar-question-answer").style.display = "none";
       document.getElementById("input-area").classList.add("hidden");
-      document.getElementById("history").classList.add("hidden");
 
       // Hide board wrapper during category selection
       const bw = document.getElementById("board-wrapper");
@@ -5392,11 +5450,10 @@ document.addEventListener('keydown', e => {
       // Animate the category transition
       const selectedRow = await animateCategoryTransition(category);
 
-      // Build a flat category label header
-      const contentZone = document.getElementById("sq-zone-content");
+      // Build category label inside content-tv, with marquee pre-configured
+      const contentTv = document.getElementById("content-tv");
       const questionBox = document.getElementById("question-box");
-      const oldCategory = document.getElementById("category");
-      if (contentZone) {
+      if (contentTv) {
         const catName = currentQuestion.category;
         const cc = catName.toLowerCase();
         const colorClass = cc === 'survey' ? 'cat-survey' : cc.includes('science') ? 'cat-science'
@@ -5404,10 +5461,22 @@ document.addEventListener('keydown', e => {
           : cc.includes('sport') ? 'cat-sports' : '';
         const label = document.createElement("div");
         label.id = "cat-label";
-        label.classList.add("offscreen-left");
         if (colorClass) label.classList.add(colorClass);
-        label.innerHTML = `<span>${catName}</span>`;
-        contentZone.insertBefore(label, questionBox);
+        // Build marquee with enough repeats to fill 300px container.
+        // Estimate unit width from char count (Bitcount at 1.8rem ≈ 18px/char)
+        // plus 1.5em padding-right gap (≈ 27px at 1.8rem).
+        const estCharWidth = 18;
+        const estGap = 27;
+        const estUnitWidth = catName.length * estCharWidth + estGap;
+        const containerWidth = 300;
+        // Need enough copies so one "half" (translateX -50%) fills the container
+        const halfCopies = Math.max(2, Math.ceil(containerWidth / estUnitWidth) + 1);
+        const oneHalf = Array(halfCopies).fill(`<span>${catName}</span>`).join("");
+        label.innerHTML = `<span class="marquee-scroll">${oneHalf}${oneHalf}</span>`;
+        // Duration scales with copies so scroll speed stays consistent (~60px/s)
+        const duration = (halfCopies * estUnitWidth) / 30;
+        label.querySelector(".marquee-scroll").style.setProperty("--marquee-duration", `${duration.toFixed(1)}s`);
+        contentTv.insertBefore(label, questionBox);
       }
 
       // Place coin badge in board footer if category has a multiplier
@@ -5438,8 +5507,6 @@ document.addEventListener('keydown', e => {
       setPhaseTeamColor(teamTurn);
       setPhase("gameplay");
 
-      // Hide old #category text — the 3D header replaces it
-      if (oldCategory) oldCategory.style.display = "none";
       const questionEl = document.getElementById("question");
       // Pre-compute fit scale against the full final text so the layout is
       // stable while the typewriter streams characters in.
@@ -5447,66 +5514,33 @@ document.addEventListener('keydown', e => {
       questionEl.textContent = "";
 
       updateBoard(); updateScores(); updateStrikes(); updateStreakDisplay(); updateHistory(); updateTurn();
-      document.getElementById("questionActions").style.display = "block";
+      document.getElementById("questionActions").style.display = "flex";
       document.getElementById("input-area").classList.remove("hidden");
-      document.getElementById("history").classList.remove("hidden");
 
-      // Slide board wrapper in from below (starts immediately alongside cat-label)
+      // Slide board wrapper in (starts immediately alongside content-tv)
       const bw = document.getElementById("board-wrapper");
       if (bw) {
         bw.classList.remove("offscreen");
         bw.classList.add("slide-in");
       }
 
-      // Question-phase entry sequence — strictly serial, each step awaits
-      // the previous animation's completion before starting:
-      //   1. cat-label slides in from the left
-      //   2. cat-label span text pops through
-      //   3. question-box extrudes from under cat-label
-      //   4. #question text fades in
-      //   5. sq-zone-input slides up from below the canvas
-      const labelEl = document.getElementById("cat-label");
-      const qboxEl  = document.getElementById("question-box");
+      // Question-phase entry sequence — strictly serial:
+      //   1. content-tv tv-on (children already loaded — screen reveals fully populated)
+      //   2. question text typewriters in
+      //   3. sq-zone-input slides up from below the canvas
       const sziEl   = document.getElementById("sq-zone-input");
       const questionEntryEl = document.getElementById("question");
       anim.sequence([
-        // 1. cat-label slide in
+        // 1. content-tv tv-on CRT effect (scale 0 → full, children visible inside)
         async () => {
-          if (!labelEl) return;
-          labelEl.classList.remove("offscreen-left");
-          labelEl.classList.add("slide-in-left");
-          await anim.done(labelEl);
+          if (!contentTv) return;
+          contentTv.classList.remove("ct-hidden");
+          contentTv.classList.add("tv-on");
+          await anim.done(contentTv);
         },
-        // 2. cat-label span TV-on effect
-        async () => {
-          const span = labelEl?.querySelector("span");
-          if (!span) return;
-          span.classList.add("tv-on");
-          await anim.done(span);
-        },
-        // 2b. Start horizontal marquee scroll.
-        // Must lock in tv-on's final state as inline styles before swapping
-        // animations — .marquee-scroll's animation property replaces tv-on's
-        // forwards fill, which would revert to the base scale(0)/opacity:0.
-        async () => {
-          const span = labelEl?.querySelector("span");
-          if (!span) return;
-          span.style.opacity = "1";
-          span.classList.remove("tv-on");
-          const text = span.textContent.trim();
-          span.innerHTML = `<span>${text}</span><span>${text}</span>`;
-          span.classList.add("marquee-scroll");
-        },
-        // 3. question-box drops out from behind cat-label
-        async () => {
-          if (!qboxEl) return;
-          qboxEl.classList.remove("hidden-behind");
-          qboxEl.classList.add("reveal-drop");
-          await anim.done(qboxEl);
-        },
-        // 4. question text typewriters in
+        // 2. question text typewriters in
         () => typewriter(questionEntryEl, currentQuestion.question),
-        // 5. input area slides up from below the canvas
+        // 3. input area slides up from below the canvas
         async () => {
           if (!sziEl) return;
           sziEl.classList.remove("offscreen-below");
@@ -6121,6 +6155,7 @@ document.addEventListener('keydown', e => {
         setTimeout(async ()=>{
           if(submitBtn) submitBtn.disabled=false;
           if(guessInput) { guessInput.disabled=false; guessInput.focus(); }
+          deactivateSpeedBoost();
           if(idx!==-1){
             const stealAns=currentQuestion.answers[idx];
             const stealMult=answerMultiplier;
@@ -6170,6 +6205,7 @@ document.addEventListener('keydown', e => {
         await flipTile(foundIdx,'correct',foundTotal,foundMult);
         if(guessInput) guessInput.disabled=false;
         if(submitBtn) submitBtn.disabled=false;
+        deactivateSpeedBoost();
         if(!revealed.every(r=>r)) animateTurnSwap();
       }else{
         updateBoard();updateScores();updateStrikes();updateStreakDisplay({ afterStrike: true });updateHistory();
@@ -6305,7 +6341,6 @@ document.addEventListener('keydown', e => {
       document.getElementById("roundCounter").textContent="0";
       document.getElementById("red-score").textContent="0";
       document.getElementById("blue-score").textContent="0";
-      document.getElementById("category").textContent="";
       document.getElementById("question").textContent="";
       document.getElementById("questionActions").style.display="none";
       document.getElementById('fm-tally-score-a').textContent = '0';

@@ -25,3 +25,22 @@ score-edit,evergreen,"""Ya gotta give""",Manually add or subtract points to corr
 speed-slider,evergreen,"""We're the ones who run!""",Controls how fast some animations and scoring sequences play out
 crt-toggle,evergreen,See the world wildly in a wild way,Toggle the CRT scanline overlay effect
 player-inventory,evergreen,Placeholder,Items/Relics will go here once feature is built
+award-mvp,evergreen,The GOAT,Scored the most total points across all rounds
+award-heavy-hitter,evergreen,One big swing,Scored the most points from a single answer
+award-lvp,evergreen,"""I hate that game!""",Scored the fewest total points (but at least tried)
+award-quality-over-quantity,evergreen,When it counts,Highest average points per correct answer — without having the most correct answers
+award-doesnt-pay-attention,evergreen,"""Then what's the RULE?""",Submitted the most duplicate answers that were already on the board
+award-sharpshooter,evergreen,Locked in,Highest correct answer accuracy across all rounds
+award-mendoza-line,evergreen,Batting .200,Accuracy at or below 20% — a dubious achievement
+award-going-streaking,evergreen,Through the quad!,Contributed to the longest streak of consecutive correct answers
+award-birthday-ruiner,evergreen,"Thanks, Jill",Got a strike that ended an active streak the most times
+award-opportunist,evergreen,Right place right time,Submitted the most correct answers that had multipliers applied
+award-the-science-guy,evergreen,Top Billing,Scored the most points in Science categories
+award-missed-popular,evergreen,"You're one of those ""the book was better"" types, huh?",The only player to score zero points on Pop Culture questions
+award-usain-dolt,evergreen,Speed kills,Fastest average answer time paired with the lowest score
+award-haaaacker,evergreen,Really? You knew ALL of them?,100% accuracy with at least 3 answers submitted
+award-the-jock,evergreen,Go sports!,Scored the most points in Sports categories
+award-multitudes,evergreen,You're like an onion,Scored points in more unique categories than anyone else
+award-frequent-flyer,evergreen,Where in the world?,Scored the most points in Geography categories
+award-hoi-polloi,evergreen,Person of the people,Scored the most points in Pop Culture categories
+award-sergeis-fez,evergreen,Legally we can't say that rhymes with something,Scored the most points in Survey categories

@@ -5,6 +5,8 @@ Family Feud-inspired game with original features and styling. Working title: **G
 - Main game file: `feud.html`
 - Question bank: `master_question_bank.json` (active file, includes variants — see below)
 - Pre-variants backup: `question_bank_pre-variants.json`
+- Award definitions: `awards.json` (name, id, compute key — see "Victory Awards" section)
+- Tooltip definitions: `tooltips.csv` (id, class, flavor, description — see "Tooltip System" section)
 - Sound files alongside feud.html: `ding.mp3` (correct answer reveal), `newstrike.wav` (incorrect answer), `goodanswer.mp3` (top answer reveal, 300ms delayed, baseVolume 0.35), `negativebeep.wav` (failed steal attempt), `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX + board-wrapper slide), `phonetype.wav` (typewriter keystroke SFX + tile-cover hover), `balbg.mp3` (background music, looping), `roundend.wav` (round winner determined), `decreaseblip.mp3` (streak/mult decrease), `neutralbeep.wav` (duplicate answer rejection), `chime.wav` (badge bounce SFX), `zoop.wav` (speed stepper SFX), `slit.wav` (fly-in/out whoosh — cat-row entry/exit, dialog open/close), `tap1.wav` (button click — setup nav, menu, confirm), `tap2.wav` (element landing — input area fly in/out), `tvon.wav` (CRT power-on), `powerdown.wav` (CRT power-off)
 
 ### Branch structure
@@ -1310,3 +1312,173 @@ document.fonts.ready.then(() => {
 ```
 
 Prevents FOUT (Flash of Unstyled Text) — the start screen only renders after all web fonts (Typekit, Google Fonts, custom `@font-face`) have loaded. No transition on the opacity change — the start screen's own CRT entrance handles the visual reveal.
+
+---
+
+## Victory Animation — Confetti + Fireworks
+
+When `endGame()` is called at the end of the final round, `playVictoryAnimation(winnerIdx)` launches two HTML5 canvas particle systems and a centered victory dialog.
+
+### Two-Canvas Architecture
+
+The victory dialog needs to be sandwiched between confetti (behind) and fireworks (in front), so two canvases are used:
+
+- **`#victory-canvas-back`** (z-index 9998) — confetti only, behind the dialog
+- **`#victory-canvas-front`** (z-index 10001) — fireworks + sparks, in front of the dialog
+- **`#victory-backdrop`** (z-index 10000) — the dialog itself, between the two canvases
+
+Both canvases are `position: absolute; inset: 0` inside `#game-root`, sized 1280×720, `pointer-events: none`, hidden by default (`display: none`).
+
+### Confetti (continuous)
+
+~90 rainbow-colored rectangles fall from above with gravity, horizontal wobble, and rotation. When a piece falls off the bottom it's recycled to the top — runs indefinitely until `stopVictoryAnimation()`. The `VICTORY.RAINBOW` array holds the color palette.
+
+### Fireworks (~7 bursts over ~8 seconds)
+
+Rockets launch from the bottom in the winning team's color (`--red-text` or `--blue-text`), rise to a random height, then explode into 50-80 sparks with gravity and fade. After all bursts fire, no more launch — confetti continues alone.
+
+### Animation Loop
+
+A single `requestAnimationFrame` loop (`victoryLoop`) drives both systems. Confetti draws to `ctxBack`, fireworks+sparks draw to `ctxFront`. Loop runs until `stopVictoryAnimation()` is called.
+
+### Integration
+
+- `playVictoryAnimation(winnerIdx)` — called by `endGame()`. Shows canvases, populates and opens the victory dialog, starts the rAF loop.
+- `stopVictoryAnimation()` — cancels rAF, clears both canvases, hides dialog. Called by `resetGame()` and `startFastMoney()`.
+
+---
+
+## Victory Dialog
+
+A custom dialog panel (`#victory-backdrop > .victory-panel`) that appears when the game ends. Distinct from the regular dialog system (`#dialog-backdrop`).
+
+### Design
+
+- **Panel background**: winning team's `--red-bg` or `--blue-bg` (set via `--victory-bg` CSS variable)
+- **Header strip**: `::before` pseudo-element with `--victory-header-bg` set to the team's text color, height measured dynamically via `--victory-header-h` to cover the title area
+- **Text**: white base, team name spans use `--red-text` / `--blue-text`
+- **Size**: 600px width, 60% canvas height, bottom-aligned with `margin-bottom: -2px`, `border-radius: 16px 16px 0 0`
+- **No backdrop dimming** — `pointer-events: none` on `.victory-backdrop` always, `pointer-events: all` on `.victory-panel` only. Clicks pass through to the game behind it.
+
+### Structure
+
+```html
+<div class="victory-panel">
+  <div class="victory-title">Victory!</div>
+  <div class="victory-body">...</div>
+  <div class="victory-awards">...</div>
+  <div class="victory-actions">...</div>
+</div>
+```
+
+### Body Text — Dynamic Messages
+
+`buildVictoryMessage(winnerIdx)` generates contextual text based on score margin:
+
+| Condition | Message |
+|---|---|
+| Scores tied (tiebreaker) | "Tied on points! [winner] wins the tiebreaker..." |
+| Margin > 100 AND winner > 2× loser | Bloodbath message |
+| Margin < 100 | Close game message |
+| Default | "[winner] takes home the win!" |
+
+Loser score of 0 is treated as 1 for the 2× check (`Math.max(lScore, 1)`).
+
+### Dismiss / Restore
+
+- **Dismiss** button adds `.victory-dismissed` class, sliding the panel to `translateY(calc(100% - 46px))` so only the title peeks above the canvas bottom edge
+- The panel gets an `onclick` handler (deferred via `requestAnimationFrame` to avoid same-click bubbling) that restores on click
+- **Restore** removes `.victory-dismissed` and clears the onclick
+- `#questionActions` remains visible in endgame state (not hidden). The "Get new question" option inside the question options dialog is disabled via `gameEnded` flag.
+
+### `#endRound` Sidebar
+
+`endGame()` also populates the `#endRound` div in the sidebar with the winner message + Fast Money / Play Again buttons — retained so players can return to the board to review answers after dismissing the victory dialog.
+
+---
+
+## Match Log — `matchLog` Array
+
+A per-session array that records every guess across all rounds. Cleared on `resetGame()`, persists across rounds (unlike `guessHistory` which resets per round).
+
+### Entry Schema
+
+```js
+{
+  player:       "Alice",           // individual player name (never team name)
+  team:         0,                 // 0 = red, 1 = blue
+  guess:        "pizza",           // raw guess text
+  outcome:      "correct",         // "correct", "wrong", "steal_success", "steal_fail", "duplicate"
+  points:       40,                // points earned (null for wrong/duplicate)
+  multiplier:   1.2,               // answer multiplier applied (null for wrong/duplicate)
+  streak:       2,                 // streak at time of guess, before increment (null for duplicate)
+  streakBroken: 0,                 // streak that was active before this wrong answer reset it (0 if none)
+  isSteal:      false,             // whether this was during steal phase
+  round:        1,                 // round number
+  question:     "Name a food",     // question text
+  category:     "Survey",          // parent category string
+  timestamp:    1713045600000,     // Date.now() at submission
+}
+```
+
+### `individualPlayer` vs `playerName`
+
+In `submitGuess()`, two player name variables exist:
+- **`playerName`** — uses team name during steals (for `guessHistory` display, per CLAUDE.md UI decisions)
+- **`individualPlayer`** — always resolves to the actual player from `teamPlayers` rotation (for `matchLog` awards)
+
+All `logGuess()` calls use `individualPlayer` to ensure awards are never assigned to a team name.
+
+---
+
+## Victory Awards System
+
+Player performance awards computed from `matchLog` data and displayed in the victory dialog.
+
+### Data Flow
+
+1. **`awards.json`** — static award definitions: `id`, `name`, `compute` key
+2. **`tooltips.csv`** — award tooltip flavor text and descriptions, keyed by `award-{id}`
+3. **`awardComputers`** (JS object) — compute functions keyed by the `compute` field. Each returns an array of tied candidates (or empty array if nobody qualifies).
+4. **`computeAwards()`** — aggregates per-player stats from `matchLog`, runs compute functions, resolves ties, returns up to 6 awards.
+
+### Per-Player Stats (aggregated in `computeAwards`)
+
+| Stat | Source |
+|---|---|
+| `totalPoints` | Sum of `points` on correct/steal_success entries |
+| `bestSingle` | Max `points` from a single entry |
+| `correctCount` | Count of correct/steal_success outcomes |
+| `guessCount` | All non-duplicate outcomes |
+| `duplicateCount` | Duplicate outcomes |
+| `maxStreak` | Highest `entry.streak + 1` on correct entries |
+| `streaksKilled` | Count of wrong entries where `streakBroken > 0` |
+| `multipliedAnswers` | Correct entries where `multiplier > 1` |
+| `catPoints` | Points per parent category (object) |
+| `catGuesses` | Guess count per parent category (object) |
+| `uniqueCatsScored` | Number of categories with points |
+| `avgAnswerTime` | Average ms gap between consecutive timestamps |
+
+### Category Normalization
+
+`parentCat(cat)` maps raw category strings to parent categories using the same logic as `getCategoryClass()`: Science, Geography, Pop Culture, Sports, Survey.
+
+### Tie Resolution — Two-Pass System
+
+**Pass 1** — iterate shuffled award definitions. If a compute function returns exactly 1 candidate, assign immediately and add the player to the `awarded` set. If multiple candidates (tie), defer.
+
+**Pass 2** — for each deferred tie:
+1. Prefer candidates NOT already in the `awarded` set (spread awards across players)
+2. If all tied candidates already have awards (or none do), pick randomly
+
+This ensures maximum award diversity across players.
+
+### Adding New Awards
+
+1. Add entry to `awards.json`: `{ "id": "my-award", "name": "My Award", "compute": "myAward" }`
+2. Add compute function to `awardComputers` in `feud.html`: `myAward(players) { ... }` — return array of tied candidates using `_topTied(eligible, valueFn)` or `_bottomTied(eligible, valueFn)` helpers
+3. Add tooltip row to `tooltips.csv`: `award-my-award,evergreen,Flavor text,Description text`
+
+### Tooltip Placement Override
+
+Award `<li>` elements use `data-tip-placement="below"` to force tooltips below them. The `showTooltip()` function checks `target.dataset.tipPlacement` before running its automatic canvas-position logic. Valid values: `"above"`, `"below"`, `"left"`, `"right"`. This attribute works on any `data-tip` element.

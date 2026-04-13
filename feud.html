@@ -1766,6 +1766,154 @@
     .cat-mult-badge:hover {
       transform: perspective(500px) rotateY(22.5deg) rotateX(-7.5deg);
     }
+    /* Victory — two canvas layers sandwich the dialog */
+    #victory-canvas-back,
+    #victory-canvas-front {
+      position: absolute;
+      inset: 0;
+      width: 1280px;
+      height: 720px;
+      pointer-events: none;
+      display: none;
+    }
+    #victory-canvas-back  { z-index: 9998; }
+    #victory-canvas-front { z-index: 10001; }
+
+    /* Victory dialog — white frosted glass, no dimming */
+    .victory-backdrop {
+      position: absolute;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      background: transparent;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    /* backdrop stays pointer-events:none always — clicks pass through to game elements behind it */
+    .victory-panel {
+      pointer-events: all;
+      /* --victory-bg set by JS to winning team's bg color */
+      background: var(--victory-bg, rgba(255, 255, 255, 0.65));
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px 16px 0 0;
+      padding: 14px 32px;
+      min-width: 600px;
+      max-width: 600px;
+      height: 60%;
+      margin-bottom: -2px;
+      color: #fff;
+      font-family: "futura-100", sans-serif;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    /* Contrasted header strip — covers from top edge through the title area */
+    .victory-panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      /* height set by JS via --victory-header-h to match title bottom edge */
+      height: var(--victory-header-h, 48px);
+      background: var(--victory-header-bg, rgba(255,255,255,0.15));
+      pointer-events: none;
+      z-index: 0;
+    }
+    .victory-panel > * { position: relative; z-index: 1; }
+    /* Active: panel visible at bottom of canvas */
+    .victory-backdrop.active .victory-panel {
+      transform: translateY(0);
+    }
+    /* Dismissed: only the title peeks above the bottom edge.
+       46px ≈ title line + top padding + title margin */
+    .victory-backdrop.active .victory-panel.victory-dismissed {
+      transform: translateY(calc(100% - 46px));
+      cursor: pointer;
+    }
+    .victory-title {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: -7px;
+      margin-bottom: 14px;
+    }
+    .victory-title:empty { display: none; }
+    .victory-body {
+      font-size: 1.1rem;
+      font-weight: 200;
+      line-height: 1.6;
+      letter-spacing: 0.2px;
+      color: #fff;
+      margin-bottom: 24px;
+    }
+    .victory-body .red  { color: var(--red-text); }
+    .victory-body .blue { color: var(--blue-text); }
+    .victory-awards { margin-bottom: 20px; text-align: center; }
+    .victory-awards:empty { display: none; margin: 0; }
+    .victory-awards-heading {
+      font-family: "futura-100", sans-serif;
+      font-weight: 400;
+      font-size: 1.2rem;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 0 0 10px 0;
+    }
+    .awards-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+    .awards-list li {
+      font-family: "futura-100", sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 4px 0;
+      color: #fff;
+      cursor: default;
+      text-align: center;
+      /* 3 per row: (100% - 2 gaps of 10px) / 3 */
+      flex: 0 0 calc((100% - 20px) / 3);
+    }
+    /* Vertical dividers between columns 1-2 and 2-3 */
+    .awards-list li:nth-child(3n+1),
+    .awards-list li:nth-child(3n+2) {
+      border-right: 1px solid rgba(255, 255, 255, 0.25);
+    }
+    .awards-list .award-name {
+      display: block;
+      font-weight: 400;
+      font-size: 1rem;
+      opacity: 1;
+      margin-bottom: 2px;
+    }
+    .awards-list .red  { color: var(--red-text); }
+    .awards-list .blue { color: var(--blue-text); }
+    .victory-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: auto;
+      margin-bottom: 15px;
+    }
+    .victory-actions .input-btn {
+      width: auto;
+      min-width: 180px;
+    }
+
     /* Badge sparkle particles — emitted from cat-row at badge center */
     .sparkle {
       position: absolute;
@@ -2758,10 +2906,10 @@
       display: inline-block;
       width: 0;
       height: 0;
-      border-top: 14px solid transparent;
-      border-bottom: 14px solid transparent;
-      border-left: 20px solid #fff;
-      margin-right: -6px;
+      border-top: 56px solid transparent;
+      border-bottom: 56px solid transparent;
+      border-left: 80px solid #fff;
+      margin-right: -24px;
     }
     .history-list { list-style: none; padding: 0; margin: 0; }
     .history-list li {
@@ -3454,6 +3602,17 @@
   <!-- 16:9 letterbox canvas -->
   <div id="game-root">
 
+  <canvas id="victory-canvas-back" width="1280" height="720"></canvas>
+  <div id="victory-backdrop" class="victory-backdrop">
+    <div class="victory-panel">
+      <div class="victory-title"></div>
+      <div class="victory-body"></div>
+      <div class="victory-awards"></div>
+      <div class="victory-actions"></div>
+    </div>
+  </div>
+  <canvas id="victory-canvas-front" width="1280" height="720"></canvas>
+
   <div id="menu-container">
     <button id="menu-btn" onclick="toggleMenu()" title="Settings">
       <span></span><span></span><span></span><span></span>
@@ -3657,7 +3816,7 @@
               <div id="question-box">
                 <div id="question"></div>
                 <div id="questionActions">
-                  <a class="question-options-link" onclick="showQuestionOptions()" data-tip="question-options">Advanced question options</a>
+                  <a class="question-options-link" onclick="showQuestionOptions()" data-tip="question-options">Question options</a>
                   <a class="question-options-link" id="history-link" onclick="showAnswerHistory()" data-tip="answer-history">Answer History</a>
                 </div>
               </div>
@@ -4394,6 +4553,525 @@
       }
     }
 
+    // ── Victory Animation — Confetti + Fireworks + Dialog ─────────
+    const VICTORY = {
+      cvBack: null, ctxBack: null,
+      cvFront: null, ctxFront: null,
+      rafId: null,
+      confetti: [],
+      fireworks: [],
+      sparks: [],
+      running: false,
+      teamColor: '#ff5555',
+      teamColorLight: '#ff8888',
+      fireworkTimer: 0,
+      fireworkCount: 0,
+      CONFETTI_COUNT: 90,
+      FIREWORK_BURSTS: 7,
+      RAINBOW: ['#ff4444','#ff8844','#ffcc44','#44dd44','#44bbff','#4466ff','#aa44ff','#ff44aa','#ffffff','#ffdd00'],
+    };
+
+    function buildVictoryMessage(winnerIdx) {
+      const loserIdx = winnerIdx === 0 ? 1 : 0;
+      const wCls = winnerIdx === 0 ? 'red' : 'blue';
+      const lCls = loserIdx === 0 ? 'red' : 'blue';
+      const winner = `<span class="${wCls}">${teamNames[winnerIdx]}</span>`;
+      const loser  = `<span class="${lCls}">${teamNames[loserIdx]}</span>`;
+      const wScore = teamScores[winnerIdx];
+      const lScore = teamScores[loserIdx];
+      const margin = wScore - lScore;
+
+      if (margin === 0) {
+        return `Tied on points! ${winner} wins the tiebreaker by taking the final round of play!`;
+      }
+      if (wScore > Math.max(lScore, 1) * 2 && margin > 100) {
+        return `That was a total trivial bloodbath! Was ${loser} even trying? ${winner} will be telling their great grandkids about this one.`;
+      }
+      if (margin < 100) {
+        return `It was close, but ${winner} pulled it out despite a valiant effort from ${loser}!`;
+      }
+      return `${winner} takes home the win!`;
+    }
+
+    // Award definitions loaded from awards.json; tooltips from tooltips.csv via data-tip
+    let awardDefs = [];
+    fetch('awards.json')
+      .then(r => r.json())
+      .then(data => { awardDefs = data; })
+      .catch(e => console.error('Failed to load awards.json', e));
+
+    // Compute functions keyed by the "compute" field in awards.json.
+    // Each returns an array of tied candidates (or empty array if nobody qualifies).
+    // Helper: filter eligible list down to all players sharing the best value.
+    function _topTied(eligible, valueFn) {
+      if (eligible.length === 0) return [];
+      const best = eligible.reduce((a, b) => valueFn(a) > valueFn(b) ? a : b);
+      return eligible.filter(p => valueFn(p) === valueFn(best));
+    }
+    function _bottomTied(eligible, valueFn) {
+      if (eligible.length === 0) return [];
+      const worst = eligible.reduce((a, b) => valueFn(a) < valueFn(b) ? a : b);
+      return eligible.filter(p => valueFn(p) === valueFn(worst));
+    }
+
+    const awardComputers = {
+      mvp(players) {
+        const eligible = players.filter(p => p.totalPoints > 0);
+        return _topTied(eligible, p => p.totalPoints);
+      },
+      heavyHitter(players) {
+        const eligible = players.filter(p => p.bestSingle > 0);
+        return _topTied(eligible, p => p.bestSingle);
+      },
+      lvp(players) {
+        const eligible = players.filter(p => p.guessCount > 0);
+        if (eligible.length < 2) return [];
+        return _bottomTied(eligible, p => p.totalPoints);
+      },
+      qualityOverQuantity(players) {
+        const maxCorrectCount = Math.max(...players.map(p => p.correctCount));
+        const eligible = players.filter(p => p.correctCount > 0 && p.correctCount < maxCorrectCount);
+        return _topTied(eligible, p => p.totalPoints / p.correctCount);
+      },
+      doesntPayAttention(players) {
+        const eligible = players.filter(p => p.duplicateCount > 0);
+        return _topTied(eligible, p => p.duplicateCount);
+      },
+      sharpshooter(players) {
+        const eligible = players.filter(p => p.guessCount >= 2 && p.correctCount > 0);
+        return _topTied(eligible, p => p.correctCount / p.guessCount);
+      },
+      mendozaLine(players) {
+        const eligible = players.filter(p => p.guessCount >= 5 && (p.correctCount / p.guessCount) <= 0.2);
+        return _bottomTied(eligible, p => p.correctCount / p.guessCount);
+      },
+      goingStreaking(players) {
+        const eligible = players.filter(p => p.maxStreak > 0);
+        return _topTied(eligible, p => p.maxStreak);
+      },
+      birthdayRuiner(players) {
+        const eligible = players.filter(p => p.streaksKilled > 0);
+        return _topTied(eligible, p => p.streaksKilled);
+      },
+      opportunist(players) {
+        const eligible = players.filter(p => p.multipliedAnswers > 0);
+        return _topTied(eligible, p => p.multipliedAnswers);
+      },
+      theScienceGuy(players) {
+        const eligible = players.filter(p => (p.catPoints['Science'] || 0) > 0);
+        return _topTied(eligible, p => p.catPoints['Science'] || 0);
+      },
+      missedPopular(players) {
+        const pcPlayers = players.filter(p => p.catGuesses['Pop Culture'] > 0);
+        if (pcPlayers.length < 2) return [];
+        const zeros = pcPlayers.filter(p => (p.catPoints['Pop Culture'] || 0) === 0);
+        return zeros.length === 1 ? [zeros[0]] : [];
+      },
+      usainDolt(players) {
+        const eligible = players.filter(p => p.guessCount >= 3 && p.avgAnswerTime > 0);
+        if (eligible.length < 2) return [];
+        const fastestTime = Math.min(...eligible.map(p => p.avgAnswerTime));
+        const lowestScore = Math.min(...eligible.map(p => p.totalPoints));
+        const candidates = eligible.filter(p => p.avgAnswerTime === fastestTime && p.totalPoints === lowestScore);
+        return candidates;
+      },
+      haaaacker(players) {
+        const eligible = players.filter(p => p.guessCount >= 3 && p.correctCount === p.guessCount);
+        return _topTied(eligible, p => p.guessCount);
+      },
+      theJock(players) {
+        const eligible = players.filter(p => (p.catPoints['Sports'] || 0) > 0);
+        return _topTied(eligible, p => p.catPoints['Sports'] || 0);
+      },
+      multitudes(players) {
+        const eligible = players.filter(p => p.uniqueCatsScored > 0);
+        if (eligible.length < 2) return [];
+        return _topTied(eligible, p => p.uniqueCatsScored);
+      },
+      frequentFlyer(players) {
+        const eligible = players.filter(p => (p.catPoints['Geography'] || 0) > 0);
+        return _topTied(eligible, p => p.catPoints['Geography'] || 0);
+      },
+      hoiPolloi(players) {
+        const eligible = players.filter(p => (p.catPoints['Pop Culture'] || 0) > 0);
+        return _topTied(eligible, p => p.catPoints['Pop Culture'] || 0);
+      },
+      sergeisFez(players) {
+        const eligible = players.filter(p => (p.catPoints['Survey'] || 0) > 0);
+        return _topTied(eligible, p => p.catPoints['Survey'] || 0);
+      },
+    };
+
+    function computeAwards() {
+      if (matchLog.length === 0 || awardDefs.length === 0) return [];
+
+      // Helper: normalize category string to parent category
+      function parentCat(cat) {
+        if (!cat) return 'Unknown';
+        const c = cat.toLowerCase();
+        if (c.includes('science'))                   return 'Science';
+        if (c.includes('geo'))                       return 'Geography';
+        if (c.includes('pop') || c.includes('cult')) return 'Pop Culture';
+        if (c.includes('sport'))                     return 'Sports';
+        if (c === 'survey')                          return 'Survey';
+        return cat;
+      }
+
+      // Build per-player stats from matchLog
+      const stats = {};
+      // Track timestamps per player for avg answer time
+      const timestamps = {};
+
+      for (const entry of matchLog) {
+        const key = entry.player;
+        if (!stats[key]) {
+          stats[key] = {
+            player: key, team: entry.team,
+            totalPoints: 0, bestSingle: 0, correctCount: 0, duplicateCount: 0, guessCount: 0,
+            maxStreak: 0, streaksKilled: 0, multipliedAnswers: 0,
+            catPoints: {}, catGuesses: {}, uniqueCatsScored: 0,
+            avgAnswerTime: 0,
+          };
+          timestamps[key] = [];
+        }
+        const s = stats[key];
+        const cat = parentCat(entry.category);
+
+        if (entry.outcome === 'duplicate') {
+          s.duplicateCount++;
+        } else {
+          s.guessCount++;
+          timestamps[key].push(entry.timestamp);
+          s.catGuesses[cat] = (s.catGuesses[cat] || 0) + 1;
+
+          if (entry.outcome === 'correct' || entry.outcome === 'steal_success') {
+            const pts = entry.points || 0;
+            s.totalPoints += pts;
+            s.correctCount++;
+            if (pts > s.bestSingle) s.bestSingle = pts;
+            // Streak: entry.streak is the value before increment, so actual streak = streak + 1
+            if ((entry.streak + 1) > s.maxStreak) s.maxStreak = entry.streak + 1;
+            // Multiplied answers
+            if (entry.multiplier && entry.multiplier > 1) s.multipliedAnswers++;
+            // Category points
+            s.catPoints[cat] = (s.catPoints[cat] || 0) + pts;
+          }
+          if (entry.outcome === 'wrong' || entry.outcome === 'steal_fail') {
+            if (entry.streakBroken > 0) s.streaksKilled++;
+          }
+        }
+      }
+
+      // Post-process: compute avg answer time and unique categories scored
+      for (const [key, s] of Object.entries(stats)) {
+        const ts = timestamps[key];
+        if (ts.length >= 2) {
+          let totalGap = 0;
+          for (let i = 1; i < ts.length; i++) totalGap += ts[i] - ts[i - 1];
+          s.avgAnswerTime = totalGap / (ts.length - 1);
+        }
+        s.uniqueCatsScored = Object.keys(s.catPoints).length;
+      }
+
+      const players = Object.values(stats);
+      if (players.length === 0) return [];
+
+      // Shuffle a copy of the definitions
+      const shuffled = [...awardDefs];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+
+      // Pass 1: collect all candidates, immediately assign clear winners (no ties)
+      const awarded = new Set();   // player names already given an award
+      const results = [];
+      const deferred = [];         // tied awards to resolve in pass 2
+
+      for (const def of shuffled) {
+        if (results.length + deferred.length >= 12) break; // generous cap for pass 2
+        const fn = awardComputers[def.compute];
+        if (!fn) continue;
+        const candidates = fn(players, matchLog);
+        if (candidates.length === 0) continue;
+        if (candidates.length === 1) {
+          results.push({ id: def.id, name: def.name, player: candidates[0].player, team: candidates[0].team });
+          awarded.add(candidates[0].player);
+        } else {
+          deferred.push({ def, candidates });
+        }
+      }
+
+      // Pass 2: resolve ties — prefer players who don't already have an award, then randomize
+      for (const { def, candidates } of deferred) {
+        if (results.length >= 6) break;
+        const withoutAward = candidates.filter(p => !awarded.has(p.player));
+        const pool = withoutAward.length > 0 ? withoutAward : candidates;
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        results.push({ id: def.id, name: def.name, player: pick.player, team: pick.team });
+        awarded.add(pick.player);
+      }
+
+      return results.slice(0, 6);
+    }
+
+    function playVictoryAnimation(winnerIdx) {
+      // Set up both canvases
+      VICTORY.cvBack  = document.getElementById('victory-canvas-back');
+      VICTORY.cvFront = document.getElementById('victory-canvas-front');
+      VICTORY.ctxBack  = VICTORY.cvBack.getContext('2d');
+      VICTORY.ctxFront = VICTORY.cvFront.getContext('2d');
+      VICTORY.cvBack.style.display  = 'block';
+      VICTORY.cvFront.style.display = 'block';
+
+      // Team colors
+      const root = getComputedStyle(document.documentElement);
+      if (winnerIdx === 0) {
+        VICTORY.teamColor = root.getPropertyValue('--red-text').trim() || '#ff5555';
+        VICTORY.teamColorLight = '#ff9999';
+      } else {
+        VICTORY.teamColor = root.getPropertyValue('--blue-text').trim() || '#4c8cff';
+        VICTORY.teamColorLight = '#88bbff';
+      }
+
+      // Populate the victory dialog
+      const backdrop = document.getElementById('victory-backdrop');
+      const panel = backdrop.querySelector('.victory-panel');
+      // Set panel background to winning team's color, header strip to team text color
+      const teamBg = root.getPropertyValue(winnerIdx === 0 ? '--red-bg' : '--blue-bg').trim();
+      const teamText = root.getPropertyValue(winnerIdx === 0 ? '--red-text' : '--blue-text').trim();
+      panel.style.setProperty('--victory-bg', teamBg);
+      panel.style.setProperty('--victory-header-bg', teamText);
+      const titleEl = backdrop.querySelector('.victory-title');
+      titleEl.textContent = 'Victory!';
+      titleEl.style.color = '';  // white from base rule
+      backdrop.querySelector('.victory-body').innerHTML = buildVictoryMessage(winnerIdx);
+      // Measure title bottom to set header strip height (after content is set)
+      requestAnimationFrame(() => {
+        const titleBottom = titleEl.offsetTop + titleEl.offsetHeight + 4;
+        panel.style.setProperty('--victory-header-h', titleBottom + 'px');
+      });
+
+      // Compute and display awards
+      const awards = computeAwards();
+      const awardsEl = backdrop.querySelector('.victory-awards');
+      if (awards.length > 0) {
+        const items = awards.map(a => {
+          const cls = a.team === 0 ? 'red' : 'blue';
+          return `<li data-tip="award-${a.id}" data-tip-placement="below"><span class="award-name">${a.name}</span><span class="${cls}">${a.player}</span></li>`;
+        }).join('');
+        awardsEl.innerHTML = `<div class="victory-awards-heading">Awards</div><ul class="awards-list">${items}</ul>`;
+      } else {
+        awardsEl.innerHTML = '';
+      }
+
+      backdrop.querySelector('.victory-actions').innerHTML =
+        make3dBtn('Dismiss', 'dismissVictoryPanel()', '') +
+        make3dBtn('Play Again', 'resetGameConfirm()');
+      setup3dBtns();
+      panel.classList.remove('victory-dismissed');
+      panel.onclick = null;
+
+      // Trigger fly-in on next frame so the transition runs
+      requestAnimationFrame(() => {
+        backdrop.classList.add('active');
+      });
+
+      // Reset particle state
+      VICTORY.confetti = [];
+      VICTORY.fireworks = [];
+      VICTORY.sparks = [];
+      VICTORY.fireworkTimer = 0;
+      VICTORY.fireworkCount = 0;
+      VICTORY.running = true;
+      VICTORY._lastTime = performance.now();
+
+      for (let i = 0; i < VICTORY.CONFETTI_COUNT; i++) {
+        VICTORY.confetti.push(makeConfetti(true));
+      }
+
+      VICTORY.rafId = requestAnimationFrame(victoryLoop);
+    }
+
+    function dismissVictoryPanel() {
+      const panel = document.querySelector('.victory-panel');
+      if (panel) {
+        panel.classList.add('victory-dismissed');
+        // Defer onclick assignment so the current click's bubble doesn't
+        // immediately trigger the restore handler on the panel
+        requestAnimationFrame(() => {
+          panel.onclick = function(e) {
+            if (panel.classList.contains('victory-dismissed')) {
+              e.stopPropagation();
+              restoreVictoryPanel();
+            }
+          };
+        });
+      }
+    }
+
+    function restoreVictoryPanel() {
+      const panel = document.querySelector('.victory-panel');
+      if (panel) {
+        panel.classList.remove('victory-dismissed');
+        panel.onclick = null;
+      }
+    }
+
+    function stopVictoryAnimation() {
+      VICTORY.running = false;
+      if (VICTORY.rafId) {
+        cancelAnimationFrame(VICTORY.rafId);
+        VICTORY.rafId = null;
+      }
+      if (VICTORY.ctxBack)  VICTORY.ctxBack.clearRect(0, 0, 1280, 720);
+      if (VICTORY.ctxFront) VICTORY.ctxFront.clearRect(0, 0, 1280, 720);
+      if (VICTORY.cvBack)   VICTORY.cvBack.style.display  = 'none';
+      if (VICTORY.cvFront)  VICTORY.cvFront.style.display  = 'none';
+      const backdrop = document.getElementById('victory-backdrop');
+      if (backdrop) backdrop.classList.remove('active');
+    }
+
+    function makeConfetti(scattered) {
+      return {
+        x: Math.random() * 1280,
+        y: scattered ? Math.random() * -720 - 20 : -10 - Math.random() * 40,
+        w: 4 + Math.random() * 8,
+        h: 6 + Math.random() * 8,
+        color: VICTORY.RAINBOW[Math.floor(Math.random() * VICTORY.RAINBOW.length)],
+        rotation: Math.random() * Math.PI * 2,
+        spin: (Math.random() - 0.5) * 0.12,
+        vy: 80 + Math.random() * 100,
+        vx: (Math.random() - 0.5) * 40,
+        wobblePhase: Math.random() * Math.PI * 2,
+        wobbleSpeed: 1.5 + Math.random() * 2,
+      };
+    }
+
+    function launchFirework() {
+      VICTORY.fireworks.push({
+        x: 200 + Math.random() * 880,
+        y: 720,
+        targetY: 120 + Math.random() * 250,
+        vy: -600 - Math.random() * 200,
+        size: 3,
+        alive: true,
+        exploded: false,
+        color: VICTORY.teamColor,
+      });
+    }
+
+    function explodeFirework(fw) {
+      const count = 50 + Math.floor(Math.random() * 30);
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i / count) + (Math.random() - 0.5) * 0.4;
+        const speed = 120 + Math.random() * 280;
+        const isLight = Math.random() > 0.5;
+        VICTORY.sparks.push({
+          x: fw.x,
+          y: fw.y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1.0,
+          decay: 0.4 + Math.random() * 0.4,
+          size: 2 + Math.random() * 2.5,
+          color: isLight ? VICTORY.teamColorLight : VICTORY.teamColor,
+        });
+      }
+    }
+
+    function victoryLoop(now) {
+      if (!VICTORY.running) return;
+      const dt = Math.min((now - VICTORY._lastTime) / 1000, 0.05);
+      VICTORY._lastTime = now;
+      const ctxB = VICTORY.ctxBack;
+      const ctxF = VICTORY.ctxFront;
+      ctxB.clearRect(0, 0, 1280, 720);
+      ctxF.clearRect(0, 0, 1280, 720);
+
+      // --- Confetti → back canvas (behind dialog) ---
+      for (let i = 0; i < VICTORY.confetti.length; i++) {
+        const c = VICTORY.confetti[i];
+        c.y += c.vy * dt;
+        c.x += c.vx * dt + Math.sin(c.wobblePhase) * 0.8;
+        c.wobblePhase += c.wobbleSpeed * dt;
+        c.rotation += c.spin;
+
+        if (c.y > 740) {
+          VICTORY.confetti[i] = makeConfetti(false);
+          continue;
+        }
+
+        ctxB.save();
+        ctxB.translate(c.x, c.y);
+        ctxB.rotate(c.rotation);
+        ctxB.fillStyle = c.color;
+        ctxB.globalAlpha = 0.9;
+        ctxB.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
+        ctxB.restore();
+      }
+
+      // --- Firework launching ---
+      VICTORY.fireworkTimer += dt * 1000;
+      if (VICTORY.fireworkCount < VICTORY.FIREWORK_BURSTS && VICTORY.fireworkTimer > 0) {
+        const interval = VICTORY.fireworkCount === 0 ? 0 : 800 + Math.random() * 600;
+        if (VICTORY.fireworkTimer >= interval) {
+          launchFirework();
+          VICTORY.fireworkCount++;
+          VICTORY.fireworkTimer = 0;
+        }
+      }
+
+      // --- Firework rockets → front canvas (in front of dialog) ---
+      for (let i = VICTORY.fireworks.length - 1; i >= 0; i--) {
+        const fw = VICTORY.fireworks[i];
+        if (!fw.alive) { VICTORY.fireworks.splice(i, 1); continue; }
+
+        fw.y += fw.vy * dt;
+
+        if (fw.y <= fw.targetY && !fw.exploded) {
+          fw.exploded = true;
+          fw.alive = false;
+          explodeFirework(fw);
+          continue;
+        }
+
+        ctxF.save();
+        ctxF.fillStyle = fw.color;
+        ctxF.globalAlpha = 1;
+        ctxF.shadowColor = fw.color;
+        ctxF.shadowBlur = 12;
+        ctxF.beginPath();
+        ctxF.arc(fw.x, fw.y, fw.size, 0, Math.PI * 2);
+        ctxF.fill();
+        ctxF.restore();
+      }
+
+      // --- Sparks → front canvas ---
+      for (let i = VICTORY.sparks.length - 1; i >= 0; i--) {
+        const s = VICTORY.sparks[i];
+        s.life -= s.decay * dt;
+        if (s.life <= 0) { VICTORY.sparks.splice(i, 1); continue; }
+
+        s.vy += 160 * dt;
+        s.x += s.vx * dt;
+        s.y += s.vy * dt;
+        s.vx *= 0.99;
+
+        ctxF.save();
+        ctxF.globalAlpha = s.life;
+        ctxF.fillStyle = s.color;
+        ctxF.shadowColor = s.color;
+        ctxF.shadowBlur = 6;
+        ctxF.beginPath();
+        ctxF.arc(s.x, s.y, s.size * s.life, 0, Math.PI * 2);
+        ctxF.fill();
+        ctxF.restore();
+      }
+
+      VICTORY.rafId = requestAnimationFrame(victoryLoop);
+    }
+
     // Resume AudioContext on first user interaction (browser autoplay policy)
     function resumeTickCtx() {
       if (tickAudioCtx && tickAudioCtx.state === "suspended") tickAudioCtx.resume();
@@ -4590,7 +5268,24 @@
       const elCenterX = rect.left + rect.width / 2;
       const elCenterY = rect.top + rect.height / 2;
       let x, y, placement;
-      if (elCenterY < canvasRect.top + canvasRect.height * 0.1) {
+      const forcedPlacement = target.dataset.tipPlacement;
+      if (forcedPlacement === 'below') {
+        placement = 'below';
+        x = rect.left + rect.width / 2 - tipRect.width / 2;
+        y = rect.bottom + 8;
+      } else if (forcedPlacement === 'above') {
+        placement = 'above';
+        x = rect.left + rect.width / 2 - tipRect.width / 2;
+        y = rect.top - tipRect.height - 8;
+      } else if (forcedPlacement === 'left') {
+        placement = 'left';
+        x = rect.left - tipRect.width - 8;
+        y = rect.top + rect.height / 2 - tipRect.height / 2;
+      } else if (forcedPlacement === 'right') {
+        placement = 'right';
+        x = rect.right + 8;
+        y = rect.top + rect.height / 2 - tipRect.height / 2;
+      } else if (elCenterY < canvasRect.top + canvasRect.height * 0.1) {
         // Top 10% — place below
         placement = 'below';
         x = rect.left + rect.width / 2 - tipRect.width / 2;
@@ -4781,6 +5476,11 @@ document.addEventListener('keydown', e => {
       _dlg._onClose = () => { menuOpen = false; };
       buildSpeedSlider();
       syncSpeedSlider();
+      // Equalize tab widths to the widest button
+      const tabs = document.querySelectorAll('.dlg-tab');
+      let maxW = 0;
+      tabs.forEach(t => { t.style.width = ''; maxW = Math.max(maxW, t.offsetWidth); });
+      tabs.forEach(t => t.style.width = maxW + 'px');
     }
     function toggleMenu() {
       playTap(1, 0.4);
@@ -4870,6 +5570,8 @@ document.addEventListener('keydown', e => {
     let devModeAllowedQuestions = null;
 
     let roundNumber = 0;
+    let gameEnded = false;
+    let matchLog = [];  // persists across rounds, cleared on resetGame()
     let teamNames = ["Red Team", "Blue Team"];
     let startingTeam = 0;
     let teamPlayers = [[], []];
@@ -5839,8 +6541,11 @@ document.addEventListener('keydown', e => {
     function removeQuestion(){ if (currentQuestion) console.log("Remove:", currentQuestion.question); }
     function flagFactCheck(){ if (currentQuestion) console.log("FactCheck:", currentQuestion.question); }
     function showQuestionOptions() {
+      const newQDisabled = gameEnded
+        ? 'style="opacity:0.35;pointer-events:none;cursor:default"'
+        : '';
       const html = `<ul class="dialog-option-list">
-        <li><a onclick="getNewQuestion()">Get new question (resets the round)</a></li>
+        <li><a onclick="getNewQuestion()" ${newQDisabled}>Get new question (resets the round)</a></li>
         <li><a onclick="closeDialog(); removeQuestion()">Flag question for removal</a></li>
         <li><a onclick="closeDialog(); flagFactCheck()">Flag question for fact check</a></li>
         <li><a onclick="copyAnswersToClipboard()">Copy answers for judge</a></li>
@@ -6422,8 +7127,28 @@ document.addEventListener('keydown', e => {
       // No-op: answer history is now rendered on demand via showAnswerHistory()
     }
 
+    function logGuess({ player, team, guess, outcome, points = null, multiplier = null, streak = null, streakBroken = 0, isSteal = false, question = null, category = null }) {
+      matchLog.push({
+        player,
+        team,
+        guess,
+        outcome,        // "correct", "wrong", "steal_success", "steal_fail", "duplicate"
+        points,         // points earned (null for wrong/duplicate)
+        multiplier,     // answer multiplier applied (null for wrong/duplicate)
+        streak,         // streak length at time of guess (null for duplicate)
+        streakBroken,   // streak value that was reset by this wrong answer (0 if no streak broken)
+        isSteal,
+        round: roundNumber,
+        question: question || (currentQuestion ? currentQuestion.question : null),
+        category: category || (currentQuestion ? currentQuestion.category : null),
+        timestamp: Date.now(),
+      });
+    }
+
     async function submitGuess(){const input=document.getElementById("guess");const guess=input.value.trim();input.value="";if(!guess||!currentQuestion)return;
       if(guessHistory.some(e=>normalize(e.guess)===normalize(guess))){
+        const dupePlayer=teamPlayers[teamTurn][playerIndex[teamTurn]%teamPlayers[teamTurn].length]||teamNames[teamTurn];
+        logGuess({ player: dupePlayer, team: teamTurn, guess, outcome: 'duplicate' });
         playSound(sfxNeutralBeep);
         input.placeholder="Answer already submitted";
         input.classList.remove('input-shake');
@@ -6433,6 +7158,8 @@ document.addEventListener('keydown', e => {
         input._dupeTimer=setTimeout(()=>{input.placeholder="Enter your guess";},2000);
         return;}
       const playerName=stealPhase?teamNames[teamTurn]:teamPlayers[teamTurn][playerIndex[teamTurn]%teamPlayers[teamTurn].length]||teamNames[teamTurn];
+      // individualPlayer always resolves to an actual player name (for matchLog awards)
+      const individualPlayer=teamPlayers[teamTurn][playerIndex[teamTurn]%teamPlayers[teamTurn].length]||teamNames[teamTurn];
       if(stealPhase){
         const idx=currentQuestion.answers.findIndex((ans,i)=>!revealed[i]&&answerMatches(guess,ans));
         const stealingTeam=teamTurn;
@@ -6448,6 +7175,7 @@ document.addEventListener('keydown', e => {
             playCorrect(idx===0);revealed[idx]=true;roundScore+=stealTotal;revealedData[idx]={mult:stealMult,earnedTotal:stealTotal};
             const stealResult=stealMult>1?`✓ Steal (${stealTotal} pts) [${stealMult.toFixed(1)}x]`:`✓ Steal (${stealTotal} pts)`;
             guessHistory.push({player:playerName,team:stealingTeam,guess:guess,result:stealResult});
+            logGuess({ player: individualPlayer, team: stealingTeam, guess, outcome: 'steal_success', points: stealTotal, multiplier: stealMult, streak: currentStreak, isSteal: true });
             currentStreak++;answerMultiplier=1+(currentStreak*0.2);
             updateHistory();
             await flipTile(idx,'correct',stealTotal,stealMult);
@@ -6474,6 +7202,7 @@ document.addEventListener('keydown', e => {
             const strikeStat = document.getElementById('strikes')?.closest('.board-stat-value');
             if (strikeStat) strikeStat.classList.replace('strikes-full', 'strikes-fade-out');
             guessHistory.push({player:playerName,team:stealingTeam,guess:guess,result:"✗ Wrong (steal)"});
+            logGuess({ player: individualPlayer, team: stealingTeam, guess, outcome: 'steal_fail', streak: currentStreak, isSteal: true });
             updateHistory();
             awardRoundScore(1-stealingTeam, (final) => {
               // Phase indicator: steal-chance → round-result, revert to
@@ -6490,9 +7219,12 @@ document.addEventListener('keydown', e => {
       let foundIdx=-1;let foundTotal=0;let foundMult=answerMultiplier;currentQuestion.answers.forEach((ans,i)=>{if(answerMatches(guess,ans)&&!revealed[i]){revealed[i]=true;
         foundMult=answerMultiplier;foundTotal=Math.round(ans.points*foundMult);roundScore+=foundTotal;revealedData[i]={mult:foundMult,earnedTotal:foundTotal};
         const resultTxt=foundMult>1?`✓ Correct (${foundTotal} pts) [${foundMult.toFixed(1)}x]`:`✓ Correct (${foundTotal} pts)`;
-        guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:resultTxt});foundIdx=i;}});
+        guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:resultTxt});
+        logGuess({ player: individualPlayer, team: teamTurn, guess, outcome: 'correct', points: foundTotal, multiplier: foundMult, streak: currentStreak });
+        foundIdx=i;}});
       const found=foundIdx!==-1;
-      if(found){currentStreak++;answerMultiplier=1+(currentStreak*0.2);playCorrect(foundIdx===0);}else{currentStreak=0;answerMultiplier=1.0;playWrong();strikes++;guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:"✗ Wrong"});}playerIndex[teamTurn]=(playerIndex[teamTurn]+1)%teamPlayers[teamTurn].length;
+      if(found){currentStreak++;answerMultiplier=1+(currentStreak*0.2);playCorrect(foundIdx===0);}else{const brokeStreak=currentStreak;currentStreak=0;answerMultiplier=1.0;playWrong();strikes++;guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:"✗ Wrong"});
+        logGuess({ player: individualPlayer, team: teamTurn, guess, outcome: 'wrong', streak: 0, streakBroken: brokeStreak });}playerIndex[teamTurn]=(playerIndex[teamTurn]+1)%teamPlayers[teamTurn].length;
       document.getElementById("message").textContent="";
       if(found){
         const guessInput=document.getElementById("guess");
@@ -6539,10 +7271,10 @@ document.addEventListener('keydown', e => {
       let winnerIdx, msg;
       if (teamScores[0] > teamScores[1]) {
         winnerIdx = 0;
-        msg = `<span class="red">${teamNames[0]}</span> wins ${maxRounds} rounds with ${teamScores[0]} points!`;
+        msg = `<span class="red">${teamNames[0]}</span> wins with ${teamScores[0]} points!`;
       } else if (teamScores[1] > teamScores[0]) {
         winnerIdx = 1;
-        msg = `<span class="blue">${teamNames[1]}</span> wins ${maxRounds} rounds with ${teamScores[1]} points!`;
+        msg = `<span class="blue">${teamNames[1]}</span> wins with ${teamScores[1]} points!`;
       } else {
         winnerIdx = lastRoundWinner;
         const cls = winnerIdx === 0 ? 'red' : 'blue';
@@ -6606,13 +7338,16 @@ document.addEventListener('keydown', e => {
 
     function endGame(msg, winnerOverride = null) {
       const winner = winnerOverride !== null ? winnerOverride : (teamScores[0] >= teamScores[1] ? 0 : 1);
+      // Populate sidebar endRound area (retained for returning to the board)
       document.getElementById("endRound").innerHTML=`
         ${msg}
         ${make3dBtn('Fast Money Round', `startFastMoney(${winner})`, 'input-btn-fm')}
         ${make3dBtn('Play Again', 'resetGameConfirm()')}`;
       setup3dBtns();
       document.getElementById("turn-input-box").style.display="none";
-      document.getElementById("questionActions").style.display="none";
+      gameEnded = true;
+      // Launch victory overlay (dialog + particles)
+      playVictoryAnimation(winner);
     }
 
     async function resetGameConfirm() {
@@ -6622,12 +7357,13 @@ document.addEventListener('keydown', e => {
     }
 
     function resetGame(){
+      stopVictoryAnimation();
       updateBlobColor();
       // Slide phase indicator out of view — stays hidden until next startGame
       hidePhaseIndicator();
       gameSpeedSetting = 1;
       setGameSpeed(1);
-      teamScores=[0,0];usedQuestions=[];roundNumber=0;playerIndex=[0,0];startingTeam=0;
+      teamScores=[0,0];usedQuestions=[];roundNumber=0;gameEnded=false;matchLog=[];playerIndex=[0,0];startingTeam=0;
       gameMode='rounds';maxRounds=0;lastRoundWinner=-1;
       resetSetupSteps();
       clearInterval(fm.timerInterval);
@@ -6669,6 +7405,7 @@ document.addEventListener('keydown', e => {
     }
 
     function startFastMoney(winningTeamIdx) {
+      stopVictoryAnimation();
       fm.winningTeam = winningTeamIdx;
       const copy = fmQuestions.map((_,i) => i);
       const picked = [];

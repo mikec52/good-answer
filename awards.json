@@ -1,0 +1,21 @@
+[
+  { "id": "mvp", "name": "MVP", "compute": "mvp" },
+  { "id": "heavy-hitter", "name": "Heavy Hitter", "compute": "heavyHitter" },
+  { "id": "lvp", "name": "LVP", "compute": "lvp" },
+  { "id": "quality-over-quantity", "name": "Quality over Quantity", "compute": "qualityOverQuantity" },
+  { "id": "doesnt-pay-attention", "name": "Doesn't Pay Attention", "compute": "doesntPayAttention" },
+  { "id": "sharpshooter", "name": "Sharpshooter", "compute": "sharpshooter" },
+  { "id": "mendoza-line", "name": "Mendoza Line", "compute": "mendozaLine" },
+  { "id": "going-streaking", "name": "Going Streaking", "compute": "goingStreaking" },
+  { "id": "birthday-ruiner", "name": "Birthday Ruiner", "compute": "birthdayRuiner" },
+  { "id": "opportunist", "name": "Opportunist", "compute": "opportunist" },
+  { "id": "the-science-guy", "name": "The Science Guy", "compute": "theScienceGuy" },
+  { "id": "missed-popular", "name": "Missed Popular", "compute": "missedPopular" },
+  { "id": "usain-dolt", "name": "Usain Dolt", "compute": "usainDolt" },
+  { "id": "haaaacker", "name": "Haaaacker", "compute": "haaaacker" },
+  { "id": "the-jock", "name": "The Jock", "compute": "theJock" },
+  { "id": "multitudes", "name": "Multitudes", "compute": "multitudes" },
+  { "id": "frequent-flyer", "name": "Frequent Flyer", "compute": "frequentFlyer" },
+  { "id": "hoi-polloi", "name": "Hoi Polloi", "compute": "hoiPolloi" },
+  { "id": "sergeis-fez", "name": "Sergei's Fez", "compute": "sergeisFez" }
+]

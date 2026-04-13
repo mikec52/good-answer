@@ -5,7 +5,7 @@ Family Feud-inspired game with original features and styling. Working title: **G
 - Main game file: `feud.html`
 - Question bank: `master_question_bank.json` (active file, includes variants — see below)
 - Pre-variants backup: `question_bank_pre-variants.json`
-- Sound files alongside feud.html: `ding.mp3` (correct answer reveal), `wrong.mp3`, `goodanswer.mp3`, `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX + board-wrapper slide), `phonetype.wav` (typewriter keystroke SFX + tile-cover hover), `balbg.mp3` (background music, looping), `roundend.wav` (round winner determined), `decreaseblip.mp3` (streak/mult decrease), `neutralbeep.wav` (duplicate answer rejection), `chime.wav` (badge bounce SFX), `zoop.wav` (speed stepper SFX), `slit.wav` (fly-in/out whoosh — cat-row entry/exit, dialog open/close), `tap1.wav` (button click — setup nav, menu, confirm), `tap2.wav` (element landing — input area fly in/out), `tvon.wav` (CRT power-on), `powerdown.wav` (CRT power-off)
+- Sound files alongside feud.html: `ding.mp3` (correct answer reveal), `newstrike.wav` (incorrect answer), `goodanswer.mp3` (top answer reveal, 300ms delayed, baseVolume 0.35), `negativebeep.wav` (failed steal attempt), `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX + board-wrapper slide), `phonetype.wav` (typewriter keystroke SFX + tile-cover hover), `balbg.mp3` (background music, looping), `roundend.wav` (round winner determined), `decreaseblip.mp3` (streak/mult decrease), `neutralbeep.wav` (duplicate answer rejection), `chime.wav` (badge bounce SFX), `zoop.wav` (speed stepper SFX), `slit.wav` (fly-in/out whoosh — cat-row entry/exit, dialog open/close), `tap1.wav` (button click — setup nav, menu, confirm), `tap2.wav` (element landing — input area fly in/out), `tvon.wav` (CRT power-on), `powerdown.wav` (CRT power-off)
 
 ### Branch structure
 - **`main`** — active development (formerly `viewport-redesign`)
@@ -813,7 +813,7 @@ SFX timed to land at a specific point in an animation (e.g. 70% through a slide-
 
 ### `<audio>` element SFX (non-Web Audio)
 
-These use `new Audio()` and `playSound()`: `sfxCorrect` (`ding.mp3`), `sfxWrong`, `sfxGoodAnswer`, `sfxSurveySays`, `sfxRoundEnd`, `sfxDecreaseBlip`, `sfxNeutralBeep`, `sfxButtonClick`. Volume: `volumeMaster × volumeSfx × baseVolume`. `baseVolume` is 0.6 for correct/wrong/goodanswer/surveysays, 1.0 (default) for others.
+These use `new Audio()` and `playSound()`: `sfxCorrect` (`ding.mp3`), `sfxWrong` (`newstrike.wav`), `sfxGoodAnswer` (`goodanswer.mp3`, 300ms delayed after ding, baseVolume 0.35), `sfxNegativeBeep` (`negativebeep.wav`, failed steal only), `sfxSurveySays`, `sfxRoundEnd`, `sfxDecreaseBlip`, `sfxNeutralBeep`, `sfxButtonClick`. Volume: `volumeMaster × volumeSfx × baseVolume`. `baseVolume` is 0.6 for correct/wrong/surveysays, 0.35 for goodanswer, 1.0 (default) for others.
 
 ---
 
@@ -916,7 +916,7 @@ When a round winner is determined (`setPhase("round-result")`), three simultaneo
 
 ## Per-Track Base Volume
 
-Individual SFX tracks can have a `baseVolume` property (0–1) that multiplies with master × SFX gain in `applyVolumes()`. Default is 1 if unset. Currently reduced to 0.6: `sfxCorrect`, `sfxWrong`, `sfxGoodAnswer`, `sfxSurveySays`.
+Individual SFX tracks can have a `baseVolume` property (0–1) that multiplies with master × SFX gain in `applyVolumes()`. Default is 1 if unset. Currently reduced to 0.6: `sfxCorrect`, `sfxWrong`, `sfxSurveySays`. `sfxGoodAnswer` is 0.35.
 
 ---
 
@@ -1179,16 +1179,28 @@ The selected category **does not move**. Instead, two sequential phases transfor
 
 ## Custom Dialog System
 
-Two independent dialog layers for modals and confirms. Both use frosted glass panels (`rgba(17,17,17,0.75)` + `backdrop-filter: blur(20px)`), positioned outside `#game-root` (fixed to viewport, unaffected by canvas scaling).
+Two independent dialog layers for modals and confirms. Both use frosted glass panels (`rgba(17,17,17,0.75)` + `backdrop-filter: blur(20px)`), positioned inside `#game-root` (`position: absolute`, constrained to the 1280×720 canvas).
 
 ### Two layers
 
-- **`#dialog-backdrop`** (z-index 10000) — content dialogs. Fly-in from bottom (`translateY(100vh) → 0`), no opacity transition. Used by `showContentDialog(title, html)` / `closeDialog()`.
+- **`#dialog-backdrop`** (z-index 10000) — content dialogs. Fly-in from bottom (`translateY(720px) → 0`), no opacity transition. Used by `showContentDialog(title, html)` / `closeDialog()`.
 - **`#confirm-backdrop`** (z-index 10001) — confirm dialogs. Fade + subtle slide (`translateY(40px) → 0` with opacity). Used by `showConfirm(message, opts)` → `Promise<boolean>` / `closeConfirm(result)`. Stacks above content dialogs.
+
+### Canvas containment
+
+Dialogs live inside `#game-root` so they scale with the canvas and cannot overflow it. Key CSS values that enforce this:
+- `.dlg-backdrop`: `position: absolute` (not `fixed`), `inset: 0`
+- `.dlg-panel`: `width: 90%` (not `90vw`)
+- `.dlg-body`: `max-height: 400px` (not `80vh`)
+- Fly-in uses `translateY(720px)` (canvas height, not `100vh`)
+
+### Tabbed dialogs
+
+Dialogs can include tabs via `.dlg-tabs` (flex container of `.dlg-tab` buttons) and `.dlg-tab-panels` (CSS grid wrapper). All `.dlg-tab-panel` children occupy the same grid cell (`grid-area: 1 / 1`), so the container sizes to the tallest tab — preventing height jumps when switching. Inactive panels use `visibility: hidden` (not `display: none`) to preserve this sizing. `switchSettingsTab(name)` toggles `.active` on tabs and panels.
 
 ### Shared CSS classes
 
-`.dlg-backdrop`, `.dlg-panel`, `.dlg-title` (gold dazzle-unicase), `.dlg-body` (`max-height: 60vh; overflow-y: auto`), `.dlg-actions`, `.dialog-btn` variants (`-confirm` gold, `-cancel`/`-close` subtle gray).
+`.dlg-backdrop`, `.dlg-panel`, `.dlg-title` (gold dazzle-unicase), `.dlg-body` (`max-height: 400px; overflow-y: auto`), `.dlg-actions`, `.dialog-btn` variants (`-confirm` gold, `-cancel`/`-close` subtle gray), `.dlg-tabs`, `.dlg-tab` (inactive `#333`, active `#fba300`), `.dlg-tab-panels`, `.dlg-tab-panel`.
 
 ### Nesting behavior
 
@@ -1204,6 +1216,7 @@ Closes topmost open layer first (confirm before content).
 - **Score edits** — was `<details>` dropdown, now `showScoreEdits()` / `showFmScoreEdits()` with `.score-edit-form` layout (team name above, +/−/input/Apply row)
 - **Answer history** — was collapsible tray (`#history-tray-handle`), now `showAnswerHistory()` reading from `guessHistory` on demand
 - **4 native `confirm()` calls** — all replaced with `await showConfirm()` (`getNewQuestion`, `submitEdit`, `resetGameConfirm`, `fmSubmitFM`)
+- **Settings** — was a full-height slide-in tray (`#settings-tray`), now a tabbed `showContentDialog` built by `openSettingsDialog()`. Three tabs: Audio (volume sliders + mute), Game (speed, tooltip delay, hide help tips), Graphics (CRT toggle). Tab state (`_settingsTab`) persists across open/close. Hamburger button remains inside `#game-root` (`position: absolute`).
 
 ---
 
@@ -1228,8 +1241,8 @@ board-streak,evergreen,On a roll,Consecutive correct answers
 ### Rendering
 
 - Off-white panel (`#f0f0f0`), `border-radius: 10px`, `max-width: 280px`
-- Flavor: `#fba300`, futura-100, 1rem, italic, with `border-bottom: 1px solid rgba(0,0,0,0.5)` separator. Hidden via `:empty { display: none }` when blank.
-- Description: `#111`, futura-100, 1.2rem, weight 300
+- Flavor: `#fba300`, futura-100, 0.7rem, italic, with `border-bottom: 1px solid rgba(0,0,0,0.5)` separator. Hidden via `:empty { display: none }` when blank.
+- Description: `#111`, futura-100, 0.9rem, weight 500
 - Pointer arrow (`::after` triangle) points toward the element, direction set via `data-placement` attribute
 
 ### Positioning logic (canvas-aware)
@@ -1253,6 +1266,36 @@ All positions clamped to viewport edges.
 ### Adding tooltips to elements
 
 Static HTML: add `data-tip="id"` directly. Dynamic JS: include in template literal or use `el.dataset.tip = "id"`. For `make3dBtn`, use the optional 4th parameter: `make3dBtn('Submit', 'submitGuess()', '', 'submit-guess')`.
+
+### Dynamic tooltip overrides
+
+The `dynamicTipText` map (just above `showTooltip()`) allows specific tooltip IDs to override their CSV text with live values. Each entry is a function returning `{ flavor?, description? }` — unset fields fall through to CSV. Currently used by `board-mult` to show the current multiplier value in the flavor text.
+
+---
+
+## Player Inventory (Placeholder)
+
+`#player-inventory` is an empty 45px-tall debossed tray (`border-radius: 50px`, inset `box-shadow`) below the submit button in `#input-area`. Placeholder for the future items/relics system. Has a tooltip (`data-tip="player-inventory"`) explaining its purpose.
+
+---
+
+## Strike Animations
+
+### Per-strike hop-slam
+
+When `updateStrikes()` renders active strikes, only the newest (index `strikes - 1`) gets the `.strike-new` class, which plays `strike-hop-slam` (pop up 12px, slam down with bounce, 0.4s scaled by game speed).
+
+### Three-strike glow
+
+At 3 strikes, the `.board-stat-value` housing the strikes gets `.strikes-full` — a red inner + outer glow that fades in over 0.8s (`strikes-glow-in`) then pulses continuously (`strikes-pulse`, 1.5s cycle). On a failed steal attempt, `.strikes-full` is replaced with `.strikes-fade-out` (1s fade to no glow).
+
+### Failed steal sequence
+
+On incorrect steal answer: `negativebeep.wav` plays, `#board-wrapper` gets a WAAPI error wiggle (500ms lateral shake, `composite: 'add'` to layer on top of existing CSS animations), and the strikes glow fades out. No strike overlay splash screen.
+
+### Board-wrapper exit transition — `forwards` fill gotcha
+
+When `#board-wrapper` exits (`.slide-in` removed, `.offscreen` added), the `forwards` fill from the slide-in animation is lost. The browser may not trigger the CSS `transition` because the fill removal isn't treated as a style change. Fix: explicitly set `style.transform = 'translateY(0)'`, force reflow, clear the inline style, then add `.offscreen` — this gives the transition a clean computed starting value.
 
 ---
 

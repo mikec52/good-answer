@@ -834,14 +834,6 @@
       display: flex; flex-direction: column; align-items: flex-end;
       transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    #menu-container.open { transform: translateX(-220px); }
-    #menu-backdrop {
-      position: fixed; inset: 0; z-index: 998;
-      background: rgba(0,0,0,0.3);
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.4s ease;
-    }
-    #menu-backdrop.active { opacity: 1; pointer-events: all; }
     #menu-btn {
       width: 31px; height: 31px; border-radius: 50%;
       background: none;
@@ -861,29 +853,6 @@
     #menu-btn span:nth-child(2),
     #menu-btn span:nth-child(3) { top: 14px; }
     #menu-btn span:nth-child(4) { top: 20px; }
-    #menu-btn.open span:nth-child(1) { top: 14px; width: 0; left: 50%; }
-    #menu-btn.open span:nth-child(2) { transform: rotate(45deg); }
-    #menu-btn.open span:nth-child(3) { transform: rotate(-45deg); }
-    #menu-btn.open span:nth-child(4) { top: 14px; width: 0; left: 50%; }
-    #settings-tray {
-      --tray-bg: #fff;
-      position: fixed; top: 0; right: 0;
-      width: 260px; height: 100vh;
-      background: var(--tray-bg);
-      padding: 80px 20px 20px;
-      color: #111; font-size: 0.85rem;
-      box-shadow: -4px 0 24px rgba(0,0,0,0.15);
-      overflow-y: auto;
-      transform: translateX(100%);
-      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-      pointer-events: none;
-      z-index: 999;
-      display: flex; flex-direction: column;
-    }
-    #settings-tray.open {
-      transform: translateX(0);
-      pointer-events: all;
-    }
     .tray-heading {
       margin: 0 0 10px; font-size: 0.75rem; font-weight: bold;
       text-transform: uppercase; letter-spacing: 0.07em; opacity: 0.55;
@@ -898,20 +867,20 @@
     .tray-row > label:first-child { flex-shrink: 0; }
     .tray-row input[type="range"] { width: 100%; cursor: pointer; -webkit-appearance: none; appearance: none; }
     .tray-row input[type="range"]::-webkit-slider-runnable-track {
-      height: 4px; border-radius: 2px; background: #ddd;
+      height: 4px; border-radius: 2px; background: rgba(255,255,255,0.2);
     }
     .tray-row input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       position: relative; z-index: 1;
       width: 16px; height: 16px; border-radius: 50%;
       margin-top: -6px;
-      background: #fba300; box-shadow: 0 0 0 2px var(--tray-bg); cursor: pointer;
+      background: #fba300; box-shadow: 0 0 0 2px rgba(17,17,17,0.75); cursor: pointer;
     }
     .tray-row input[type="range"]::-moz-range-thumb {
       width: 16px; height: 16px; border-radius: 50%;
-      background: #fba300; box-shadow: 0 0 0 2px var(--tray-bg); cursor: pointer;
+      background: #fba300; box-shadow: 0 0 0 2px rgba(17,17,17,0.75); cursor: pointer;
     }
-    .tray-divider { height: 1px; background: rgba(0,0,0,0.1); margin: 10px 0; }
+    .tray-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 10px 0; }
     /* Toggle switch */
     .toggle-switch { position: relative; width: 40px; height: 22px; display: inline-block; flex-shrink: 0; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
@@ -930,18 +899,18 @@
     .tray-row-slider { display: flex; align-items: center; margin-top: 8px; margin-bottom: 10px; }
     .tray-row-slider input[type="range"] { width: 100%; cursor: pointer; -webkit-appearance: none; appearance: none; }
     .tray-row-slider input[type="range"]::-webkit-slider-runnable-track {
-      height: 4px; border-radius: 2px; background: #ddd;
+      height: 4px; border-radius: 2px; background: rgba(255,255,255,0.2);
     }
     .tray-row-slider input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       position: relative; z-index: 1;
       width: 16px; height: 16px; border-radius: 50%;
       margin-top: -6px;
-      background: #fba300; box-shadow: 0 0 0 2px var(--tray-bg); cursor: pointer;
+      background: #fba300; box-shadow: 0 0 0 2px rgba(17,17,17,0.75); cursor: pointer;
     }
     .tray-row-slider input[type="range"]::-moz-range-thumb {
       width: 16px; height: 16px; border-radius: 50%;
-      background: #fba300; box-shadow: 0 0 0 2px var(--tray-bg); cursor: pointer;
+      background: #fba300; box-shadow: 0 0 0 2px rgba(17,17,17,0.75); cursor: pointer;
     }
     /* Speed slider — wrapper keeps slider + labels in the same width context */
     .speed-slider-wrap {
@@ -952,18 +921,18 @@
       -webkit-appearance: none; appearance: none;
     }
     .speed-slider-wrap input[type="range"]::-webkit-slider-runnable-track {
-      height: 4px; border-radius: 2px; background: #ddd;
+      height: 4px; border-radius: 2px; background: rgba(255,255,255,0.2);
     }
     .speed-slider-wrap input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       position: relative; z-index: 1;
       width: 16px; height: 16px; border-radius: 50%;
       margin-top: -6px;
-      background: #fba300; box-shadow: 0 0 0 2px var(--tray-bg); cursor: pointer;
+      background: #fba300; box-shadow: 0 0 0 2px rgba(17,17,17,0.75); cursor: pointer;
     }
     .speed-slider-wrap input[type="range"]::-moz-range-thumb {
       width: 16px; height: 16px; border-radius: 50%;
-      background: #fba300; box-shadow: 0 0 0 2px var(--tray-bg); cursor: pointer;
+      background: #fba300; box-shadow: 0 0 0 2px rgba(17,17,17,0.75); cursor: pointer;
     }
     /* Notch tick marks + clickable labels — padding matches thumb half-width
        so labels align with the thumb center at each discrete stop. */
@@ -2644,12 +2613,41 @@
       opacity: 1;
       border-color: #ff0000;
     }
+    .strike-x.strike-new {
+      animation: strike-hop-slam calc(0.4s / var(--speed)) ease-in forwards;
+    }
+    .board-stat-value.strikes-full {
+      animation: strikes-glow-in 0.8s ease forwards, strikes-pulse 1.5s ease-in-out 0.8s infinite;
+    }
+    @keyframes strikes-glow-in {
+      0%   { box-shadow: inset 0 0 0 rgba(255,0,0,0), 0 0 0 rgba(255,0,0,0); }
+      100% { box-shadow: inset 0 0 12px rgba(255,0,0,0.6), inset 0 0 30px rgba(255,0,0,0.3), 0 0 15px rgba(255,0,0,0.4), 0 0 30px rgba(255,0,0,0.2); }
+    }
+    .board-stat-value.strikes-fade-out {
+      animation: strikes-glow-out 1s ease forwards;
+    }
+    @keyframes strikes-glow-out {
+      0%   { box-shadow: inset 0 0 12px rgba(255,0,0,0.6), inset 0 0 30px rgba(255,0,0,0.3), 0 0 15px rgba(255,0,0,0.4), 0 0 30px rgba(255,0,0,0.2); }
+      100% { box-shadow: inset 0 0 0 rgba(255,0,0,0), 0 0 0 rgba(255,0,0,0); }
+    }
+    @keyframes strikes-pulse {
+      0%, 100% { box-shadow: inset 0 0 12px rgba(255,0,0,0.6), inset 0 0 30px rgba(255,0,0,0.3), 0 0 15px rgba(255,0,0,0.4), 0 0 30px rgba(255,0,0,0.2); }
+      50%      { box-shadow: inset 0 0 18px rgba(255,0,0,0.8), inset 0 0 40px rgba(255,0,0,0.4), 0 0 25px rgba(255,0,0,0.6), 0 0 45px rgba(255,0,0,0.3); }
+    }
+    @keyframes strike-hop-slam {
+      0%   { transform: translateY(0) scale(1); }
+      25%  { transform: translateY(-12px) scale(1.1); }
+      55%  { transform: translateY(3px) scale(0.95); }
+      75%  { transform: translateY(-1px) scale(1.02); }
+      100% { transform: translateY(0) scale(1); }
+    }
 
     /* Input */
     #input-area { width: 100%; border-radius: 10px; border: 3px solid transparent; overflow: hidden; box-sizing: border-box; font-family: "futura-100"; text-transform: uppercase; min-height: 250px; max-height: 250px; display: flex; flex-direction: column;}
     #input-area.team-red  { border-color: var(--red-bg);  background: color-mix(in srgb, var(--red-bg)  80%, black); }
     #input-area.team-blue { border-color: var(--blue-bg); background: color-mix(in srgb, var(--blue-bg) 80%, black); }
     #input-area.hidden { display: none; }
+    #player-inventory { height: 45px; border-radius: 50px; margin: 0px 15px 10px 15px; background: rgba(0,0,0,0.35); box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.05); }
     input[type="text"] { padding: 8px; font-size: 1rem; }
     .btn {
       padding: 8px 14px; 
@@ -3285,7 +3283,7 @@
 
     /* ── Custom dialog / modal — shared styles ───────────────── */
     .dlg-backdrop {
-      position: fixed; inset: 0;
+      position: absolute; inset: 0;
       background: rgba(0, 0, 0, 0.5);
       display: flex; align-items: center; justify-content: center;
       opacity: 0; pointer-events: none;
@@ -3299,7 +3297,7 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 16px;
       padding: 28px 32px;
-      min-width: 320px; max-width: 480px; width: 90vw;
+      min-width: 320px; max-width: 480px; width: 90%;
       color: #fff;
       font-family: "futura-100", sans-serif;
     }
@@ -3315,7 +3313,7 @@
       color: rgba(255, 255, 255, 0.85);
       margin-bottom: 20px;
       padding: 2px 0;
-      max-height: 80vh; overflow-y: auto;
+      max-height: 400px; overflow-y: auto;
     }
     .dlg-body:empty { display: none; }
     .dlg-actions {
@@ -3343,10 +3341,27 @@
     .dialog-btn-cancel:hover,
     .dialog-btn-close:hover { background: rgba(255, 255, 255, 0.18); }
 
+    /* ── Dialog tabs ──────────────────────────────────────────── */
+    .dlg-tabs { display: flex; gap: 8px; margin-bottom: 16px; justify-content: center; }
+    .dlg-tab {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700; font-size: 0.85rem;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      border: none; border-radius: 8px;
+      padding: 8px 16px; cursor: pointer;
+      background: #333; color: rgba(255,255,255,0.7);
+      transition: background 0.15s, color 0.15s;
+    }
+    .dlg-tab:hover { background: #444; }
+    .dlg-tab.active { background: #fba300; color: #111; }
+    .dlg-tab-panels { display: grid; }
+    .dlg-tab-panel { grid-area: 1 / 1; visibility: hidden; }
+    .dlg-tab-panel.active { visibility: visible; }
+
     /* ── Content dialog — fly in from bottom, no opacity ────── */
     #dialog-backdrop { z-index: 10000; }
     #dialog-backdrop .dlg-panel {
-      transform: translateY(100vh);
+      transform: translateY(720px);
       transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
     }
     #dialog-backdrop.active .dlg-panel {
@@ -3382,7 +3397,7 @@
     #tooltip.visible { opacity: 1; }
     #tooltip-flavor {
       font-family: "futura-100", sans-serif;
-      font-size: 1rem; color: #fba300;
+      font-size: 0.7rem; color: #fba300;
       font-style: italic;
       margin-bottom: 6px;
       padding-bottom: 6px;
@@ -3411,82 +3426,16 @@
       border-left-color: var(--tip-bg);
     }
     #tooltip-desc {
-      font-size: 1.2rem; line-height: 1.4;
+      font-size: 0.9rem; line-height: 1.4;
       font-weight: 500;
       color: #111;
     }
   </style>
 </head>
 <body>
-  <div id="dialog-backdrop" class="dlg-backdrop">
-    <div class="dlg-panel">
-      <div class="dlg-title"></div>
-      <div class="dlg-body"></div>
-      <div class="dlg-actions"></div>
-    </div>
-  </div>
-  <div id="confirm-backdrop" class="dlg-backdrop">
-    <div class="dlg-panel">
-      <div class="dlg-title"></div>
-      <div class="dlg-body"></div>
-      <div class="dlg-actions"></div>
-    </div>
-  </div>
   <div id="tooltip">
     <div id="tooltip-flavor"></div>
     <div id="tooltip-desc"></div>
-  </div>
-  <div id="menu-backdrop"></div>
-  <div id="settings-tray">
-    <div class="tray-section">
-      <h3 style="margin: 0 0 12px; font-size: 1.5rem; color: #fba300; margin-bottom: 20px;">Settings</h3>
-    </div>
-    <div class="tray-section">
-      <div class="tray-heading">Volume</div>
-      <div class="tray-row-label"><label>Master</label></div>
-      <div class="tray-row-slider"><input type="range" id="vol-master" min="0" max="1" step="0.01" value="1" oninput="volumeMaster=+this.value;applyVolumes()" data-tip="vol-master"></div>
-      <div class="tray-row-label"><label>Music</label></div>
-      <div class="tray-row-slider"><input type="range" id="vol-music" min="0" max="1" step="0.01" value="1" oninput="volumeMusic=+this.value;applyVolumes()" data-tip="vol-music"></div>
-      <div class="tray-row-label"><label>SFX</label></div>
-      <div class="tray-row-slider"><input type="range" id="vol-sfx" min="0" max="1" step="0.01" value="1" oninput="volumeSfx=+this.value;applyVolumes()" data-tip="vol-sfx"></div>
-      <div class="tray-row" data-tip="mute-toggle">
-        <label>Mute</label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="mute-toggle" onchange="toggleSound()">
-          <span class="toggle-track"></span>
-        </label>
-      </div>
-    </div>
-    <div class="tray-divider"></div>
-    <div class="tray-section">
-      <div class="tray-heading">Options</div>
-      <div class="tray-row-label"><label>Game Speed</label></div>
-      <div class="speed-slider-wrap">
-        <input type="range" id="speed-slider" min="0" max="1" step="1" value="1" oninput="applySpeedFromSlider(+this.value)" data-tip="speed-slider">
-        <div class="speed-notch-labels" id="speed-notch-labels"></div>
-      </div>
-      <div class="tray-row" data-tip="crt-toggle">
-        <label>CRT Effect</label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="crt-checkbox" onchange="toggleCRT()">
-          <span class="toggle-track"></span>
-        </label>
-      </div>
-      <div class="tray-row-label"><label>Tooltip Delay <span id="tip-delay-value" style="opacity:0.5">400ms</span></label></div>
-      <div class="tray-row-slider">
-        <input type="range" id="tip-delay-slider" min="0" max="1000" step="100" value="400" oninput="setTooltipDelay(+this.value)">
-      </div>
-      <div class="tray-row">
-        <label>Hide Help Tips</label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="hide-help-toggle" onchange="hideHelpTips=this.checked; hideTooltip()">
-          <span class="toggle-track"></span>
-        </label>
-      </div>
-    </div>
-    <div class="tray-bottom">
-      <button class="tray-link" onclick="toggleDevPanel()">Open Dev Panel</button>
-    </div>
   </div>
   <div id="crt-overlay"></div>
   <div id="strike-overlay"><div id="strike-x-graphic">X</div></div>
@@ -3730,6 +3679,7 @@
                 </div>
               </div>
               <div id="endRound"></div>
+              <div id="player-inventory" data-tip="player-inventory"></div>
             </div>
             <div id="message"></div>
           </div>
@@ -3896,6 +3846,20 @@
     </div>
   </div>
 
+  <div id="dialog-backdrop" class="dlg-backdrop">
+    <div class="dlg-panel">
+      <div class="dlg-title"></div>
+      <div class="dlg-body"></div>
+      <div class="dlg-actions"></div>
+    </div>
+  </div>
+  <div id="confirm-backdrop" class="dlg-backdrop">
+    <div class="dlg-panel">
+      <div class="dlg-title"></div>
+      <div class="dlg-body"></div>
+      <div class="dlg-actions"></div>
+    </div>
+  </div>
   </div><!-- /game-root -->
 
   <script>
@@ -4123,17 +4087,18 @@
     }
 
     const sfxCorrect     = new Audio("ding.mp3");
-    const sfxWrong       = new Audio("wrong.mp3");
+    const sfxWrong       = new Audio("newstrike.wav");
     const sfxGoodAnswer  = new Audio("goodanswer.mp3");
     const sfxButtonClick = new Audio("analogbuttonclick.mp3");
     const sfxSurveySays  = new Audio("surveysays.mp3");
     const sfxRoundEnd    = new Audio("roundend.wav");
     const sfxDecreaseBlip = new Audio("decreaseblip.mp3");
     const sfxNeutralBeep = new Audio("neutralbeep.wav");
+    const sfxNegativeBeep = new Audio("negativebeep.wav");
     // Per-track base volume (multiplied with master × sfx gain)
     sfxCorrect.baseVolume    = 0.6;
     sfxWrong.baseVolume      = 0.6;
-    sfxGoodAnswer.baseVolume = 0.6;
+    sfxGoodAnswer.baseVolume = 0.35;
     sfxSurveySays.baseVolume = 0.6;
 
     // ── Tick SFX — Web Audio API for rapid-fire scoring ticks ─────
@@ -4459,7 +4424,7 @@
     }
 
     const bgTracks = [bgMusic];
-    const sfxTracks = [sfxCorrect, sfxWrong, sfxGoodAnswer, sfxSurveySays, sfxRoundEnd, sfxDecreaseBlip, sfxNeutralBeep];
+    const sfxTracks = [sfxCorrect, sfxWrong, sfxGoodAnswer, sfxSurveySays, sfxRoundEnd, sfxDecreaseBlip, sfxNeutralBeep, sfxNegativeBeep];
 
     let soundEnabled = true;
     let volumeMaster = 1, volumeMusic = 1, volumeSfx = 1;
@@ -4596,13 +4561,22 @@
         _tip.desc   = document.getElementById('tooltip-desc');
       }
     }
+    const dynamicTipText = {
+      'board-mult': () => {
+        const v = answerMultiplier;
+        return { flavor: v > 1
+          ? `Your next correct answer gets a ${v.toFixed(1)}x multiplier`
+          : 'No multiplier yet — start a streak!' };
+      },
+    };
     function showTooltip(target, id) {
       _tipEls();
       const data = tooltipData.get(id);
       if (!data) return;
       if (hideHelpTips && data.cls === 'help') return;
-      _tip.flavor.textContent = data.flavor || '';
-      _tip.desc.textContent   = data.description || '';
+      const overrides = dynamicTipText[id]?.() || {};
+      _tip.flavor.textContent = overrides.flavor ?? data.flavor ?? '';
+      _tip.desc.textContent   = overrides.description ?? data.description ?? '';
       _tip.activeTarget = target;
       // Position relative to game canvas, not viewport
       const gameRoot = document.getElementById('game-root');
@@ -4742,14 +4716,77 @@ document.addEventListener('keydown', e => {
     });
 
     let menuOpen = false;
-    function setMenuState(open) {
-      menuOpen = open;
-      document.getElementById('settings-tray').classList.toggle('open', open);
-      document.getElementById('menu-container').classList.toggle('open', open);
-      document.getElementById('menu-btn').classList.toggle('open', open);
-      document.getElementById('menu-backdrop').classList.toggle('active', open);
+    let _settingsTab = 'audio';
+    function switchSettingsTab(name) {
+      _settingsTab = name;
+      document.querySelectorAll('.dlg-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+      document.querySelectorAll('.dlg-tab-panel').forEach(p => p.classList.toggle('active', p.dataset.tab === name));
     }
-    function toggleMenu() { playTap(1, 0.4); setMenuState(!menuOpen); }
+    function openSettingsDialog() {
+      const html = `
+        <div class="dlg-tabs">
+          <button class="dlg-tab ${_settingsTab === 'audio' ? 'active' : ''}" data-tab="audio" onclick="switchSettingsTab('audio')">Audio</button>
+          <button class="dlg-tab ${_settingsTab === 'game' ? 'active' : ''}" data-tab="game" onclick="switchSettingsTab('game')">Game</button>
+          <button class="dlg-tab ${_settingsTab === 'graphics' ? 'active' : ''}" data-tab="graphics" onclick="switchSettingsTab('graphics')">Graphics</button>
+        </div>
+        <div class="dlg-tab-panels">
+        <div class="dlg-tab-panel ${_settingsTab === 'audio' ? 'active' : ''}" data-tab="audio">
+          <div class="tray-row-label"><label>Master</label></div>
+          <div class="tray-row-slider"><input type="range" id="vol-master" min="0" max="1" step="0.01" value="${volumeMaster}" oninput="volumeMaster=+this.value;applyVolumes()" data-tip="vol-master"></div>
+          <div class="tray-row-label"><label>Music</label></div>
+          <div class="tray-row-slider"><input type="range" id="vol-music" min="0" max="1" step="0.01" value="${volumeMusic}" oninput="volumeMusic=+this.value;applyVolumes()" data-tip="vol-music"></div>
+          <div class="tray-row-label"><label>SFX</label></div>
+          <div class="tray-row-slider"><input type="range" id="vol-sfx" min="0" max="1" step="0.01" value="${volumeSfx}" oninput="volumeSfx=+this.value;applyVolumes()" data-tip="vol-sfx"></div>
+          <div class="tray-row" data-tip="mute-toggle">
+            <label>Mute</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="mute-toggle" ${!soundEnabled ? 'checked' : ''} onchange="toggleSound()">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+        <div class="dlg-tab-panel ${_settingsTab === 'game' ? 'active' : ''}" data-tab="game">
+          <div class="tray-row-label"><label>Game Speed</label></div>
+          <div class="speed-slider-wrap">
+            <input type="range" id="speed-slider" min="0" max="${SPEED_NOTCHES.length - 1}" step="1" value="${SPEED_NOTCHES.findIndex(n => n.value === gameSpeedSetting)}" oninput="applySpeedFromSlider(+this.value)" data-tip="speed-slider">
+            <div class="speed-notch-labels" id="speed-notch-labels"></div>
+          </div>
+          <div class="tray-row-label"><label>Tooltip Delay <span id="tip-delay-value" style="opacity:0.5">${tooltipDelay}ms</span></label></div>
+          <div class="tray-row-slider">
+            <input type="range" id="tip-delay-slider" min="0" max="1000" step="100" value="${tooltipDelay}" oninput="setTooltipDelay(+this.value)">
+          </div>
+          <div class="tray-row">
+            <label>Hide Help Tips</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="hide-help-toggle" ${hideHelpTips ? 'checked' : ''} onchange="hideHelpTips=this.checked; hideTooltip()">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+        <div class="dlg-tab-panel ${_settingsTab === 'graphics' ? 'active' : ''}" data-tab="graphics">
+          <div class="tray-row" data-tip="crt-toggle">
+            <label>CRT Effect</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="crt-checkbox" ${crtEnabled ? 'checked' : ''} onchange="toggleCRT()">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+        </div>
+        <div style="text-align:center;padding-top:10px;">
+          <button class="tray-link" onclick="closeDialog();toggleDevPanel()">Open Dev Panel</button>
+        </div>`;
+      showContentDialog('Settings', html);
+      menuOpen = true;
+      _dlg._onClose = () => { menuOpen = false; };
+      buildSpeedSlider();
+      syncSpeedSlider();
+    }
+    function toggleMenu() {
+      playTap(1, 0.4);
+      if (menuOpen) closeDialog();
+      else openSettingsDialog();
+    }
 
     function showAnswerHistory() {
       if (guessHistory.length === 0) {
@@ -4765,13 +4802,6 @@ document.addEventListener('keydown', e => {
       }).join('');
       showContentDialog('Answer History', `<ul class="history-list">${items}</ul>`);
     }
-    document.addEventListener('click', e => {
-      if (menuOpen &&
-          !document.getElementById('menu-container').contains(e.target) &&
-          !document.getElementById('settings-tray').contains(e.target)) {
-        setMenuState(false);
-      }
-    });
 
     function toggleCRT() {
       crtEnabled = document.getElementById('crt-checkbox').checked;
@@ -4791,14 +4821,13 @@ document.addEventListener('keydown', e => {
     function playCorrect(isTopAnswer) {
       playSound(sfxCorrect);
       if (isTopAnswer) {
-        playSound(sfxGoodAnswer);
+        setTimeout(() => playSound(sfxGoodAnswer), 300);
         showTopAnswerOverlay();
       }
     }
 
     function playWrong() {
       playSound(sfxWrong);
-      showStrikeOverlay();
     }
 
     function showTopAnswerOverlay() {
@@ -4858,8 +4887,13 @@ document.addEventListener('keydown', e => {
     }
 
     function computeDevModeQuestions() {
-      // Full question bank — no per-category limit
-      devModeAllowedQuestions = null;
+      const catCount = {};
+      devModeAllowedQuestions = new Set();
+      for (let i = 0; i < questions.length; i++) {
+        const cat = questions[i].category;
+        catCount[cat] = (catCount[cat] || 0) + 1;
+        if (catCount[cat] <= 3) devModeAllowedQuestions.add(i);
+      }
     }
 
     function activateDevMode() {
@@ -4868,7 +4902,8 @@ document.addEventListener('keydown', e => {
 
       // Mute music before starting bg music so the fade-in captures gain=0
       volumeMusic = 0;
-      document.getElementById('vol-music').value = 0;
+      const volMusicEl = document.getElementById('vol-music');
+      if (volMusicEl) volMusicEl.value = 0;
       applyVolumes();
 
       // Dismiss start screen with full animated sequence
@@ -5329,6 +5364,9 @@ document.addEventListener('keydown', e => {
       // Board slides out in parallel with the sidebar sequence
       if (bw && bw.classList.contains("slide-in")) {
         bw.classList.remove("slide-in");
+        bw.style.transform = 'translateY(0)';
+        void bw.offsetWidth;
+        bw.style.transform = '';
         bw.classList.add("offscreen");
         // tap2 near exit (70% of 0.5s transition = ~350ms)
         anim.timer(bw, 350 / gameSpeed, () => playTick(0, { volume: 0.5 }));
@@ -6135,9 +6173,13 @@ document.addEventListener('keydown', e => {
         const x = document.createElement("span");
         x.classList.add("strike-x");
         if (i < strikes) x.classList.add("active");
+        if (i === strikes - 1 && strikes > 0) x.classList.add("strike-new");
         x.textContent = "X";
         s.appendChild(x);
       }
+      // Red glow on 3 strikes
+      const strikeStat = s.closest('.board-stat-value');
+      if (strikeStat) { strikeStat.classList.remove('strikes-fade-out', 'strikes-full'); if (strikes >= 3) strikeStat.classList.add('strikes-full'); }
     }
 
     function rollCategoryMultiplier() {
@@ -6394,16 +6436,12 @@ document.addEventListener('keydown', e => {
       if(stealPhase){
         const idx=currentQuestion.answers.findIndex((ans,i)=>!revealed[i]&&answerMatches(guess,ans));
         const stealingTeam=teamTurn;
-        playSound(sfxSurveySays);
         const submitBtn=document.getElementById("turn-submit-btn");
         const guessInput=document.getElementById("guess");
         if(submitBtn) submitBtn.disabled=true;
         if(guessInput) guessInput.disabled=true;
-        setTimeout(async ()=>{
-          if(submitBtn) submitBtn.disabled=false;
-          if(guessInput) { guessInput.disabled=false; guessInput.focus(); }
-          deactivateSpeedBoost();
-          if(idx!==-1){
+        deactivateSpeedBoost();
+        {if(idx!==-1){
             const stealAns=currentQuestion.answers[idx];
             const stealMult=answerMultiplier;
             const stealTotal=Math.round(stealAns.points*stealMult);
@@ -6421,7 +6459,20 @@ document.addEventListener('keydown', e => {
               if(!checkForWinner())endRound(`🎉 <span class="${stealingTeam===0?"red":"blue"}">${teamNames[stealingTeam]}</span> stole ${final} points!`,stealingTeam);
             });
           } else {
-            playWrong();
+            playSound(sfxNegativeBeep);
+            const bw = document.getElementById('board-wrapper');
+            if (bw) bw.animate([
+              { transform: 'translateX(0)' },
+              { transform: 'translateX(-8px)' },
+              { transform: 'translateX(8px)' },
+              { transform: 'translateX(-6px)' },
+              { transform: 'translateX(6px)' },
+              { transform: 'translateX(-3px)' },
+              { transform: 'translateX(3px)' },
+              { transform: 'translateX(0)' }
+            ], { duration: 500, easing: 'ease', composite: 'add' });
+            const strikeStat = document.getElementById('strikes')?.closest('.board-stat-value');
+            if (strikeStat) strikeStat.classList.replace('strikes-full', 'strikes-fade-out');
             guessHistory.push({player:playerName,team:stealingTeam,guess:guess,result:"✗ Wrong (steal)"});
             updateHistory();
             awardRoundScore(1-stealingTeam, (final) => {
@@ -6434,7 +6485,7 @@ document.addEventListener('keydown', e => {
               if(!checkForWinner())endRound(`✅ <span class="${keepTeam===0?"red":"blue"}">${teamNames[keepTeam]}</span> keeps ${final} points!`,keepTeam);
             });
           }
-        },1500);
+        }
         return;}
       let foundIdx=-1;let foundTotal=0;let foundMult=answerMultiplier;currentQuestion.answers.forEach((ans,i)=>{if(answerMatches(guess,ans)&&!revealed[i]){revealed[i]=true;
         foundMult=answerMultiplier;foundTotal=Math.round(ans.points*foundMult);roundScore+=foundTotal;revealedData[i]={mult:foundMult,earnedTotal:foundTotal};

@@ -24,3 +24,4 @@ next-round,evergreen,,Move on to the next round
 score-edit,evergreen,"""Ya gotta give""",Manually add or subtract points to correct a scoring error
 speed-slider,evergreen,"""We're the ones who run!""",Controls how fast some animations and scoring sequences play out
 crt-toggle,evergreen,See the world wildly in a wild way,Toggle the CRT scanline overlay effect
+player-inventory,evergreen,Placeholder,Items/Relics will go here once feature is built

@@ -703,6 +703,22 @@
       color: #fba300;
       font-weight: 700;
     }
+    .lobby-setting-btn {
+      cursor: pointer;
+      user-select: none;
+      transition: opacity 0.15s ease;
+    }
+    .lobby-setting-btn:hover { opacity: 0.7; }
+    .lobby-speed-arrows {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .lobby-speed-arrows .lobby-setting-btn {
+      font-size: 0.7rem;
+      opacity: 0.6;
+    }
+    .lobby-speed-arrows .lobby-setting-btn:hover { opacity: 1; }
     .lobby-start-btn {
       padding: 14px 48px;
       background: #fba300;
@@ -4603,6 +4619,10 @@
       const speedInput = document.getElementById('speedInput');
       if (speedInput) speedInput.value = notch.value;
       syncSpeedStepper();
+      // Broadcast to all players in multiplayer
+      if (isMultiplayer && isHost && gameRef) {
+        syncState({ gameSpeed: notch.value });
+      }
     }
 
     /** Build the speed slider's range and notch labels from SPEED_NOTCHES. */
@@ -5815,11 +5835,14 @@ document.addEventListener('keydown', e => {
           </div>
         </div>
         <div class="dlg-tab-panel ${_settingsTab === 'game' ? 'active' : ''}" data-tab="game">
-          <div class="tray-row-label"><label>Game Speed</label></div>
-          <div class="speed-slider-wrap">
-            <input type="range" id="speed-slider" min="0" max="${SPEED_NOTCHES.length - 1}" step="1" value="${SPEED_NOTCHES.findIndex(n => n.value === gameSpeedSetting)}" oninput="applySpeedFromSlider(+this.value)" data-tip="speed-slider">
-            <div class="speed-notch-labels" id="speed-notch-labels"></div>
+          <div style="${isMultiplayer && !isHost ? 'opacity:0.7;' : ''}">
+            <div class="tray-row-label"><label>Game Speed</label></div>
+            <div class="speed-slider-wrap">
+              <input type="range" id="speed-slider" min="0" max="${SPEED_NOTCHES.length - 1}" step="1" value="${SPEED_NOTCHES.findIndex(n => n.value === gameSpeedSetting)}" oninput="applySpeedFromSlider(+this.value)" data-tip="speed-slider" ${isMultiplayer && !isHost ? 'disabled' : ''}>
+              <div class="speed-notch-labels" id="speed-notch-labels"></div>
+            </div>
           </div>
+          ${isMultiplayer && !isHost ? '<div style="font-size:0.75rem; color:rgba(255,255,255,0.4); margin-top:-4px; margin-bottom:8px;">Host controls game speed during online play</div>' : ''}${isMultiplayer && isHost ? '<div style="font-size:0.75rem; color:rgba(255,255,255,0.4); margin-top:-4px; margin-bottom:8px;">Your game speed setting impacts all players in this session</div>' : ''}
           <div class="tray-row-label"><label>Tooltip Delay <span id="tip-delay-value" style="opacity:0.5">${tooltipDelay}ms</span></label></div>
           <div class="tray-row-slider">
             <input type="range" id="tip-delay-slider" min="0" max="1000" step="100" value="${tooltipDelay}" oninput="setTooltipDelay(+this.value)">
@@ -5998,6 +6021,11 @@ document.addEventListener('keydown', e => {
     let _lastWriteId = 0;     // monotonic counter to detect self-echoes
     let _prevSnapshot = null; // last Firestore snapshot data for diffing
 
+    // ── Ready-Up Consensus ──
+    let _readyPlayersMap = {};       // { uid: true } — who has clicked Ready
+    let _readyCountdownEnd = null;   // Date.now() + 10000 when countdown starts
+    let _readyCountdownInterval = null; // setInterval ID for countdown ticks
+
     async function syncState(updates) {
       if (!isMultiplayer || !gameRef) return;
       _lastWriteId++;
@@ -6016,7 +6044,7 @@ document.addEventListener('keydown', e => {
           }
           return out;
         }
-        if (obj && typeof obj === 'object') {
+        if (obj && typeof obj === 'object' && Object.getPrototypeOf(obj) === Object.prototype) {
           const out = {};
           for (const [k, v] of Object.entries(obj)) {
             if (v === undefined) out[k] = null;
@@ -6050,6 +6078,23 @@ document.addEventListener('keydown', e => {
           isSelfEcho: data._writerUid === myUid,
           myLastWriteId: _lastWriteId,
         });
+        // Host-only: process pending actions from non-host clients.
+        // These are raw inputs (category clicks, guesses) that the host
+        // evaluates and syncs the result back to all clients.
+        if (isHost && data.pendingAction && data.pendingAction.uid !== myUid) {
+          const action = data.pendingAction;
+          console.log('[multi] host processing pendingAction:', action);
+          // Clear the pending action first to prevent re-processing
+          syncState({ pendingAction: null });
+          if (action.type === 'selectCategory') {
+            hostProcessCategorySelect(action.category);
+          } else if (action.type === 'guess') {
+            hostProcessGuess(action.guess, action.uid);
+          }
+          _prevSnapshot = data;
+          return; // Host's state write will trigger a new snapshot for reconciliation
+        }
+
         // Skip ALL self-echoes: if this write came from us, we already
         // applied the changes locally. The old check (matching _writeId)
         // broke when stale echoes arrived after _lastWriteId had advanced,
@@ -6083,81 +6128,65 @@ document.addEventListener('keydown', e => {
         writeId: data._writeId,
       });
 
-      // ── Scores ──
-      if (data.teamScores) {
-        const changed = !prev || data.teamScores[0] !== prev.teamScores?.[0]
-                                || data.teamScores[1] !== prev.teamScores?.[1];
-        if (changed) {
-          teamScores = [...data.teamScores];
-          updateScores();
-        }
-      }
+      // Look ahead: will flipTile run for a newly revealed tile?
+      // If so, skip immediate display updates for streak/mult/roundScore —
+      // flipTile's scoring sequence will animate them properly.
+      const hasNewTileReveal = data.revealed && prev?.revealed &&
+        data.lastResult && data.lastResult.tileIdx !== undefined &&
+        data.revealed.some((r, i) => r && !prev.revealed[i] &&
+          data.lastResult.tileIdx === i);
 
-      // ── Strikes ──
-      if (data.strikes !== undefined && data.strikes !== (prev?.strikes ?? 0)) {
-        strikes = data.strikes;
-        updateStrikes();
-      }
+      // ═══════════════════════════════════════════════════════════
+      // PHASE 1: Update all state variables BEFORE any UI calls.
+      // This ensures updateTurn/updateRoleUI see consistent state.
+      // ═══════════════════════════════════════════════════════════
 
-      // ── Streak / multiplier ──
-      if (data.currentStreak !== undefined) {
-        currentStreak = data.currentStreak;
-        answerMultiplier = data.answerMultiplier ?? 1.0;
-        updateStreakDisplay();
-      }
-
-      // ── Round score ──
-      if (data.roundScore !== undefined) {
-        roundScore = data.roundScore;
-        updateBoardRoundTotal();
-      }
-
-      // ── Revealed answers ──
-      if (data.revealed && prev?.revealed) {
-        // Find newly revealed tiles
-        data.revealed.forEach((r, i) => {
-          if (r && !prev.revealed[i]) {
-            // A new tile was revealed by the active player
-            revealed[i] = true;
-            if (data.revealedData?.[i]) revealedData[i] = data.revealedData[i];
-            const lastResult = data.lastResult;
-            if (lastResult && lastResult.tileIdx === i) {
-              flipTile(i, 'correct', lastResult.points, lastResult.mult);
-            } else {
-              // Rebuild board to show the reveal (missed tiles, etc.)
-              updateBoard();
-            }
-          }
-        });
-      }
-
-      // ── Steal phase ──
-      if (data.stealPhase !== undefined && data.stealPhase !== (prev?.stealPhase ?? false)) {
-        stealPhase = data.stealPhase;
-        if (stealPhase) {
-          teamTurn = data.teamTurn ?? teamTurn;
-          updateTurn();
-        }
+      // ── Player index (turn rotation) — must be before any updateTurn calls ──
+      const playerIndexChanged = data.playerIndex && (
+        !prev?.playerIndex ||
+        data.playerIndex[0] !== prev.playerIndex[0] ||
+        data.playerIndex[1] !== prev.playerIndex[1]
+      );
+      if (data.playerIndex) {
+        playerIndex = [...data.playerIndex];
       }
 
       // ── Team turn ──
-      if (data.teamTurn !== undefined && data.teamTurn !== (prev?.teamTurn ?? 0)) {
+      const teamTurnChanged = data.teamTurn !== undefined && data.teamTurn !== (prev?.teamTurn ?? 0);
+      if (teamTurnChanged) {
         teamTurn = data.teamTurn;
-        updateTurn();
       }
 
-      // ── Phase transitions ──
-      if (data.phase && data.phase !== prev?.phase) {
-        handlePhaseTransition(data);
+      // ── Steal phase ──
+      const stealChanged = data.stealPhase !== undefined && data.stealPhase !== (prev?.stealPhase ?? false);
+      if (stealChanged) {
+        stealPhase = data.stealPhase;
+        if (stealPhase && data.teamTurn !== undefined) teamTurn = data.teamTurn;
       }
 
-      // ── Current question (new round / category picked) ──
-      if (data.currentQuestion && !prev?.currentQuestion) {
-        currentQuestion = data.currentQuestion;
-        revealed = data.revealed || new Array(currentQuestion.answers.length).fill(false);
-        revealedData = data.revealedData || new Array(currentQuestion.answers.length).fill(null);
-        categoryMultiplier = data.categoryMultiplier || 1;
-        updateBoard();
+      // ── Scores (state only) ──
+      const scoresChanged = data.teamScores && (!prev || data.teamScores[0] !== prev.teamScores?.[0]
+                                                       || data.teamScores[1] !== prev.teamScores?.[1]);
+      if (scoresChanged) {
+        teamScores = [...data.teamScores];
+      }
+
+      // ── Strikes (state only) ──
+      const newStrike = data.strikes !== undefined && data.strikes > (prev?.strikes ?? 0);
+      const strikesChanged = data.strikes !== undefined && data.strikes !== (prev?.strikes ?? 0);
+      if (strikesChanged) {
+        strikes = data.strikes;
+      }
+
+      // ── Streak / multiplier (state only) ──
+      if (data.currentStreak !== undefined) {
+        currentStreak = data.currentStreak;
+        answerMultiplier = data.answerMultiplier ?? 1.0;
+      }
+
+      // ── Round score (state only) ──
+      if (data.roundScore !== undefined) {
+        roundScore = data.roundScore;
       }
 
       // ── Guess history ──
@@ -6175,9 +6204,102 @@ document.addEventListener('keydown', e => {
         roundNumber = data.roundNumber;
       }
 
-      // ── Active player ──
+      // ── Game speed ──
+      if (data.gameSpeed !== undefined && data.gameSpeed !== (prev?.gameSpeed ?? gameSpeedSetting)) {
+        gameSpeedSetting = data.gameSpeed;
+        setGameSpeed(gameSpeedSetting);
+        syncSpeedSlider();
+      }
+
+      // ── Current question (new round / category picked) ──
+      if (data.currentQuestion && !prev?.currentQuestion) {
+        currentQuestion = data.currentQuestion;
+        revealed = data.revealed || new Array(currentQuestion.answers.length).fill(false);
+        revealedData = data.revealedData || new Array(currentQuestion.answers.length).fill(null);
+        categoryMultiplier = data.categoryMultiplier || 1;
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // PHASE 2: UI updates — all state is now consistent.
+      // ═══════════════════════════════════════════════════════════
+
+      if (scoresChanged) updateScores();
+      if (strikesChanged) {
+        updateStrikes();
+        // Play wrong answer SFX for non-host clients (host plays it in submitGuess)
+        if (newStrike) playWrong();
+      }
+
+      // Streak/mult display
+      if (data.currentStreak !== undefined) {
+        if (hasNewTileReveal) {
+          // flipTile will handle the display
+        } else if (newStrike) {
+          updateStreakDisplay({ afterStrike: true });
+        } else {
+          updateStreakDisplay();
+        }
+      }
+
+      if (data.roundScore !== undefined && !hasNewTileReveal) {
+        updateBoardRoundTotal();
+      }
+
+      // Revealed answers (tile animations + SFX)
+      if (data.revealed && prev?.revealed) {
+        data.revealed.forEach((r, i) => {
+          if (r && !prev.revealed[i]) {
+            revealed[i] = true;
+            if (data.revealedData?.[i]) revealedData[i] = data.revealedData[i];
+            const lastResult = data.lastResult;
+            if (lastResult && lastResult.tileIdx === i) {
+              // Play correct answer SFX (host plays it in submitGuess, non-host needs it here)
+              playCorrect(i === 0);
+              flipTile(i, 'correct', lastResult.points, lastResult.mult);
+            } else {
+              updateBoard();
+            }
+          }
+        });
+      }
+
+      // New question board
+      if (data.currentQuestion && !prev?.currentQuestion) {
+        updateBoard();
+      }
+
+      // Turn UI — single consolidated call with correct state
+      if (teamTurnChanged || stealChanged || playerIndexChanged) {
+        updateTurn();
+      }
+
+      // Phase transitions
+      if (data.phase && data.phase !== prev?.phase) {
+        handlePhaseTransition(data);
+      }
+
+      // Active player role UI — LAST, after all state and phase updates
       if (data.activePlayerUid) {
         updateRoleUI(data.activePlayerUid);
+      }
+
+      // ── Ready-up consensus ──
+      if (data.readyPlayers !== undefined) {
+        const newMap = data.readyPlayers || {};
+        const changed = JSON.stringify(newMap) !== JSON.stringify(_readyPlayersMap);
+        if (changed) {
+          _readyPlayersMap = { ...newMap };
+          // Disable the Ready Up button if this client already readied
+          if (_readyPlayersMap[myUid]) {
+            const readyBtn = document.querySelector('#turn-body .input-btn:last-of-type');
+            if (readyBtn) { readyBtn.style.pointerEvents = 'none'; readyBtn.style.filter = 'brightness(0.5)'; }
+          }
+          updateReadyStatus();
+          checkReadyAdvance();
+        }
+      }
+      if (data.readyCountdown && !_readyCountdownEnd) {
+        startReadyCountdown(data.readyCountdown);
       }
     }
 
@@ -6185,8 +6307,9 @@ document.addEventListener('keydown', e => {
     function handlePhaseTransition(data) {
       switch (data.phase) {
         case 'category-select':
-          // Spectator: show category selection using synced picks from Firestore
-          if (data.activePlayerUid !== myUid && data.categoryPicks) {
+          // Non-host clients: show category selection using synced picks from Firestore.
+          // Self-echo skip (line ~6085) already prevents the host from re-processing.
+          if (data.categoryPicks) {
             // Update round state before showing categories
             if (data.roundNumber !== undefined) roundNumber = data.roundNumber;
             if (data.teamTurn !== undefined) teamTurn = data.teamTurn;
@@ -6198,28 +6321,48 @@ document.addEventListener('keydown', e => {
           }
           break;
         case 'gameplay':
-          // Category was picked — spectator needs to build the full question screen
-          if (data.currentQuestion && data.activePlayerUid !== myUid) {
+          // Category was picked — all non-picker clients build the question screen.
+          // Self-echo skip prevents the picker from re-processing their own write.
+          if (data.currentQuestion) {
             currentQuestion = data.currentQuestion;
             revealed = data.revealed || new Array(currentQuestion.answers.length).fill(false);
             revealedData = new Array(currentQuestion.answers.length).fill(null);
             categoryMultiplier = data.categoryMultiplier || 1;
             if (data.usedQuestions) usedQuestions = [...data.usedQuestions];
-            // Build the question screen on the spectator side
-            setupQuestionScreenForSpectator();
+            // Animate category pills exit, then build question screen
+            animateSpectatorCategoryExit().then(() => setupQuestionScreenForSpectator());
           }
           break;
         case 'steal':
           stealPhase = true;
           teamTurn = data.teamTurn;
+          if (data.playerIndex) playerIndex = [...data.playerIndex];
           updateTurn();
-          setPhaseText("steal-chance", `${teamNames[teamTurn]} can steal!`);
+          const stealPlayerName = teamPlayers[teamTurn]?.[playerIndex[teamTurn] % teamPlayers[teamTurn]?.length];
+          setPhaseText("steal-chance", `${stealPlayerName || teamNames[teamTurn]} can steal!`);
           setPhaseTeamColor(teamTurn);
           setPhase("steal-chance", { knock: true });
           break;
         case 'round-result':
-          // Round ended — show results
+          // Round ended — show results on all clients
           if (data.roundResultMsg) {
+            // Set data-phase synchronously so updateRoleUI (which runs later
+            // in the same reconcile) sees round-result and doesn't hide buttons.
+            // setPhase() is async (awaits exit animation) so we can't rely on it.
+            document.getElementById('phase-indicator').dataset.phase = 'round-result';
+            const scoringTeam = data.roundWinner ?? 0;
+            if (data.roundPhaseText) setPhaseText("round-result", data.roundPhaseText);
+            setPhaseTeamColor(scoringTeam);
+            setPhase("round-result");
+            // Ensure input area is visible (spectator may have it hidden)
+            const ia = document.getElementById("input-area");
+            if (ia) ia.classList.remove("hidden");
+            const szi = document.getElementById("sq-zone-input");
+            if (szi) {
+              szi.classList.remove("offscreen-below");
+              if (!szi.classList.contains("input-enter")) szi.classList.add("input-enter");
+            }
+            document.getElementById("turn-input-box").style.display = "";
             endRound(data.roundResultMsg, data.roundWinner);
           }
           break;
@@ -6228,6 +6371,32 @@ document.addEventListener('keydown', e => {
 
     // Set up the question/gameplay screen for a spectator who received
     // the question via Firestore (mirrors the post-animation state of pickCategory)
+    async function animateSpectatorCategoryExit() {
+      const rows = document.querySelectorAll("#category-pills-area .cat-row");
+      const divider = document.querySelector("#category-pills-area .pills-divider");
+      const allItems = [...rows];
+      if (divider) allItems.push(divider);
+
+      if (allItems.length === 0) return;
+
+      // Stagger all items out to the left (same animation as Path A in animateCategoryTransition)
+      const durExit = 0.3 / gameSpeed;
+      const staggerGap = TIMING.catRowExitStagger / gameSpeed / 1000;
+      allItems.forEach((el, i) => {
+        el.style.animationDelay = '';
+        el.style.animation = `cat-slide-out-left ${durExit}s ease-in ${i * staggerGap}s both`;
+      });
+
+      // Spin out any badges
+      document.querySelectorAll("#category-pills-area .cat-mult-badge").forEach(b => {
+        b.style.animation = `badge-spin-out 0.4s forwards`;
+      });
+
+      // Wait for last item to finish
+      const totalTime = ((allItems.length - 1) * staggerGap + durExit) * 1000;
+      await anim.wait(totalTime * gameSpeed); // anim.wait divides by gameSpeed internally
+    }
+
     function setupQuestionScreenForSpectator() {
       if (!currentQuestion) return;
 
@@ -6240,7 +6409,7 @@ document.addEventListener('keydown', e => {
       setPhaseTeamColor(teamTurn);
       setPhase("gameplay");
 
-      // Build cat-label inside content-tv
+      // Build cat-label inside content-tv (same logic as pickCategory)
       const contentTv = document.getElementById("content-tv");
       const questionBox = document.getElementById("question-box");
       if (contentTv) {
@@ -6260,51 +6429,63 @@ document.addEventListener('keydown', e => {
         const duration = (halfCopies * estUnitWidth) / 30;
         label.querySelector(".marquee-scroll").style.setProperty("--marquee-duration", `${duration.toFixed(1)}s`);
         contentTv.insertBefore(label, questionBox);
-
-        // Show content-tv (skip CRT animation for spectator — just reveal)
-        contentTv.classList.remove("ct-hidden", "slide-out-left");
-        contentTv.classList.add("tv-on");
       }
-
-      // Set question text (no typewriter for spectator — instant display)
-      const questionEl = document.getElementById("question");
-      if (questionEl) {
-        fitByCharCount(questionEl, 48, currentQuestion.question, 0.5);
-        questionEl.textContent = currentQuestion.question;
-        questionEl.classList.add("typed");
-      }
-      document.getElementById("questionActions").style.display = "flex";
 
       // Category multiplier badge in board footer
       if (categoryMultiplier > 1) {
         const boardFooter = document.querySelector(".board-footer");
-        if (boardFooter) {
+        const bwEl = document.getElementById("board-wrapper");
+        if (boardFooter && bwEl) {
           const coinClass = categoryMultiplier >= 3 ? 'coin-gold' : categoryMultiplier >= 2 ? 'coin-silver' : 'coin-bronze';
           const tipId = categoryMultiplier >= 3 ? 'cat-mult-3x' : categoryMultiplier >= 2 ? 'cat-mult-2x' : 'cat-mult-1-5x';
           const badge = document.createElement("div");
-          badge.className = `cat-mult-badge board-badge ${coinClass} badge-visible`;
+          badge.className = `cat-mult-badge board-badge ${coinClass}`;
           badge.textContent = categoryMultiplier + "x";
           badge.dataset.tip = tipId;
           boardFooter.appendChild(badge);
+          anim.done(bwEl).then(() => badge.classList.add("badge-visible"));
         }
       }
 
-      // Show board
+      // Prepare question text for typewriter (set fit scale before streaming)
+      const questionEl = document.getElementById("question");
+      fitByCharCount(questionEl, 48, currentQuestion.question, 0.5);
+      questionEl.textContent = "";
+
+      // State updates
       updateBoard(); updateScores(); updateStrikes(); updateStreakDisplay(); updateHistory(); updateTurn();
+      document.getElementById("questionActions").style.display = "flex";
+      document.getElementById("input-area").classList.remove("hidden");
+
+      // Board slides in (parallel with content-tv sequence)
       const bw = document.getElementById("board-wrapper");
       if (bw) {
-        bw.classList.remove("offscreen");
-        bw.classList.add("slide-in", "board-ready");
+        bw.classList.remove("offscreen", "board-ready");
+        bw.classList.add("slide-in");
+        anim.done(bw).then(() => bw.classList.add("board-ready"));
       }
 
-      // Show input area — rebuild turn body with proper 3D buttons
-      const szi = document.getElementById("sq-zone-input");
-      if (szi) {
-        szi.classList.remove("offscreen-below");
-        szi.classList.add("input-enter");
-      }
-      document.getElementById("input-area").classList.remove("hidden");
-      // Re-init 3D button hover listeners (DOM was rebuilt by initRoundState)
+      // Question-phase entry sequence — mirrors pickCategory's anim.sequence:
+      //   1. content-tv tv-on CRT effect
+      //   2. question text typewriters in
+      //   3. sq-zone-input slides up from below
+      const sziEl = document.getElementById("sq-zone-input");
+      anim.sequence([
+        async () => {
+          if (!contentTv) return;
+          contentTv.classList.remove("ct-hidden", "slide-out-left");
+          contentTv.classList.add("tv-on");
+          await anim.done(contentTv);
+        },
+        () => typewriter(questionEl, currentQuestion.question),
+        async () => {
+          if (!sziEl) return;
+          sziEl.classList.remove("offscreen-below");
+          sziEl.classList.add("input-enter");
+          await anim.done(sziEl);
+        },
+      ]);
+
       setup3dBtns();
     }
 
@@ -6322,12 +6503,16 @@ document.addEventListener('keydown', e => {
       }
 
       // Hide submit button for spectators (opacity on 3D buttons breaks face rendering)
-      const submitBtns = inputArea?.querySelectorAll('.input-btn');
-      if (submitBtns) {
-        submitBtns.forEach(btn => {
-          btn.style.pointerEvents = isActive ? '' : 'none';
-          btn.style.visibility = isActive ? '' : 'hidden';
-        });
+      // But NOT during round-result phase — all players need Ready Up / Reveal All
+      const inRoundResult = document.getElementById('phase-indicator')?.dataset.phase === 'round-result';
+      if (!inRoundResult) {
+        const submitBtns = inputArea?.querySelectorAll('.input-btn');
+        if (submitBtns) {
+          submitBtns.forEach(btn => {
+            btn.style.pointerEvents = isActive ? '' : 'none';
+            btn.style.visibility = isActive ? '' : 'hidden';
+          });
+        }
       }
 
       // Category pills interactivity
@@ -6893,8 +7078,8 @@ document.addEventListener('keydown', e => {
           teamTurn, teamPlayerUids: teamPlayerUids.map(t => t.map(u => u.substring(0,8))),
         });
       }
-      if (isMultiplayer && !amIActivePlayer()) {
-        // Spectator: show a waiting state until category picks arrive
+      if (isMultiplayer && !isHost) {
+        // Non-host: show a waiting state until host syncs category picks
         document.getElementById("sidebar-category-select").style.display = "flex";
         document.getElementById("sidebar-question-answer").style.display = "none";
         document.getElementById("input-area").classList.add("hidden");
@@ -6954,16 +7139,28 @@ document.addEventListener('keydown', e => {
     }
 
     // Shared data for synced category display in multiplayer
-    let _syncedCategoryPicks = null; // { picks: [...], hasSurvey, multipliers: {} }
+    let _syncedCategoryPicks = null; // { picks: [...], hasSurvey, multipliers: {}, questions: {} }
+    let _preSelectedQuestions = null; // { category: { question, answers, _poolIdx } }
 
     function showCategorySelection(syncedData) {
+      // The pills area uses blend-multiply (::before with mix-blend-mode).
+      // On innerHTML rebuild, the ::before flashes at full opacity before
+      // the blend composites. Fix: set opacity 0, rebuild, show panel,
+      // then transition opacity to 1 over 150ms — masks the flash entirely.
+      const pillsAreaRef = document.getElementById("category-pills-area");
+      if (pillsAreaRef) {
+        pillsAreaRef.style.transition = 'none';
+        pillsAreaRef.style.opacity = '0';
+      }
+
       let picks, hasSurvey;
 
       if (syncedData) {
-        // Spectator path: use data from Firestore
+        // Non-host path: use data from Firestore
         picks = syncedData.picks;
         hasSurvey = syncedData.hasSurvey;
         categoryMultipliers = syncedData.multipliers || {};
+        _preSelectedQuestions = syncedData.questions || {};
       } else {
         // Active player (or local mode): generate randomly
         const remainingIdx = questions.map((q, idx) => !usedQuestions.includes(idx) && (!devModeAllowedQuestions || devModeAllowedQuestions.has(idx)) ? idx : null).filter(i => i !== null);
@@ -6983,9 +7180,33 @@ document.addEventListener('keydown', e => {
         if (hasSurvey) allPicks.push('Survey');
         allPicks.forEach(cat => { categoryMultipliers[cat] = rollCategoryMultiplier(); });
 
-        // In multiplayer, sync picks + round state so spectators see the same categories
+        // Pre-select a random question per category so the question is ready
+        // when a player clicks. Only the chosen category's question gets added
+        // to usedQuestions — the others return to the pool automatically.
+        const preSelectedQuestions = {};
+        allPicks.forEach(cat => {
+          const pool = questions.map((q, idx) => ({ q, idx }))
+            .filter(obj => !usedQuestions.includes(obj.idx) && obj.q.category === cat && (!devModeAllowedQuestions || devModeAllowedQuestions.has(obj.idx)));
+          if (pool.length > 0) {
+            const choice = pool[Math.floor(Math.random() * pool.length)];
+            preSelectedQuestions[cat] = {
+              question: choice.q.question,
+              category: choice.q.category,
+              answers: choice.q.answers.map(a => ({
+                text: a.text, display: a.display, points: a.points,
+                variants: a.variants || []
+              })),
+              _poolIdx: choice.idx
+            };
+          }
+        });
+
+        // Store pre-selected questions for pickCategory to use
+        _preSelectedQuestions = preSelectedQuestions;
+
+        // In multiplayer, sync picks + questions + round state so all clients have everything
         if (isMultiplayer) {
-          _syncedCategoryPicks = { picks, hasSurvey, multipliers: { ...categoryMultipliers } };
+          _syncedCategoryPicks = { picks, hasSurvey, multipliers: { ...categoryMultipliers }, questions: preSelectedQuestions };
           syncState({
             categoryPicks: _syncedCategoryPicks,
             phase: 'category-select',
@@ -7002,13 +7223,24 @@ document.addEventListener('keydown', e => {
             answerMultiplier: 1.0,
             stealPhase: false,
             lastResult: null,
+            readyPlayers: {},
+            readyCountdown: null,
+            guessHistory: [],
+            pendingAction: null,
+            playerIndex: [...playerIndex],
           });
         }
       }
 
-      // Populate team prompt via phase indicator
-      const teamName = teamNames[teamTurn];
-      setPhaseText("category-select", `${teamName}, select a category:`);
+      // Clear local ready state
+      _readyPlayersMap = {};
+      if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
+      _readyCountdownEnd = null;
+
+      // Populate team prompt via phase indicator — show active player's name
+      const catPlayer = teamPlayers[teamTurn]?.[playerIndex[teamTurn] % (teamPlayers[teamTurn]?.length || 1)];
+      const catPromptName = catPlayer || teamNames[teamTurn];
+      setPhaseText("category-select", `${catPromptName}, select a category:`);
       setPhaseTeamColor(teamTurn);
       // Delay the phase assignment a beat after container slide-in at game
       // start so the container arrives empty and text slides in second.
@@ -7036,7 +7268,7 @@ document.addEventListener('keydown', e => {
         // Category class on BOTH the row and the button so the row
         // inherits the `--cat-face` / `--cat-solid` CSS variables for
         // its own glow/CRT animations during Path B exit.
-        return `<div class="cat-row${cc ? ' ' + cc : ''}" data-tip="cat-pill"><button class="cat-select-btn btn-3d${cc ? ' ' + cc : ''}" onclick="pickCategory('${cat.replace(/'/g,"\\'")}')">${s}</button>${badge}</div>`;
+        return `<div class="cat-row${cc ? ' ' + cc : ''}" data-tip="cat-pill"><button class="cat-select-btn btn-3d${cc ? ' ' + cc : ''}" onclick="onCategoryClick('${cat.replace(/'/g,"\\'")}')">${s}</button>${badge}</div>`;
       };
       let pillsHtml = '<div class="trivia-categories">';
       picks.forEach(c => { pillsHtml += makeBtn(c, c); });
@@ -7119,9 +7351,28 @@ document.addEventListener('keydown', e => {
       // While parent is display:none, CSS animations don't start (no box
       // generated). Flipping to display:flex here causes all cat-row
       // animations to begin with their stagger delays already in place.
+      //
+      // The pills area uses blend-multiply (::before with mix-blend-mode).
+      // On display toggle, the ::before renders at full opacity for one frame
+      // before the blend composites. Hide the ::before via opacity:0, show
+      // the panel, then restore on the next frame.
       document.getElementById("sidebar-category-select").style.display = "flex";
       document.getElementById("sidebar-question-answer").style.display = "none";
       document.getElementById("input-area").classList.add("hidden");
+      // Fade in the pills area to mask blend-multiply composite flash.
+      // The 150ms transition covers any frames where ::before renders
+      // at full opacity before mix-blend-mode kicks in.
+      if (pillsAreaRef) {
+        requestAnimationFrame(() => {
+          pillsAreaRef.style.transition = 'opacity 0.15s ease';
+          pillsAreaRef.style.opacity = '1';
+          // Clean up inline styles after transition
+          pillsAreaRef.addEventListener('transitionend', () => {
+            pillsAreaRef.style.removeProperty('transition');
+            pillsAreaRef.style.removeProperty('opacity');
+          }, { once: true });
+        });
+      }
 
       // Hide board wrapper during category selection
       const bw = document.getElementById("board-wrapper");
@@ -7249,12 +7500,50 @@ document.addEventListener('keydown', e => {
       return selectedRow;
     }
 
+    // Route category clicks: host runs pickCategory locally, non-host submits a pendingAction
+    function onCategoryClick(category) {
+      if (!isMultiplayer || isHost) {
+        // Local mode or host: run directly
+        pickCategory(category);
+      } else {
+        // Non-host: submit action for host to process
+        syncState({ pendingAction: { type: 'selectCategory', category, uid: myUid } });
+        // Disable category buttons to prevent double-clicks while waiting
+        document.querySelectorAll('.cat-row').forEach(r => { r.style.pointerEvents = 'none'; r.style.opacity = '0.6'; });
+      }
+    }
+
+    // Host processes a category selection from any client (including itself via direct call)
+    function hostProcessCategorySelect(category) {
+      // pickCategory handles everything: question setup, animations, and Firestore sync
+      pickCategory(category);
+    }
+
+    // Host processes a guess submitted by a non-host player
+    function hostProcessGuess(guess, guesserUid) {
+      // Inject the guess into the input field and run submitGuess.
+      // submitGuess reads from the input, evaluates, animates, and syncs.
+      const input = document.getElementById("guess");
+      if (input) {
+        input.value = guess;
+        submitGuess();
+      }
+    }
+
     async function pickCategory(category) {
-      const pool = questions.map((q, idx) => ({q, idx}))
-        .filter(obj => !usedQuestions.includes(obj.idx) && obj.q.category === category && (!devModeAllowedQuestions || devModeAllowedQuestions.has(obj.idx)));
-      if (pool.length === 0) { document.getElementById("question").textContent = "No questions left in this category."; return; }
-      const choice = pool[Math.floor(Math.random() * pool.length)];
-      currentQuestion = choice.q; usedQuestions.push(choice.idx);
+      // Use pre-selected question if available (multiplayer + local with pre-selection)
+      if (_preSelectedQuestions && _preSelectedQuestions[category]) {
+        const pre = _preSelectedQuestions[category];
+        currentQuestion = pre;
+        if (pre._poolIdx !== undefined) usedQuestions.push(pre._poolIdx);
+      } else {
+        // Fallback: random selection (shouldn't normally reach here)
+        const pool = questions.map((q, idx) => ({q, idx}))
+          .filter(obj => !usedQuestions.includes(obj.idx) && obj.q.category === category && (!devModeAllowedQuestions || devModeAllowedQuestions.has(obj.idx)));
+        if (pool.length === 0) { document.getElementById("question").textContent = "No questions left in this category."; return; }
+        const choice = pool[Math.floor(Math.random() * pool.length)];
+        currentQuestion = choice.q; usedQuestions.push(choice.idx);
+      }
       revealed = Array(currentQuestion.answers.length).fill(false);
       revealedData = Array(currentQuestion.answers.length).fill(null);
       categoryMultiplier = categoryMultipliers[category] || 1;
@@ -7717,6 +8006,11 @@ document.addEventListener('keydown', e => {
         await updateStreakValue();
         await anim.wait(gap);
         await updateMultValue();
+      } else {
+        // Still sync tracking vars so subsequent reconcile snapshots
+        // don't see a stale _prevStreak/_prevMultiplier and re-animate
+        _prevStreak = currentStreak;
+        _prevMultiplier = answerMultiplier;
       }
     }
 
@@ -7871,8 +8165,9 @@ document.addEventListener('keydown', e => {
       setPhaseTeamColor(teamTurn);
 
       if (stealPhase) {
+        const stealCur = teamPlayers[teamTurn][playerIndex[teamTurn] % teamPlayers[teamTurn].length];
         if (header)  header.textContent  = `${teamName} can STEAL!`;
-        if (subtext) { subtext.textContent = "One guess for the steal..."; fitByCharCount(subtext, 12); }
+        if (subtext) { subtext.textContent = stealCur ? `${stealCur} is up` : "One guess for the steal..."; fitByCharCount(subtext, 12); }
       } else {
         if (header) header.textContent = `${teamName} has the board`;
         const cur = teamPlayers[teamTurn][playerIndex[teamTurn] % teamPlayers[teamTurn].length];
@@ -8021,6 +8316,29 @@ document.addEventListener('keydown', e => {
     }
 
     async function submitGuess(){const input=document.getElementById("guess");const guess=input.value.trim();input.value="";if(!guess||!currentQuestion)return;
+
+      // Non-host multiplayer: check duplicates locally (instant feedback), then
+      // submit guess as a pending action for host to evaluate
+      if (isMultiplayer && !isHost) {
+        if (guessHistory.some(e => normalize(e.guess) === normalize(guess))) {
+          playSound(sfxNeutralBeep);
+          input.placeholder = "Answer already submitted";
+          input.classList.remove('input-shake');
+          void input.offsetWidth;
+          input.classList.add('input-shake');
+          clearTimeout(input._dupeTimer);
+          input._dupeTimer = setTimeout(() => { input.placeholder = "Enter your guess"; }, 2000);
+          return;
+        }
+        syncState({ pendingAction: { type: 'guess', guess, uid: myUid } });
+        // Disable input while waiting for host to process
+        if (input) input.disabled = true;
+        const submitBtn = document.getElementById("turn-submit-btn");
+        if (submitBtn) submitBtn.disabled = true;
+        return;
+      }
+
+      // Host or local mode: evaluate the guess
       if(guessHistory.some(e=>normalize(e.guess)===normalize(guess))){
         const dupePlayer=teamPlayers[teamTurn][playerIndex[teamTurn]%teamPlayers[teamTurn].length]||teamNames[teamTurn];
         logGuess({ player: dupePlayer, team: teamTurn, guess, outcome: 'duplicate' });
@@ -8038,6 +8356,8 @@ document.addEventListener('keydown', e => {
       if(stealPhase){
         const idx=currentQuestion.answers.findIndex((ans,i)=>!revealed[i]&&answerMatches(guess,ans));
         const stealingTeam=teamTurn;
+        // Advance turn order — steal counts as a turn for the stealing player
+        playerIndex[teamTurn]=(playerIndex[teamTurn]+1)%teamPlayers[teamTurn].length;
         const submitBtn=document.getElementById("turn-submit-btn");
         const guessInput=document.getElementById("guess");
         if(submitBtn) submitBtn.disabled=true;
@@ -8053,14 +8373,19 @@ document.addEventListener('keydown', e => {
             logGuess({ player: individualPlayer, team: stealingTeam, guess, outcome: 'steal_success', points: stealTotal, multiplier: stealMult, streak: currentStreak, isSteal: true });
             currentStreak++;answerMultiplier=1+(currentStreak*0.2);
             updateHistory();
+            // Sync tile reveal immediately so spectators see it without waiting for animation
+            syncAfterGuess({ outcome: 'steal_success', tileIdx: idx, points: stealTotal, mult: stealMult });
             await flipTile(idx,'correct',stealTotal,stealMult);
             awardRoundScore(stealingTeam, (final) => {
+              deactivateSpeedBoost();
               // Phase indicator: steal-chance → round-result
-              setPhaseText("round-result", `${teamNames[stealingTeam]} stole ${final} points!`);
+              const stealPhaseText = `${teamNames[stealingTeam]} stole ${final} points!`;
+              setPhaseText("round-result", stealPhaseText);
               setPhaseTeamColor(stealingTeam);
               setPhase("round-result");
-              syncAfterGuess({ outcome: 'steal_success', tileIdx: idx, points: stealTotal, mult: stealMult });
-              if(!checkForWinner())endRound(`🎉 <span class="${stealingTeam===0?"red":"blue"}">${teamNames[stealingTeam]}</span> stole ${final} points!`,stealingTeam);
+              const stealMsg = `🎉 <span class="${stealingTeam===0?"red":"blue"}">${teamNames[stealingTeam]}</span> stole ${final} points!`;
+              syncAfterGuess({ outcome: 'steal_success', tileIdx: idx, points: stealTotal, mult: stealMult }, { msg: stealMsg, winner: stealingTeam, phaseText: stealPhaseText });
+              if(!checkForWinner())endRound(stealMsg, stealingTeam);
             });
           } else {
             playSound(sfxNegativeBeep);
@@ -8081,24 +8406,31 @@ document.addEventListener('keydown', e => {
             logGuess({ player: individualPlayer, team: stealingTeam, guess, outcome: 'steal_fail', streak: currentStreak, isSteal: true });
             updateHistory();
             awardRoundScore(1-stealingTeam, (final) => {
+              deactivateSpeedBoost();
               // Phase indicator: steal-chance → round-result, revert to
               // scoring team's color (the team that kept the points)
               const keepTeam = 1 - stealingTeam;
-              setPhaseText("round-result", `${teamNames[keepTeam]} wins the round and keeps ${final} points!`);
+              const keepPhaseText = `${teamNames[keepTeam]} wins the round and keeps ${final} points!`;
+              setPhaseText("round-result", keepPhaseText);
               setPhaseTeamColor(keepTeam);
               setPhase("round-result");
-              syncAfterGuess({ outcome: 'steal_fail' });
-              if(!checkForWinner())endRound(`✅ <span class="${keepTeam===0?"red":"blue"}">${teamNames[keepTeam]}</span> keeps ${final} points!`,keepTeam);
+              const keepMsg = `✅ <span class="${keepTeam===0?"red":"blue"}">${teamNames[keepTeam]}</span> keeps ${final} points!`;
+              syncAfterGuess({ outcome: 'steal_fail' }, { msg: keepMsg, winner: keepTeam, phaseText: keepPhaseText });
+              if(!checkForWinner())endRound(keepMsg, keepTeam);
             });
           }
         }
         return;}
-      let foundIdx=-1;let foundTotal=0;let foundMult=answerMultiplier;currentQuestion.answers.forEach((ans,i)=>{if(answerMatches(guess,ans)&&!revealed[i]){revealed[i]=true;
+      // Stop at first match — forEach could multi-match fuzzy-similar answers
+      // (e.g. "shirt" matching both "skirt" and "shirt"), revealing multiple
+      // tiles but only animating the last.
+      let foundIdx=-1;let foundTotal=0;let foundMult=answerMultiplier;
+      for(let i=0;i<currentQuestion.answers.length;i++){const ans=currentQuestion.answers[i];if(answerMatches(guess,ans)&&!revealed[i]){revealed[i]=true;
         foundMult=answerMultiplier;foundTotal=Math.round(ans.points*foundMult);roundScore+=foundTotal;revealedData[i]={mult:foundMult,earnedTotal:foundTotal};
         const resultTxt=foundMult>1?`✓ Correct (${foundTotal} pts) [${foundMult.toFixed(1)}x]`:`✓ Correct (${foundTotal} pts)`;
         guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:resultTxt});
         logGuess({ player: individualPlayer, team: teamTurn, guess, outcome: 'correct', points: foundTotal, multiplier: foundMult, streak: currentStreak });
-        foundIdx=i;}});
+        foundIdx=i;break;}}
       const found=foundIdx!==-1;
       if(found){currentStreak++;answerMultiplier=1+(currentStreak*0.2);playCorrect(foundIdx===0);}else{const brokeStreak=currentStreak;currentStreak=0;answerMultiplier=1.0;playWrong();strikes++;guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:"✗ Wrong"});
         logGuess({ player: individualPlayer, team: teamTurn, guess, outcome: 'wrong', streak: 0, streakBroken: brokeStreak });}playerIndex[teamTurn]=(playerIndex[teamTurn]+1)%teamPlayers[teamTurn].length;
@@ -8109,37 +8441,44 @@ document.addEventListener('keydown', e => {
         if(guessInput) guessInput.disabled=true;
         if(submitBtn) submitBtn.disabled=true;
         updateStrikes();updateHistory();
+        // Sync immediately so spectators get the tile reveal without waiting for animation
+        syncAfterGuess({ outcome: 'correct', tileIdx: foundIdx, points: foundTotal, mult: foundMult });
         await flipTile(foundIdx,'correct',foundTotal,foundMult);
         if(guessInput) guessInput.disabled=false;
         if(submitBtn) submitBtn.disabled=false;
         deactivateSpeedBoost();
-        syncAfterGuess({ outcome: 'correct', tileIdx: foundIdx, points: foundTotal, mult: foundMult });
         if(!revealed.every(r=>r)) animateTurnSwap();
       }else{
         updateBoard();updateScores();updateStrikes();updateStreakDisplay({ afterStrike: true });updateHistory();
         if(strikes>=3){updateTurn();}else{animateTurnSwap();}
       }
       document.getElementById("guess")?.focus();
-      if(!found&&strikes>=3){stealPhase=true;teamTurn=1-teamTurn;updateTurn();
+      if(!found&&strikes>=3){stealPhase=true;teamTurn=1-teamTurn;
+        const stealPlayer = teamPlayers[teamTurn][playerIndex[teamTurn] % teamPlayers[teamTurn].length];
+        updateTurn();
         // Phase indicator: gameplay → steal-chance with "knock" collision
-        setPhaseText("steal-chance", `${teamNames[teamTurn]} can steal!`);
+        setPhaseText("steal-chance", `${stealPlayer || teamNames[teamTurn]} can steal!`);
         setPhaseTeamColor(teamTurn);
         setPhase("steal-chance", { knock: true });
         syncAfterGuess({ outcome: 'wrong_steal' });
         return;}
       if(!found && strikes < 3) { syncAfterGuess({ outcome: 'wrong' }); }
       if(revealed.every(r=>r)&&!stealPhase){awardRoundScore(teamTurn, (final) => {
+        deactivateSpeedBoost();
         // Phase indicator: gameplay → round-result
-        setPhaseText("round-result", `${teamNames[teamTurn]} won the round with ${final} points!`);
+        const revealAllPhaseText = `${teamNames[teamTurn]} won the round with ${final} points!`;
+        setPhaseText("round-result", revealAllPhaseText);
         setPhaseTeamColor(teamTurn);
         setPhase("round-result");
-        if(!checkForWinner())endRound(`🎉 <span class="${teamTurn===0?"red":"blue"}">${teamNames[teamTurn]}</span> revealed all answers! They win ${final} points.`,teamTurn);});}}
+        const revealAllMsg = `🎉 <span class="${teamTurn===0?"red":"blue"}">${teamNames[teamTurn]}</span> revealed all answers! They win ${final} points.`;
+        syncAfterGuess({ outcome: 'correct', tileIdx: foundIdx, points: foundTotal, mult: foundMult }, { msg: revealAllMsg, winner: teamTurn, phaseText: revealAllPhaseText });
+        if(!checkForWinner())endRound(revealAllMsg, teamTurn);});}}
 
     // Sync current game state to Firestore after a guess is processed.
     // Called at the end of submitGuess() after all local state + animations.
-    function syncAfterGuess(result) {
+    function syncAfterGuess(result, roundEnd) {
       if (!isMultiplayer) return;
-      syncState({
+      const payload = {
         revealed: [...revealed],
         revealedData: revealedData.map(d => d ? { mult: d.mult, earnedTotal: d.earnedTotal } : null),
         roundScore,
@@ -8154,10 +8493,25 @@ document.addEventListener('keydown', e => {
         playerIndex: [...playerIndex],
         lastResult: result || null,
         activePlayerUid: getActivePlayerUid(),
-        phase: stealPhase ? 'steal'
-             : revealed.every(r => r) ? 'round-result'
+        // Phase logic: roundEnd explicitly means round-result. Otherwise,
+        // use steal/gameplay. Don't infer round-result from revealed.every()
+        // because sync now fires before the animation — awardRoundScore hasn't
+        // computed the roundResultMsg yet. The second sync (with roundEnd) will
+        // set round-result properly.
+        phase: roundEnd ? 'round-result'
+             : stealPhase ? 'steal'
              : 'gameplay',
-      });
+      };
+      // Include round-result data so spectators can render endRound()
+      if (roundEnd) {
+        payload.roundResultMsg = roundEnd.msg;
+        payload.roundWinner = roundEnd.winner;
+        payload.roundPhaseText = roundEnd.phaseText;
+        // Clear ready state from any previous round
+        payload.readyPlayers = {};
+        payload.readyCountdown = null;
+      }
+      syncState(payload);
     }
 
     function checkForWinner() {
@@ -8203,14 +8557,137 @@ document.addEventListener('keydown', e => {
       if (qbox2) { qbox2.classList.remove("team-red","team-blue"); qbox2.classList.add(endTeamClass); }
       header.innerHTML = msg;
       const isLastRound = gameMode === 'rounds' && roundNumber >= maxRounds;
-      body.innerHTML = `
-        ${make3dBtn('Reveal All Answers', 'revealAll()', 'input-btn-sm', 'reveal-all')}
-        ${make3dBtn(isLastRound ? 'Conclude Final Round' : 'Next Round', isLastRound ? 'endGameByRounds()' : 'advanceRound()', isLastRound ? 'input-btn-xs' : '', 'next-round')}
-      `;
+
+      // Final round: auto-trigger victory — no button needed
+      if (isLastRound) {
+        endGameByRounds();
+        return;
+      }
+
+      if (isMultiplayer) {
+        // Multiplayer: Ready Up consensus — all players must ready before advancing
+        body.innerHTML = `
+          ${make3dBtn('Reveal All Answers', 'revealAll()', 'input-btn-sm', 'reveal-all')}
+          ${make3dBtn('Ready Up', 'readyUp()', '', 'ready-up')}
+          <div id="ready-status" style="text-align:center; margin-top:8px; font-family:futura-100,sans-serif; font-size:0.85rem; color:#aaa;"></div>
+        `;
+      } else {
+        // Local mode: direct advance
+        body.innerHTML = `
+          ${make3dBtn('Reveal All Answers', 'revealAll()', 'input-btn-sm', 'reveal-all')}
+          ${make3dBtn('Next Round', 'advanceRound()', '', 'next-round')}
+        `;
+      }
       setup3dBtns();
 
-      document.getElementById("endRound").innerHTML = `
-        <a class="score-edit-link" onclick="showScoreEdits()" data-tip="score-edit">Score edits needed?</a>`;
+      document.getElementById("endRound").innerHTML = "";
+
+      // Reset local ready state for new round-result phase
+      if (isMultiplayer) {
+        _readyPlayersMap = {};
+        if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
+        _readyCountdownEnd = null;
+        updateReadyStatus();
+      }
+    }
+
+    // ── Ready-Up Consensus (Multiplayer) ──────────────────────────
+
+    // Determine which client is responsible for triggering advanceRound/endGame.
+    // Host (first UID in red team) is the designated advancer.
+    function amDesignatedAdvancer() {
+      if (!isMultiplayer) return true;
+      // Host = first player in team 0
+      const hostUid = teamPlayerUids[0]?.[0];
+      if (hostUid && hostUid === myUid) return true;
+      // Fallback: if host isn't in readyPlayers (disconnected?), first ready player advances
+      if (hostUid && !_readyPlayersMap[hostUid]) {
+        const allUids = [...teamPlayerUids[0], ...teamPlayerUids[1]];
+        const firstReady = allUids.find(uid => _readyPlayersMap[uid]);
+        return firstReady === myUid;
+      }
+      return false;
+    }
+
+    function readyUp() {
+      if (!isMultiplayer) {
+        // Local mode fallback (shouldn't reach here but just in case)
+        advanceRound();
+        return;
+      }
+
+      // Mark self as ready locally
+      _readyPlayersMap[myUid] = true;
+
+      // Disable the Ready Up button
+      const readyBtn = document.querySelector('#turn-body .input-btn:last-of-type');
+      if (readyBtn) {
+        readyBtn.style.pointerEvents = 'none';
+        readyBtn.style.filter = 'brightness(0.5)';
+      }
+
+      // Build Firestore update with dot-notation to merge into readyPlayers map
+      const update = {};
+      update['readyPlayers.' + myUid] = true;
+
+      // If we're the first to ready, also set the countdown start timestamp
+      const allUids = [...teamPlayerUids[0], ...teamPlayerUids[1]];
+      const readyCount = allUids.filter(uid => _readyPlayersMap[uid]).length;
+      if (readyCount === 1) {
+        update.readyCountdown = window._fb.serverTimestamp();
+        // Start countdown locally immediately — self-echoes are skipped
+        // so we can't rely on the snapshot to trigger startReadyCountdown
+        startReadyCountdown({ toDate: () => new Date() });
+      }
+
+      syncState(update);
+      updateReadyStatus();
+      checkReadyAdvance();
+    }
+
+    function updateReadyStatus() {
+      const el = document.getElementById('ready-status');
+      if (!el) return;
+      const allUids = [...teamPlayerUids[0], ...teamPlayerUids[1]];
+      const readyCount = allUids.filter(uid => _readyPlayersMap[uid]).length;
+      const total = allUids.length;
+
+      if (readyCount === 0) {
+        el.textContent = '';
+      } else if (_readyCountdownEnd) {
+        const remaining = Math.max(0, Math.ceil((_readyCountdownEnd - Date.now()) / 1000));
+        el.textContent = `${readyCount}/${total} ready — ${remaining}s`;
+      } else {
+        el.textContent = `${readyCount}/${total} ready`;
+      }
+    }
+
+    function checkReadyAdvance() {
+      const allUids = [...teamPlayerUids[0], ...teamPlayerUids[1]];
+      const allReady = allUids.length > 0 && allUids.every(uid => _readyPlayersMap[uid]);
+      const timedOut = _readyCountdownEnd && Date.now() >= _readyCountdownEnd;
+
+      if (allReady || timedOut) {
+        if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
+        if (amDesignatedAdvancer()) {
+          advanceRound();
+        }
+        // Non-designated clients will advance when they receive the
+        // category-select phase transition via onSnapshot
+      }
+    }
+
+    function startReadyCountdown(serverTimestamp) {
+      // serverTimestamp is a Firestore Timestamp — convert to JS Date
+      const startTime = serverTimestamp.toDate ? serverTimestamp.toDate().getTime() : serverTimestamp;
+      _readyCountdownEnd = startTime + 10000; // 10 seconds
+
+      if (_readyCountdownInterval) clearInterval(_readyCountdownInterval);
+      _readyCountdownInterval = setInterval(() => {
+        updateReadyStatus();
+        checkReadyAdvance();
+      }, 250); // tick every 250ms for smooth countdown display
+      updateReadyStatus();
     }
 
     function showScoreEdits() {
@@ -9125,8 +9602,11 @@ document.addEventListener('keydown', e => {
       redList.innerHTML = '';
       blueList.innerHTML = '';
 
+      // Sort by UID for deterministic order across all clients
+      // (Firestore map key iteration order is not guaranteed)
       let redCount = 0, blueCount = 0;
-      for (const [uid, p] of Object.entries(players)) {
+      const sortedEntries = Object.entries(players).sort(([a], [b]) => a.localeCompare(b));
+      for (const [uid, p] of sortedEntries) {
         if (p.team === 0 || p.team === 1) {
           const li = document.createElement('li');
           if (uid === myUid) li.classList.add('is-me');
@@ -9146,14 +9626,25 @@ document.addEventListener('keydown', e => {
         (redCount <= blueCount ? redList : blueList).appendChild(hint);
       }
 
-      // Update settings display
+      // Update settings display — host gets interactive controls, others read-only
       const settingsEl = document.getElementById('lobby-settings');
+      const playerCount = Object.keys(players).length;
       if (settingsEl) {
-        settingsEl.innerHTML = `
-          <div>Rounds: <span>${data.maxRounds || 4}</span></div>
-          <div>Speed: <span>${data.gameSpeed || 1}x</span></div>
-          <div>Players: <span>${Object.keys(players).length}</span></div>
-        `;
+        if (isHost) {
+          settingsEl.innerHTML = `
+            <div>Rounds: <span class="lobby-setting-btn" onclick="cycleLobbyRounds()">${data.maxRounds || 4}</span></div>
+            <div>Speed: <span class="lobby-speed-arrows"><span class="lobby-setting-btn" onclick="cycleLobbySpeed(-1)">◀</span>
+              <span id="lobby-speed-value">${data.gameSpeed || 1}x</span>
+              <span class="lobby-setting-btn" onclick="cycleLobbySpeed(1)">▶</span></span></div>
+            <div>Players: <span>${playerCount}</span></div>
+          `;
+        } else {
+          settingsEl.innerHTML = `
+            <div>Rounds: <span>${data.maxRounds || 4}</span></div>
+            <div>Speed: <span>${data.gameSpeed || 1}x</span></div>
+            <div>Players: <span>${playerCount}</span></div>
+          `;
+        }
       }
 
       // Enable start button if both teams have players
@@ -9165,6 +9656,30 @@ document.addEventListener('keydown', e => {
           btn.textContent = canStart ? 'Start Game' : 'Waiting for players...';
         }
       }
+    }
+
+    const LOBBY_ROUND_OPTIONS = [2, 4, 6];
+
+    async function cycleLobbyRounds() {
+      if (!isHost || !gameRef) return;
+      playTap(1);
+      // Read current from Firestore doc (rendered in the span)
+      const snap = await window._fb.getDoc(gameRef);
+      const current = snap.data()?.maxRounds || 4;
+      const idx = LOBBY_ROUND_OPTIONS.indexOf(current);
+      const next = LOBBY_ROUND_OPTIONS[(idx + 1) % LOBBY_ROUND_OPTIONS.length];
+      await window._fb.updateDoc(gameRef, { maxRounds: next });
+    }
+
+    async function cycleLobbySpeed(dir) {
+      if (!isHost || !gameRef) return;
+      playTap(1);
+      const snap = await window._fb.getDoc(gameRef);
+      const current = snap.data()?.gameSpeed || 1;
+      const idx = SPEED_NOTCHES.findIndex(n => n.value === current);
+      const nextIdx = idx + dir;
+      if (nextIdx < 0 || nextIdx >= SPEED_NOTCHES.length) return;
+      await window._fb.updateDoc(gameRef, { gameSpeed: SPEED_NOTCHES[nextIdx].value });
     }
 
     async function joinTeam(teamIdx) {
@@ -9195,7 +9710,9 @@ document.addEventListener('keydown', e => {
       const players = data.players || {};
 
       const redPlayers = [], bluePlayers = [];
-      for (const [uid, p] of Object.entries(players)) {
+      // Sort by UID for deterministic order across all clients
+      const sortedPlayers = Object.entries(players).sort(([a], [b]) => a.localeCompare(b));
+      for (const [uid, p] of sortedPlayers) {
         if (p.team === 0) redPlayers.push({ uid, name: p.name });
         else if (p.team === 1) bluePlayers.push({ uid, name: p.name });
       }
@@ -9211,7 +9728,10 @@ document.addEventListener('keydown', e => {
         startingTeam: _startingTeam,
       });
 
-      // Host transitions to game
+      // Host transitions to game — inject the sorted teamPlayers into data
+      // so transitionFromLobbyToGame uses the same canonical order as non-host clients
+      data.teamPlayers = { 0: redPlayers, 1: bluePlayers };
+      data.startingTeam = _startingTeam;
       transitionFromLobbyToGame(data);
     }
 
@@ -9221,18 +9741,31 @@ document.addEventListener('keydown', e => {
     function transitionFromLobbyToGame(data) {
       if (unsubGameSnap) { unsubGameSnap(); unsubGameSnap = null; }
       fadeOutScreen(document.getElementById('lobby'), () => {
-        // Apply lobby settings to game state
-        const players = data.players || {};
-        const redNames = [], blueNames = [], redUids = [], blueUids = [];
-        for (const [uid, p] of Object.entries(players)) {
-          if (p.team === 0) { redNames.push(p.name); redUids.push(uid); }
-          else if (p.team === 1) { blueNames.push(p.name); blueUids.push(uid); }
+        // Apply lobby settings to game state.
+        // Use host-determined team arrays (data.teamPlayers) for canonical order.
+        // Falling back to data.players for backwards compatibility.
+        let redNames, blueNames, redUids, blueUids;
+        if (data.teamPlayers && data.teamPlayers[0] && data.teamPlayers[1]) {
+          // Host wrote ordered arrays: [{uid, name}, ...]
+          redNames = data.teamPlayers[0].map(p => p.name);
+          blueNames = data.teamPlayers[1].map(p => p.name);
+          redUids = data.teamPlayers[0].map(p => p.uid);
+          blueUids = data.teamPlayers[1].map(p => p.uid);
+        } else {
+          // Fallback: build from lobby players map (order not guaranteed)
+          const players = data.players || {};
+          redNames = []; blueNames = []; redUids = []; blueUids = [];
+          for (const [uid, p] of Object.entries(players)) {
+            if (p.team === 0) { redNames.push(p.name); redUids.push(uid); }
+            else if (p.team === 1) { blueNames.push(p.name); blueUids.push(uid); }
+          }
         }
         teamNames = [data.teamNames?.[0] || 'Red Team', data.teamNames?.[1] || 'Blue Team'];
         teamPlayers = [redNames, blueNames];
         teamPlayerUids = [redUids, blueUids];
         maxRounds = data.maxRounds || 4;
-        setGameSpeed(data.gameSpeed || 1);
+        gameSpeedSetting = data.gameSpeed || 1;
+        setGameSpeed(gameSpeedSetting);
         // Use host-determined startingTeam if available
         if (data.startingTeam !== undefined) {
           _lobbyStartingTeam = data.startingTeam;

@@ -66,27 +66,39 @@ The goal is a polished, distributable game app without migrating away from the c
 
 Active development on the `multi` branch. Firebase/Firestore powers real-time state sync. The full implementation plan is at `.claude/plans/buzzing-toasting-feather.md`.
 
-### Architecture
+### Architecture — Host-Authoritative
 
-- **Client-authoritative**: The active player's browser evaluates guesses (`answerMatches()`, scoring, streak math) and writes results to Firestore. All other clients receive updates via `onSnapshot` listeners. Appropriate for trusted-friends prototype. Migration to Cloud Functions (server-authoritative) is straightforward — same schema, logic just moves to a function.
-- **Auth**: Firebase Anonymous Auth (display name on join). Google Sign-In enabled but deferred to commercialization. Both are wired in the SDK imports.
+- **Host-authoritative**: The host's browser is the sole authority for all game logic. The host generates categories, pre-selects questions, evaluates guesses, advances turns, computes scores/stats/awards, and determines round/game end. Non-host clients submit raw inputs (`pendingAction`) and render synced results. This mirrors the eventual Cloud Functions migration — swap "host's browser" for "server function."
+- **`pendingAction` pattern**: Non-host players write `{ pendingAction: { type, data, uid } }` to Firestore. The host's snapshot listener intercepts these before `reconcileLocalState`, processes them, syncs the result, and clears the action. Two action types: `selectCategory` and `guess`.
+- **Auth**: Firebase Anonymous Auth (display name on join). Google Sign-In enabled but deferred to commercialization.
 - **Local mode preserved**: `isMultiplayer` flag gates all sync behavior. The game works identically offline.
 - **Single-file philosophy maintained**: Firebase SDK via CDN `<script type="module">`, config in `firebase-config.js`, all sync logic inline in `feud.html`.
 
 ### Key Multiplayer Functions
 
-- **`syncState(updates)`** — writes game state to Firestore with `_writerUid` and `_writeId` metadata. Includes a `clean()` sanitizer that converts `undefined` to `null` (Firestore rejects `undefined`) and handles sparse arrays.
-- **`startGameListener()` / `stopGameListener()`** — manages `onSnapshot` subscription on the game document.
-- **`reconcileLocalState(data, prev)`** — processes incoming Firestore snapshots on spectator clients. Diffs against previous snapshot to detect changes in scores, strikes, revealed tiles, phase transitions, etc. Triggers appropriate UI updates and animations.
-- **`handlePhaseTransition(data)`** — handles `category-select`, `gameplay`, `steal`, and `round-result` phase changes for spectators.
-- **`setupQuestionScreenForSpectator()`** — builds the full question/gameplay screen when a spectator receives a category pick (sidebar swap, cat-label, question text, board, input area in disabled state).
-- **`syncAfterGuess(result)`** — called at all 4 exit paths of `submitGuess()` (correct, wrong, steal success, steal fail). Writes the full game state snapshot to Firestore.
+- **`syncState(updates)`** — writes game state to Firestore with `_writerUid` and `_writeId` metadata. Includes a `clean()` sanitizer that converts `undefined` to `null` (Firestore rejects `undefined`) and handles sparse arrays. Preserves non-plain objects (Firebase FieldValue sentinels) by only recursing into plain `{}` objects.
+- **`startGameListener()` / `stopGameListener()`** — manages `onSnapshot` subscription on the game document. The host's listener has a `pendingAction` processor at the top that intercepts non-host inputs before reconciliation.
+- **`reconcileLocalState(data, prev)`** — processes incoming Firestore snapshots on all non-writing clients. Split into two phases: Phase 1 updates all state variables (playerIndex, teamTurn, stealPhase, scores, strikes, streak, etc.), Phase 2 triggers UI updates (updateScores, updateStrikes, flipTile, updateTurn, etc.) after state is consistent.
+- **`handlePhaseTransition(data)`** — handles `category-select`, `gameplay`, `steal`, and `round-result` phase changes for non-host clients.
+- **`setupQuestionScreenForSpectator()`** — builds the full question/gameplay screen when a non-host client receives a category pick. Mirrors `pickCategory()`'s animation sequence: content-tv CRT power-on → typewriter question text → input area slide-up.
+- **`animateSpectatorCategoryExit()`** — staggers category pills out left before the question screen builds, matching the controller's `animateCategoryTransition` Path A.
+- **`syncAfterGuess(result, roundEnd)`** — called by the host after evaluating a guess. Writes the full game state snapshot to Firestore. Optional `roundEnd` parameter adds `roundResultMsg`, `roundWinner`, `roundPhaseText` and sets phase to `round-result`.
+- **`onCategoryClick(category)`** — router: host/local runs `pickCategory()` directly, non-host writes `pendingAction: { type: 'selectCategory' }`.
+- **`hostProcessCategorySelect(category)` / `hostProcessGuess(guess, uid)`** — host-side handlers for non-host actions.
 - **`getActivePlayerUid()` / `amIActivePlayer()`** — determines who has control based on `teamTurn`, `playerIndex`, and `teamPlayerUids`.
-- **`updateRoleUI(activeUid)`** — enables/disables controls based on whether this client is the active player. Called from `updateTurn()`.
+- **`updateRoleUI(activeUid)`** — enables/disables controls based on whether this client is the active player. Called from `updateTurn()`. Skips button hiding during `round-result` phase so all players can interact with Ready Up.
 
 ### Self-Echo Detection
 
-The `onSnapshot` listener skips all snapshots where `data._writerUid === myUid`. The active player already applied changes locally, so echoes are ignored. This replaced an earlier per-writeId check that broke when stale echoes arrived after `_lastWriteId` had advanced.
+The `onSnapshot` listener skips all snapshots where `data._writerUid === myUid`. The writing client already applied changes locally, so echoes are ignored. This replaced an earlier per-writeId check that broke when stale echoes arrived after `_lastWriteId` had advanced.
+
+### Deterministic Team Ordering
+
+Firestore map key iteration order (`Object.entries(players)`) is not guaranteed across clients. All player iteration now sorts by UID (`localeCompare`) for deterministic ordering. The host writes canonical `teamPlayers` arrays (sorted `[{uid, name}, ...]`) to Firestore at game start. `transitionFromLobbyToGame` reads from `data.teamPlayers` (not `data.players`) so all clients get identical `teamPlayers` and `teamPlayerUids` arrays. This prevents `playerIndex[N]` from referencing different players on different clients.
+
+### Ready-Up Consensus
+
+Between rounds, all players see a "Ready Up" button. First click starts a 10-second countdown (server timestamp). Auto-advances when all players ready or countdown expires. The host (`teamPlayerUids[0][0]`) is the designated advancer — calls `advanceRound()`. Other clients receive the `category-select` phase via snapshot. State: `readyPlayers` map, `readyCountdown` timestamp, `_readyCountdownInterval` local timer.
 
 ### Game Flow
 
@@ -94,38 +106,47 @@ The `onSnapshot` listener skips all snapshots where `data._writerUid === myUid`.
 2. **Local**: existing setup flow unchanged
 3. **Online → Create Game**: generates 5-char alphanumeric code, writes game doc to Firestore, shows lobby
 4. **Online → Join Game**: enter code + display name, Firebase Anonymous Auth, join lobby
-5. **Lobby**: real-time player list, team assignment (Join Red/Join Blue), host-configured settings. Start Game enabled when both teams have players.
-6. **Game start**: host determines `startingTeam`, writes to Firestore. Both clients transition to gameplay. `startGameFromLobby()` mirrors `startGame()` but reads team/player data from Firestore instead of setup inputs.
-7. **Category selection**: active player generates random picks + multiplier rolls, syncs to Firestore. Spectator waits for `categoryPicks` via `reconcileLocalState` and renders from synced data.
-8. **Gameplay**: active player submits guesses, results sync to all clients. Spectator sees board updates, score changes, strike animations.
-9. **Round advancement**: `advanceRound()` gates `showCategorySelection()` — only the active player generates categories, spectator waits.
+5. **Lobby**: real-time player list, team assignment (Join Red/Join Blue). Host sees interactive settings (round count cycles 2→4→6, speed stepper). Non-host sees read-only settings. Start Game enabled when both teams have players.
+6. **Game start**: host determines `startingTeam` and canonical team arrays (sorted by UID), writes to Firestore. All clients transition to gameplay via `transitionFromLobbyToGame()` → `startGameFromLobby()`.
+7. **Category selection**: host generates random picks, pre-selects a question per category, rolls multipliers, syncs `categoryPicks` (including embedded questions) to Firestore. All non-host clients render from synced data. Active player can click; others are disabled via `updateRoleUI`.
+8. **Category pick**: active player clicks a category. If host, runs `pickCategory()` directly using the pre-selected question. If non-host, writes `pendingAction: { type: 'selectCategory' }` → host processes → syncs question + `phase: 'gameplay'`.
+9. **Gameplay**: active player submits guesses. If host, evaluates locally. If non-host, writes `pendingAction: { type: 'guess' }` → host evaluates → syncs result. All clients animate from synced state (tile reveals, strikes, streak/mult updates). Scoring sync fires before animation so spectators see results within ~200-500ms.
+10. **Steal phase**: on 3 strikes, `stealPhase` flips, `teamTurn` switches. Steal counts as a turn (`playerIndex` advances). Phase indicator shows stealing player's name.
+11. **Round end**: auto-triggers `endGameByRounds()` on final round. Non-final rounds show Ready Up button for all players.
+12. **Round advancement**: ready-up consensus → host calls `advanceRound()` → generates next round's categories → syncs.
 
-### What Works (tested with 2 browser tabs)
+### What Works (tested with 2-3 browser windows)
 
-- Full lobby flow (create, join, team assignment, start)
-- Category sync (identical pills + multiplier badges on both screens)
-- Question sync (same question, same board layout)
-- All guess types syncing (correct, wrong, steal success, steal fail)
-- Scores, strikes, streaks updating on spectator
-- Phase transitions (gameplay → steal → round-result → category-select)
-- 2-round game completing with victory screen on active player
-- Role-based UI (spectator can't click categories or submit guesses)
+- Full lobby flow (create, join, team assignment, settings, start)
+- Host-authoritative category generation with pre-selected questions
+- Category selection via pendingAction (non-host → host → sync)
+- Guess evaluation via pendingAction (non-host → host → sync)
+- Immediate scoring sync (spectator sees tile reveals within ~500ms)
+- Spectator animations: category exit fly-out, content-tv CRT power-on, typewriter question text, input area slide-in, staggered strike → streak → mult reset
+- Ready-up consensus with countdown timer
+- Victory/end-game sync (auto-victory on final round, all clients see dialog)
+- Host-controlled game speed (broadcast to all clients in real-time)
+- Deterministic team ordering across clients
+- Turn rotation synced via playerIndex
+- SFX on all clients (correct ding + good answer splash, wrong strike sound)
+- Phase indicator shows active player's name (category select, steal chance)
 
 ### What's Left (priority order)
 
-1. **Ready-up consensus for round advancement** — instead of assigning one player the "Next Round" button, all players get it. First click writes to a `readyPlayers` map in Firestore, starts a 10-second countdown visible to all. Auto-advances when countdown expires or all players click. This is the Jackbox-style pattern and is simpler than figuring out who should have control.
-2. **Victory/end-game sync** — `endGame()` needs to write to Firestore so all clients see the victory screen, confetti, and awards.
-3. **Reveal All sync** — `revealAll()` needs to write revealed tiles to Firestore.
-4. **Spectator animation polish** — category exit animations (currently instant panel swap), typewriter effect for question text (currently instant), scoring animation sequence order (streak/mult sometimes fires before tile reveal completes).
-5. **Background blob color sync** — round-end purple shift doesn't propagate to spectator.
-6. **Awards accuracy** — `matchLog` player/team mapping may have issues causing MVP/LVP inversion.
+1. **Spectator visual polish (Safari-specific)** — Safari has blend-multiply opacity flicker on category-pills-area and content-tv clipping issues. Chrome is clean. Deferring Safari pass until Chrome build is stable.
+2. **Reveal All sync** — `revealAll()` currently local-only. Consider making it automatic at round end (standard Feud behavior).
+3. **Background blob color sync** — round-end purple shift doesn't propagate to spectator.
+4. **Awards accuracy** — `matchLog` player/team mapping may have issues. With host-authoritative model, host should compute awards and sync the results.
+5. **Lobby UX** — host name hardcoded to "Host" (no name input on create), lobby UI needs broader redesign for online play.
 
 ### Parallel Data Structures (multiplayer-specific)
 
-- **`teamPlayerUids = [[], []]`** — parallel to `teamPlayers`, stores Firebase UIDs instead of display names. Set by `transitionFromLobbyToGame()`.
-- **`_lobbyStartingTeam`** — host-determined starting team, passed through Firestore so both clients agree.
-- **`_syncedCategoryPicks`** — `{ picks, hasSurvey, multipliers }` object synced to Firestore when the active player generates categories.
+- **`teamPlayerUids = [[], []]`** — parallel to `teamPlayers`, stores Firebase UIDs. Set by `transitionFromLobbyToGame()` from host-written `data.teamPlayers` arrays (sorted by UID for determinism).
+- **`_lobbyStartingTeam`** — host-determined starting team, passed through Firestore so all clients agree.
+- **`_syncedCategoryPicks`** — `{ picks, hasSurvey, multipliers, questions }` object synced by the host. Includes pre-selected questions per category.
+- **`_preSelectedQuestions`** — `{ category: { question, answers, _poolIdx } }` local cache. Host generates at category time; non-host clients receive via synced `categoryPicks.questions`.
 - **`_prevSnapshot`** — last Firestore snapshot data, used by `reconcileLocalState` for diffing.
+- **`_readyPlayersMap`** — `{ uid: true }` map tracking ready-up clicks. `_readyCountdownEnd` / `_readyCountdownInterval` for the 10-second timer.
 
 ---
 

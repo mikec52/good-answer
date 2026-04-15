@@ -133,12 +133,14 @@ Between rounds, all players see a "Ready Up" button. First click starts a 10-sec
 
 ### What's Left (priority order)
 
-1. **Play Again button non-functional** — the "Play Again" button at game end doesn't work in multiplayer. Top priority for next session.
-2. **Awards accuracy** — `matchLog` player/team mapping may have issues. With host-authoritative model, host should compute awards and sync the results.
-3. **Speed boost bug** — spacebar fast-forward persists after round-ending steal. `deactivateSpeedBoost()` fires too early in the steal path.
-4. **Safari visual polish** — content-tv clipping issues. Deferring Safari pass until Chrome build is stable.
-5. **Lobby UX (future)** — Captain role for Blue team (first Blue player chronologically), team name editing in lobby, team color selection.
-6. **No disconnect handling** — host leaving mid-game strands all players. Lobby back button handles pre-game disconnect, but mid-game disconnects are unhandled.
+1. **Host submit button stays clickable during teammate's turn** — after host's scoring animation, `updateRoleUI` should disable the button but timing may not always work. Non-host side is confirmed working. Needs more testing.
+2. **Return-to-lobby turn desync (intermittent)** — one test showed host thinking it was player 4's turn while non-hosts showed player 1. Could not reproduce on subsequent tests. Debug logging added to `category-select` and `play-again` phase transitions to capture state if it recurs.
+3. **Awards accuracy** — `matchLog` player/team mapping may have issues. With host-authoritative model, host should compute awards and sync the results.
+4. **Speed boost bug** — spacebar fast-forward persists after round-ending steal. `deactivateSpeedBoost()` fires too early in the steal path.
+5. **Safari visual polish** — content-tv clipping issues. Deferring Safari pass until Chrome build is stable.
+6. **Lobby UX (future)** — Captain role for Blue team (first Blue player chronologically), team name editing in lobby, team color selection.
+7. **No disconnect handling** — host leaving mid-game strands all players. Lobby back button handles pre-game disconnect, but mid-game disconnects are unhandled.
+8. **Debug logging cleanup** — diagnostic `console.log` statements in `category-select` transition, `play-again` transition, and `host syncing category-select` should be removed once multiplayer flows are stable.
 
 ### What Was Fixed (April 14 session)
 
@@ -153,6 +155,33 @@ Between rounds, all players see a "Ready Up" button. First click starts a 10-sec
 - **Reveal All automatic** — `revealAll()` now auto-triggers 3 seconds after round winner is determined (both mid-game and final round). Reveal All button removed from UI. Works on all clients locally (no Firestore sync needed).
 - **Non-host input focus** — `updateRoleUI` now focuses guess input when it's the player's turn, but only after `sq-zone-input` has finished its slide-in (prevents browser forcing offscreen element visible). `setupQuestionScreenForSpectator` focuses input at end of `anim.sequence`.
 - **Spectator tooltip access** — `pointer-events: none` moved from `.cat-row` to child `.btn-3d`/`.action-btn` elements via `.spectator-disabled` class, preserving hover for tooltips.
+
+### What Was Fixed (April 15 session)
+
+#### Victory Dialog & Post-Game Flow
+- **Victory dialog redesigned** — "Dismiss" button replaced with toggle arrow (▼/▲) in header corner. Three action buttons in a CSS grid row: "Play Again" (consensus), "Return to Lobby" (timer), "Exit to Menu" (individual). Vote status text below buttons.
+- **Play Again vote system** — multiplayer: all players must vote unanimously. Votes synced via `playAgainVotes` map in Firestore. Host triggers `phase: 'play-again'` on consensus. Non-host receives via `handlePhaseTransition` — resets state, slides out victory panel, waits for `category-select` phase (no `executePlayAgain` call to avoid async race conditions).
+- **Return to Lobby vote system** — 25-second countdown starts on first vote. Unanimous vote triggers immediately. Players can switch votes. Host writes `status: 'lobby'` to Firestore. Vote state: `lobbyVotes`, `lobbyCountdownStart`.
+- **Exit to Menu** — individual action. Removes player from Firestore `players` map. Remaining players' consensus thresholds auto-adjust via `teamPlayerUids` filtering in `reconcileLocalState`.
+- **Victory panel slide-out animation** — `slideOutVictoryPanel()` stops particles/canvases immediately but lets panel exit via CSS transition. Runs in parallel with exit animations on Play Again, sequentially on Return to Lobby.
+- **`stopVictoryAnimation` race fix** — `VICTORY._stopped` guard prevents deferred `requestAnimationFrame` from re-adding `active` class after stop. Backdrop `display: none` set explicitly.
+
+#### Game Reset & UI Cleanup
+- **`resetGameUI()` function** — comprehensive DOM cleanup: resets scores, round counter, board wrapper, content-tv, input area, category pills, phase indicator, sidebar panels, scoreboard animation classes. Called by `executePlayAgain`, `executeReturnToLobby`, and `startGameFromLobby`.
+- **Stale category pills flash** — `resetGameUI` now clears `#category-pills-area` innerHTML, preventing old pills from flashing on non-host during game restart.
+- **Return-to-lobby exit animations** — added board/input/content-tv exit sequence (was missing). Guard flag `_returningToLobby` prevents double-execution from concurrent snapshots.
+- **Game listener stopped before animations** — both `executePlayAgain` (host only) and `executeReturnToLobby` stop the game listener before async animations to prevent snapshot interference.
+- **Play-again infinite loop fix** — non-host no longer stops/restarts game listener during play-again. The restarted listener was seeing the same `phase: 'play-again'` and re-triggering `executePlayAgain` infinitely. Non-host now keeps listener running and waits for `category-select`.
+- **Play-again round counter race fix** — non-host `play-again` handler no longer calls `executePlayAgain()`. Instead it just resets state and dismisses victory panel. The `category-select` handler sets `roundCounter` correctly without competing async functions.
+- **Exit to Menu setup bleedthrough** — `exitToMainMenu` now hides setup and ribbon-scroller after `resetGame()` before showing mode select.
+
+#### Scoring Guard (concurrent answer prevention)
+- **`_scoringInProgress` flag** — set `true` before `flipTile()`, cleared after. Blocks `submitGuess()` at the top via early return.
+- **`updateRoleUI` respects scoring guard** — `guessInput.disabled` and `submitBtn.disabled` now check `_scoringInProgress` before enabling, preventing the role UI from re-enabling controls during animations.
+- **Non-host scoring guard** — `reconcileLocalState` sets `_scoringInProgress = true` and disables input/button when a tile reveal snapshot arrives. `flipTile().then()` clears the flag and calls `updateRoleUI` to restore correct state.
+- **Host post-scoring role UI** — after `flipTile` completes, host calls `updateRoleUI(getActivePlayerUid())` instead of blindly re-enabling controls, so the button is correctly disabled when it's the teammate's turn.
+- **Enter key guard** — inline `onkeydown` handler checks `!_scoringInProgress` before calling `submitGuess()`.
+- **Submit button selector fix** — all references changed from `getElementById("turn-submit-btn")` (which returned `null` — button never had that ID) to `querySelector('#turn-body .action-btn')`.
 
 ### Lobby Redesign (April 14 session)
 

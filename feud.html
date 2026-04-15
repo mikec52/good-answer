@@ -2215,15 +2215,49 @@
     .awards-list .red  { color: var(--red-text); }
     .awards-list .blue { color: var(--blue-text); }
     .victory-actions {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
       margin-top: auto;
       margin-bottom: 15px;
     }
     .victory-actions .action-btn {
-      width: auto;
-      min-width: 180px;
+      width: 100%;
+      min-width: 0;
+    }
+    /* Toggle arrow for dismiss/restore */
+    .victory-toggle-arrow {
+      position: absolute;
+      top: 6px;
+      right: 10px;
+      z-index: 2;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.1rem;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+      padding: 4px 8px;
+      pointer-events: all;
+      font-family: "futura-100", sans-serif;
+    }
+    .victory-toggle-arrow:hover { opacity: 1; }
+    /* Vote-selected highlight on action buttons */
+    .victory-actions .action-btn.vote-selected {
+      outline: 2px solid rgba(255,255,255,0.8);
+      outline-offset: 2px;
+      box-shadow: 0 0 12px rgba(255,255,255,0.3);
+    }
+    /* Vote status text below buttons */
+    .victory-vote-status {
+      grid-column: 1 / -1;
+      font-family: "futura-100", sans-serif;
+      font-size: 0.85rem;
+      font-weight: 400;
+      color: rgba(255,255,255,0.85);
+      text-align: center;
+      min-height: 1.4em;
     }
 
     /* Badge sparkle particles — emitted from cat-row at badge center */
@@ -4185,7 +4219,7 @@
                 <div id="turn-body">
                   <div id="turn-subtext">Player is up</div>
                   <div class="turn-input-row">
-                    <input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" data-tip="guess-input" />
+                    <input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="Enter your guess" onkeydown="if(event.key==='Enter'&&!_scoringInProgress)submitGuess()" data-tip="guess-input" />
                     <button class="btn action-btn" onclick="submitGuess()" data-tip="submit-guess">Submit</button>
                   </div>
                 </div>
@@ -5262,15 +5296,48 @@
         awardsEl.innerHTML = '';
       }
 
-      backdrop.querySelector('.victory-actions').innerHTML =
-        make3dBtn('Dismiss', 'dismissVictoryPanel()', '') +
-        make3dBtn('Play Again', 'resetGameConfirm()');
+      // Store winner for play-again flow and reset vote state
+      _postGameWinnerIdx = winnerIdx;
+      _playAgainVotes = {};
+      _lobbyVotes = {};
+      _myPostGameVote = null;
+      if (_lobbyCountdownInterval) { clearInterval(_lobbyCountdownInterval); _lobbyCountdownInterval = null; }
+      _lobbyCountdownEnd = null;
+
+      // Toggle arrow in header corner (replaces Dismiss button)
+      const existingArrow = panel.querySelector('.victory-toggle-arrow');
+      if (existingArrow) existingArrow.remove();
+      const arrow = document.createElement('button');
+      arrow.className = 'victory-toggle-arrow';
+      arrow.innerHTML = '&#9660;';  // ▼
+      arrow.onclick = (e) => { e.stopPropagation(); toggleVictoryPanel(); };
+      panel.appendChild(arrow);
+
+      // Action buttons — multiplayer uses vote system, local is instant
+      const actionsEl = backdrop.querySelector('.victory-actions');
+      if (isMultiplayer) {
+        actionsEl.innerHTML =
+          make3dBtn('Play Again', 'votePlayAgain()', 'vote-btn-playagain') +
+          make3dBtn('Return to Lobby', 'voteReturnToLobby()', 'vote-btn-lobby') +
+          make3dBtn('Exit to Menu', 'exitToMainMenu()', 'vote-btn-exit') +
+          '<div class="victory-vote-status" id="victory-vote-status"></div>';
+      } else {
+        actionsEl.innerHTML =
+          make3dBtn('Play Again', 'localPlayAgain()', '') +
+          make3dBtn('Return to Lobby', 'localReturnToLobby()', '') +
+          make3dBtn('Exit to Menu', 'exitToMainMenu()', '') +
+          '<div class="victory-vote-status" id="victory-vote-status"></div>';
+      }
       panel.classList.remove('victory-dismissed');
       panel.onclick = null;
 
+      // Restore backdrop display (stopVictoryAnimation hides it)
+      backdrop.style.display = '';
+      VICTORY._stopped = false;
+
       // Trigger fly-in on next frame so the transition runs
       requestAnimationFrame(() => {
-        backdrop.classList.add('active');
+        if (!VICTORY._stopped) backdrop.classList.add('active');
       });
 
       // Reset particle state
@@ -5289,33 +5356,75 @@
       VICTORY.rafId = requestAnimationFrame(victoryLoop);
     }
 
-    function dismissVictoryPanel() {
+    function toggleVictoryPanel() {
       const panel = document.querySelector('.victory-panel');
-      if (panel) {
+      if (!panel) return;
+      const arrow = panel.querySelector('.victory-toggle-arrow');
+      if (panel.classList.contains('victory-dismissed')) {
+        // Restore
+        panel.classList.remove('victory-dismissed');
+        if (arrow) arrow.innerHTML = '&#9660;'; // ▼
+        panel.onclick = null;
+      } else {
+        // Dismiss
         panel.classList.add('victory-dismissed');
-        // Defer onclick assignment so the current click's bubble doesn't
-        // immediately trigger the restore handler on the panel
+        if (arrow) arrow.innerHTML = '&#9650;'; // ▲
         requestAnimationFrame(() => {
           panel.onclick = function(e) {
             if (panel.classList.contains('victory-dismissed')) {
               e.stopPropagation();
-              restoreVictoryPanel();
+              toggleVictoryPanel();
             }
           };
         });
       }
     }
+    // Aliases for any existing references
+    function dismissVictoryPanel() { toggleVictoryPanel(); }
+    function restoreVictoryPanel() { toggleVictoryPanel(); }
 
-    function restoreVictoryPanel() {
-      const panel = document.querySelector('.victory-panel');
-      if (panel) {
-        panel.classList.remove('victory-dismissed');
-        panel.onclick = null;
+    // Animate the victory panel down and out of view (500ms CSS transition).
+    // Returns a Promise that resolves when the slide-out completes.
+    // Stops particles + hides canvases immediately but lets the panel exit gracefully.
+    function slideOutVictoryPanel() {
+      // Stop particles and canvases immediately
+      VICTORY.running = false;
+      VICTORY._stopped = true;
+      if (VICTORY.rafId) { cancelAnimationFrame(VICTORY.rafId); VICTORY.rafId = null; }
+      if (VICTORY.ctxBack)  VICTORY.ctxBack.clearRect(0, 0, 1280, 720);
+      if (VICTORY.ctxFront) VICTORY.ctxFront.clearRect(0, 0, 1280, 720);
+      if (VICTORY.cvBack)   VICTORY.cvBack.style.display  = 'none';
+      if (VICTORY.cvFront)  VICTORY.cvFront.style.display  = 'none';
+
+      const backdrop = document.getElementById('victory-backdrop');
+      if (!backdrop || !backdrop.classList.contains('active')) {
+        // Already hidden — clean up immediately
+        if (backdrop) backdrop.style.display = 'none';
+        return Promise.resolve();
       }
+
+      // Remove 'active' to trigger the CSS transition (translateY(0) → translateY(100%))
+      backdrop.classList.remove('active');
+      return new Promise(resolve => {
+        const panel = backdrop.querySelector('.victory-panel');
+        if (!panel) { backdrop.style.display = 'none'; resolve(); return; }
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          backdrop.style.display = 'none';
+          resolve();
+        };
+        panel.addEventListener('transitionend', (e) => {
+          if (e.target === panel) finish();
+        }, { once: true });
+        setTimeout(finish, 600); // fallback for hidden tabs
+      });
     }
 
     function stopVictoryAnimation() {
       VICTORY.running = false;
+      VICTORY._stopped = true;  // guard against deferred rAF re-adding 'active'
       if (VICTORY.rafId) {
         cancelAnimationFrame(VICTORY.rafId);
         VICTORY.rafId = null;
@@ -5325,7 +5434,10 @@
       if (VICTORY.cvBack)   VICTORY.cvBack.style.display  = 'none';
       if (VICTORY.cvFront)  VICTORY.cvFront.style.display  = 'none';
       const backdrop = document.getElementById('victory-backdrop');
-      if (backdrop) backdrop.classList.remove('active');
+      if (backdrop) {
+        backdrop.classList.remove('active');
+        backdrop.style.display = 'none';
+      }
     }
 
     function makeConfetti(scattered) {
@@ -6028,6 +6140,14 @@ document.addEventListener('keydown', e => {
     let _readyCountdownEnd = null;   // Date.now() + 10000 when countdown starts
     let _readyCountdownInterval = null; // setInterval ID for countdown ticks
 
+    // ── Post-Game Vote State ──
+    let _playAgainVotes = {};        // { uid: true }
+    let _lobbyVotes = {};            // { uid: true }
+    let _lobbyCountdownEnd = null;   // Date.now() + 25000 when first lobby vote
+    let _lobbyCountdownInterval = null;
+    let _myPostGameVote = null;      // 'playAgain' | 'lobby' | null
+    let _postGameWinnerIdx = null;   // winner index for play-again context
+
     async function syncState(updates) {
       if (!isMultiplayer || !gameRef) return;
       _lastWriteId++;
@@ -6074,6 +6194,12 @@ document.addEventListener('keydown', e => {
         if (!snap.exists()) return;
         const data = snap.data();
         console.log('[multi] snapshot: phase=' + data.phase + ' writer=' + (data._writerUid?.substring(0,8)||'?') + ' selfEcho=' + (data._writerUid === myUid) + ' writeId=' + data._writeId + ' readyPlayers=' + JSON.stringify(data.readyPlayers || {}));
+        // Return to lobby: if status changed to 'lobby' during a game, all clients transition
+        if (data.status === 'lobby' && gameEnded) {
+          executeReturnToLobby();
+          return;
+        }
+
         // Host-only: process pending actions from non-host clients.
         // These are raw inputs (category clicks, guesses) that the host
         // evaluates and syncs the result back to all clients.
@@ -6258,7 +6384,20 @@ document.addEventListener('keydown', e => {
             if (lastResult && lastResult.tileIdx === i) {
               // Play correct answer SFX (host plays it in submitGuess, non-host needs it here)
               playCorrect(i === 0);
-              flipTile(i, 'correct', lastResult.points, lastResult.mult);
+              // Set scoring guard so non-host input is blocked during animation
+              _scoringInProgress = true;
+              const guessInput = document.getElementById("guess");
+              const submitBtn = document.querySelector('#turn-body .action-btn');
+              if (guessInput) guessInput.disabled = true;
+              if (submitBtn) submitBtn.disabled = true;
+              flipTile(i, 'correct', lastResult.points, lastResult.mult).then(() => {
+                _scoringInProgress = false;
+                if (guessInput) guessInput.disabled = false;
+                if (submitBtn) submitBtn.disabled = false;
+                // Re-apply role UI in case this client's turn was gated
+                const activeUid = data.activePlayerUid || getActivePlayerUid();
+                if (activeUid) updateRoleUI(activeUid);
+              });
             } else {
               updateBoard();
             }
@@ -6322,6 +6461,51 @@ document.addEventListener('keydown', e => {
       if (data.readyCountdown && !_readyCountdownEnd) {
         startReadyCountdown(data.readyCountdown);
       }
+
+      // ── Post-game vote consensus ──
+      if (data.playAgainVotes !== undefined) {
+        const newMap = data.playAgainVotes || {};
+        if (JSON.stringify(newMap) !== JSON.stringify(_playAgainVotes)) {
+          _playAgainVotes = { ...newMap };
+          updatePostGameVoteUI();
+          checkPlayAgainConsensus();
+        }
+      }
+      if (data.lobbyVotes !== undefined) {
+        const newMap = data.lobbyVotes || {};
+        if (JSON.stringify(newMap) !== JSON.stringify(_lobbyVotes)) {
+          _lobbyVotes = { ...newMap };
+          updatePostGameVoteUI();
+          checkLobbyConsensus();
+        }
+      }
+      if (data.lobbyCountdownStart && !_lobbyCountdownEnd) {
+        startLobbyVoteCountdown(data.lobbyCountdownStart);
+      }
+      // If lobby countdown was cleared (all lobby voters switched away)
+      if (data.lobbyCountdownStart === null && _lobbyCountdownEnd) {
+        _lobbyCountdownEnd = null;
+        if (_lobbyCountdownInterval) { clearInterval(_lobbyCountdownInterval); _lobbyCountdownInterval = null; }
+        updatePostGameVoteUI();
+      }
+
+      // If a player exited (removed from players map), update teamPlayerUids
+      if (data.players && gameEnded) {
+        const currentUids = new Set(Object.keys(data.players));
+        let changed = false;
+        for (let t = 0; t < 2; t++) {
+          const filtered = teamPlayerUids[t].filter(uid => currentUids.has(uid));
+          if (filtered.length !== teamPlayerUids[t].length) {
+            teamPlayerUids[t] = filtered;
+            changed = true;
+          }
+        }
+        if (changed) {
+          updatePostGameVoteUI();
+          if (Object.keys(_playAgainVotes).length > 0) checkPlayAgainConsensus();
+          if (Object.keys(_lobbyVotes).length > 0) checkLobbyConsensus();
+        }
+      }
     }
 
     // Handle phase transitions received from Firestore
@@ -6330,6 +6514,7 @@ document.addEventListener('keydown', e => {
         case 'category-select':
           // Non-host clients: animate round exit, then show category selection.
           if (data.categoryPicks) {
+            console.log('[multi] category-select transition: data.roundNumber=' + data.roundNumber + ' local roundNumber=' + roundNumber + ' data.teamTurn=' + data.teamTurn + ' data.playerIndex=' + JSON.stringify(data.playerIndex) + ' local playerIndex=' + JSON.stringify(playerIndex) + ' activePlayerUid=' + data.activePlayerUid);
             if (data.roundNumber !== undefined) roundNumber = data.roundNumber;
             if (data.teamTurn !== undefined) teamTurn = data.teamTurn;
             if (data.startingTeam !== undefined) startingTeam = data.startingTeam;
@@ -6421,6 +6606,31 @@ document.addEventListener('keydown', e => {
             document.getElementById("turn-input-box").style.display = "";
             endRound(data.roundResultMsg, data.roundWinner);
           }
+          break;
+        case 'play-again':
+          // Host triggered play-again — non-host clients just reset state and
+          // dismiss the victory panel. The upcoming category-select phase will
+          // handle all UI setup (exit animations, initRoundState, scoreboard).
+          // We do NOT call executePlayAgain() — its async animations would race
+          // with the category-select handler and clobber the round counter.
+          console.log('[multi] play-again transition: data.roundNumber=' + data.roundNumber);
+          if (data.startingTeam !== undefined) {
+            startingTeam = data.startingTeam;
+            teamTurn = data.startingTeam;
+          }
+          if (data.teamScores) teamScores = [...data.teamScores];
+          if (data.usedQuestions) usedQuestions = [...data.usedQuestions];
+          roundNumber = data.roundNumber || 0;
+          gameEnded = false;
+          matchLog = [];
+          playerIndex = data.playerIndex || [0, 0];
+          lastRoundWinner = -1;
+          clearPostGameVoteState();
+          _readyPlayersMap = {};
+          if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
+          _readyCountdownEnd = null;
+          // Dismiss victory panel (sync — no await needed, just fire and forget)
+          slideOutVictoryPanel();
           break;
       }
     }
@@ -6555,12 +6765,14 @@ document.addEventListener('keydown', e => {
       const turnSubtext = document.getElementById('turn-subtext');
 
       if (guessInput) {
-        guessInput.disabled = !isActive;
+        // Don't re-enable input if a scoring animation is in progress —
+        // the flipTile .then() callback will re-enable when it completes
+        guessInput.disabled = _scoringInProgress ? true : !isActive;
         guessInput.placeholder = isActive ? 'Enter your guess' : 'Waiting for other player...';
         // Only focus if the input area isn't mid-entry-animation
         // (focusing an offscreen element forces the browser to show it prematurely)
         const szi = document.getElementById('sq-zone-input');
-        if (isActive && szi && !szi.classList.contains('offscreen-below')) guessInput.focus();
+        if (isActive && !_scoringInProgress && szi && !szi.classList.contains('offscreen-below')) guessInput.focus();
       }
 
       // Hide submit button for spectators
@@ -6570,7 +6782,7 @@ document.addEventListener('keydown', e => {
         const submitBtns = inputArea?.querySelectorAll('.action-btn');
         if (submitBtns) {
           submitBtns.forEach(btn => {
-            btn.disabled = !isActive;
+            btn.disabled = _scoringInProgress ? true : !isActive;
           });
         }
       }
@@ -7027,6 +7239,7 @@ document.addEventListener('keydown', e => {
     }
 
     function initRoundState() {
+      _scoringInProgress = false;
       currentQuestion = null;
       revealed = [];
       revealedData = [];
@@ -7072,7 +7285,7 @@ document.addEventListener('keydown', e => {
       document.getElementById("turn-body").innerHTML = `
         <div id="turn-subtext"></div>
         <div class="turn-input-row">
-          <input type="text" id="guess" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" data-tip="guess-input" />
+          <input type="text" id="guess" placeholder="Enter your guess" onkeydown="if(event.key==='Enter'&&!_scoringInProgress)submitGuess()" data-tip="guess-input" />
           ${make3dBtn('Submit', 'submitGuess()', '', 'submit-guess')}
         </div>`;
       updateBoard(); updateScores(); updateStrikes(); updateStreakDisplay(); updateHistory(); updateTurn();
@@ -7254,6 +7467,8 @@ document.addEventListener('keydown', e => {
 
         // In multiplayer, sync picks + questions + round state so all clients have everything
         if (isMultiplayer) {
+          console.log('[multi] host syncing category-select: teamTurn=' + teamTurn + ' playerIndex=' + JSON.stringify(playerIndex) + ' activePlayerUid=' + getActivePlayerUid() + ' teamPlayerUids=' + JSON.stringify(teamPlayerUids.map(t => t.map(u => u.substring(0,8)))));
+
           _syncedCategoryPicks = { picks, hasSurvey, multipliers: { ...categoryMultipliers }, questions: preSelectedQuestions };
           syncState({
             categoryPicks: _syncedCategoryPicks,
@@ -7553,6 +7768,9 @@ document.addEventListener('keydown', e => {
     function hostProcessGuess(guess, guesserUid) {
       // Inject the guess into the input field and run submitGuess.
       // submitGuess reads from the input, evaluates, animates, and syncs.
+      // The _scoringInProgress guard at the top of submitGuess will block
+      // if an animation is running (shouldn't happen now that non-host
+      // input is fully disabled during scoring, but defense-in-depth).
       const input = document.getElementById("guess");
       if (input) {
         input.value = guess;
@@ -8342,7 +8560,11 @@ document.addEventListener('keydown', e => {
       });
     }
 
-    async function submitGuess(){const input=document.getElementById("guess");const guess=input.value.trim();input.value="";if(!guess||!currentQuestion)return;
+    let _scoringInProgress = false; // re-entrancy guard for submitGuess
+
+    async function submitGuess(){const input=document.getElementById("guess");const guess=input.value.trim();
+      if(_scoringInProgress){return;} // block all entry points while scoring
+      input.value="";if(!guess||!currentQuestion)return;
 
       // Non-host multiplayer: check duplicates locally (instant feedback), then
       // submit guess as a pending action for host to evaluate
@@ -8360,7 +8582,7 @@ document.addEventListener('keydown', e => {
         syncState({ pendingAction: { type: 'guess', guess, uid: myUid } });
         // Disable input while waiting for host to process
         if (input) input.disabled = true;
-        const submitBtn = document.getElementById("turn-submit-btn");
+        const submitBtn = document.querySelector('#turn-body .action-btn');
         if (submitBtn) submitBtn.disabled = true;
         return;
       }
@@ -8385,7 +8607,7 @@ document.addEventListener('keydown', e => {
         const stealingTeam=teamTurn;
         // Advance turn order — steal counts as a turn for the stealing player
         playerIndex[teamTurn]=(playerIndex[teamTurn]+1)%teamPlayers[teamTurn].length;
-        const submitBtn=document.getElementById("turn-submit-btn");
+        const submitBtn=document.querySelector('#turn-body .action-btn');
         const guessInput=document.getElementById("guess");
         if(submitBtn) submitBtn.disabled=true;
         if(guessInput) guessInput.disabled=true;
@@ -8464,15 +8686,24 @@ document.addEventListener('keydown', e => {
       document.getElementById("message").textContent="";
       if(found){
         const guessInput=document.getElementById("guess");
-        const submitBtn=document.getElementById("turn-submit-btn");
+        const submitBtn=document.querySelector('#turn-body .action-btn');
+        _scoringInProgress = true;
         if(guessInput) guessInput.disabled=true;
         if(submitBtn) submitBtn.disabled=true;
         updateStrikes();updateHistory();
         // Sync immediately so spectators get the tile reveal without waiting for animation
         syncAfterGuess({ outcome: 'correct', tileIdx: foundIdx, points: foundTotal, mult: foundMult });
         await flipTile(foundIdx,'correct',foundTotal,foundMult);
-        if(guessInput) guessInput.disabled=false;
-        if(submitBtn) submitBtn.disabled=false;
+        _scoringInProgress = false;
+        // Re-apply role UI to set correct enabled state for the now-active player
+        // (don't blindly re-enable — the host may not be the active player anymore)
+        if (isMultiplayer) {
+          const activeUid = getActivePlayerUid();
+          if (activeUid) updateRoleUI(activeUid);
+        } else {
+          if(guessInput) guessInput.disabled=false;
+          if(submitBtn) submitBtn.disabled=false;
+        }
         deactivateSpeedBoost();
         if(!revealed.every(r=>r)) animateTurnSwap();
       }else{
@@ -8707,6 +8938,510 @@ document.addEventListener('keydown', e => {
       updateReadyStatus();
     }
 
+    // ── Post-Game Vote System ──────────────────────────────────────
+
+    function _allPlayerUids() {
+      return [...teamPlayerUids[0], ...teamPlayerUids[1]];
+    }
+
+    function votePlayAgain() {
+      if (!isMultiplayer || !myUid) return;
+      _myPostGameVote = 'playAgain';
+      _playAgainVotes[myUid] = true;
+      delete _lobbyVotes[myUid];
+
+      const update = {};
+      update['playAgainVotes.' + myUid] = true;
+      update['lobbyVotes.' + myUid] = window._fb.deleteField();
+
+      // If removing self was the last lobby voter, clear countdown
+      const lobbyVoterCount = _allPlayerUids().filter(uid => _lobbyVotes[uid]).length;
+      if (lobbyVoterCount === 0 && _lobbyCountdownEnd) {
+        _lobbyCountdownEnd = null;
+        if (_lobbyCountdownInterval) { clearInterval(_lobbyCountdownInterval); _lobbyCountdownInterval = null; }
+        update.lobbyCountdownStart = null;
+      }
+
+      syncState(update);
+      updatePostGameVoteUI();
+      checkPlayAgainConsensus();
+    }
+
+    function voteReturnToLobby() {
+      if (!isMultiplayer || !myUid) return;
+      _myPostGameVote = 'lobby';
+      _lobbyVotes[myUid] = true;
+      delete _playAgainVotes[myUid];
+
+      const update = {};
+      update['lobbyVotes.' + myUid] = true;
+      update['playAgainVotes.' + myUid] = window._fb.deleteField();
+
+      // Start countdown if this is the first lobby vote
+      if (!_lobbyCountdownEnd) {
+        update.lobbyCountdownStart = window._fb.serverTimestamp();
+        // Start locally immediately (self-echo skip means snapshot won't trigger it)
+        startLobbyVoteCountdown({ toDate: () => new Date() });
+      }
+
+      syncState(update);
+      updatePostGameVoteUI();
+      checkLobbyConsensus();
+    }
+
+    function updatePostGameVoteUI() {
+      // Highlight the voted button
+      document.querySelectorAll('.victory-actions .action-btn').forEach(btn => {
+        btn.classList.remove('vote-selected');
+      });
+      if (_myPostGameVote === 'playAgain') {
+        const btn = document.querySelector('.vote-btn-playagain');
+        if (btn) btn.classList.add('vote-selected');
+      } else if (_myPostGameVote === 'lobby') {
+        const btn = document.querySelector('.vote-btn-lobby');
+        if (btn) btn.classList.add('vote-selected');
+      }
+
+      // Status text
+      const el = document.getElementById('victory-vote-status');
+      if (!el) return;
+      const allUids = _allPlayerUids();
+      const total = allUids.length;
+      const playAgainCount = allUids.filter(uid => _playAgainVotes[uid]).length;
+
+      let parts = [];
+      if (playAgainCount > 0) {
+        parts.push(`${playAgainCount}/${total} voted to play again`);
+      }
+      if (_lobbyCountdownEnd) {
+        const remaining = Math.max(0, Math.ceil((_lobbyCountdownEnd - Date.now()) / 1000));
+        parts.push(`Returning to lobby in ${remaining}s...`);
+      }
+      el.textContent = parts.join(' \u2022 ');
+    }
+
+    function checkPlayAgainConsensus() {
+      const allUids = _allPlayerUids();
+      const allVoted = allUids.length > 0 && allUids.every(uid => _playAgainVotes[uid]);
+      if (allVoted) {
+        if (_lobbyCountdownInterval) { clearInterval(_lobbyCountdownInterval); _lobbyCountdownInterval = null; }
+        if (amDesignatedAdvancer()) {
+          executePlayAgain();
+        }
+      }
+    }
+
+    function checkLobbyConsensus() {
+      const allUids = _allPlayerUids();
+      const allVoted = allUids.length > 0 && allUids.every(uid => _lobbyVotes[uid]);
+      if (allVoted) {
+        // Unanimous — trigger immediately, skip timer
+        if (_lobbyCountdownInterval) { clearInterval(_lobbyCountdownInterval); _lobbyCountdownInterval = null; }
+        if (amDesignatedAdvancer()) {
+          executeReturnToLobby();
+        }
+      }
+    }
+
+    function startLobbyVoteCountdown(serverTimestamp) {
+      const startTime = serverTimestamp.toDate ? serverTimestamp.toDate().getTime() : serverTimestamp;
+      _lobbyCountdownEnd = startTime + 25000; // 25 seconds
+
+      if (_lobbyCountdownInterval) clearInterval(_lobbyCountdownInterval);
+      _lobbyCountdownInterval = setInterval(() => {
+        updatePostGameVoteUI();
+        checkLobbyCountdownExpired();
+      }, 250);
+      updatePostGameVoteUI();
+    }
+
+    function checkLobbyCountdownExpired() {
+      if (!_lobbyCountdownEnd) return;
+      if (Date.now() >= _lobbyCountdownEnd) {
+        if (_lobbyCountdownInterval) { clearInterval(_lobbyCountdownInterval); _lobbyCountdownInterval = null; }
+        if (amDesignatedAdvancer()) {
+          executeReturnToLobby();
+        }
+      }
+    }
+
+    function clearPostGameVoteState() {
+      _playAgainVotes = {};
+      _lobbyVotes = {};
+      _myPostGameVote = null;
+      if (_lobbyCountdownInterval) { clearInterval(_lobbyCountdownInterval); _lobbyCountdownInterval = null; }
+      _lobbyCountdownEnd = null;
+    }
+
+    // ── Play Again: restart with same teams ──────────────────────────
+
+    async function executePlayAgain() {
+      // Stop game listener on HOST only — non-host keeps listener running so it
+      // can receive the subsequent category-select phase from the host.
+      // Stopping on non-host + restarting causes an infinite loop: the restarted
+      // listener sees the same 'play-again' phase and re-triggers executePlayAgain.
+      gameEnded = false;
+      if (isMultiplayer && isHost) stopGameListener();
+
+      // 1. Slide victory panel out (runs in parallel with exit animations)
+      const victorySlide = slideOutVictoryPanel();
+
+      // 2. Exit animations (mirror advanceRound's exit sequence)
+      const contentTvExit = document.getElementById("content-tv");
+      const szInput = document.getElementById("sq-zone-input");
+      const bw = document.getElementById("board-wrapper");
+
+      if (bw && bw.classList.contains("slide-in")) {
+        bw.classList.remove("slide-in");
+        bw.style.transform = 'translateY(0)';
+        void bw.offsetWidth;
+        bw.style.transform = '';
+        bw.classList.add("offscreen");
+      }
+
+      await anim.sequence([
+        async () => {
+          if (szInput && szInput.classList.contains("input-enter")) {
+            szInput.classList.remove("input-enter");
+            await anim.play(szInput, "input-exit");
+          }
+        },
+        async () => {
+          if (contentTvExit && !contentTvExit.classList.contains("ct-hidden")) {
+            await anim.play(contentTvExit, "slide-out-left");
+          }
+        },
+      ]);
+
+      // Ensure victory slide-out is complete before proceeding
+      await victorySlide;
+
+      // 3. Preserve state that carries across games
+      const savedUsedQuestions = [...usedQuestions];
+      const savedMaxRounds = maxRounds;
+      const savedGameSpeed = gameSpeedSetting;
+
+      // 4. Reset game state (scores, counters, stats)
+      teamScores = [0, 0];
+      roundNumber = 0;
+      gameEnded = false;
+      matchLog = [];
+      playerIndex = [0, 0];
+      lastRoundWinner = -1;
+
+      // Restore preserved state
+      usedQuestions = savedUsedQuestions;
+      maxRounds = savedMaxRounds;
+      gameSpeedSetting = savedGameSpeed;
+      setGameSpeed(savedGameSpeed);
+
+      // 5. Determine new starting team
+      if (isMultiplayer && isHost) {
+        const newStartingTeam = Math.floor(Math.random() * 2);
+        startingTeam = newStartingTeam;
+        teamTurn = newStartingTeam;
+
+        // Sync the new game state to Firestore — triggers 'play-again' phase on non-host
+        syncState({
+          phase: 'play-again',
+          teamScores: [0, 0],
+          roundNumber: 0,
+          gameEnded: false,
+          matchLog: [],
+          playerIndex: [0, 0],
+          startingTeam: newStartingTeam,
+          usedQuestions: savedUsedQuestions,
+          playAgainVotes: {},
+          lobbyVotes: {},
+          lobbyCountdownStart: null,
+          readyPlayers: {},
+          readyCountdown: null,
+          strikes: 0,
+          currentStreak: 0,
+          answerMultiplier: 1.0,
+          roundScore: 0,
+          stealPhase: false,
+          currentQuestion: null,
+          revealed: null,
+          revealedData: null,
+          categoryMultiplier: 1,
+          lastResult: null,
+          guessHistory: [],
+          roundResultMsg: null,
+          roundWinner: null,
+          roundPhaseText: null,
+        });
+      } else if (!isMultiplayer) {
+        startingTeam = Math.floor(Math.random() * 2);
+        teamTurn = startingTeam;
+      }
+      // Non-host multiplayer: startingTeam was already set from phase transition data
+
+      // 6. Clear vote and ready-up state
+      clearPostGameVoteState();
+      _readyPlayersMap = {};
+      if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
+      _readyCountdownEnd = null;
+
+      // 7. Comprehensive UI reset — clears all animation classes, scores,
+      // board state so advanceRound() starts from a clean slate
+      resetGameUI();
+      updateBlobColor();
+
+      // 8. Host: restart game listener (stopped at top of function)
+      // Non-host: listener was never stopped — it stays running to receive
+      // the host's upcoming category-select phase transition
+      if (isMultiplayer && isHost) {
+        startGameListener();
+      }
+
+      // 9. Re-animate scoreboard and phase indicator
+      const sb = document.getElementById("scoreboard");
+      if (sb) {
+        sb.classList.remove("slide-in");
+        sb.classList.add("offscreen");
+        requestAnimationFrame(() => {
+          sb.classList.remove("offscreen");
+          sb.classList.add("slide-in");
+        });
+      }
+
+      updateScores();
+      showPhaseIndicator();
+
+      // Non-host: wait for host's category-select phase via the running listener.
+      // Host/local: generate categories and advance the round.
+      if (isMultiplayer && !isHost) return;
+      advanceRound();
+    }
+
+    // ── Return to Lobby ──────────────────────────────────────────────
+
+    // Reset all game DOM elements to their pre-game state.
+    // Called by executeReturnToLobby and executePlayAgain so the next
+    // startGameFromLobby() → advanceRound() starts from a clean slate.
+    function resetGameUI() {
+      // Score + round text
+      document.getElementById("roundCounter").textContent = "0";
+      document.getElementById("red-score").textContent = "0";
+      document.getElementById("blue-score").textContent = "0";
+      document.getElementById("question").textContent = "";
+      document.getElementById("questionActions").style.display = "none";
+      document.getElementById("endRound").innerHTML = "";
+      document.getElementById("message").textContent = "";
+      document.getElementById("turn-input-box").style.display = "";
+
+      // Board wrapper — force to offscreen (no animation classes)
+      const bw = document.getElementById("board-wrapper");
+      if (bw) {
+        bw.classList.remove("slide-in");
+        bw.classList.add("offscreen");
+        bw.style.transform = '';
+      }
+
+      // Content-tv — reset to hidden (pre-CRT-on state)
+      const ctv = document.getElementById("content-tv");
+      if (ctv) {
+        ctv.classList.remove("slide-out-left", "tv-on");
+        ctv.classList.add("ct-hidden");
+        ctv.style.animation = '';
+        ctv.style.animationDelay = '';
+      }
+
+      // Input area — reset to below-canvas position
+      const szi = document.getElementById("sq-zone-input");
+      if (szi) {
+        szi.classList.remove("input-enter", "input-exit");
+        szi.classList.add("offscreen-below");
+      }
+      const ia = document.getElementById("input-area");
+      if (ia) ia.classList.add("hidden");
+
+      // Question text classes
+      const qEl = document.getElementById("question");
+      if (qEl) qEl.classList.remove("typing", "typed");
+
+      // Cat-label from previous round
+      const oldCatLabel = document.getElementById("cat-label");
+      if (oldCatLabel) oldCatLabel.remove();
+
+      // Category pills + badges — clear both the pills area and any remnants
+      const pillsArea = document.getElementById("category-pills-area");
+      if (pillsArea) pillsArea.innerHTML = "";
+      document.querySelectorAll(".board-footer > .cat-mult-badge").forEach(el => el.remove());
+      document.querySelectorAll("#sq-zone-content > .cat-row").forEach(el => el.remove());
+
+      // Phase indicator — remove glow and phase data
+      const pi = document.getElementById("phase-indicator");
+      if (pi) {
+        pi.classList.remove("round-glow");
+        pi.removeAttribute("data-phase");
+      }
+
+      // Sidebar panels
+      document.getElementById("sidebar-category-select").style.display = "none";
+      document.getElementById("sidebar-question-answer").style.display = "none";
+
+      // Scoreboard — remove animation classes so startGameFromLobby can replay them
+      const sb = document.getElementById("scoreboard");
+      if (sb) {
+        sb.classList.remove("slide-in");
+        sb.classList.add("offscreen");
+      }
+    }
+
+    let _returningToLobby = false; // guard against double-execution from snapshots
+
+    async function executeReturnToLobby() {
+      if (_returningToLobby) return;
+      _returningToLobby = true;
+
+      // 1. Stop game listener FIRST to prevent snapshot interference during animations
+      gameEnded = false;
+      stopGameListener();
+      clearPostGameVoteState();
+
+      // 2. Exit animations — victory panel slides out in parallel with game elements
+      const victorySlide = slideOutVictoryPanel();
+
+      const contentTvExit = document.getElementById("content-tv");
+      const szInput = document.getElementById("sq-zone-input");
+      const bw = document.getElementById("board-wrapper");
+
+      if (bw && bw.classList.contains("slide-in")) {
+        bw.classList.remove("slide-in");
+        bw.style.transform = 'translateY(0)';
+        void bw.offsetWidth;
+        bw.style.transform = '';
+        bw.classList.add("offscreen");
+      }
+
+      await anim.sequence([
+        async () => {
+          if (szInput && szInput.classList.contains("input-enter")) {
+            szInput.classList.remove("input-enter");
+            await anim.play(szInput, "input-exit");
+          }
+        },
+        async () => {
+          if (contentTvExit && !contentTvExit.classList.contains("ct-hidden")) {
+            await anim.play(contentTvExit, "slide-out-left");
+          }
+        },
+      ]);
+
+      await victorySlide;
+
+      // 3. Reset game state
+      teamScores = [0, 0];
+      roundNumber = 0;
+      matchLog = [];
+      playerIndex = [0, 0];
+      lastRoundWinner = -1;
+
+      // 5. Reset all game UI elements to clean pre-game state
+      resetGameUI();
+      hidePhaseIndicator();
+
+      if (isMultiplayer) {
+        // Host writes the status change to Firestore
+        if (isHost) {
+          await window._fb.updateDoc(gameRef, {
+            status: 'lobby',
+            phase: null,
+            playAgainVotes: {},
+            lobbyVotes: {},
+            lobbyCountdownStart: null,
+            readyPlayers: {},
+            readyCountdown: null,
+            teamScores: [0, 0],
+            roundNumber: null,
+            currentQuestion: null,
+            revealed: null,
+            categoryPicks: null,
+            pendingAction: null,
+            strikes: 0,
+            currentStreak: 0,
+            answerMultiplier: 1.0,
+            roundScore: 0,
+            stealPhase: false,
+            lastResult: null,
+            guessHistory: [],
+            matchLog: [],
+            roundResultMsg: null,
+            roundWinner: null,
+            roundPhaseText: null,
+          });
+        }
+
+        // Fade out game, show lobby
+        const gameEl = document.getElementById('game');
+        fadeOutScreen(gameEl, () => {
+          gameEl.style.display = 'none';
+          showLobby();
+        });
+      } else {
+        // Local mode: return to setup step 2 (team config)
+        document.getElementById("game").style.display = "none";
+        document.getElementById("setup").style.display = "block";
+        document.getElementById("ribbon-scroller").style.display = "block";
+        // Show step 2 directly (team names + player rows are already populated)
+        const step1 = document.getElementById('setup-step-1');
+        const step2 = document.getElementById('setup-step-2');
+        step1.style.display = 'none';
+        step1.classList.remove('setup-fly-out', 'setup-fly-in', 'setup-fly-in-right');
+        step2.style.display = 'flex';
+        step2.classList.remove('setup-fly-out-left', 'setup-fly-in');
+        // Update the round display
+        document.getElementById('selected-rounds').textContent = `${maxRounds} Round Game`;
+      }
+
+      _returningToLobby = false;
+    }
+
+    // ── Exit to Main Menu ────────────────────────────────────────────
+
+    function exitToMainMenu() {
+      // Individual action — does not affect other players' state
+      stopVictoryAnimation();
+      clearPostGameVoteState();
+      stopGameListener();
+
+      // If multiplayer, remove self from the game
+      if (isMultiplayer && gameRef && myUid) {
+        window._fb.updateDoc(gameRef, {
+          [`players.${myUid}`]: window._fb.deleteField()
+        }).catch(e => console.warn('exitToMainMenu cleanup:', e));
+      }
+
+      // Full reset back to start screen
+      resetGame();
+
+      // Clear multiplayer state
+      gameRef = null;
+      gameCode = '';
+      isHost = false;
+      isMultiplayer = false;
+
+      // Show mode select — hide setup/ribbon that resetGame() showed
+      document.getElementById('game').style.display = 'none';
+      document.getElementById('setup').style.display = 'none';
+      document.getElementById('ribbon-scroller').style.display = 'none';
+      backToModeSelect();
+      const ms = document.getElementById('mode-select');
+      if (ms) { ms.style.display = 'flex'; ms.classList.add('fade-in'); }
+    }
+
+    // ── Local Mode Wrappers ──────────────────────────────────────────
+
+    function localPlayAgain() {
+      executePlayAgain();
+    }
+
+    function localReturnToLobby() {
+      executeReturnToLobby();
+    }
+
     function showScoreEdits() {
       const html = `<div class="score-edit-form">
         <div class="score-edit-team">
@@ -8740,8 +9475,7 @@ document.addEventListener('keydown', e => {
       // Populate sidebar endRound area (retained for returning to the board)
       document.getElementById("endRound").innerHTML=`
         ${msg}
-        ${make3dBtn('Fast Money Round', `startFastMoney(${winner})`, 'action-btn-fm')}
-        ${make3dBtn('Play Again', 'resetGameConfirm()')}`;
+        ${make3dBtn('Fast Money Round', `startFastMoney(${winner})`, 'action-btn-fm')}`;
       document.getElementById("turn-input-box").style.display="none";
       gameEnded = true;
       // Launch victory overlay (dialog + particles)
@@ -8756,6 +9490,7 @@ document.addEventListener('keydown', e => {
 
     function resetGame(){
       stopVictoryAnimation();
+      clearPostGameVoteState();
       updateBlobColor();
       // Slide phase indicator out of view — stays hidden until next startGame
       hidePhaseIndicator();
@@ -9927,9 +10662,10 @@ document.addEventListener('keydown', e => {
       document.getElementById("game").style.display = "flex";
       document.getElementById("ribbon-scroller").style.display = "none";
 
-      // Hide sidebar panels until showCategorySelection populates and reveals
-      document.getElementById("sidebar-category-select").style.display = "none";
-      document.getElementById("input-area").classList.add("hidden");
+      // Comprehensive UI reset — clears all animation classes, scores, board
+      // state from any previous game so advanceRound() starts clean
+      resetGameUI();
+
       document.getElementById("roundTarget").textContent = maxRounds || '—';
 
       // Phase indicator: start offscreen, slide in

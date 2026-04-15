@@ -22,7 +22,7 @@
     @property --bg-blob-base {
       syntax: '<color>';
       inherits: true;
-      initial-value: #513f6d;
+      initial-value: #111;
     }
 
     :root {
@@ -32,7 +32,7 @@
       --blue-text: #4c8cff;
 
       /* Background blob base — change this one value to shift all four blob shades */
-      --bg-blob-base: #513f6d;
+      --bg-blob-base: #111;
 
       /* Category color palette */
       --cat-science: #0000c0;
@@ -616,15 +616,54 @@
       color: rgba(255,255,255,0.4);
       margin-bottom: 24px;
     }
+    .lobby-back-row {
+      width: 90%;
+      max-width: 800px;
+      text-align: left;
+      margin-bottom: 8px;
+    }
+    .lobby-back-btn {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: rgba(255,255,255,0.6);
+      font-family: "futura-100", sans-serif;
+      font-size: 0.9rem;
+      padding: 6px 16px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .lobby-back-btn:hover {
+      border-color: rgba(255,255,255,0.5);
+      color: #fff;
+    }
+    .lobby-code-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .lobby-code-copy-label {
+      font-family: "futura-100", sans-serif;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.35);
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .lobby-code-copy-label:hover {
+      color: rgba(255,255,255,0.6);
+    }
     .lobby-teams {
       display: flex;
-      gap: 32px;
+      gap: 16px;
       margin-bottom: 24px;
-      width: 80%;
-      max-width: 600px;
+      width: 90%;
+      max-width: 800px;
     }
     .lobby-team {
       flex: 1;
+      display: flex;
+      flex-direction: column;
       background: rgba(17,17,17,0.75);
       backdrop-filter: blur(12px);
       border-radius: 12px;
@@ -634,6 +673,13 @@
     }
     .lobby-team.team-red { border-color: var(--red-bg); }
     .lobby-team.team-blue { border-color: var(--blue-bg); }
+    .lobby-team.team-unassigned {
+      flex: 0.6;
+      border-color: rgba(255,255,255,0.15);
+    }
+    .team-unassigned .lobby-team-header {
+      color: rgba(255,255,255,0.5);
+    }
     .lobby-team-header {
       font-family: "futura-100", sans-serif;
       font-weight: 700;
@@ -649,6 +695,7 @@
       list-style: none;
       padding: 0;
       margin: 0;
+      flex: 1;
     }
     .lobby-player-list li {
       font-family: "futura-100", sans-serif;
@@ -676,7 +723,9 @@
     .lobby-join-team-btn {
       display: block;
       width: 100%;
-      margin-top: 10px;
+      margin-top: 0;
+      margin-bottom: 10px;
+      flex-shrink: 0;
       padding: 8px;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.2);
@@ -693,11 +742,11 @@
     }
     .lobby-settings {
       display: flex;
-      gap: 24px;
-      margin-bottom: 20px;
+      gap: 48px;
+      margin-bottom: 32px;
       font-family: "futura-100", sans-serif;
       color: rgba(255,255,255,0.6);
-      font-size: 0.9rem;
+      font-size: 1.8rem;
     }
     .lobby-settings span {
       color: #fba300;
@@ -715,7 +764,7 @@
       gap: 6px;
     }
     .lobby-speed-arrows .lobby-setting-btn {
-      font-size: 0.7rem;
+      font-size: 1.2rem;
       opacity: 0.6;
     }
     .lobby-speed-arrows .lobby-setting-btn:hover { opacity: 1; }
@@ -1632,22 +1681,19 @@
       padding: 12px 0;
       border-radius: 20px;
       margin: 10px 0px;
-      --blend-bg: #efefef;
+      background: rgba(17, 17, 17, 0.35);
       /* Locked height — prevents the pills area from shrinking when the
-         selected cat-row goes `position: absolute` during the exit tumble.
-         Without this the whole area visibly collapses and the phase
-         indicator below it jumps up. Sized to fit the full contents:
-         12px top pad + trivia group (292px) + divider (~41px) +
-         survey group (116px) + 12px bottom pad = 473px, rounded up. */
+         selected cat-row goes `position: absolute` during the exit tumble. */
       min-height: 480px;
       box-sizing: border-box;
     }
-    /* NOTE: do not animate opacity or transform on #category-pills-area.
-       It uses .blend-multiply, and changing its opacity creates a new
-       stacking context that blocks mix-blend-mode from reaching the
-       #game-root backdrop (see CLAUDE.md "Blend-Multiply Utility" caveats).
-       The cat-rows inside stagger in individually, which gives a gradual
-       reveal without touching the parent. */
+    #category-pills-area.pills-slide-in {
+      animation: pills-slide-in calc(0.4s / var(--speed)) ease-out both;
+    }
+    @keyframes pills-slide-in {
+      from { transform: translateX(-110%); }
+      to   { transform: translateX(0); }
+    }
     /* Category select buttons — .btn base + width constraint */
     .cat-select-btn { width: 100%; }
     .cat-row .cat-select-btn { width: 100%; }
@@ -1709,67 +1755,11 @@
     .btn-3d span:nth-child(4) { transform: rotateX(90deg)  translateZ(25px); }
 
     /* 3D input-area buttons — same prism as .btn-3d but #111 faces */
-    .input-btn {
-      position: relative;
-      height: 38px;
-      transform-style: preserve-3d;
-      animation: btn3d-tilt 25s ease-in-out infinite;
-      background: transparent;
-      border: none;
-      padding: 0;
-      margin: 10px 0;
-      overflow: visible;
-      cursor: pointer;
-      width: 98%;
-      margin-top: 10px;
-    }
-    .input-btn.input-btn-sm span {
-      font-size: 1rem;
-      background: #fff;
-      color: #111;
-    }
-    .input-btn.input-btn-sm:hover span {
-      background: #e0e0e0;
-      color: #111;
-    }
-    .input-btn.input-btn-xs span {
-      font-size: 0.9rem;
-    }
-    .input-btn.input-btn-fm span {
-      font-size: 1.2rem;
-    }
-    .input-btn span {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(17, 17, 17, 0.9);
-      color: #fff;
-      font-family: 'Bitcount Single', sans-serif;
-      font-weight: 300;
-      text-transform: uppercase;
-      font-size: 22px;
-      letter-spacing: 2px;
-      transition: background 0.5s, color 0.5s;
-      border: 2px solid #333;
-      box-sizing: border-box;
-      box-shadow: inset 0 20px 50px rgba(0, 0, 0, 0.2);
-      border-radius: 0;
-      opacity: 0.95;
-    }
-    .input-btn:hover span {
-      background: #222;
-    }
-    .input-btn span:nth-child(1) { transform: rotateX(0deg)   translateZ(19px); }
-    .input-btn span:nth-child(2) { transform: rotateX(270deg) translateZ(19px); }
-    .input-btn span:nth-child(3) { transform: rotateX(180deg) translateZ(19px); }
-    .input-btn span:nth-child(4) { transform: rotateX(90deg)  translateZ(19px); }
-    /* Stagger sibling input-btns */
-    .input-btn:nth-child(1) { animation-delay: 0s; }
-    .input-btn:nth-child(2) { animation-delay: -1.6s; }
-    .input-btn:nth-child(3) { animation-delay: -3.2s; }
+    /* Action button size variants */
+    .action-btn-sm { font-size: 0.9rem; background: #fff; color: #111; border-color: #ccc; }
+    .action-btn-sm:hover { filter: brightness(0.95); }
+    .action-btn-xs { font-size: 0.85rem; }
+    .action-btn-fm { font-size: 1.15rem; }
 
     /* Category color classes — sets CSS vars that span inherits */
     .cat-science    { --cat-face: color-mix(in srgb, var(--cat-science)    90%, transparent); --cat-solid: var(--cat-science);    --cat-text: #fff; --cat-text-hover: #fff; }
@@ -1792,6 +1782,15 @@
       height: 80px;
       box-sizing: border-box;
       animation: cat-slide-in calc(0.4s / var(--speed)) ease-out backwards;
+    }
+    /* Spectator-disabled: blocks clicks but preserves hover for tooltips */
+    .spectator-disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+    .spectator-disabled .btn-3d,
+    .spectator-disabled .action-btn {
+      pointer-events: none;
     }
     /* Slide-in keyframes */
     @keyframes cat-slide-in {
@@ -1893,29 +1892,13 @@
       to   { border-color: transparent; }
     }
 
-    /* Pills area background slide-out — last beat of the Path A cascade.
-       We animate the .blend-multiply ::before pseudo-element (which is
-       the only visible "background" of the pills area) rather than the
-       pills area itself, for two reasons:
-         1. The selected category row is a child of #category-pills-area
-            and is supposed to stay anchored in place during its glow +
-            CRT. Translating the parent would drag the selected row with
-            it.
-         2. Adding `transform` to #category-pills-area would create a
-            new stacking context that breaks the ::before's
-            mix-blend-mode multiply (which depends on blending against
-            the #game-root backdrop).
-       Animating left+right (not transform) on the ::before keeps the
-       box width constant while translating it left, and avoids any
-       stacking-context interference. The selected row floats in place
-       against the canvas background as the multiply layer slides out
-       beneath it. */
-    @keyframes pills-bg-slide-out {
-      from { left: 0;       right: 0; }
-      to   { left: -400px;  right: 400px; }
+    /* Pills area background fade-out during category exit */
+    #category-pills-area.pills-exit {
+      animation: pills-bg-fade-out calc(0.3s / var(--speed)) ease-in calc(0.5s / var(--speed)) both;
     }
-    #category-pills-area.pills-exit::before {
-      animation: pills-bg-slide-out calc(0.3s / var(--speed)) ease-in calc(0.5s / var(--speed)) both;
+    @keyframes pills-bg-fade-out {
+      from { background: rgba(17, 17, 17, 0.35); }
+      to   { background: transparent; }
     }
 
     /* Phase 2 — CRT power-off sequence.
@@ -2238,7 +2221,7 @@
       margin-top: auto;
       margin-bottom: 15px;
     }
-    .victory-actions .input-btn {
+    .victory-actions .action-btn {
       width: auto;
       min-width: 180px;
     }
@@ -3127,9 +3110,9 @@
     #player-inventory { height: 45px; border-radius: 50px; margin: 0px 15px 10px 15px; background: rgba(0,0,0,0.35); box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.05); }
     input[type="text"] { padding: 8px; font-size: 1rem; }
     .btn {
-      padding: 8px 14px; 
-      font-size: 1rem; 
-      margin: 5px; 
+      padding: 8px 14px;
+      font-size: 1rem;
+      margin: 5px;
       cursor: pointer;
       border: solid;
       border-color: #fe5815;
@@ -3142,9 +3125,26 @@
         #ffd24d 25%,  /* gold */
         #ffb000 50%,  /* rich amber */
         #ff7a00 75%,  /* orange */
-        #d94a00 100%  /* deep edge */); 
+        #d94a00 100%  /* deep edge */);
       color: white;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    .action-btn {
+      width: 98%;
+      margin: 10px 0;
+      padding: 10px 14px;
+      font-size: 1.1rem;
+      font-family: 'Bitcount Single', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: filter 0.2s ease;
+    }
+    .action-btn:hover { filter: brightness(1.1); }
+    .action-btn:active { transform: scale(0.97); }
+    .action-btn:disabled, .action-btn.disabled {
+      filter: brightness(0.5);
+      pointer-events: none;
+      cursor: default;
     }
 
     /* Unified turn + input box */
@@ -3207,7 +3207,7 @@
       box-sizing: border-box;
       align-self: stretch;
     }
-    .turn-input-row .input-btn {
+    .turn-input-row .action-btn {
       width: 98%;
       box-sizing: border-box;
     }
@@ -3953,10 +3953,12 @@
     <defs>
       <style>
         @keyframes bg-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .bg-out-top    { animation: bg-rotate 29s linear infinite; transform-origin: 13px 25px; fill: var(--bg-blob-base); opacity: 0.6;  transition: fill 1.5s ease; }
-        .bg-in-top     { animation: bg-rotate 14s linear infinite; transform-origin: 13px 25px; fill: var(--bg-blob-base); opacity: 1.0; transition: fill 1.5s ease; }
-        .bg-out-bottom { animation: bg-rotate 36s linear infinite; transform-origin: 84px 93px; fill: var(--bg-blob-base); opacity: 0.40; transition: fill 1.5s ease; }
-        .bg-in-bottom  { animation: bg-rotate 21s linear infinite; transform-origin: 84px 93px; fill: var(--bg-blob-base); opacity: 0.80; transition: fill 1.5s ease; }
+        /* SMPTE-inspired fixed blob colors: left pair = green/yellow, right pair = magenta/cyan */
+        /* To revert to single-color blobs, replace fixed fills with: fill: var(--bg-blob-base); */
+        .bg-out-top    { animation: bg-rotate 29s linear infinite; transform-origin: 13px 25px; fill: #00c000; opacity: 0.6; }
+        .bg-in-top     { animation: bg-rotate 14s linear infinite; transform-origin: 13px 25px; fill: #fdd835; opacity: 1.0; }
+        .bg-out-bottom { animation: bg-rotate 36s linear infinite; transform-origin: 84px 93px; fill: #c000c0; opacity: 0.40; }
+        .bg-in-bottom  { animation: bg-rotate 21s linear infinite; transform-origin: 84px 93px; fill: #00c0c0; opacity: 0.80; }
       </style>
     </defs>
     <path class="bg-out-top"    d="M37-5C25.1-14.7,5.7-19.1-9.2-10-28.5,1.8-32.7,31.1-19.8,49c15.5,21.5,52.6,22,67.2,2.3C59.4,35,53.7,8.5,37-5Z"/>
@@ -4156,7 +4158,7 @@
 
         <!-- Panel A: Category select -->
         <div id="sidebar-category-select">
-          <div id="category-pills-area" class="blend-multiply"></div>
+          <div id="category-pills-area"></div>
         </div>
 
         <!-- Panel B: Question answer (3-row grid) -->
@@ -4184,7 +4186,7 @@
                   <div id="turn-subtext">Player is up</div>
                   <div class="turn-input-row">
                     <input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" data-tip="guess-input" />
-                    <button class="input-btn" onclick="submitGuess()"><span>Submit</span><span>Submit</span><span>Submit</span><span>Submit</span></button>
+                    <button class="btn action-btn" onclick="submitGuess()" data-tip="submit-guess">Submit</button>
                   </div>
                 </div>
               </div>
@@ -4378,7 +4380,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, linkWithPopup, onAuthStateChanged }
       from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, deleteDoc, serverTimestamp, arrayUnion }
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, deleteDoc, deleteField, serverTimestamp, arrayUnion }
       from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
     import { firebaseConfig } from "./firebase-config.js";
 
@@ -4402,6 +4404,7 @@
       onSnapshot,
       collection: (...args) => collection(db, ...args),
       deleteDoc,
+      deleteField: () => deleteField(),
       serverTimestamp,
       arrayUnion,
     };
@@ -5262,7 +5265,6 @@
       backdrop.querySelector('.victory-actions').innerHTML =
         make3dBtn('Dismiss', 'dismissVictoryPanel()', '') +
         make3dBtn('Play Again', 'resetGameConfirm()');
-      setup3dBtns();
       panel.classList.remove('victory-dismissed');
       panel.onclick = null;
 
@@ -6071,13 +6073,7 @@ document.addEventListener('keydown', e => {
       unsubGameSnap = window._fb.onSnapshot(gameRef, (snap) => {
         if (!snap.exists()) return;
         const data = snap.data();
-        console.log('[multi] snapshot:', {
-          phase: data.phase,
-          writerUid: data._writerUid?.substring(0,8),
-          writeId: data._writeId,
-          isSelfEcho: data._writerUid === myUid,
-          myLastWriteId: _lastWriteId,
-        });
+        console.log('[multi] snapshot: phase=' + data.phase + ' writer=' + (data._writerUid?.substring(0,8)||'?') + ' selfEcho=' + (data._writerUid === myUid) + ' writeId=' + data._writeId + ' readyPlayers=' + JSON.stringify(data.readyPlayers || {}));
         // Host-only: process pending actions from non-host clients.
         // These are raw inputs (category clicks, guesses) that the host
         // evaluates and syncs the result back to all clients.
@@ -6180,6 +6176,13 @@ document.addEventListener('keydown', e => {
 
       // ── Streak / multiplier (state only) ──
       if (data.currentStreak !== undefined) {
+        // On round reset (streak drops to 0), sync prev values to suppress
+        // decrease animation/SFX — the board is about to be cleared anyway
+        if (data.currentStreak === 0 && currentStreak > 0) {
+          _prevStreak = 0;
+          _prevMultiplier = 1.0;
+          _streakDisplayGeneration++;
+        }
         currentStreak = data.currentStreak;
         answerMultiplier = data.answerMultiplier ?? 1.0;
       }
@@ -6263,6 +6266,24 @@ document.addEventListener('keydown', e => {
         });
       }
 
+      // Failed steal effects (wiggle + SFX + strikes glow fade)
+      if (data.lastResult?.outcome === 'steal_fail' && prev?.lastResult?.outcome !== 'steal_fail') {
+        playSound(sfxNegativeBeep);
+        const bw = document.getElementById('board-wrapper');
+        if (bw) bw.animate([
+          { transform: 'translateX(0)' },
+          { transform: 'translateX(-8px)' },
+          { transform: 'translateX(8px)' },
+          { transform: 'translateX(-6px)' },
+          { transform: 'translateX(6px)' },
+          { transform: 'translateX(-3px)' },
+          { transform: 'translateX(3px)' },
+          { transform: 'translateX(0)' }
+        ], { duration: 500, easing: 'ease', composite: 'add' });
+        const strikeStat = document.getElementById('strikes')?.closest('.board-stat-value');
+        if (strikeStat) strikeStat.classList.replace('strikes-full', 'strikes-fade-out');
+      }
+
       // New question board
       if (data.currentQuestion && !prev?.currentQuestion) {
         updateBoard();
@@ -6291,8 +6312,8 @@ document.addEventListener('keydown', e => {
           _readyPlayersMap = { ...newMap };
           // Disable the Ready Up button if this client already readied
           if (_readyPlayersMap[myUid]) {
-            const readyBtn = document.querySelector('#turn-body .input-btn:last-of-type');
-            if (readyBtn) { readyBtn.style.pointerEvents = 'none'; readyBtn.style.filter = 'brightness(0.5)'; }
+            const readyBtn = document.querySelector('#turn-body .action-btn:last-of-type');
+            if (readyBtn) readyBtn.disabled = true;
           }
           updateReadyStatus();
           checkReadyAdvance();
@@ -6307,17 +6328,42 @@ document.addEventListener('keydown', e => {
     function handlePhaseTransition(data) {
       switch (data.phase) {
         case 'category-select':
-          // Non-host clients: show category selection using synced picks from Firestore.
-          // Self-echo skip (line ~6085) already prevents the host from re-processing.
+          // Non-host clients: animate round exit, then show category selection.
           if (data.categoryPicks) {
-            // Update round state before showing categories
             if (data.roundNumber !== undefined) roundNumber = data.roundNumber;
             if (data.teamTurn !== undefined) teamTurn = data.teamTurn;
             if (data.startingTeam !== undefined) startingTeam = data.startingTeam;
-            initRoundState();
-            updateTurn();
-            document.getElementById("roundCounter").textContent = roundNumber;
-            showCategorySelection(data.categoryPicks);
+
+            // Animate sidebar + board elements out (mirrors host advanceRound)
+            const _contentTv = document.getElementById("content-tv");
+            const _szInput = document.getElementById("sq-zone-input");
+            const _bw = document.getElementById("board-wrapper");
+            if (_bw && _bw.classList.contains("slide-in")) {
+              _bw.classList.remove("slide-in");
+              _bw.style.transform = 'translateY(0)';
+              void _bw.offsetWidth;
+              _bw.style.transform = '';
+              _bw.classList.add("offscreen");
+            }
+            (async () => {
+              await anim.sequence([
+                async () => {
+                  if (_szInput && _szInput.classList.contains("input-enter")) {
+                    _szInput.classList.remove("input-enter");
+                    await anim.play(_szInput, "input-exit");
+                  }
+                },
+                async () => {
+                  if (_contentTv && !_contentTv.classList.contains("ct-hidden")) {
+                    await anim.play(_contentTv, "slide-out-left");
+                  }
+                },
+              ]);
+              updateTurn();
+              initRoundState();
+              document.getElementById("roundCounter").textContent = roundNumber;
+              showCategorySelection(data.categoryPicks);
+            })();
           }
           break;
         case 'gameplay':
@@ -6329,8 +6375,10 @@ document.addEventListener('keydown', e => {
             revealedData = new Array(currentQuestion.answers.length).fill(null);
             categoryMultiplier = data.categoryMultiplier || 1;
             if (data.usedQuestions) usedQuestions = [...data.usedQuestions];
-            // Animate category pills exit, then build question screen
-            animateSpectatorCategoryExit().then(() => setupQuestionScreenForSpectator());
+            // Use the same exit animation as the host (Path A slide-out +
+            // Path B glow → CRT on the selected category), then build question screen
+            const _pickedCat = currentQuestion.category;
+            animateCategoryTransition(_pickedCat).then(() => setupQuestionScreenForSpectator());
           }
           break;
         case 'steal':
@@ -6354,6 +6402,14 @@ document.addEventListener('keydown', e => {
             if (data.roundPhaseText) setPhaseText("round-result", data.roundPhaseText);
             setPhaseTeamColor(scoringTeam);
             setPhase("round-result");
+            // setPhase early-returns (data-phase already set above), so apply
+            // round-result effects directly: glow, SFX, and blob color reset
+            const pi = document.getElementById('phase-indicator');
+            if (pi && !pi.classList.contains('round-glow')) {
+              pi.classList.add('round-glow');
+              playSound(sfxRoundEnd);
+              document.getElementById('game-root').style.setProperty('--bg-blob-base', '#111');
+            }
             // Ensure input area is visible (spectator may have it hidden)
             const ia = document.getElementById("input-area");
             if (ia) ia.classList.remove("hidden");
@@ -6483,10 +6539,11 @@ document.addEventListener('keydown', e => {
           sziEl.classList.remove("offscreen-below");
           sziEl.classList.add("input-enter");
           await anim.done(sziEl);
+          // Focus guess input after slide-in completes (safe now — not offscreen)
+          const guessEl = document.getElementById("guess");
+          if (guessEl && !guessEl.disabled) guessEl.focus();
         },
       ]);
-
-      setup3dBtns();
     }
 
     // Update UI based on whether this client is the active player
@@ -6500,26 +6557,29 @@ document.addEventListener('keydown', e => {
       if (guessInput) {
         guessInput.disabled = !isActive;
         guessInput.placeholder = isActive ? 'Enter your guess' : 'Waiting for other player...';
+        // Only focus if the input area isn't mid-entry-animation
+        // (focusing an offscreen element forces the browser to show it prematurely)
+        const szi = document.getElementById('sq-zone-input');
+        if (isActive && szi && !szi.classList.contains('offscreen-below')) guessInput.focus();
       }
 
-      // Hide submit button for spectators (opacity on 3D buttons breaks face rendering)
+      // Hide submit button for spectators
       // But NOT during round-result phase — all players need Ready Up / Reveal All
       const inRoundResult = document.getElementById('phase-indicator')?.dataset.phase === 'round-result';
       if (!inRoundResult) {
-        const submitBtns = inputArea?.querySelectorAll('.input-btn');
+        const submitBtns = inputArea?.querySelectorAll('.action-btn');
         if (submitBtns) {
           submitBtns.forEach(btn => {
-            btn.style.pointerEvents = isActive ? '' : 'none';
-            btn.style.visibility = isActive ? '' : 'hidden';
+            btn.disabled = !isActive;
           });
         }
       }
 
-      // Category pills interactivity
+      // Category pills interactivity — use class instead of pointer-events
+      // so hover (tooltips) still works for spectators
       const catRows = document.querySelectorAll('.cat-row');
       catRows.forEach(row => {
-        row.style.pointerEvents = isActive ? '' : 'none';
-        row.style.opacity = isActive ? '' : '0.6';
+        row.classList.toggle('spectator-disabled', !isActive);
       });
 
       // Show waiting message for spectators
@@ -6881,7 +6941,7 @@ document.addEventListener('keydown', e => {
       if (newPhase === "round-result") {
         pi.classList.add("round-glow");
         playSound(sfxRoundEnd);
-        document.getElementById("game-root").style.setProperty("--bg-blob-base", "#513f6d");
+        document.getElementById("game-root").style.setProperty("--bg-blob-base", "#111");
       } else if (current === "round-result") {
         pi.classList.remove("round-glow");
         // Blob color restored by updateBlobColor via updateTurn in advanceRound
@@ -6934,12 +6994,6 @@ document.addEventListener('keydown', e => {
         }
       });
 
-      // Clear start-screen inline blob fills so --bg-blob-base (set by
-      // updateBlobColor in advanceRound) takes over. The CSS transition on
-      // fill (1.5s) crossfades from start colors directly to team color.
-      ['.bg-out-top', '.bg-in-top', '.bg-out-bottom', '.bg-in-bottom']
-        .forEach(sel => { const el = document.querySelector(sel); if (el) el.style.fill = ''; });
-
       document.getElementById("setup").style.display = "none";
       document.getElementById("game").style.display = "flex";
       document.getElementById("ribbon-scroller").style.display = "none";
@@ -6984,6 +7038,7 @@ document.addEventListener('keydown', e => {
       answerMultiplier = 1.0;
       _prevStreak = 0;
       _prevMultiplier = 1.0;
+      _streakDisplayGeneration++;
       categoryMultiplier = 1;
       const catMultEl = document.getElementById("cat-mult-indicator");
       if (catMultEl) catMultEl.style.display = "none";
@@ -7020,7 +7075,6 @@ document.addEventListener('keydown', e => {
           <input type="text" id="guess" placeholder="Enter your guess" onkeydown="if(event.key==='Enter')submitGuess()" data-tip="guess-input" />
           ${make3dBtn('Submit', 'submitGuess()', '', 'submit-guess')}
         </div>`;
-      setup3dBtns();
       updateBoard(); updateScores(); updateStrikes(); updateStreakDisplay(); updateHistory(); updateTurn();
     }
 
@@ -7092,14 +7146,13 @@ document.addEventListener('keydown', e => {
     }
 
     function make3dBtn(text, onclick, extraClass, dataTip) {
-      const s = `<span>${text}</span>`.repeat(4);
-      const cls = 'input-btn' + (extraClass ? ' ' + extraClass : '');
+      const cls = 'btn action-btn' + (extraClass ? ' ' + extraClass : '');
       const tip = dataTip ? ` data-tip="${dataTip}"` : '';
-      return `<button class="${cls}" onclick="${onclick}"${tip}>${s}</button>`;
+      return `<button class="${cls}" onclick="${onclick}"${tip}>${text}</button>`;
     }
 
     function setup3dBtns() {
-      document.querySelectorAll('.btn-3d, .input-btn').forEach(btn => {
+      document.querySelectorAll('.btn-3d').forEach(btn => {
         if (btn._has3dHover) return;
         btn._has3dHover = true;
         btn.addEventListener('mouseenter', function() {
@@ -7143,14 +7196,9 @@ document.addEventListener('keydown', e => {
     let _preSelectedQuestions = null; // { category: { question, answers, _poolIdx } }
 
     function showCategorySelection(syncedData) {
-      // The pills area uses blend-multiply (::before with mix-blend-mode).
-      // On innerHTML rebuild, the ::before flashes at full opacity before
-      // the blend composites. Fix: set opacity 0, rebuild, show panel,
-      // then transition opacity to 1 over 150ms — masks the flash entirely.
       const pillsAreaRef = document.getElementById("category-pills-area");
       if (pillsAreaRef) {
-        pillsAreaRef.style.transition = 'none';
-        pillsAreaRef.style.opacity = '0';
+        pillsAreaRef.classList.remove('pills-slide-in');
       }
 
       let picks, hasSurvey;
@@ -7352,26 +7400,13 @@ document.addEventListener('keydown', e => {
       // generated). Flipping to display:flex here causes all cat-row
       // animations to begin with their stagger delays already in place.
       //
-      // The pills area uses blend-multiply (::before with mix-blend-mode).
-      // On display toggle, the ::before renders at full opacity for one frame
-      // before the blend composites. Hide the ::before via opacity:0, show
-      // the panel, then restore on the next frame.
       document.getElementById("sidebar-category-select").style.display = "flex";
       document.getElementById("sidebar-question-answer").style.display = "none";
       document.getElementById("input-area").classList.add("hidden");
-      // Fade in the pills area to mask blend-multiply composite flash.
-      // The 150ms transition covers any frames where ::before renders
-      // at full opacity before mix-blend-mode kicks in.
+      // Slide the pills area in from the left — content is fully composited
+      // off-screen before it becomes visible.
       if (pillsAreaRef) {
-        requestAnimationFrame(() => {
-          pillsAreaRef.style.transition = 'opacity 0.15s ease';
-          pillsAreaRef.style.opacity = '1';
-          // Clean up inline styles after transition
-          pillsAreaRef.addEventListener('transitionend', () => {
-            pillsAreaRef.style.removeProperty('transition');
-            pillsAreaRef.style.removeProperty('opacity');
-          }, { once: true });
-        });
+        requestAnimationFrame(() => pillsAreaRef.classList.add('pills-slide-in'));
       }
 
       // Hide board wrapper during category selection
@@ -7446,12 +7481,7 @@ document.addEventListener('keydown', e => {
         delay += stepSeconds;
       });
 
-      // Path A finale — the pills area's blended background slides out
-      // to the left as the cascade's last beat. The CSS rule for
-      // .pills-exit::before has its own delay (0.5s) baked in, matching
-      // the next stagger step after the last cat-row/divider. See the
-      // pills-bg-slide-out keyframe for why this animates the ::before
-      // pseudo-element rather than the pills area itself.
+      // Path A finale — pills area background fades out as the cascade's last beat.
       pillsArea.classList.add("pills-exit");
 
       // ═════ Path B — Selected category: glow ramp → CRT power-off ═════
@@ -8001,17 +8031,10 @@ document.addEventListener('keydown', e => {
       await animateCountUp(roundTotalEl, oldRoundTotal, roundScore);
       await anim.wait(gap);
 
-      // Step 4a/4b: streak + multiplier (skip on final answer — values don't carry over)
-      if (!revealed.every(r => r)) {
-        await updateStreakValue();
-        await anim.wait(gap);
-        await updateMultValue();
-      } else {
-        // Still sync tracking vars so subsequent reconcile snapshots
-        // don't see a stale _prevStreak/_prevMultiplier and re-animate
-        _prevStreak = currentStreak;
-        _prevMultiplier = answerMultiplier;
-      }
+      // Step 4a/4b: streak + multiplier (always animate, even on final answer)
+      await updateStreakValue();
+      await anim.wait(gap);
+      await updateMultValue();
     }
 
     function revealAll() {
@@ -8117,12 +8140,16 @@ document.addEventListener('keydown', e => {
       _prevMultiplier = answerMultiplier;
     }
 
+    let _streakDisplayGeneration = 0; // incremented on round reset to cancel stale callbacks
     function updateStreakDisplay(opts = {}) {
       if (opts.afterStrike) {
         // Wait for strike animation to finish, then sequence streak → gap → mult
+        const gen = _streakDisplayGeneration;
         anim.wait(1400).then(async () => {
+          if (gen !== _streakDisplayGeneration) return; // round changed, discard
           await updateStreakValue();
           await anim.wait(500);
+          if (gen !== _streakDisplayGeneration) return;
           await updateMultValue();
         });
       } else {
@@ -8131,7 +8158,7 @@ document.addEventListener('keydown', e => {
       }
     }
 
-    const BG_BLOB_DEFAULT = '#513f6d';
+    const BG_BLOB_DEFAULT = '#111';
     function updateBlobColor(team) {
       const root = document.getElementById('game-root');
       let color = BG_BLOB_DEFAULT;
@@ -8558,8 +8585,9 @@ document.addEventListener('keydown', e => {
       header.innerHTML = msg;
       const isLastRound = gameMode === 'rounds' && roundNumber >= maxRounds;
 
-      // Final round: auto-trigger victory — no button needed
+      // Final round: auto-reveal remaining answers, then trigger victory
       if (isLastRound) {
+        setTimeout(() => revealAll(), 3000 / gameSpeed);
         endGameByRounds();
         return;
       }
@@ -8567,19 +8595,18 @@ document.addEventListener('keydown', e => {
       if (isMultiplayer) {
         // Multiplayer: Ready Up consensus — all players must ready before advancing
         body.innerHTML = `
-          ${make3dBtn('Reveal All Answers', 'revealAll()', 'input-btn-sm', 'reveal-all')}
           ${make3dBtn('Ready Up', 'readyUp()', '', 'ready-up')}
           <div id="ready-status" style="text-align:center; margin-top:8px; font-family:futura-100,sans-serif; font-size:0.85rem; color:#aaa;"></div>
         `;
       } else {
         // Local mode: direct advance
         body.innerHTML = `
-          ${make3dBtn('Reveal All Answers', 'revealAll()', 'input-btn-sm', 'reveal-all')}
           ${make3dBtn('Next Round', 'advanceRound()', '', 'next-round')}
         `;
       }
-      setup3dBtns();
 
+      // Auto-reveal remaining answers after 3 seconds
+      setTimeout(() => revealAll(), 3000 / gameSpeed);
       document.getElementById("endRound").innerHTML = "";
 
       // Reset local ready state for new round-result phase
@@ -8594,19 +8621,10 @@ document.addEventListener('keydown', e => {
     // ── Ready-Up Consensus (Multiplayer) ──────────────────────────
 
     // Determine which client is responsible for triggering advanceRound/endGame.
-    // Host (first UID in red team) is the designated advancer.
+    // The game host is the designated advancer. isHost is set at create/join time.
     function amDesignatedAdvancer() {
       if (!isMultiplayer) return true;
-      // Host = first player in team 0
-      const hostUid = teamPlayerUids[0]?.[0];
-      if (hostUid && hostUid === myUid) return true;
-      // Fallback: if host isn't in readyPlayers (disconnected?), first ready player advances
-      if (hostUid && !_readyPlayersMap[hostUid]) {
-        const allUids = [...teamPlayerUids[0], ...teamPlayerUids[1]];
-        const firstReady = allUids.find(uid => _readyPlayersMap[uid]);
-        return firstReady === myUid;
-      }
-      return false;
+      return isHost;
     }
 
     function readyUp() {
@@ -8620,11 +8638,8 @@ document.addEventListener('keydown', e => {
       _readyPlayersMap[myUid] = true;
 
       // Disable the Ready Up button
-      const readyBtn = document.querySelector('#turn-body .input-btn:last-of-type');
-      if (readyBtn) {
-        readyBtn.style.pointerEvents = 'none';
-        readyBtn.style.filter = 'brightness(0.5)';
-      }
+      const readyBtn = document.querySelector('#turn-body .action-btn:last-of-type');
+      if (readyBtn) readyBtn.disabled = true;
 
       // Build Firestore update with dot-notation to merge into readyPlayers map
       const update = {};
@@ -8666,8 +8681,10 @@ document.addEventListener('keydown', e => {
       const allUids = [...teamPlayerUids[0], ...teamPlayerUids[1]];
       const allReady = allUids.length > 0 && allUids.every(uid => _readyPlayersMap[uid]);
       const timedOut = _readyCountdownEnd && Date.now() >= _readyCountdownEnd;
+      console.log('[multi] checkReadyAdvance: allReady=' + allReady + ' timedOut=' + timedOut + ' readyMap=' + JSON.stringify(_readyPlayersMap) + ' allUids=' + JSON.stringify(allUids.map(u=>u.substring(0,8))) + ' isDesignated=' + amDesignatedAdvancer());
 
       if (allReady || timedOut) {
+        console.log('[multi] checkReadyAdvance → ADVANCING (allReady=' + allReady + ' timedOut=' + timedOut + ')');
         if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
         if (amDesignatedAdvancer()) {
           advanceRound();
@@ -8723,9 +8740,8 @@ document.addEventListener('keydown', e => {
       // Populate sidebar endRound area (retained for returning to the board)
       document.getElementById("endRound").innerHTML=`
         ${msg}
-        ${make3dBtn('Fast Money Round', `startFastMoney(${winner})`, 'input-btn-fm')}
+        ${make3dBtn('Fast Money Round', `startFastMoney(${winner})`, 'action-btn-fm')}
         ${make3dBtn('Play Again', 'resetGameConfirm()')}`;
-      setup3dBtns();
       document.getElementById("turn-input-box").style.display="none";
       gameEnded = true;
       // Launch victory overlay (dialog + particles)
@@ -9433,21 +9449,45 @@ document.addEventListener('keydown', e => {
     function generateGameCode() {
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/1/O/0 confusion
       let code = '';
-      for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
+      for (let i = 0; i < 1; i++) code += chars[Math.floor(Math.random() * chars.length)];
       return code;
     }
 
-    async function showCreateGame() {
+    function showCreateGame() {
       playTap(1);
       const modeSelect = document.getElementById('mode-select');
+      modeSelect.querySelector('h1').textContent = 'Create Game';
+      modeSelect.querySelector('.mode-buttons').innerHTML = `
+        <div class="join-form">
+          <h2>Enter Your Name</h2>
+          <input type="text" id="create-name-input" placeholder="Your name" maxlength="18">
+          <div class="join-form-actions">
+            <button class="cancel-btn" onclick="backToModeSelect()">Back</button>
+            <button class="join-btn" onclick="submitCreateGame()">Create</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('create-name-input').focus();
+      modeSelect.querySelector('.join-form').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submitCreateGame();
+      });
+    }
+
+    async function submitCreateGame() {
+      const nameInput = document.getElementById('create-name-input');
+      let name = (nameInput?.value || '').trim();
+      if (!name) name = 'Player 1';
+
       // Sign in anonymously
       if (!myUid) await window._fb.signInAnonymously();
-      // Wait for auth state to propagate
       if (!myUid) await new Promise(r => { const i = setInterval(() => { if (myUid) { clearInterval(i); r(); } }, 50); });
 
       gameCode = generateGameCode();
       isHost = true;
-      myName = 'Host';
+      myName = name;
+
+      // Limit question pool during testing (same as dev mode — 3 per category)
+      if (questions.length > 0) computeDevModeQuestions();
 
       // Write game document to Firestore
       gameRef = window._fb.doc('games', gameCode);
@@ -9455,17 +9495,17 @@ document.addEventListener('keydown', e => {
         hostUid: myUid,
         status: 'lobby',
         createdAt: window._fb.serverTimestamp(),
-        maxRounds: parseInt(document.getElementById('roundsInput').value) || 4,
+        maxRounds: 4,
         gameSpeed: gameSpeedSetting || 1,
         teamNames: ['Red Team', 'Blue Team'],
         teamScores: [0, 0],
         players: {
-          [myUid]: { name: myName, team: null, isHost: true, online: true }
+          [myUid]: { name: myName, team: 0, isHost: true, online: true, joinedAt: Date.now() }
         }
       });
 
       // Transition to lobby
-      fadeOutScreen(modeSelect, () => showLobby());
+      fadeOutScreen(document.getElementById('mode-select'), () => showLobby());
     }
 
     function showJoinForm() {
@@ -9475,7 +9515,7 @@ document.addEventListener('keydown', e => {
       modeSelect.querySelector('.mode-buttons').innerHTML = `
         <div class="join-form">
           <h2>Enter Code</h2>
-          <input type="text" id="join-code-input" placeholder="Game code" maxlength="5"
+          <input type="text" id="join-code-input" placeholder="Game code" maxlength="1"
                  style="text-transform: uppercase; letter-spacing: 0.2em; font-size: 1.5rem;">
           <input type="text" id="join-name-input" placeholder="Your name" maxlength="18">
           <div class="join-error" id="join-error"></div>
@@ -9517,12 +9557,11 @@ document.addEventListener('keydown', e => {
       const nameInput = document.getElementById('join-name-input');
       const errorEl   = document.getElementById('join-error');
       const code = (codeInput.value || '').trim().toUpperCase();
-      const name = (nameInput.value || '').trim();
+      let name = (nameInput.value || '').trim();
 
       errorEl.textContent = '';
 
-      if (!code || code.length < 5) { errorEl.textContent = 'Enter a 5-character game code'; return; }
-      if (!name) { errorEl.textContent = 'Enter your name'; return; }
+      if (!code || code.length < 1) { errorEl.textContent = 'Enter a game code'; return; }
 
       // Sign in anonymously
       if (!myUid) await window._fb.signInAnonymously();
@@ -9537,11 +9576,27 @@ document.addEventListener('keydown', e => {
 
       gameCode = code;
       isHost = false;
+      // Auto-assign sequential name if blank (dev convenience)
+      if (!name) {
+        const existing = Object.values(data.players || {}).map(p => p.name);
+        let n = 1;
+        while (existing.includes(`Player ${n}`)) n++;
+        name = `Player ${n}`;
+      }
       myName = name;
+
+      // Auto-assign to team with fewer players
+      const players = data.players || {};
+      let redCount = 0, blueCount = 0;
+      for (const p of Object.values(players)) {
+        if (p.team === 0) redCount++;
+        else if (p.team === 1) blueCount++;
+      }
+      const autoTeam = redCount <= blueCount ? 0 : 1;
 
       // Add self to players map
       await window._fb.updateDoc(gameRef, {
-        [`players.${myUid}`]: { name: myName, team: null, isHost: false, online: true }
+        [`players.${myUid}`]: { name: myName, team: autoTeam, isHost: false, online: true, joinedAt: Date.now() }
       });
 
       // Transition to lobby
@@ -9556,7 +9611,21 @@ document.addEventListener('keydown', e => {
       // Listen for real-time updates
       if (unsubGameSnap) unsubGameSnap();
       unsubGameSnap = window._fb.onSnapshot(gameRef, (snap) => {
-        if (!snap.exists()) return;
+        if (!snap.exists()) {
+          // Game was deleted (host left) — kick back to mode select
+          if (unsubGameSnap) { unsubGameSnap(); unsubGameSnap = null; }
+          gameRef = null;
+          gameCode = '';
+          const lobby = document.getElementById('lobby');
+          if (lobby) {
+            lobby.style.display = 'none';
+            lobby.classList.remove('fade-in');
+          }
+          backToModeSelect();
+          const ms = document.getElementById('mode-select');
+          if (ms) { ms.style.display = 'flex'; ms.classList.add('fade-in'); }
+          return;
+        }
         const data = snap.data();
         // If game started, transition out of lobby
         if (data.status === 'playing' && !isHost) {
@@ -9571,19 +9640,30 @@ document.addEventListener('keydown', e => {
       // Initial render — subsequent updates come from onSnapshot → renderLobbyFromData
       const lobby = document.getElementById('lobby');
       lobby.innerHTML = `
+        <div class="lobby-back-row">
+          <button class="lobby-back-btn" onclick="leaveLobby()">&#8592; Back</button>
+        </div>
         <h1>Game Lobby</h1>
-        <div class="lobby-code-display" onclick="copyGameCode()" title="Click to copy">${gameCode}</div>
-        <div class="lobby-code-hint">Share this code with your friends</div>
+        <div class="lobby-code-row">
+          <div class="lobby-code-display" onclick="copyGameCode()" title="Click to copy">${gameCode}</div>
+          <span class="lobby-code-copy-label" onclick="copyGameCode()">Click to copy</span>
+        </div>
+        <div class="lobby-code-hint" id="lobby-code-hint">Share this code with your friends</div>
         <div class="lobby-teams" id="lobby-teams">
           <div class="lobby-team team-red">
             <div class="lobby-team-header">Red Team</div>
+            <button class="lobby-join-team-btn red-join" onclick="joinTeam(0)">Join Red</button>
             <ul class="lobby-player-list" id="lobby-red-players"></ul>
-            <button class="lobby-join-team-btn" onclick="joinTeam(0)">Join Red</button>
+          </div>
+          <div class="lobby-team team-unassigned">
+            <div class="lobby-team-header">Unassigned</div>
+            <button class="lobby-join-team-btn unassigned-join" onclick="joinTeam(null)">Undecided</button>
+            <ul class="lobby-player-list" id="lobby-unassigned-players"></ul>
           </div>
           <div class="lobby-team team-blue">
             <div class="lobby-team-header">Blue Team</div>
+            <button class="lobby-join-team-btn blue-join" onclick="joinTeam(1)">Join Blue</button>
             <ul class="lobby-player-list" id="lobby-blue-players"></ul>
-            <button class="lobby-join-team-btn" onclick="joinTeam(1)">Join Blue</button>
           </div>
         </div>
         <div class="lobby-settings" id="lobby-settings"></div>
@@ -9597,33 +9677,23 @@ document.addEventListener('keydown', e => {
       const players = data.players || {};
       const redList = document.getElementById('lobby-red-players');
       const blueList = document.getElementById('lobby-blue-players');
-      if (!redList || !blueList) return;
+      const unassignedList = document.getElementById('lobby-unassigned-players');
+      if (!redList || !blueList || !unassignedList) return;
 
       redList.innerHTML = '';
       blueList.innerHTML = '';
+      unassignedList.innerHTML = '';
 
-      // Sort by UID for deterministic order across all clients
-      // (Firestore map key iteration order is not guaranteed)
-      let redCount = 0, blueCount = 0;
-      const sortedEntries = Object.entries(players).sort(([a], [b]) => a.localeCompare(b));
+      // Sort chronologically (first joiner at top)
+      let redCount = 0, blueCount = 0, unassignedCount = 0;
+      const sortedEntries = Object.entries(players).sort(([, a], [, b]) => (a.joinedAt || 0) - (b.joinedAt || 0));
       for (const [uid, p] of sortedEntries) {
-        if (p.team === 0 || p.team === 1) {
-          const li = document.createElement('li');
-          if (uid === myUid) li.classList.add('is-me');
-          li.innerHTML = `${p.name}${p.isHost ? ' <span class="lobby-player-host-badge">Host</span>' : ''}`;
-          if (p.team === 0) { redList.appendChild(li); redCount++; }
-          else { blueList.appendChild(li); blueCount++; }
-        }
-      }
-
-      // Show unassigned players as a hint
-      const unassigned = Object.entries(players).filter(([, p]) => p.team === null);
-      if (unassigned.length > 0) {
-        const hint = document.createElement('li');
-        hint.style.color = 'rgba(255,255,255,0.4)';
-        hint.style.fontStyle = 'italic';
-        hint.textContent = `${unassigned.length} player${unassigned.length > 1 ? 's' : ''} waiting to pick a team`;
-        (redCount <= blueCount ? redList : blueList).appendChild(hint);
+        const li = document.createElement('li');
+        if (uid === myUid) li.classList.add('is-me');
+        li.innerHTML = `${p.name}${p.isHost ? ' <span class="lobby-player-host-badge">Host</span>' : ''}`;
+        if (p.team === 0) { redList.appendChild(li); redCount++; }
+        else if (p.team === 1) { blueList.appendChild(li); blueCount++; }
+        else { unassignedList.appendChild(li); unassignedCount++; }
       }
 
       // Update settings display — host gets interactive controls, others read-only
@@ -9647,13 +9717,21 @@ document.addEventListener('keydown', e => {
         }
       }
 
-      // Enable start button if both teams have players
+      // Start button: require all assigned + both teams have players
       if (isHost) {
         const btn = document.getElementById('lobby-start-btn');
         if (btn) {
-          const canStart = redCount > 0 && blueCount > 0;
+          const allAssigned = unassignedCount === 0;
+          const bothTeams = redCount > 0 && blueCount > 0;
+          const canStart = allAssigned && bothTeams;
           btn.disabled = !canStart;
-          btn.textContent = canStart ? 'Start Game' : 'Waiting for players...';
+          if (!allAssigned) {
+            btn.textContent = `${unassignedCount} player${unassignedCount > 1 ? 's' : ''} not on a team`;
+          } else if (!bothTeams) {
+            btn.textContent = 'Waiting for players...';
+          } else {
+            btn.textContent = 'Start Game';
+          }
         }
       }
     }
@@ -9692,12 +9770,53 @@ document.addEventListener('keydown', e => {
 
     function copyGameCode() {
       navigator.clipboard.writeText(gameCode).then(() => {
-        const hint = document.querySelector('.lobby-code-hint');
-        if (hint) {
+        const hint = document.getElementById('lobby-code-hint');
+        const label = document.querySelector('.lobby-code-copy-label');
+        if (label) {
+          label.textContent = 'Copied!';
+          setTimeout(() => { label.textContent = 'Click to copy'; }, 1500);
+        } else if (hint) {
           hint.textContent = 'Copied!';
           setTimeout(() => { hint.textContent = 'Share this code with your friends'; }, 1500);
         }
       });
+    }
+
+    async function leaveLobby() {
+      playTap(1);
+      // Unsubscribe from real-time listener
+      if (unsubGameSnap) { unsubGameSnap(); unsubGameSnap = null; }
+
+      if (gameRef) {
+        try {
+          if (isHost) {
+            // Delete the entire game document — kicks all players
+            await window._fb.deleteDoc(gameRef);
+          } else {
+            // Remove self from players map
+            await window._fb.updateDoc(gameRef, {
+              [`players.${myUid}`]: window._fb.deleteField()
+            });
+          }
+        } catch (e) {
+          console.warn('leaveLobby cleanup failed:', e);
+        }
+      }
+
+      // Reset local state
+      gameRef = null;
+      gameCode = '';
+      isHost = false;
+
+      // Transition back to mode select
+      const lobby = document.getElementById('lobby');
+      if (lobby) {
+        lobby.style.display = 'none';
+        lobby.classList.remove('fade-in');
+      }
+      backToModeSelect();
+      const ms = document.getElementById('mode-select');
+      if (ms) { ms.style.display = 'flex'; ms.classList.add('fade-in'); }
     }
 
     async function lobbyStartGame() {
@@ -9709,9 +9828,12 @@ document.addEventListener('keydown', e => {
       const data = snap.data();
       const players = data.players || {};
 
+      // Guard: don't start if anyone is unassigned
+      if (Object.values(players).some(p => p.team === null)) return;
+
       const redPlayers = [], bluePlayers = [];
-      // Sort by UID for deterministic order across all clients
-      const sortedPlayers = Object.entries(players).sort(([a], [b]) => a.localeCompare(b));
+      // Sort by join time for deterministic order across all clients
+      const sortedPlayers = Object.entries(players).sort(([, a], [, b]) => (a.joinedAt || 0) - (b.joinedAt || 0));
       for (const [uid, p] of sortedPlayers) {
         if (p.team === 0) redPlayers.push({ uid, name: p.name });
         else if (p.team === 1) bluePlayers.push({ uid, name: p.name });
@@ -9800,10 +9922,6 @@ document.addEventListener('keydown', e => {
       if (redLabelH4) { redLabelH4.textContent = teamNames[0]; fitByCharCount(redLabelH4, 10); }
       if (blueLabelH4) { blueLabelH4.textContent = teamNames[1]; fitByCharCount(blueLabelH4, 10); }
 
-      // Clear start-screen inline blob fills so updateBlobColor works
-      ['.bg-out-top', '.bg-in-top', '.bg-out-bottom', '.bg-in-bottom']
-        .forEach(sel => { const el = document.querySelector(sel); if (el) el.style.fill = ''; });
-
       // Show game, hide setup + ribbon
       document.getElementById("setup").style.display = "none";
       document.getElementById("game").style.display = "flex";
@@ -9852,28 +9970,12 @@ document.addEventListener('keydown', e => {
       // Setup starts off-screen right; start screen covers it
       setup.style.transform = 'translateX(110%)';
 
-      // Start screen blob colors: set base to black, then assign distinct
-      // per-blob fills via inline style (overrides the CSS var).
-      const START_BLOB_COLORS = ['#0000c0', '#00c000', '#c000c0', '#00c0c0'];
-      const blobEls = ['.bg-out-top', '.bg-in-top', '.bg-out-bottom', '.bg-in-bottom']
-        .map(sel => document.querySelector(sel));
-      gameRoot.style.setProperty('--bg-blob-base', '#C00000');
-      blobEls.forEach((el, i) => { if (el) el.style.fill = START_BLOB_COLORS[i]; });
+      // Blob fills are now fixed in CSS (SMPTE colors). Only --bg-blob-base
+      // (game-root background) needs to change. Start with dark base.
+      gameRoot.style.setProperty('--bg-blob-base', '#111');
 
-      // Shared cleanup: crossfade inline blob fills to the default purple,
-      // then clear them so CSS variable control takes over.
-      // Called by both normal click and dev mode.
       window._restoreStartBlobs = function() {
-        // Set each blob's inline fill to the default — the CSS transition
-        // on fill (1.5s) crossfades from the bright start color to purple.
-        blobEls.forEach(el => { if (el) el.style.fill = BG_BLOB_DEFAULT; });
-        // Also crossfade --bg-blob-base (black → purple) for game-root bg.
         gameRoot.style.setProperty('--bg-blob-base', BG_BLOB_DEFAULT);
-        // After transition completes, remove inline fills so the blobs
-        // respond to future --bg-blob-base changes (team colors, etc.)
-        setTimeout(() => {
-          blobEls.forEach(el => { if (el) el.style.fill = ''; });
-        }, 1600);
       };
 
       // Shared dismiss sequence: crossfade blobs → TV-off logo → fade screen.

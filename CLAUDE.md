@@ -133,11 +133,38 @@ Between rounds, all players see a "Ready Up" button. First click starts a 10-sec
 
 ### What's Left (priority order)
 
-1. **Spectator visual polish (Safari-specific)** — Safari has blend-multiply opacity flicker on category-pills-area and content-tv clipping issues. Chrome is clean. Deferring Safari pass until Chrome build is stable.
-2. **Reveal All sync** — `revealAll()` currently local-only. Consider making it automatic at round end (standard Feud behavior).
-3. **Background blob color sync** — round-end purple shift doesn't propagate to spectator.
-4. **Awards accuracy** — `matchLog` player/team mapping may have issues. With host-authoritative model, host should compute awards and sync the results.
-5. **Lobby UX** — host name hardcoded to "Host" (no name input on create), lobby UI needs broader redesign for online play.
+1. **Play Again button non-functional** — the "Play Again" button at game end doesn't work in multiplayer. Top priority for next session.
+2. **Awards accuracy** — `matchLog` player/team mapping may have issues. With host-authoritative model, host should compute awards and sync the results.
+3. **Speed boost bug** — spacebar fast-forward persists after round-ending steal. `deactivateSpeedBoost()` fires too early in the steal path.
+4. **Safari visual polish** — content-tv clipping issues. Deferring Safari pass until Chrome build is stable.
+5. **Lobby UX (future)** — Captain role for Blue team (first Blue player chronologically), team name editing in lobby, team color selection.
+6. **No disconnect handling** — host leaving mid-game strands all players. Lobby back button handles pre-game disconnect, but mid-game disconnects are unhandled.
+
+### What Was Fixed (April 14 session)
+
+- **`amDesignatedAdvancer()`** — was using `teamPlayerUids[0][0]` (alphabetical first UID) instead of `isHost`. Caused wrong client to call `advanceRound()`. Simplified to `return isHost`.
+- **Streak/mult decrease SFX on round exit** — `decreaseblip.mp3` fired during round transitions via stale `updateStreakDisplay` callbacks. Fixed with `_streakDisplayGeneration` counter (incremented in `initRoundState`) and `_prevStreak`/`_prevMultiplier` pre-sync in reconcile when `currentStreak` drops to 0.
+- **3D prism buttons replaced** — `.input-btn` (4-face rotating prism) replaced with flat `.btn .action-btn` for all action buttons (Submit, Ready Up, Next Round, etc.). Category pills keep `.btn-3d`. Eliminated the `filter: brightness()` flattening bug on disabled buttons and removed `setup3dBtns()` calls for non-category elements.
+- **Spectator round-end effects** — failed steal wiggle + `negativebeep.wav` + strikes glow fade now synced via `lastResult.outcome === 'steal_fail'` in reconcile. Phase indicator `round-glow` + `sfxRoundEnd` + blob color reset now fire in `handlePhaseTransition` directly (bypassing `setPhase` early-return caused by synchronous `data-phase` attribute set).
+- **Spectator category exit animation** — non-host now uses `animateCategoryTransition()` (same as host) instead of the simplified `animateSpectatorCategoryExit()`. Selected category gets the full glow → CRT power-off sequence on all clients.
+- **Spectator round-advance exit animation** — non-host `category-select` phase handler now mirrors host's `advanceRound` exit sequence (input slides down → content-tv slides out left → board slides out) before `initRoundState()`.
+- **Category pills opacity flicker** — removed `blend-multiply` from `#category-pills-area`. Replaced with simple `background: rgba(17,17,17,0.35)`. Added `pills-slide-in` animation (slides from left). Eliminated the `opacity: 0` → rAF → `opacity: 1` race condition workaround.
+- **Blob background simplified** — fixed SMPTE-inspired colors per blob (green/yellow left, magenta/cyan right). `--bg-blob-base` now only controls `#game-root` background gradient. Neutral color changed from purple (`#513f6d`) to black (`#111`). All inline fill override code removed.
+- **Reveal All automatic** — `revealAll()` now auto-triggers 3 seconds after round winner is determined (both mid-game and final round). Reveal All button removed from UI. Works on all clients locally (no Firestore sync needed).
+- **Non-host input focus** — `updateRoleUI` now focuses guess input when it's the player's turn, but only after `sq-zone-input` has finished its slide-in (prevents browser forcing offscreen element visible). `setupQuestionScreenForSpectator` focuses input at end of `anim.sequence`.
+- **Spectator tooltip access** — `pointer-events: none` moved from `.cat-row` to child `.btn-3d`/`.action-btn` elements via `.spectator-disabled` class, preserving hover for tooltips.
+
+### Lobby Redesign (April 14 session)
+
+- **Host name input** — `showCreateGame()` now shows a name input form. Blank defaults to "Player 1". Host auto-assigned to Red team with `joinedAt` timestamp.
+- **Auto team assignment** — `submitJoinGame()` counts red vs blue players and assigns to the smaller team (red if tied). `joinedAt: Date.now()` added to all player entries.
+- **3-column layout** — Red Team | Unassigned | Blue Team. "Undecided" button lets players move to unassigned. Join buttons fixed above player lists (never pushed down).
+- **Chronological ordering** — player lists sorted by `joinedAt` instead of UID. First joiner appears at top.
+- **Start validation** — requires all players on teams AND both teams have ≥1 player. Dynamic button text explains why Start is disabled.
+- **Back button** — `leaveLobby()` function: host leaving deletes game doc (kicks all players via `onSnapshot` `!snap.exists()` handler), non-host leaving removes self via `deleteField()`. `deleteField` added to Firestore imports.
+- **Settings doubled** — lobby settings display at 1.8rem font, 48px gap.
+- **Click to copy label** — visible label next to game code, updates to "Copied!" on click.
+- **Game code length** — currently set to 1 character for dev testing convenience. Change loop bound in `generateGameCode()` to restore (4-5 chars for production).
 
 ### Parallel Data Structures (multiplayer-specific)
 

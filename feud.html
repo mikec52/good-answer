@@ -6855,6 +6855,12 @@ document.addEventListener('keydown', e => {
         writeId: data._writeId,
       });
 
+      // Track scribble word picks from all drawers (Firestore map)
+      // Update both when map is present and when it's explicitly null/cleared
+      if (data.hasOwnProperty && data.hasOwnProperty('scribbleWordPicks')) {
+        scribbleState._wordPicks = data.scribbleWordPicks || {};
+      }
+
       // Look ahead: will flipTile run for a newly revealed tile?
       // If so, skip immediate display updates for streak/mult/roundScore —
       // flipTile's scoring sequence will animate them properly.
@@ -7206,6 +7212,21 @@ document.addEventListener('keydown', e => {
           // For high-five and survey, the host will follow up with a
           // 'category-select' or 'gameplay' phase transition that the
           // existing handlers process — no extra action needed here.
+          break;
+
+        case 'scribble-drawing-start':
+          // Host synced the start of the drawing session with both team's words
+          if (data.scribbleSessionWords) {
+            // Stop the word-select countdown locally if it's still running
+            if (scribbleState._wsCountdown) {
+              clearInterval(scribbleState._wsCountdown);
+              scribbleState._wsCountdown = null;
+            }
+            scribbleEnterDrawingForMyTeam(
+              data.scribbleSessionWords.team0,
+              data.scribbleSessionWords.team1
+            );
+          }
           break;
 
         case 'category-select':
@@ -8905,23 +8926,66 @@ document.addEventListener('keydown', e => {
     }
 
     // Host collects both drawers' picks and starts the drawing session.
-    // Called when timer expires or when both picks are detected.
+    // Reads from scribbleWordPicks map (synced by each drawer), determines
+    // team words, auto-fills missing picks, and syncs the start phase.
     function scribbleHostStartDrawing() {
       if (scribbleState.phase !== "word-select") return;
+      if (!isHost && isMultiplayer) return; // Safety: only host triggers
 
-      // For now: each client uses their own pick as "myWord" and a
-      // placeholder for the opponent's word. In multiplayer, the host
-      // will eventually sync both words to all clients.
-      const myPick = scribbleState._myWordPick || { word: "mystery", difficulty: "medium", points: 75 };
+      const sessionIdx = scribbleState.currentSession;
+      const picks = scribbleState._wordPicks || {};
 
-      // Generate an opponent word (placeholder until Firestore word sync)
-      const oppDiffs = ["easy", "medium", "hard"];
-      const oppDiff = oppDiffs[Math.floor(Math.random() * 3)];
-      const oppWord = scribblePickWord(oppDiff);
-      const oppPts = SCRIBBLE_CONFIG.difficultyPoints[oppDiff];
-      scribbleState.usedWords.add(oppWord);
+      // Determine each team's drawer UID for this session
+      const team0DrawerUid = teamPlayerUids[0]?.[sessionIdx % (teamPlayerUids[0]?.length || 1)];
+      const team1DrawerUid = teamPlayerUids[1]?.[sessionIdx % (teamPlayerUids[1]?.length || 1)];
 
-      scribbleStartDrawingSession(myPick.word, myPick.difficulty, myPick.points, oppWord, oppDiff, oppPts);
+      // Fetch each team's pick (or auto-pick if missing)
+      function getOrAutoPick(uid) {
+        if (uid && picks[uid]) return picks[uid];
+        // Auto-pick random medium word
+        const w = scribblePickWord("medium");
+        scribbleState.usedWords.add(w);
+        return { word: w, difficulty: "medium", points: 75 };
+      }
+
+      const team0Word = getOrAutoPick(team0DrawerUid);
+      const team1Word = getOrAutoPick(team1DrawerUid);
+
+      // In local mode or if not multiplayer: start drawing session directly
+      // using the host's team perspective
+      if (!isMultiplayer) {
+        scribbleStartDrawingSession(team0Word.word, team0Word.difficulty, team0Word.points,
+                                     team1Word.word, team1Word.difficulty, team1Word.points);
+        return;
+      }
+
+      // Multiplayer: sync a drawing-start phase so all clients transition together
+      syncState({
+        phase: 'scribble-drawing-start',
+        scribbleSessionWords: {
+          team0: team0Word,
+          team1: team1Word,
+        },
+        scribbleWordPicks: null, // Clear picks map
+      });
+
+      // Host also starts locally
+      scribbleEnterDrawingForMyTeam(team0Word, team1Word);
+    }
+
+    // Given both team words, figure out which is "my team's" and start drawing
+    function scribbleEnterDrawingForMyTeam(team0Word, team1Word) {
+      // Determine my team
+      let myTeam = 0;
+      if (isMultiplayer && myUid) {
+        if (teamPlayerUids[1]?.includes(myUid)) myTeam = 1;
+      }
+      const myTeamWord = myTeam === 0 ? team0Word : team1Word;
+      const oppTeamWord = myTeam === 0 ? team1Word : team0Word;
+      scribbleStartDrawingSession(
+        myTeamWord.word, myTeamWord.difficulty, myTeamWord.points,
+        oppTeamWord.word, oppTeamWord.difficulty, oppTeamWord.points
+      );
     }
 
     // ── Drawing session ──

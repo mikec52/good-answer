@@ -3307,6 +3307,19 @@
     .scribble-ws-choice.easy { border-color: rgba(68,204,68,0.3); }
     .scribble-ws-choice.medium { border-color: rgba(76,140,255,0.3); }
     .scribble-ws-choice.hard { border-color: rgba(251,140,0,0.3); }
+    .scribble-ws-choice.picked {
+      border-color: #fba300 !important;
+      background: #3a2a00 !important;
+      box-shadow: 0 0 18px rgba(251,163,0,0.6);
+      transform: scale(1.03);
+    }
+    .scribble-ws-choice.picked::before {
+      content: "✓";
+      color: #fba300;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-right: 10px;
+    }
     .scribble-ws-word { font-family: "Bitcount Single", monospace; font-size: 1.4rem; text-transform: uppercase; }
     .scribble-ws-choice.easy .scribble-ws-word { color: #44cc44; }
     .scribble-ws-choice.medium .scribble-ws-word { color: #4c8cff; }
@@ -6861,6 +6874,16 @@ document.addEventListener('keydown', e => {
         scribbleState._wordPicks = data.scribbleWordPicks || {};
       }
 
+      // Apply scribble canvas snapshots (from drawers) for non-drawer clients
+      if (scribbleState.active && scribbleState.phase === "drawing" && data.scribbleCanvases) {
+        const prevCanvases = prev?.scribbleCanvases || {};
+        for (const teamIdx of ["0", "1"]) {
+          if (data.scribbleCanvases[teamIdx] && data.scribbleCanvases[teamIdx] !== prevCanvases[teamIdx]) {
+            scribbleApplyCanvasSnapshot(parseInt(teamIdx), data.scribbleCanvases[teamIdx]);
+          }
+        }
+      }
+
       // Look ahead: will flipTile run for a newly revealed tile?
       // If so, skip immediate display updates for streak/mult/roundScore —
       // flipTile's scoring sequence will animate them properly.
@@ -8663,6 +8686,50 @@ document.addEventListener('keydown', e => {
       ctx.putImageData(id, 0, 0);
     }
 
+    // ── Canvas snapshot sync ──
+    // Drawer: broadcast current canvas as compressed JPEG to Firestore so
+    // guessers (and the opposing team's drawer) can see the drawing.
+    // Called on pointerup / bucket fill / clear — not continuously.
+    function scribbleBroadcastCanvas() {
+      if (!isMultiplayer || scribbleState.myRole !== "drawer") return;
+      if (scribbleState.phase !== "drawing") return;
+      const c = document.getElementById("scribble-draw-canvas");
+      if (!c) return;
+      try {
+        const dataUrl = c.toDataURL("image/jpeg", 0.5);
+        // Determine my team (0 or 1) for the sync key
+        const myTeam = teamPlayerUids[0]?.includes(myUid) ? 0 : 1;
+        syncState({ [`scribbleCanvases.${myTeam}`]: dataUrl });
+      } catch (e) {
+        console.warn('[scribble] broadcast failed:', e);
+      }
+    }
+
+    // Guesser (or opposing drawer): receive a canvas snapshot and render it
+    // onto the correct target canvas (teammate or opponent view).
+    function scribbleApplyCanvasSnapshot(teamIdx, dataUrl) {
+      if (!dataUrl) return;
+      // Determine which target canvas this snapshot goes to
+      // Guesser view has teammate-canvas (my team) and opp-canvas (other team)
+      // Drawer view has no separate canvas (they draw on their own)
+      let myTeam = 0;
+      if (isMultiplayer && myUid) {
+        myTeam = teamPlayerUids[0]?.includes(myUid) ? 0 : 1;
+      }
+      const targetId = (teamIdx === myTeam) ? "scribble-teammate-canvas" : "scribble-opp-canvas";
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      const ctx = target.getContext("2d");
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, SCRIBBLE_CONFIG.canvasSize, SCRIBBLE_CONFIG.canvasSize);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, SCRIBBLE_CONFIG.canvasSize, SCRIBBLE_CONFIG.canvasSize);
+        ctx.drawImage(img, 0, 0, SCRIBBLE_CONFIG.canvasSize, SCRIBBLE_CONFIG.canvasSize);
+      };
+      img.src = dataUrl;
+    }
+
     // ── Scribble scoring ──
     function scribbleInitSessionScoring() {
       return {
@@ -8826,9 +8893,23 @@ document.addEventListener('keydown', e => {
 
     // ── Word selection ──
     function scribbleStartWordSelection() {
+      console.log('[scribble] word selection starting for session', scribbleState.currentSession);
+
+      // Clear any stale timers / state from previous session
+      if (scribbleState._wsCountdown) { clearInterval(scribbleState._wsCountdown); scribbleState._wsCountdown = null; }
+      if (scribbleState.sessionInterval) { clearInterval(scribbleState.sessionInterval); scribbleState.sessionInterval = null; }
+      if (scribbleState.revealTimer) { clearInterval(scribbleState.revealTimer); scribbleState.revealTimer = null; }
+      scribbleState._teammateSolved = false;
+      scribbleState._opponentSolved = false;
+      scribbleState._myWordPick = null;
+
       scribbleState.phase = "word-select";
       scribbleState.myRole = scribbleDetermineRole(scribbleState.currentSession);
-      scribbleState._myWordPick = null; // stores this drawer's pick until both are ready
+      console.log('[scribble] my role for session', scribbleState.currentSession, 'is', scribbleState.myRole);
+
+      // Ensure container is visible (important for session 2+)
+      const container = document.getElementById("scribble-container");
+      if (container) container.style.display = "flex";
 
       // Show word select, hide others
       const ws = document.getElementById("scribble-word-select");
@@ -8877,11 +8958,15 @@ document.addEventListener('keydown', e => {
           if (picked) return;
           picked = true;
           scribbleState.usedWords.add(c.word);
-          choicesEl.querySelectorAll(".scribble-ws-choice").forEach(d => d.style.pointerEvents = "none");
-          div.style.borderColor = "var(--gold)";
+          // Dim the unpicked cards, strongly highlight the picked one
+          choicesEl.querySelectorAll(".scribble-ws-choice").forEach(d => {
+            d.style.pointerEvents = "none";
+            if (d !== div) { d.style.opacity = "0.3"; }
+          });
+          div.classList.add("picked");
           // Store pick locally — don't start drawing yet, wait for timer/both picks
           scribbleState._myWordPick = { word: c.word, difficulty: c.difficulty, points: c.points };
-          if (wsWaiting) { wsWaiting.textContent = "Waiting for other drawer..."; wsWaiting.style.display = ""; }
+          if (wsWaiting) { wsWaiting.textContent = "✓ Pick locked in. Waiting for other drawer..."; wsWaiting.style.display = ""; }
 
           // Sync pick to Firestore so host can track both drawers
           if (isMultiplayer) {
@@ -9016,14 +9101,23 @@ document.addEventListener('keydown', e => {
       // Show the main sidebar input-area for guessers
       const mainInputArea = document.getElementById("input-area");
       const sqa = document.getElementById("sidebar-question-answer");
+      const sqInput = document.getElementById("sq-zone-input");
+      const sqContent = document.getElementById("sq-zone-content");
       if (!isDrawer) {
         if (sqa) sqa.style.display = "flex";
+        if (sqContent) sqContent.style.display = "none"; // no content-tv for scribble
+        if (sqInput) { sqInput.style.display = ""; sqInput.classList.remove("offscreen-below"); sqInput.classList.add("input-enter"); }
         if (mainInputArea) {
           mainInputArea.style.display = "";
-          mainInputArea.classList.remove("offscreen-below", "input-enter");
+          mainInputArea.classList.remove("hidden");
         }
+        // Update turn-header to reflect scribble guessing context
+        const turnHeader = document.getElementById("turn-header");
+        if (turnHeader) turnHeader.textContent = "Guess the drawings!";
+        const turnSubtext = document.getElementById("turn-subtext");
+        if (turnSubtext) turnSubtext.textContent = "Type your guess";
       } else {
-        // Hide sidebar input for drawers
+        // Hide sidebar input-area for drawers (they don't guess)
         if (sqa) sqa.style.display = "none";
       }
 
@@ -9235,6 +9329,7 @@ document.addEventListener('keydown', e => {
         if (scribbleState.currentTool === "bucket") {
           scribbleSaveUndo();
           scribbleFloodFill(p.x, p.y, scribbleState.currentColor);
+          scribbleBroadcastCanvas();
           return;
         }
         scribbleState.isDrawing = true;
@@ -9260,8 +9355,16 @@ document.addEventListener('keydown', e => {
         scribbleState.lastX = p.x; scribbleState.lastY = p.y;
       });
 
-      c.addEventListener("pointerup", () => { scribbleState.isDrawing = false; });
-      c.addEventListener("pointerleave", () => { scribbleState.isDrawing = false; });
+      c.addEventListener("pointerup", () => {
+        scribbleState.isDrawing = false;
+        scribbleBroadcastCanvas();
+      });
+      c.addEventListener("pointerleave", () => {
+        if (scribbleState.isDrawing) {
+          scribbleState.isDrawing = false;
+          scribbleBroadcastCanvas();
+        }
+      });
 
       c.addEventListener("contextmenu", (e) => { e.preventDefault(); });
 
@@ -9301,7 +9404,7 @@ document.addEventListener('keydown', e => {
       // Clear
       const clearBtn = document.getElementById("scribble-clear-btn");
       if (clearBtn) clearBtn.addEventListener("click", () => {
-        if (scribbleState.drawingEnabled) { scribbleSaveUndo(); scribbleClearDrawCanvas(); }
+        if (scribbleState.drawingEnabled) { scribbleSaveUndo(); scribbleClearDrawCanvas(); scribbleBroadcastCanvas(); }
       });
 
       // Undo

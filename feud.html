@@ -3318,15 +3318,27 @@
     #scribble-game { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
     .scribble-timer { font-family: "Bitcount Single", monospace; font-size: 1.6rem; color: #fba300; }
     .scribble-timer.warning { color: #ff4444; animation: pulse 0.5s ease-in-out infinite alternate; }
-    .scribble-canvases { display: flex; gap: 16px; }
     .scribble-panel { display: flex; flex-direction: column; align-items: center; gap: 6px; }
     .scribble-panel-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #888; }
     .scribble-canvas-wrap { position: relative; }
+
+    /* Drawer layout: word on left, canvas on right */
+    .scribble-drawer-layout { display: flex; gap: 20px; align-items: flex-start; justify-content: center; }
+    .scribble-drawer-word-side {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-width: 160px; padding-top: 80px;
+    }
+    .scribble-drawer-hint { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+
+    /* Guesser layout: two canvases side by side */
+    .scribble-guesser-layout { display: flex; gap: 16px; justify-content: center; }
+
     #scribble-draw-canvas { border-radius: 6px; box-shadow: inset 0 0 12px rgba(0,0,0,0.4); display: block; cursor: crosshair; }
     #scribble-draw-canvas.disabled { cursor: not-allowed !important; opacity: 0.7; }
+    #scribble-teammate-canvas { border-radius: 6px; box-shadow: inset 0 0 12px rgba(0,0,0,0.4); display: block; cursor: default; }
     #scribble-opp-canvas { border-radius: 6px; display: block; cursor: default; box-shadow: none; }
     .scribble-opponent-wrap {
-      position: relative; width: 480px; height: 480px; border-radius: 6px; overflow: hidden;
+      position: relative; width: 380px; height: 380px; border-radius: 6px; overflow: hidden;
       box-shadow: inset 0 0 12px rgba(0,0,0,0.4);
     }
     .scribble-tile-grid {
@@ -3383,7 +3395,7 @@
     }
     .scribble-eraser-dot::after { content: "\2715"; font-size: 0.5rem; font-weight: 700; color: #ff4444; }
 
-    .scribble-drawer-word { font-family: "Bitcount Single", monospace; font-size: 1.1rem; padding: 4px 12px; border-radius: 6px; background: #1a1a1a; text-align: center; }
+    .scribble-drawer-word { font-family: "Bitcount Single", monospace; font-size: 1.8rem; padding: 10px 18px; border-radius: 8px; background: #1a1a1a; text-align: center; text-transform: uppercase; }
     .scribble-drawer-word.easy { color: #44cc44; border: 1px solid rgba(68,204,68,0.3); }
     .scribble-drawer-word.medium { color: #4c8cff; border: 1px solid rgba(76,140,255,0.3); }
     .scribble-drawer-word.hard { color: #fb8c00; border: 1px solid rgba(251,140,0,0.3); }
@@ -4769,19 +4781,32 @@
             <div id="scribble-container" style="display:none;">
               <!-- Word selection overlay -->
               <div id="scribble-word-select" style="display:none;">
-                <div class="scribble-ws-title">Choose Your Word</div>
-                <div class="scribble-ws-timer" id="scribble-ws-timer">10</div>
-                <div class="scribble-ws-choices" id="scribble-ws-choices"></div>
-                <div class="scribble-ws-waiting" id="scribble-ws-waiting" style="display:none;">Waiting for other drawer...</div>
+                <!-- Drawer view: word cards -->
+                <div id="scribble-ws-drawer-view">
+                  <div class="scribble-ws-title">Choose Your Word</div>
+                  <div class="scribble-ws-timer" id="scribble-ws-timer">10</div>
+                  <div class="scribble-ws-choices" id="scribble-ws-choices"></div>
+                  <div class="scribble-ws-waiting" id="scribble-ws-waiting" style="display:none;">Waiting for other drawer...</div>
+                </div>
+                <!-- Guesser view: waiting message -->
+                <div id="scribble-ws-guesser-view" style="display:none;">
+                  <div class="scribble-ws-title" style="margin-bottom:20px;">Secret Scribble</div>
+                  <div class="scribble-ws-waiting">Drawers are selecting words...</div>
+                </div>
               </div>
               <!-- Drawing game area -->
               <div id="scribble-game" style="display:none;">
                 <div class="scribble-timer" id="scribble-timer">1:00</div>
-                <div class="scribble-canvases">
+
+                <!-- DRAWER VIEW: word on left, single canvas on right -->
+                <div id="scribble-drawer-view" class="scribble-drawer-layout" style="display:none;">
+                  <div class="scribble-drawer-word-side">
+                    <div class="scribble-drawer-word" id="scribble-drawer-word"></div>
+                    <div class="scribble-drawer-hint">Draw this!</div>
+                  </div>
                   <div class="scribble-panel" id="scribble-draw-panel">
-                    <div class="scribble-panel-label" id="scribble-draw-label">Your Drawing</div>
                     <div class="scribble-canvas-wrap">
-                      <canvas id="scribble-draw-canvas" width="480" height="480"></canvas>
+                      <canvas id="scribble-draw-canvas" width="380" height="380"></canvas>
                       <div class="scribble-edge-tools">
                         <button class="scribble-color-btn active" data-color="#111111" style="background:#111111;"></button>
                         <button class="scribble-color-btn" data-color="#ffffff" style="background:#ffffff;"></button>
@@ -4805,16 +4830,26 @@
                       <button class="scribble-size-btn" data-size="16"><span class="scribble-size-dot" style="width:20px;height:20px;"></span></button>
                       <button class="scribble-size-btn" id="scribble-eraser-btn"><span class="scribble-eraser-dot"></span></button>
                     </div>
-                    <div class="scribble-drawer-word" id="scribble-drawer-word" style="display:none;"></div>
+                  </div>
+                </div>
+
+                <!-- GUESSER VIEW: teammate canvas left, opponent canvas right -->
+                <div id="scribble-guesser-view" class="scribble-guesser-layout" style="display:none;">
+                  <div class="scribble-panel" id="scribble-teammate-panel">
+                    <div class="scribble-panel-label" id="scribble-teammate-label">Teammate</div>
+                    <div class="scribble-canvas-wrap">
+                      <canvas id="scribble-teammate-canvas" width="380" height="380"></canvas>
+                    </div>
                   </div>
                   <div class="scribble-panel" id="scribble-opp-panel">
-                    <div class="scribble-panel-label" id="scribble-opp-label">Opponent Drawing</div>
+                    <div class="scribble-panel-label" id="scribble-opp-label">Opponent</div>
                     <div class="scribble-opponent-wrap" id="scribble-opponent-wrap">
-                      <canvas id="scribble-opp-canvas" width="480" height="480"></canvas>
+                      <canvas id="scribble-opp-canvas" width="380" height="380"></canvas>
                       <div class="scribble-tile-grid" id="scribble-tile-grid"></div>
                     </div>
                   </div>
                 </div>
+
                 <div class="scribble-guess-area" id="scribble-guess-area">
                   <input type="text" class="scribble-guess-input" id="scribble-guess-input" placeholder="Type your guess..." maxlength="40">
                   <button class="scribble-guess-submit" id="scribble-guess-btn">Guess</button>
@@ -8127,9 +8162,9 @@ document.addEventListener('keydown', e => {
     const DEV_SKIP_TO_SCRIBBLE = true; // Bypass normal rounds, jump straight to scribble after lobby
 
     const SCRIBBLE_CONFIG = {
-      canvasSize: 480,
+      canvasSize: 380,
       gridSize: 4,
-      tileSize: 120, // canvasSize / gridSize
+      tileSize: 95, // canvasSize / gridSize
       drawDuration: 60,
       revealInterval: 4,
       wordSelectTime: 10,
@@ -8142,6 +8177,7 @@ document.addEventListener('keydown', e => {
     let scribbleState = {
       active: false,
       phase: "idle", // idle | word-select | countdown | drawing | session-end | summary
+      myRole: "drawer", // "drawer" | "guesser" — set per session
       currentSession: 0,
       sessions: [],
       usedWords: new Set(),
@@ -8175,6 +8211,7 @@ document.addEventListener('keydown', e => {
       scribbleState = {
         active: false,
         phase: "idle",
+        myRole: "drawer",
         currentSession: 0,
         sessions: [],
         usedWords: new Set(),
@@ -8469,11 +8506,20 @@ document.addEventListener('keydown', e => {
     }
 
     // ── Enter scribble round ──
+    function scribbleDetermineRole(sessionIdx) {
+      // In a 2v2, session 0 = players at index 0 draw, index 1 guess.
+      // Session 1 = players at index 1 draw, index 0 guess.
+      // For auto-scribbler testing, always be the drawer.
+      // TODO: In real multiplayer, check myUid against teamPlayerUids[myTeam][sessionIdx]
+      return "drawer";
+    }
+
     function enterScribbleRound() {
       scribbleState.active = true;
       scribbleState.currentSession = 0;
       scribbleState.sessions = [];
       scribbleState.usedWords = new Set();
+      scribbleState.myRole = scribbleDetermineRole(0);
 
       // Hide normal game elements, show scribble container
       const bw = document.getElementById("board-wrapper");
@@ -8497,6 +8543,7 @@ document.addEventListener('keydown', e => {
     // ── Word selection ──
     function scribbleStartWordSelection() {
       scribbleState.phase = "word-select";
+      scribbleState.myRole = scribbleDetermineRole(scribbleState.currentSession);
 
       // Show word select, hide others
       const ws = document.getElementById("scribble-word-select");
@@ -8505,6 +8552,17 @@ document.addEventListener('keydown', e => {
       if (ws) ws.style.display = "flex";
       if (sg) sg.style.display = "none";
       if (ss) ss.style.display = "none";
+
+      // Role-based word select views
+      const drawerView = document.getElementById("scribble-ws-drawer-view");
+      const guesserView = document.getElementById("scribble-ws-guesser-view");
+      if (scribbleState.myRole === "drawer") {
+        if (drawerView) drawerView.style.display = "";
+        if (guesserView) guesserView.style.display = "none";
+      } else {
+        if (drawerView) drawerView.style.display = "none";
+        if (guesserView) guesserView.style.display = "";
+      }
 
       const wsWaiting = document.getElementById("scribble-ws-waiting");
       if (wsWaiting) wsWaiting.style.display = "none";
@@ -8581,6 +8639,22 @@ document.addEventListener('keydown', e => {
       if (ws) ws.style.display = "none";
       if (sg) sg.style.display = "flex";
 
+      // Show role-appropriate view
+      const drawerView = document.getElementById("scribble-drawer-view");
+      const guesserView = document.getElementById("scribble-guesser-view");
+      const guessAreaEl = document.getElementById("scribble-guess-area");
+      const isDrawer = scribbleState.myRole === "drawer";
+
+      if (isDrawer) {
+        if (drawerView) drawerView.style.display = "flex";
+        if (guesserView) guesserView.style.display = "none";
+        if (guessAreaEl) guessAreaEl.style.display = "none"; // Drawers don't guess
+      } else {
+        if (drawerView) drawerView.style.display = "none";
+        if (guesserView) guesserView.style.display = "flex";
+        if (guessAreaEl) guessAreaEl.style.display = "flex";
+      }
+
       // Reset tools to defaults
       scribbleState.currentTool = "brush";
       scribbleState.currentColor = "#111111";
@@ -8603,7 +8677,7 @@ document.addEventListener('keydown', e => {
       if (oppCanvas) { const ctx = oppCanvas.getContext("2d"); ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, SCRIBBLE_CONFIG.canvasSize, SCRIBBLE_CONFIG.canvasSize); }
       scribbleResetTileGrid();
 
-      // Show drawer's word
+      // Show drawer's word (in the left-side panel)
       const wordEl = document.getElementById("scribble-drawer-word");
       if (wordEl) { wordEl.style.display = ""; wordEl.textContent = myWord.toUpperCase(); wordEl.className = `scribble-drawer-word ${myDiff}`; }
 

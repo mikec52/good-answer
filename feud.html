@@ -8632,16 +8632,23 @@ document.addEventListener('keydown', e => {
     // Restores the main game UI elements that non-feud modules hide on
     // entry. Resets their CSS state so advanceRound() works cleanly.
     function restoreMainGameUI() {
+      // Restore the main board + content-tv to a fresh pre-round state.
+      // Input-area stays visible (home base philosophy) — callers use
+      // showInputArea() + setInputAreaMode() to set its content.
+      // sidebar-category-select is NOT shown here — it's only shown by
+      // showRoundTypePicker/showCategorySelection when they're active;
+      // leaving it visible leaks stale pills from the previous round.
       const bw = document.getElementById("board-wrapper");
       if (bw) { bw.style.display = ""; bw.classList.add("offscreen"); }
       const ct = document.getElementById("content-tv");
       if (ct) { ct.style.display = ""; ct.classList.add("ct-hidden"); ct.classList.remove("tv-on", "slide-out-left"); }
       const ia = document.getElementById("input-area");
-      if (ia) { ia.style.display = ""; ia.classList.add("offscreen-below"); ia.classList.remove("input-enter"); }
+      if (ia) { ia.style.display = ""; ia.classList.remove("hidden"); }
+      // Keep sidebar-category-select hidden — callers re-show it when needed
       const scs = document.getElementById("sidebar-category-select");
-      if (scs) scs.style.display = "";
+      if (scs) scs.style.display = "none";
       const sqa = document.getElementById("sidebar-question-answer");
-      if (sqa) sqa.style.display = "";
+      if (sqa) sqa.style.display = "flex";
       // Hide scribble container
       const sc = document.getElementById("scribble-container");
       if (sc) sc.style.display = "none";

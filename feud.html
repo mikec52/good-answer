@@ -6805,6 +6805,8 @@ document.addEventListener('keydown', e => {
             hostProcessCategorySelect(action.category);
           } else if (action.type === 'guess') {
             hostProcessGuess(action.guess, action.uid);
+          } else if (action.type === 'scribbleGuess') {
+            scribbleEvaluateGuess(action.guess, action.uid);
           }
           _prevSnapshot = data;
           return; // Host's state write will trigger a new snapshot for reconciliation
@@ -6881,6 +6883,20 @@ document.addEventListener('keydown', e => {
           if (data.scribbleCanvases[teamIdx] && data.scribbleCanvases[teamIdx] !== prevCanvases[teamIdx]) {
             scribbleApplyCanvasSnapshot(parseInt(teamIdx), data.scribbleCanvases[teamIdx]);
           }
+        }
+      }
+
+      // Receive scribble scoring updates from host
+      if (scribbleState.active && data.scribbleScoring) {
+        scribbleState.sessionScoring = data.scribbleScoring;
+      }
+
+      // Apply new solve event (received from host after a correct guess)
+      if (scribbleState.active && data.scribbleLastSolve && data.scribbleLastSolve.ts !== prev?.scribbleLastSolve?.ts) {
+        const solve = data.scribbleLastSolve;
+        // Don't re-apply our own solve (host already applied it locally)
+        if (!isHost) {
+          scribbleApplySolve(solve.solvedTeam, { total: solve.total, mult: solve.mult }, solve.guesserUid);
         }
       }
 
@@ -7552,6 +7568,9 @@ document.addEventListener('keydown', e => {
     // Update UI based on whether this client is the active player
     function updateRoleUI(activeUid) {
       if (!isMultiplayer) return;
+      // Scribble has its own role logic — drawers can't guess, guessers can.
+      // Don't let normal turn logic override it.
+      if (scribbleState.active) { updateScribbleRoleUI(); return; }
       // Face-off has its own role UI — don't let normal turn logic override it
       if (faceoffState.active) { updateFaceoffRoleUI(); return; }
       const isActive = (activeUid === myUid);
@@ -8792,42 +8811,173 @@ document.addEventListener('keydown', e => {
       return { total, mult, breakdown };
     }
 
+    // Role UI for scribble — drawer has input locked, guesser has it enabled.
+    // Called from updateRoleUI when scribbleState.active.
+    function updateScribbleRoleUI() {
+      const guessInput = document.getElementById('guess');
+      const submitBtn = document.querySelector('#turn-body .action-btn');
+      const isDrawer = scribbleState.myRole === "drawer";
+      const canGuess = !isDrawer && scribbleState.phase === "drawing";
+      if (guessInput) {
+        guessInput.disabled = !canGuess;
+        guessInput.placeholder = canGuess ? "Type your guess..." : (isDrawer ? "Drawing — no guessing" : "Waiting...");
+      }
+      if (submitBtn) {
+        submitBtn.disabled = !canGuess;
+        submitBtn.style.display = isDrawer ? "none" : "";
+      }
+    }
+
     // ── Scribble guess handler (called from main submitGuess) ──
+    // Non-host: send pendingAction to host for evaluation.
+    // Host/local: evaluate directly.
     function scribbleSubmitGuess(guess) {
-      const g = guess.toLowerCase();
+      if (!isMultiplayer || isHost) {
+        scribbleEvaluateGuess(guess, myUid);
+      } else {
+        syncState({ pendingAction: { type: 'scribbleGuess', guess, uid: myUid } });
+      }
+    }
+
+    // Host-side evaluation. Computes score, updates state, syncs to all clients.
+    function scribbleEvaluateGuess(guess, guesserUid) {
+      const g = guess.trim().toLowerCase();
+      if (!g) return;
       const sw = scribbleState._sessionWords;
       if (!sw) return;
-      const statusEl = document.getElementById("scribble-status");
-      const guessInput = document.getElementById("guess");
+
+      // Determine guesser's team from their UID
+      const guesserTeam = teamPlayerUids[0]?.includes(guesserUid) ? 0 :
+                          teamPlayerUids[1]?.includes(guesserUid) ? 1 :
+                          (!isMultiplayer ? 0 : -1);
+      if (guesserTeam === -1) return;
+
+      const myTeam = guesserTeam; // for this evaluation path
+      // "myWord" is the word for the canvas labeled teammate from guesserTeam's view
+      // "oppWord" is the other team's word
+      // The session words stored on state are keyed to the local viewer, but since
+      // the host viewer might be on team 0 and the guesser on team 1, we need
+      // absolute team-indexed words. Use scribbleState._team0Word/_team1Word.
+
+      // Build statusMsg context per-client at display time (after sync)
       let matched = false;
+      let scoredResult = null;
+      let solvedTeam = null; // which canvas (which drawer's team) was solved
 
-      // Check teammate's drawing (canvas 0)
-      if (!scribbleState._teammateSolved && g === sw.myWord.toLowerCase()) {
-        scribbleState._teammateSolved = true;
-        const result = scribbleScoreGuess(0, 0, scribbleState.sessionTimer, sw.myPts);
-        scribbleShowSolved("scribble-teammate-panel");
-        if (statusEl) { statusEl.textContent = `Correct! ${sw.myWord.toUpperCase()} — ${result.total} pts (${result.mult}x)`; statusEl.className = "scribble-status correct"; }
+      // We stored team0 + team1 word info; look them up
+      const t0 = scribbleState._team0Word, t1 = scribbleState._team1Word;
+      if (!t0 || !t1) return;
+
+      // Is the guess the guesser's OWN team's word (teammate drawing)?
+      const myTeamWord = myTeam === 0 ? t0 : t1;
+      const oppTeamWord = myTeam === 0 ? t1 : t0;
+      const myTeamSolved = scribbleState.sessionScoring?.drawingFirstClaimed?.[myTeam];
+      const oppTeamSolved = scribbleState.sessionScoring?.drawingFirstClaimed?.[1 - myTeam];
+
+      if (!myTeamSolved && g === myTeamWord.word.toLowerCase()) {
+        scoredResult = scribbleScoreGuessAbs(guesserTeam, myTeam, scribbleState.sessionTimer, myTeamWord.points);
+        solvedTeam = myTeam;
+        matched = true;
+      } else if (!oppTeamSolved && g === oppTeamWord.word.toLowerCase()) {
+        scoredResult = scribbleScoreGuessAbs(guesserTeam, 1 - myTeam, scribbleState.sessionTimer, oppTeamWord.points);
+        solvedTeam = 1 - myTeam;
         matched = true;
       }
 
-      // Check opponent's drawing (canvas 1)
-      if (!matched && !scribbleState._opponentSolved && g === sw.oppWord.toLowerCase()) {
-        scribbleState._opponentSolved = true;
-        const result = scribbleScoreGuess(0, 1, scribbleState.sessionTimer, sw.oppPts);
-        scribbleShowSolved("scribble-opp-panel");
+      if (matched) {
+        // Sync updated scoring + which canvas was solved
+        const allSolved = scribbleState.sessionScoring.drawingFirstClaimed[0] && scribbleState.sessionScoring.drawingFirstClaimed[1];
+        if (isMultiplayer) {
+          syncState({
+            scribbleScoring: scribbleState.sessionScoring,
+            scribbleLastSolve: {
+              solvedTeam,
+              word: solvedTeam === 0 ? t0.word : t1.word,
+              guesserUid,
+              total: scoredResult.total,
+              mult: scoredResult.mult,
+              ts: Date.now(),
+            },
+            pendingAction: null,
+          });
+        }
+        // Apply locally
+        scribbleApplySolve(solvedTeam, scoredResult, guesserUid);
+        if (allSolved) {
+          setTimeout(() => scribbleEndDrawingSession("all-solved", scribbleState._sessionData), 500);
+        }
+      } else {
+        // Wrong guess — flash on guesser's screen (only if they're the host/local)
+        if (!isMultiplayer || guesserUid === myUid) {
+          const gi = document.getElementById("guess");
+          if (gi) { gi.classList.add("flash-wrong"); setTimeout(() => gi.classList.remove("flash-wrong"), 400); }
+        }
+        // Clear pendingAction
+        if (isMultiplayer) syncState({ pendingAction: null });
+      }
+    }
+
+    // Apply a solve locally — shows overlay, updates status, reveals tiles if steal
+    function scribbleApplySolve(solvedTeam, result, guesserUid) {
+      const statusEl = document.getElementById("scribble-status");
+      const myTeam = (isMultiplayer && myUid && teamPlayerUids[1]?.includes(myUid)) ? 1 : 0;
+      const isMyTeamDrawing = (solvedTeam === myTeam);
+      const t0 = scribbleState._team0Word, t1 = scribbleState._team1Word;
+      const word = solvedTeam === 0 ? t0?.word : t1?.word;
+
+      // Show solved overlay on correct canvas panel (guesser view panels)
+      scribbleShowSolved(isMyTeamDrawing ? "scribble-teammate-panel" : "scribble-opp-panel");
+
+      // If opponent canvas was solved, reveal all tiles
+      if (!isMyTeamDrawing) {
         scribbleRevealAllTiles();
-        if (statusEl) { statusEl.textContent = `Steal! ${sw.oppWord.toUpperCase()} — ${result.total} pts (${result.mult}x)`; statusEl.className = "scribble-status correct"; }
-        matched = true;
       }
 
-      if (!matched && guessInput) {
-        guessInput.classList.add("flash-wrong");
-        setTimeout(() => guessInput.classList.remove("flash-wrong"), 400);
+      // Status message on guesser's screen
+      if (statusEl && word) {
+        const prefix = isMyTeamDrawing ? "Correct!" : "Steal!";
+        statusEl.textContent = `${prefix} ${word.toUpperCase()} — ${result.total} pts (${result.mult}x)`;
+        statusEl.className = "scribble-status correct";
+      }
+    }
+
+    // New scoring function that takes absolute team indices
+    function scribbleScoreGuessAbs(guesserTeam, drawerTeam, secondsRemaining, wordPoints) {
+      const ss = scribbleState.sessionScoring;
+      const mult = getScribbleTimeMultiplier(secondsRemaining);
+      const isSteal = (guesserTeam !== drawerTeam);
+      let raw = wordPoints;
+      const breakdown = [`${wordPoints} (word)`];
+
+      if (!ss.firstGuessClaimed) {
+        ss.firstGuessClaimed = true;
+        raw += 50;
+        breakdown.push("+50 (first guess)");
+      }
+      if (isSteal) {
+        raw += 50;
+        breakdown.push("+50 (steal)");
       }
 
-      if (scribbleState._teammateSolved && scribbleState._opponentSolved) {
-        scribbleEndDrawingSession("all-solved", scribbleState._sessionData);
+      const total = Math.round(raw * mult);
+      ss.events.push({
+        type: "guess", team: guesserTeam, drawerTeam, raw, mult, total,
+        breakdown: breakdown.join(" ") + ` x${mult}`, secondsRemaining,
+      });
+      ss.teamScores[guesserTeam] += total;
+
+      if (!ss.drawingFirstClaimed[drawerTeam]) {
+        ss.drawingFirstClaimed[drawerTeam] = true;
+        const drawerBonus = Math.round(50 * mult);
+        ss.events.push({
+          type: "drawer-bonus", team: drawerTeam, drawerTeam,
+          raw: 50, mult, total: drawerBonus,
+          breakdown: `50 (first drawing guessed) x${mult}`, secondsRemaining,
+        });
+        ss.teamScores[drawerTeam] += drawerBonus;
       }
+
+      return { total, mult, breakdown };
     }
 
     // ── Scribble countdown ──
@@ -9084,6 +9234,10 @@ document.addEventListener('keydown', e => {
 
     // Given both team words, figure out which is "my team's" and start drawing
     function scribbleEnterDrawingForMyTeam(team0Word, team1Word) {
+      // Store absolute team words for the scoring engine (host-authoritative)
+      scribbleState._team0Word = team0Word;
+      scribbleState._team1Word = team1Word;
+
       // Determine my team
       let myTeam = 0;
       if (isMultiplayer && myUid) {
@@ -9130,7 +9284,9 @@ document.addEventListener('keydown', e => {
       const sqContent = document.getElementById("sq-zone-content");
       if (!isDrawer) {
         if (sqa) sqa.style.display = "flex";
-        if (sqContent) sqContent.style.display = "none"; // no content-tv for scribble
+        // Keep sq-zone-content in the layout (flex:1) but invisible so
+        // sq-zone-input stays anchored at the bottom where it usually is
+        if (sqContent) { sqContent.style.visibility = "hidden"; sqContent.style.display = ""; }
         if (mainInputArea) {
           mainInputArea.style.display = "";
           mainInputArea.classList.remove("hidden");
@@ -9213,6 +9369,13 @@ document.addEventListener('keydown', e => {
         scribbleState.phase = "drawing";
         scribbleState.drawingEnabled = true;
         if (drawCanvas) drawCanvas.classList.remove("disabled");
+
+        // Enable guess input for guessers now that drawing phase is active
+        if (isMultiplayer) updateScribbleRoleUI();
+        else if (!isDrawer) {
+          const gi = document.getElementById("guess");
+          if (gi) gi.disabled = false;
+        }
 
         scribbleState.sessionInterval = setInterval(() => {
           scribbleState.sessionTimer--;

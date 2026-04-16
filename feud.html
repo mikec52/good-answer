@@ -7945,6 +7945,113 @@ document.addEventListener('keydown', e => {
       span.textContent = text;
       fitByCharCount(span, 40);
     }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // setInputAreaMode — the "home base" control center API.
+    //
+    // Sets the header, subtext, and body of #input-area based on current
+    // module state. Keeps the input-area always visible; toggles between
+    // guess mode (input enabled), disabled mode (input visible but greyed),
+    // and action mode (button replaces input row, e.g. Ready Up).
+    //
+    // Usage:
+    //   setInputAreaMode({ mode: 'guess', header: 'Red Team has the board',
+    //                      subtext: 'Player is up', teamColor: 0 });
+    //   setInputAreaMode({ mode: 'disabled', header: 'YOU ARE DRAWING',
+    //                      subtext: 'Draw the word!', inputPlaceholder: 'Drawing — no guessing' });
+    //   setInputAreaMode({ mode: 'action', header: 'Red Team won!',
+    //                      buttonText: 'Ready Up', onButtonClick: readyUp });
+    // ─────────────────────────────────────────────────────────────────────
+    function setInputAreaMode(opts) {
+      const {
+        mode = 'guess',
+        header,
+        subtext,
+        inputPlaceholder = 'Enter your guess',
+        buttonText,
+        onButtonClick,
+        teamColor,
+      } = opts || {};
+
+      const turnInputBox = document.getElementById('turn-input-box');
+      const turnHeader = document.getElementById('turn-header');
+      const turnSubtext = document.getElementById('turn-subtext');
+      const turnBody = document.getElementById('turn-body');
+      if (!turnBody) return;
+
+      // Header + subtext
+      if (header !== undefined && turnHeader) turnHeader.innerHTML = header;
+      if (subtext !== undefined && turnSubtext) turnSubtext.textContent = subtext;
+
+      // Team color on the box
+      if (turnInputBox && teamColor !== undefined) {
+        turnInputBox.classList.remove('team-red', 'team-blue');
+        if (teamColor === 0) turnInputBox.classList.add('team-red');
+        else if (teamColor === 1) turnInputBox.classList.add('team-blue');
+      }
+
+      // Ensure the canonical input row and action row both exist in turn-body.
+      // Modules toggle between them instead of innerHTML-swapping the container.
+      let inputRow = turnBody.querySelector('.turn-input-row');
+      let actionRow = turnBody.querySelector('.turn-action-row');
+      if (!inputRow) {
+        inputRow = document.createElement('div');
+        inputRow.className = 'turn-input-row';
+        inputRow.innerHTML = `<input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="${inputPlaceholder}" onkeydown="if(event.key==='Enter'&&!_scoringInProgress)submitGuess()" data-tip="guess-input" /><button class="btn action-btn" onclick="submitGuess()" data-tip="submit-guess">Submit</button>`;
+        turnBody.appendChild(inputRow);
+      }
+      if (!actionRow) {
+        actionRow = document.createElement('div');
+        actionRow.className = 'turn-action-row';
+        actionRow.style.display = 'none';
+        turnBody.appendChild(actionRow);
+      }
+
+      const guessInput = document.getElementById('guess');
+      const submitBtn = inputRow.querySelector('button.action-btn');
+
+      switch (mode) {
+        case 'guess':
+          inputRow.style.display = '';
+          actionRow.style.display = 'none';
+          if (guessInput) {
+            guessInput.disabled = false;
+            guessInput.placeholder = inputPlaceholder;
+          }
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.style.display = ''; }
+          break;
+        case 'disabled':
+          inputRow.style.display = '';
+          actionRow.style.display = 'none';
+          if (guessInput) {
+            guessInput.disabled = true;
+            guessInput.value = '';
+            guessInput.placeholder = inputPlaceholder;
+          }
+          if (submitBtn) { submitBtn.disabled = true; }
+          break;
+        case 'action':
+          inputRow.style.display = 'none';
+          actionRow.style.display = '';
+          actionRow.innerHTML = `<button class="btn action-btn" id="input-action-btn">${buttonText || 'Continue'}</button>`;
+          const btn = document.getElementById('input-action-btn');
+          if (btn && onButtonClick) btn.onclick = onButtonClick;
+          break;
+      }
+    }
+
+    // Ensures the input-area itself is visible (no offscreen/input-enter management).
+    // Called by modules that want to guarantee the home base is shown.
+    function showInputArea() {
+      const sqa = document.getElementById('sidebar-question-answer');
+      const sqi = document.getElementById('sq-zone-input');
+      const sqc = document.getElementById('sq-zone-content');
+      const ia = document.getElementById('input-area');
+      if (sqa) sqa.style.display = 'flex';
+      if (sqc) { sqc.style.visibility = 'hidden'; sqc.style.display = ''; }
+      if (sqi) { sqi.style.display = ''; sqi.classList.remove('offscreen-below', 'input-exit'); sqi.classList.add('input-enter'); }
+      if (ia) { ia.style.display = ''; ia.classList.remove('hidden'); }
+    }
     function setPhaseTeamColor(teamIdx) {
       const pi = document.getElementById("phase-indicator");
       if (!pi) return;
@@ -8168,6 +8275,18 @@ document.addEventListener('keydown', e => {
       updateTurn();
       initRoundState();
 
+      // Reset input-area from any previous round's module state (e.g. Ready Up)
+      // to a neutral waiting state. The next module will override with its own
+      // context once it sets up.
+      showInputArea();
+      setInputAreaMode({
+        mode: 'disabled',
+        header: 'New round',
+        subtext: 'Setting up...',
+        inputPlaceholder: 'Wait for round type selection',
+        teamColor: teamTurn,
+      });
+
       // In multiplayer, only the active player generates and syncs categories.
       // The spectator waits for Firestore to deliver the picks via reconcileLocalState.
       if (isMultiplayer) {
@@ -8180,10 +8299,9 @@ document.addEventListener('keydown', e => {
         });
       }
       if (isMultiplayer && !isHost) {
-        // Non-host: show a waiting state until host syncs category picks / face-off state
+        // Non-host: show a waiting state until host syncs category picks / face-off state.
+        // Keep input-area visible (home base) with context message.
         document.getElementById("sidebar-category-select").style.display = "flex";
-        document.getElementById("sidebar-question-answer").style.display = "none";
-        document.getElementById("input-area").classList.add("hidden");
         const bw2 = document.getElementById("board-wrapper");
         if (bw2) { bw2.classList.remove("slide-in"); bw2.classList.add("offscreen"); }
         return;
@@ -8219,6 +8337,17 @@ document.addEventListener('keydown', e => {
       setPhaseText("category-select", `${catPromptName}, pick a round type:`);
       setPhaseTeamColor(teamTurn);
       anim.wait(TIMING.phaseTextEnterDelay).then(() => setPhase("category-select"));
+
+      // Input-area home base during round type picking
+      const amIPickingPlayer = isMultiplayer ? amIActivePlayer() : true;
+      showInputArea();
+      setInputAreaMode({
+        mode: 'disabled',
+        header: amIPickingPlayer ? 'PICK A ROUND TYPE' : `Waiting on ${catPromptName}...`,
+        subtext: amIPickingPlayer ? 'Choose from the cards' : 'They are picking a round type',
+        inputPlaceholder: amIPickingPlayer ? 'Select a round type above' : 'Wait for round type selection',
+        teamColor: teamTurn,
+      });
 
       // Build pills HTML
       const moduleKeys = syncedData?.roundTypePicks || Object.keys(ROUND_MODULES);
@@ -8470,29 +8599,21 @@ document.addEventListener('keydown', e => {
       const winnerClass = scoringTeam === 0 ? "red" : "blue";
       const pts = scoringTeam === 0 ? redScore : blueScore;
 
-      // Reuse the existing round-result phase for ready-up UI
+      // Set phase indicator to round-result
       setPhaseText("round-result",
         `<span class="${winnerClass}">${winnerName}</span> won the round with ${pts} points!`);
       setPhase("round-result");
 
-      // Show ready-up (multiplayer) or Next Round (local)
-      const endRoundDiv = document.getElementById("endRound");
-      if (endRoundDiv) {
-        endRoundDiv.style.display = "";
-        const tib = document.getElementById("turn-input-box");
-        if (tib) {
-          tib.style.background = scoringTeam === 0 ? "var(--red-bg)" : "var(--blue-bg)";
-          tib.style.display = "";
-        }
-        const tb = document.getElementById("turn-body");
-        if (tb) {
-          if (isMultiplayer) {
-            tb.innerHTML = `<button class="btn action-btn" onclick="readyUp()">Ready Up</button>`;
-          } else {
-            tb.innerHTML = `<button class="btn action-btn" onclick="advanceRound()">Next Round</button>`;
-          }
-        }
-      }
+      // Use input-area home base to show the Ready Up / Next Round action
+      showInputArea();
+      setInputAreaMode({
+        mode: 'action',
+        header: `<span class="${winnerClass}">${winnerName}</span> won with ${pts} pts!`,
+        subtext: isMultiplayer ? 'Ready up to continue' : 'Click to continue',
+        buttonText: isMultiplayer ? 'Ready Up' : 'Next Round',
+        onButtonClick: isMultiplayer ? readyUp : advanceRound,
+        teamColor: scoringTeam,
+      });
 
       if (isMultiplayer && isHost) {
         syncAfterGuess({ outcome: "module-complete" }, true);
@@ -8830,19 +8951,26 @@ document.addEventListener('keydown', e => {
     }
 
     // Role UI for scribble — drawer has input locked, guesser has it enabled.
-    // Called from updateRoleUI when scribbleState.active.
+    // Called from updateRoleUI when scribbleState.active. Uses the
+    // setInputAreaMode home-base API for consistency.
     function updateScribbleRoleUI() {
-      const guessInput = document.getElementById('guess');
-      const submitBtn = document.querySelector('#turn-body .action-btn');
       const isDrawer = scribbleState.myRole === "drawer";
-      const canGuess = !isDrawer && scribbleState.phase === "drawing";
-      if (guessInput) {
-        guessInput.disabled = !canGuess;
-        guessInput.placeholder = canGuess ? "Type your guess..." : (isDrawer ? "Drawing — no guessing" : "Waiting...");
-      }
-      if (submitBtn) {
-        submitBtn.disabled = !canGuess;
-        submitBtn.style.display = isDrawer ? "none" : "";
+      const isDrawing = scribbleState.phase === "drawing";
+      if (isDrawer) {
+        setInputAreaMode({
+          mode: 'disabled',
+          inputPlaceholder: 'Drawing — no guessing',
+        });
+      } else if (isDrawing) {
+        setInputAreaMode({
+          mode: 'guess',
+          inputPlaceholder: 'Type your guess...',
+        });
+      } else {
+        setInputAreaMode({
+          mode: 'disabled',
+          inputPlaceholder: 'Waiting...',
+        });
       }
     }
 
@@ -9096,17 +9224,16 @@ document.addEventListener('keydown', e => {
       if (wsWaiting) { wsWaiting.textContent = "Waiting for other drawer..."; wsWaiting.style.display = "none"; }
       document.querySelectorAll(".scribble-solved-overlay").forEach(el => el.remove());
 
-      // Hide normal game elements, show scribble container
+      // Hide main game board + content-tv, but keep input-area visible as home base
       const bw = document.getElementById("board-wrapper");
       if (bw) bw.style.display = "none";
       const ct = document.getElementById("content-tv");
       if (ct) ct.style.display = "none";
-      const ia = document.getElementById("input-area");
-      if (ia) ia.style.display = "none";
       const scs = document.getElementById("sidebar-category-select");
       if (scs) scs.style.display = "none";
-      const sqa = document.getElementById("sidebar-question-answer");
-      if (sqa) sqa.style.display = "none";
+
+      // Input-area stays as the player's home base — always visible
+      showInputArea();
 
       const container = document.getElementById("scribble-container");
       if (container) container.style.display = "flex";
@@ -9146,6 +9273,16 @@ document.addEventListener('keydown', e => {
       const container = document.getElementById("scribble-container");
       if (container) container.style.display = "flex";
 
+      // Input-area home base: set context for this phase
+      showInputArea();
+      const isDrawer = scribbleState.myRole === "drawer";
+      setInputAreaMode({
+        mode: 'disabled',
+        header: 'SECRET SCRIBBLE',
+        subtext: isDrawer ? 'Pick a word from the cards' : 'Drawers are picking words...',
+        inputPlaceholder: isDrawer ? 'Choose a word above' : 'Wait for drawing to start',
+      });
+
       // Show word select, hide others
       const ws = document.getElementById("scribble-word-select");
       const sg = document.getElementById("scribble-game");
@@ -9157,7 +9294,7 @@ document.addEventListener('keydown', e => {
       // Role-based word select views
       const drawerView = document.getElementById("scribble-ws-drawer-view");
       const guesserView = document.getElementById("scribble-ws-guesser-view");
-      if (scribbleState.myRole === "drawer") {
+      if (isDrawer) {
         if (drawerView) drawerView.style.display = "";
         if (guesserView) guesserView.style.display = "none";
       } else {
@@ -9347,40 +9484,24 @@ document.addEventListener('keydown', e => {
         if (guesserView) guesserView.style.display = "flex";
       }
 
-      // Show the main sidebar input-area for guessers — reuse the same
-      // slide-up animation used by pickCategory for the feud question flow
-      const mainInputArea = document.getElementById("input-area");
-      const sqa = document.getElementById("sidebar-question-answer");
-      const sqInput = document.getElementById("sq-zone-input");
-      const sqContent = document.getElementById("sq-zone-content");
-      if (!isDrawer) {
-        if (sqa) sqa.style.display = "flex";
-        // Keep sq-zone-content in the layout (flex:1) but invisible so
-        // sq-zone-input stays anchored at the bottom where it usually is
-        if (sqContent) { sqContent.style.visibility = "hidden"; sqContent.style.display = ""; }
-        if (mainInputArea) {
-          mainInputArea.style.display = "";
-          mainInputArea.classList.remove("hidden");
-        }
-        // Update turn-header + subtext to reflect scribble context
-        const turnHeader = document.getElementById("turn-header");
-        if (turnHeader) turnHeader.textContent = "Guess the drawings!";
-        const turnSubtext = document.getElementById("turn-subtext");
-        if (turnSubtext) turnSubtext.textContent = "Type your guess";
-        // Slide input-area up from below — same animation as feud rounds
-        if (sqInput) {
-          sqInput.classList.remove("input-enter", "input-exit");
-          sqInput.classList.add("offscreen-below");
-          // Next frame: trigger slide-in by swapping classes
-          requestAnimationFrame(() => {
-            sqInput.classList.remove("offscreen-below");
-            sqInput.classList.add("input-enter");
-          });
-        }
+      // Input-area home base: stays visible for all players. Content
+      // varies by role — guessers get the input; drawers get a disabled
+      // input with context explaining they're drawing.
+      showInputArea();
+      if (isDrawer) {
+        setInputAreaMode({
+          mode: 'disabled',
+          header: 'YOUR TURN TO DRAW!',
+          subtext: 'Draw the word on your canvas',
+          inputPlaceholder: 'Drawing — no guessing',
+        });
       } else {
-        // Hide sidebar input-area for drawers (they don't guess)
-        if (sqa) sqa.style.display = "none";
-        if (sqInput) sqInput.classList.add("offscreen-below");
+        setInputAreaMode({
+          mode: 'guess',
+          header: 'GUESS THE DRAWINGS',
+          subtext: 'Either team\u2019s word earns points',
+          inputPlaceholder: 'Type your guess...',
+        });
       }
 
       // Reset tools to defaults
@@ -9516,14 +9637,20 @@ document.addEventListener('keydown', e => {
       scribbleState.drawingEnabled = false;
       const drawCanvas = document.getElementById("scribble-draw-canvas");
       if (drawCanvas) drawCanvas.classList.add("disabled");
-      const guessInput = document.getElementById("guess");
-      if (guessInput) guessInput.disabled = true;
 
       scribbleRevealAllTiles();
 
       const statusEl = document.getElementById("scribble-status");
       if (reason === "timeup" && statusEl) { statusEl.textContent = "Time's up!"; statusEl.className = "scribble-status timeup"; }
       else if (reason === "all-solved" && statusEl) { statusEl.textContent = "Both drawings solved!"; statusEl.className = "scribble-status correct"; }
+
+      // Transition input-area to session-end state
+      setInputAreaMode({
+        mode: 'disabled',
+        header: 'Session complete',
+        subtext: reason === "all-solved" ? 'Both words solved!' : 'Time\'s up',
+        inputPlaceholder: 'Getting next session ready...',
+      });
 
       scribbleState.sessions.push({
         ...sessionData,

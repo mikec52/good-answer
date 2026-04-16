@@ -6786,7 +6786,9 @@ document.addEventListener('keydown', e => {
           console.log('[multi] host processing pendingAction:', action);
           // Clear the pending action first to prevent re-processing
           syncState({ pendingAction: null });
-          if (action.type === 'selectCategory') {
+          if (action.type === 'selectRoundType') {
+            hostProcessRoundTypePick(action.moduleKey);
+          } else if (action.type === 'selectCategory') {
             hostProcessCategorySelect(action.category);
           } else if (action.type === 'guess') {
             hostProcessGuess(action.guess, action.uid);
@@ -7164,6 +7166,48 @@ document.addEventListener('keydown', e => {
     // Handle phase transitions received from Firestore
     function handlePhaseTransition(data) {
       switch (data.phase) {
+        case 'round-type-select':
+          // Non-host: host is showing the round type picker
+          if (data.roundNumber !== undefined) roundNumber = data.roundNumber;
+          if (data.teamTurn !== undefined) teamTurn = data.teamTurn;
+          if (data.startingTeam !== undefined) startingTeam = data.startingTeam;
+          if (data.playerIndex) playerIndex = [...data.playerIndex];
+          // Animate exit + show picker (mirror host advanceRound exit)
+          {
+            const _contentTv = document.getElementById("content-tv");
+            const _szInput = document.getElementById("sq-zone-input");
+            const _bw = document.getElementById("board-wrapper");
+            if (_bw && _bw.classList.contains("slide-in")) {
+              _bw.classList.remove("slide-in");
+              _bw.style.transform = 'translateY(0)';
+              void _bw.offsetWidth;
+              _bw.style.transform = '';
+              _bw.classList.add("offscreen");
+            }
+            (async () => {
+              await anim.sequence([
+                async () => { if (_szInput && _szInput.classList.contains("input-enter")) { _szInput.classList.remove("input-enter"); await anim.play(_szInput, "input-exit"); } },
+                async () => { if (_contentTv && !_contentTv.classList.contains("ct-hidden")) { await anim.play(_contentTv, "slide-out-left"); } },
+              ]);
+              updateTurn();
+              initRoundState();
+              document.getElementById("roundCounter").textContent = roundNumber;
+              showRoundTypePicker(data);
+            })();
+          }
+          break;
+
+        case 'round-type-selected':
+          // Non-host: host picked a round type, dispatch accordingly
+          currentRoundType = data.selectedRoundType;
+          if (data.selectedRoundType === 'secret-scribble') {
+            enterScribbleRound(handleModuleComplete);
+          }
+          // For high-five and survey, the host will follow up with a
+          // 'category-select' or 'gameplay' phase transition that the
+          // existing handlers process — no extra action needed here.
+          break;
+
         case 'category-select':
           // Non-host clients: animate round exit, then show category selection.
           if (data.categoryPicks) {
@@ -8064,7 +8108,130 @@ document.addEventListener('keydown', e => {
         return;
       }
 
-      showCategorySelection();
+      showRoundTypePicker();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Round Type Picker — orchestrator UI
+    // ─────────────────────────────────────────────────────────────────────
+
+    function showRoundTypePicker(syncedData) {
+      const pillsAreaRef = document.getElementById("category-pills-area");
+      if (pillsAreaRef) pillsAreaRef.classList.remove("pills-slide-in");
+
+      // Determine available modules (check min player counts)
+      const teamSizes = isMultiplayer
+        ? [teamPlayerUids[0]?.length || 0, teamPlayerUids[1]?.length || 0]
+        : [teamPlayers[0]?.length || 1, teamPlayers[1]?.length || 1];
+      const minTeamSize = Math.min(teamSizes[0], teamSizes[1]);
+
+      // Phase indicator — active player's name + prompt
+      const catPlayer = teamPlayers[teamTurn]?.[playerIndex[teamTurn] % (teamPlayers[teamTurn]?.length || 1)];
+      const catPromptName = catPlayer || teamNames[teamTurn];
+      setPhaseText("category-select", `${catPromptName}, pick a round type:`);
+      setPhaseTeamColor(teamTurn);
+      anim.wait(TIMING.phaseTextEnterDelay).then(() => setPhase("category-select"));
+
+      // Build pills HTML
+      const moduleKeys = syncedData?.roundTypePicks || Object.keys(ROUND_MODULES);
+      let pillsHtml = '<div class="trivia-categories">';
+      moduleKeys.forEach(key => {
+        const mod = ROUND_MODULES[key];
+        if (!mod) return;
+        const disabled = minTeamSize < mod.minPlayersPerTeam;
+        const cc = mod.colorClass || '';
+        const disabledClass = disabled ? ' spectator-disabled' : '';
+        const disabledAttr = disabled ? ' style="pointer-events:none;opacity:0.35;"' : '';
+        const tipAttr = disabled ? ` data-tip="rt-disabled"` : ` data-tip="rt-${key}"`;
+        const s = `<span>${mod.label}</span>`.repeat(4);
+        pillsHtml += `<div class="cat-row ${cc}${disabledClass}"${disabledAttr}${tipAttr}><button class="cat-select-btn btn-3d ${cc}" onclick="onRoundTypePick('${key}')"${disabled ? ' disabled' : ''}>${s}</button></div>`;
+      });
+      pillsHtml += '</div>';
+
+      const pillsArea = document.getElementById("category-pills-area");
+      pillsArea.classList.remove("pills-exit");
+      pillsArea.innerHTML = pillsHtml;
+      setup3dBtns();
+
+      // Stagger slide-ins (same pattern as category pills)
+      const rows = document.querySelectorAll("#category-pills-area .cat-row");
+      anim.stagger(rows, { gap: TIMING.catRowStagger });
+      rows.forEach((row, i) => {
+        anim.timer(row, (i * TIMING.catRowStagger) / gameSpeed, () => playSlit(1, 0.4));
+      });
+
+      // Show sidebar
+      document.getElementById("sidebar-category-select").style.display = "flex";
+      document.getElementById("sidebar-question-answer").style.display = "none";
+
+      // Multiplayer sync — host broadcasts available types
+      if (isMultiplayer && isHost) {
+        syncState({
+          phase: 'round-type-select',
+          roundTypePicks: moduleKeys,
+          activePlayerUid: getActivePlayerUid(),
+          roundNumber,
+          teamTurn,
+          startingTeam,
+          playerIndex: [...playerIndex],
+          readyPlayers: {},
+          readyCountdown: null,
+          selectedRoundType: null,
+          pendingAction: null,
+        });
+      }
+
+      // Disable pills for non-active players in multiplayer
+      if (isMultiplayer && !amIActivePlayer()) {
+        document.querySelectorAll("#category-pills-area .cat-row").forEach(row => {
+          const btn = row.querySelector("button");
+          if (btn) btn.style.pointerEvents = "none";
+          row.classList.add("spectator-disabled");
+        });
+      }
+    }
+
+    function onRoundTypePick(moduleKey) {
+      if (!isMultiplayer || isHost) {
+        hostProcessRoundTypePick(moduleKey);
+      } else {
+        // Non-host: send pending action to host
+        syncState({ pendingAction: { type: 'selectRoundType', moduleKey, uid: myUid } });
+        // Disable pills while waiting
+        document.querySelectorAll("#category-pills-area .cat-row button").forEach(b => b.style.pointerEvents = "none");
+      }
+    }
+
+    function hostProcessRoundTypePick(moduleKey) {
+      currentRoundType = moduleKey;
+
+      // Sync selection to all clients
+      if (isMultiplayer) {
+        syncState({
+          selectedRoundType: moduleKey,
+          phase: 'round-type-selected',
+          pendingAction: null,
+        });
+      }
+
+      // Dispatch to appropriate module
+      if (moduleKey === 'high-five') {
+        hostProcessRoundTypePick_highFive();
+      } else if (moduleKey === 'survey') {
+        hostProcessRoundTypePick_survey();
+      } else if (moduleKey === 'secret-scribble') {
+        enterScribbleRound(handleModuleComplete);
+      }
+    }
+
+    function hostProcessRoundTypePick_highFive() {
+      // Show category selection filtered to trivia only (no Survey)
+      showCategorySelection(null, { excludeSurvey: true });
+    }
+
+    function hostProcessRoundTypePick_survey() {
+      // Skip category selection — auto-pick Survey
+      showCategorySelection(null, { surveyOnly: true });
     }
 
     function make3dBtn(text, onclick, extraClass, dataTip) {
@@ -8157,9 +8324,108 @@ document.addEventListener('keydown', e => {
     }
 
     // ─────────────────────────────────────────────────────────────────────
+    // Module Orchestration Layer — Round Type Selection
+    // ─────────────────────────────────────────────────────────────────────
+    let currentRoundType = null; // 'high-five' | 'survey' | 'secret-scribble'
+
+    // Registry of round type modules. Each defines its label, player
+    // requirements, entry function, and reset function.
+    const ROUND_MODULES = {
+      'high-five': {
+        label: 'High Five',
+        colorClass: 'cat-science',
+        minPlayersPerTeam: 1,
+        enter(onComplete) { hostProcessRoundTypePick_highFive(); },
+        reset() { initRoundState(); },
+      },
+      'survey': {
+        label: 'Survey',
+        colorClass: 'cat-survey',
+        minPlayersPerTeam: 1,
+        enter(onComplete) { hostProcessRoundTypePick_survey(); },
+        reset() { initRoundState(); },
+      },
+      'secret-scribble': {
+        label: 'Secret Scribble',
+        colorClass: 'cat-popculture',
+        minPlayersPerTeam: 2,
+        enter(onComplete) { enterScribbleRound(onComplete); },
+        reset() { resetScribbleState(); },
+      },
+    };
+
+    // Called by non-feud modules when they finish. Folds scores into the
+    // main teamScores, resets the module, restores normal game UI, and
+    // triggers the ready-up / next-round flow.
+    function handleModuleComplete({ redScore, blueScore }) {
+      teamScores[0] += redScore;
+      teamScores[1] += blueScore;
+      updateScores();
+
+      const scoringTeam = redScore >= blueScore ? 0 : 1;
+      lastRoundWinner = scoringTeam;
+
+      restoreMainGameUI();
+
+      const mod = ROUND_MODULES[currentRoundType];
+      if (mod && mod.reset) mod.reset();
+      currentRoundType = null;
+
+      // Build end-of-round message
+      const winnerName = teamNames[scoringTeam] || (scoringTeam === 0 ? "Red" : "Blue");
+      const winnerClass = scoringTeam === 0 ? "red" : "blue";
+      const pts = scoringTeam === 0 ? redScore : blueScore;
+
+      // Reuse the existing round-result phase for ready-up UI
+      setPhaseText("round-result",
+        `<span class="${winnerClass}">${winnerName}</span> won the round with ${pts} points!`);
+      setPhase("round-result");
+
+      // Show ready-up (multiplayer) or Next Round (local)
+      const endRoundDiv = document.getElementById("endRound");
+      if (endRoundDiv) {
+        endRoundDiv.style.display = "";
+        const tib = document.getElementById("turn-input-box");
+        if (tib) {
+          tib.style.background = scoringTeam === 0 ? "var(--red-bg)" : "var(--blue-bg)";
+          tib.style.display = "";
+        }
+        const tb = document.getElementById("turn-body");
+        if (tb) {
+          if (isMultiplayer) {
+            tb.innerHTML = `<button class="btn action-btn" onclick="readyUp()">Ready Up</button>`;
+          } else {
+            tb.innerHTML = `<button class="btn action-btn" onclick="advanceRound()">Next Round</button>`;
+          }
+        }
+      }
+
+      if (isMultiplayer && isHost) {
+        syncAfterGuess({ outcome: "module-complete" }, true);
+      }
+    }
+
+    // Restores the main game UI elements that non-feud modules hide on
+    // entry. Resets their CSS state so advanceRound() works cleanly.
+    function restoreMainGameUI() {
+      const bw = document.getElementById("board-wrapper");
+      if (bw) { bw.style.display = ""; bw.classList.add("offscreen"); }
+      const ct = document.getElementById("content-tv");
+      if (ct) { ct.style.display = ""; ct.classList.add("ct-hidden"); ct.classList.remove("tv-on", "slide-out-left"); }
+      const ia = document.getElementById("input-area");
+      if (ia) { ia.style.display = ""; ia.classList.add("offscreen-below"); ia.classList.remove("input-enter"); }
+      const scs = document.getElementById("sidebar-category-select");
+      if (scs) scs.style.display = "";
+      const sqa = document.getElementById("sidebar-question-answer");
+      if (sqa) sqa.style.display = "";
+      // Hide scribble container
+      const sc = document.getElementById("scribble-container");
+      if (sc) sc.style.display = "none";
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
     // Secret Scribble — state + config
     // ─────────────────────────────────────────────────────────────────────
-    const DEV_SKIP_TO_SCRIBBLE = true; // Bypass normal rounds, jump straight to scribble after lobby
 
     const SCRIBBLE_CONFIG = {
       canvasSize: 380,
@@ -8519,7 +8785,8 @@ document.addEventListener('keydown', e => {
       return "guesser";
     }
 
-    function enterScribbleRound() {
+    function enterScribbleRound(onComplete) {
+      scribbleState._onComplete = onComplete || null;
       scribbleState.active = true;
       scribbleState.currentSession = 0;
       scribbleState.sessions = [];
@@ -8860,10 +9127,38 @@ document.addEventListener('keydown', e => {
           </div>`;
       }
 
-      // Fold scores into main teamScores
-      teamScores[0] += totalRed;
-      teamScores[1] += totalBlue;
-      updateScores();
+      // Store totals for the onComplete callback
+      scribbleState._roundTotals = { redScore: totalRed, blueScore: totalBlue };
+
+      // Add Continue button to summary
+      const continueBtn = document.createElement("button");
+      continueBtn.className = "btn action-btn";
+      continueBtn.textContent = "Continue";
+      continueBtn.style.marginTop = "12px";
+      continueBtn.onclick = scribbleFinishRound;
+      ss.appendChild(continueBtn);
+    }
+
+    function scribbleFinishRound() {
+      const totals = scribbleState._roundTotals || { redScore: 0, blueScore: 0 };
+      const onComplete = scribbleState._onComplete;
+
+      // Hide scribble container
+      const sc = document.getElementById("scribble-container");
+      if (sc) sc.style.display = "none";
+
+      // Clean up any leftover overlays
+      document.querySelectorAll(".scribble-solved-overlay").forEach(el => el.remove());
+
+      // Call the orchestrator's completion callback
+      if (onComplete) {
+        onComplete(totals);
+      } else {
+        // Fallback: fold scores directly (shouldn't happen with orchestrator)
+        teamScores[0] += totals.redScore;
+        teamScores[1] += totals.blueScore;
+        updateScores();
+      }
     }
 
     // ── Scribble drawing event wiring (deferred until DOM is ready) ──
@@ -9587,10 +9882,29 @@ document.addEventListener('keydown', e => {
       }, 2000);
     }
 
-    function showCategorySelection(syncedData) {
+    function showCategorySelection(syncedData, poolFilter) {
       const pillsAreaRef = document.getElementById("category-pills-area");
       if (pillsAreaRef) {
         pillsAreaRef.classList.remove('pills-slide-in');
+      }
+
+      // Survey-only mode: skip category UI entirely, auto-pick Survey
+      if (poolFilter?.surveyOnly) {
+        // Generate a Survey question and go straight to gameplay
+        const surveyIdx = questions.map((q, idx) => ({ q, idx }))
+          .filter(obj => !usedQuestions.includes(obj.idx) && obj.q.category === 'Survey' && (!devModeAllowedQuestions || devModeAllowedQuestions.has(obj.idx)));
+        if (surveyIdx.length > 0) {
+          const choice = surveyIdx[Math.floor(Math.random() * surveyIdx.length)];
+          _preSelectedQuestions = { 'Survey': { question: choice.q.question, category: 'Survey', answers: choice.q.answers.map(a => ({ text: a.text, display: a.display, points: a.points, variants: a.variants || [] })), _poolIdx: choice.idx } };
+          categoryMultipliers = { 'Survey': rollCategoryMultiplier() };
+          if (isMultiplayer) {
+            _syncedCategoryPicks = { picks: [], hasSurvey: true, multipliers: { ...categoryMultipliers }, questions: _preSelectedQuestions };
+            syncState({ categoryPicks: _syncedCategoryPicks, phase: 'category-select', activePlayerUid: getActivePlayerUid(), roundNumber, teamTurn, startingTeam, currentQuestion: null, revealed: [], revealedData: [], roundScore: 0, strikes: 0, currentStreak: 0, answerMultiplier: 1.0, stealPhase: false, lastResult: null, readyPlayers: {}, readyCountdown: null, guessHistory: [], pendingAction: null, playerIndex: [...playerIndex] });
+          }
+          pickCategory('Survey');
+          return;
+        }
+        // Fallback: no Survey questions left — show normal selection
       }
 
       let picks, hasSurvey;
@@ -9604,7 +9918,7 @@ document.addEventListener('keydown', e => {
       } else {
         // Active player (or local mode): generate randomly
         const remainingIdx = questions.map((q, idx) => !usedQuestions.includes(idx) && (!devModeAllowedQuestions || devModeAllowedQuestions.has(idx)) ? idx : null).filter(i => i !== null);
-        hasSurvey = remainingIdx.some(i => questions[i].category === 'Survey');
+        hasSurvey = poolFilter?.excludeSurvey ? false : remainingIdx.some(i => questions[i].category === 'Survey');
         if (!hasSurvey) console.warn('[category-select] No Survey questions remaining! usedQuestions count:', usedQuestions.length, 'total questions:', questions.length, 'remaining:', remainingIdx.length);
         const objCats = [...new Set(remainingIdx.filter(i => questions[i].category !== 'Survey').map(i => questions[i].category))];
         if (objCats.length === 0 && !hasSurvey) { endGame("No more questions available."); return; }
@@ -13102,6 +13416,7 @@ document.addEventListener('keydown', e => {
         pendingFaceoffActions: null,
         scribbleState: null,
         pendingScribbleActions: null,
+        selectedRoundType: null,
         awards: null,
         gameEnded: false,
         readyPlayers: {},
@@ -13261,12 +13576,7 @@ document.addEventListener('keydown', e => {
         startGameListener();
       }
 
-      // Dev shortcut: skip normal rounds, jump straight to scribble
-      if (DEV_SKIP_TO_SCRIBBLE && typeof enterScribbleRound === "function") {
-        enterScribbleRound();
-      } else {
-        advanceRound();
-      }
+      advanceRound();
     }
 
     // ── Start screen dismiss ───────────────────────────────────────

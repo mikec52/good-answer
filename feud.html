@@ -7283,6 +7283,16 @@ document.addEventListener('keydown', e => {
           }
           break;
 
+        case 'scribble-session-end':
+          // Host ended the session — mirror locally on non-hosts
+          if (scribbleState.phase === "drawing" || scribbleState.phase === "countdown") {
+            scribbleApplyEndDrawingSession(
+              data.scribbleEndReason || "timeup",
+              data.scribbleEndSessionData || scribbleState._sessionData || {}
+            );
+          }
+          break;
+
         case 'category-select':
           // Non-host clients: animate round exit, then show category selection.
           if (data.categoryPicks) {
@@ -8436,9 +8446,15 @@ document.addEventListener('keydown', e => {
     // main teamScores, resets the module, restores normal game UI, and
     // triggers the ready-up / next-round flow.
     function handleModuleComplete({ redScore, blueScore }) {
-      teamScores[0] += redScore;
-      teamScores[1] += blueScore;
-      updateScores();
+      // Only the host folds scores into teamScores and syncs. Non-hosts
+      // receive the canonical teamScores via the host's syncAfterGuess
+      // below, which triggers reconcileLocalState → updateScores().
+      // This prevents doubling when both local increment AND sync apply.
+      if (!isMultiplayer || isHost) {
+        teamScores[0] += redScore;
+        teamScores[1] += blueScore;
+        updateScores();
+      }
 
       const scoringTeam = redScore >= blueScore ? 0 : 1;
       lastRoundWinner = scoringTeam;
@@ -9465,6 +9481,33 @@ document.addEventListener('keydown', e => {
 
     function scribbleEndDrawingSession(reason, sessionData) {
       if (scribbleState.phase === "session-end" || scribbleState.phase === "summary") return;
+
+      // In multiplayer, only the host drives session end and syncs it
+      // to all clients. Non-hosts wait for the sync and mirror via
+      // handlePhaseTransition 'scribble-session-end'.
+      if (isMultiplayer && !isHost) {
+        // Non-host local timer can expire too; if it does, just wait —
+        // host's sync will finalize for everyone.
+        return;
+      }
+
+      scribbleApplyEndDrawingSession(reason, sessionData);
+
+      // Host syncs the session end so non-hosts finalize in sync
+      if (isMultiplayer && isHost) {
+        syncState({
+          phase: 'scribble-session-end',
+          scribbleEndReason: reason,
+          scribbleEndSessionData: sessionData,
+          scribbleEndTs: Date.now(),
+        });
+      }
+    }
+
+    // Apply session-end locally — used by host directly and by non-hosts
+    // when they receive the 'scribble-session-end' phase from the host.
+    function scribbleApplyEndDrawingSession(reason, sessionData) {
+      if (scribbleState.phase === "session-end" || scribbleState.phase === "summary") return;
       scribbleState.phase = "session-end";
 
       clearInterval(scribbleState.sessionInterval); scribbleState.sessionInterval = null;
@@ -9473,10 +9516,8 @@ document.addEventListener('keydown', e => {
       scribbleState.drawingEnabled = false;
       const drawCanvas = document.getElementById("scribble-draw-canvas");
       if (drawCanvas) drawCanvas.classList.add("disabled");
-      const guessInput = document.getElementById("scribble-guess-input");
-      const guessBtn = document.getElementById("scribble-guess-btn");
+      const guessInput = document.getElementById("guess");
       if (guessInput) guessInput.disabled = true;
-      if (guessBtn) guessBtn.disabled = true;
 
       scribbleRevealAllTiles();
 

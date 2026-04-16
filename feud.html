@@ -8919,27 +8919,63 @@ document.addEventListener('keydown', e => {
       }
     }
 
-    // Apply a solve locally — shows overlay, updates status, reveals tiles if steal
+    // Apply a solve locally — shows overlay, updates status, reveals tiles.
+    // Status message is perspective-aware: what happened from MY client's view.
     function scribbleApplySolve(solvedTeam, result, guesserUid) {
       const statusEl = document.getElementById("scribble-status");
       const myTeam = (isMultiplayer && myUid && teamPlayerUids[1]?.includes(myUid)) ? 1 : 0;
-      const isMyTeamDrawing = (solvedTeam === myTeam);
+      const drawerTeam = solvedTeam;
+      const guesserTeam = teamPlayerUids[0]?.includes(guesserUid) ? 0 :
+                          (teamPlayerUids[1]?.includes(guesserUid) ? 1 : 0);
+      const isSteal = guesserTeam !== drawerTeam;
+      const isMyTeamGuessed = guesserTeam === myTeam;
+      const isMyTeamDrawing = drawerTeam === myTeam;
+      const isDrawer = scribbleState.myRole === "drawer";
+
       const t0 = scribbleState._team0Word, t1 = scribbleState._team1Word;
       const word = solvedTeam === 0 ? t0?.word : t1?.word;
 
-      // Show solved overlay on correct canvas panel (guesser view panels)
-      scribbleShowSolved(isMyTeamDrawing ? "scribble-teammate-panel" : "scribble-opp-panel");
-
-      // If opponent canvas was solved, reveal all tiles
-      if (!isMyTeamDrawing) {
-        scribbleRevealAllTiles();
+      // Show solved overlay — location depends on role
+      if (isDrawer) {
+        // Drawer only sees their own canvas. Show overlay if it was their drawing.
+        if (isMyTeamDrawing) {
+          scribbleShowSolved("scribble-draw-panel");
+        }
+      } else {
+        // Guesser sees both canvases. Show overlay on whichever was solved.
+        scribbleShowSolved(isMyTeamDrawing ? "scribble-teammate-panel" : "scribble-opp-panel");
+        // Reveal opponent canvas tiles if that's what was solved (they can see it now)
+        if (!isMyTeamDrawing) {
+          scribbleRevealAllTiles();
+        }
       }
 
-      // Status message on guesser's screen
+      // Perspective-aware status message
       if (statusEl && word) {
-        const prefix = isMyTeamDrawing ? "Correct!" : "Steal!";
-        statusEl.textContent = `${prefix} ${word.toUpperCase()} — ${result.total} pts (${result.mult}x)`;
-        statusEl.className = "scribble-status correct";
+        let msg = "";
+        let cls = "correct";
+        const pts = `+${result.total} pts (${result.mult}x)`;
+        if (isMyTeamGuessed) {
+          // My team guessed something
+          if (isSteal) {
+            msg = `🎯 Steal! ${word.toUpperCase()} — ${pts}`;
+          } else {
+            msg = `✓ Correct! ${word.toUpperCase()} — ${pts}`;
+          }
+        } else {
+          // Other team guessed
+          if (isMyTeamDrawing) {
+            // The opponent stole our drawing's word
+            msg = `💔 They stole "${word.toUpperCase()}"!`;
+            cls = "timeup"; // red-colored style
+          } else {
+            // Other team guessed their own teammate's word
+            msg = `The other team guessed "${word.toUpperCase()}"`;
+            cls = "correct";
+          }
+        }
+        statusEl.textContent = msg;
+        statusEl.className = `scribble-status ${cls}`;
       }
     }
 
@@ -9036,6 +9072,13 @@ document.addEventListener('keydown', e => {
       scribbleState.sessions = [];
       scribbleState.usedWords = new Set();
       scribbleState.myRole = scribbleDetermineRole(0);
+
+      // Clear stale UI state from any previous scribble round
+      const statusEl = document.getElementById("scribble-status");
+      if (statusEl) { statusEl.textContent = ""; statusEl.className = "scribble-status"; }
+      const wsWaiting = document.getElementById("scribble-ws-waiting");
+      if (wsWaiting) { wsWaiting.textContent = "Waiting for other drawer..."; wsWaiting.style.display = "none"; }
+      document.querySelectorAll(".scribble-solved-overlay").forEach(el => el.remove());
 
       // Hide normal game elements, show scribble container
       const bw = document.getElementById("board-wrapper");
@@ -9374,6 +9417,10 @@ document.addEventListener('keydown', e => {
       const messageEl = document.getElementById("message");
       if (guessInput && !isDrawer) { guessInput.disabled = false; guessInput.value = ""; guessInput.placeholder = "Type your guess..."; guessInput.focus(); }
       if (messageEl) messageEl.textContent = "";
+
+      // Clear any lingering status message from previous session/round
+      const statusEl = document.getElementById("scribble-status");
+      if (statusEl) { statusEl.textContent = ""; statusEl.className = "scribble-status"; }
 
       // Drawing starts disabled until countdown finishes
       scribbleState.drawingEnabled = false;

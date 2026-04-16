@@ -2723,6 +2723,7 @@
     .team-score-box .team-label h4 {
       margin: 0;
       font-family: "Bitcount Single";
+      color: #ffffff;
       white-space: nowrap;
       /* Shrink-to-fit by char count: fitByCharCount() sets --fit-scale.
          Base tuned so 10 chars ("Turbo Team") fits at scale 1. */
@@ -2734,6 +2735,7 @@
       font-size: 3rem;
       font-family: "Bitcount Single", sans-serif;
       font-variation-settings: "ROND" 0;
+      color: #ffffff;
       border-radius: 6px;
       height: 80px;
       display: flex;
@@ -9218,14 +9220,24 @@ document.addEventListener('keydown', e => {
         return;
       }
 
-      // Multiplayer: sync a drawing-start phase so all clients transition together
+      // Multiplayer: sync a drawing-start phase so all clients transition together.
+      // Critical: reset scribbleScoring + scribbleLastSolve + scribbleCanvases
+      // so session 2 doesn't inherit session 1's "already solved" state.
       syncState({
         phase: 'scribble-drawing-start',
         scribbleSessionWords: {
           team0: team0Word,
           team1: team1Word,
         },
-        scribbleWordPicks: null, // Clear picks map
+        scribbleWordPicks: null,
+        scribbleCanvases: null,
+        scribbleScoring: {
+          firstGuessClaimed: false,
+          drawingFirstClaimed: [false, false],
+          events: [],
+          teamScores: [0, 0],
+        },
+        scribbleLastSolve: null,
       });
 
       // Host also starts locally
@@ -9335,6 +9347,13 @@ document.addEventListener('keydown', e => {
       const teammateCanvas = document.getElementById("scribble-teammate-canvas");
       if (teammateCanvas) { const ctx = teammateCanvas.getContext("2d"); ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, SCRIBBLE_CONFIG.canvasSize, SCRIBBLE_CONFIG.canvasSize); }
       scribbleResetTileGrid();
+      // Clear any lingering solved overlays from previous session
+      document.querySelectorAll(".scribble-solved-overlay").forEach(el => el.remove());
+      // Reset scoring state locally so stale session 1 flags don't block session 2 guesses
+      // (host's sync will bring canonical values, but we want clean local state first)
+      scribbleState.sessionScoring = scribbleInitSessionScoring();
+      scribbleState._teammateSolved = false;
+      scribbleState._opponentSolved = false;
 
       // Show drawer's word (in the left-side panel)
       const wordEl = document.getElementById("scribble-drawer-word");

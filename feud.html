@@ -8464,16 +8464,12 @@ document.addEventListener('keydown', e => {
       undoStack: [],
       // Scoring
       sessionScoring: null,
-      // Auto-scribbler (standalone testing only — replaced by real Firestore sync in multiplayer)
-      autoScribbleInterval: null,
-      autoCanvas: null, autoCtx: null,
     };
 
     function resetScribbleState() {
       if (scribbleState.sessionInterval) clearInterval(scribbleState.sessionInterval);
       if (scribbleState.revealTimer) clearInterval(scribbleState.revealTimer);
       if (scribbleState.renderLoopId) cancelAnimationFrame(scribbleState.renderLoopId);
-      if (scribbleState.autoScribbleInterval) clearInterval(scribbleState.autoScribbleInterval);
       scribbleState = {
         active: false,
         phase: "idle",
@@ -8495,9 +8491,7 @@ document.addEventListener('keydown', e => {
         drawingEnabled: false,
         undoStack: [],
         sessionScoring: null,
-        autoScribbleInterval: null,
-        autoCanvas: null, autoCtx: null,
-      };
+          };
       // Hide scribble container if it exists
       const sc = document.getElementById("scribble-container");
       if (sc) sc.style.display = "none";
@@ -8697,45 +8691,42 @@ document.addEventListener('keydown', e => {
       return { total, mult, breakdown };
     }
 
-    // ── Scribble auto-scribbler (standalone testing) ──
-    function scribbleInitAutoScribbler() {
-      scribbleState.autoCanvas = document.createElement("canvas");
-      scribbleState.autoCanvas.width = SCRIBBLE_CONFIG.canvasSize;
-      scribbleState.autoCanvas.height = SCRIBBLE_CONFIG.canvasSize;
-      scribbleState.autoCtx = scribbleState.autoCanvas.getContext("2d");
-      scribbleState.autoCtx.fillStyle = "#ffffff";
-      scribbleState.autoCtx.fillRect(0, 0, SCRIBBLE_CONFIG.canvasSize, SCRIBBLE_CONFIG.canvasSize);
-    }
+    // ── Scribble guess handler (called from main submitGuess) ──
+    function scribbleSubmitGuess(guess) {
+      const g = guess.toLowerCase();
+      const sw = scribbleState._sessionWords;
+      if (!sw) return;
+      const statusEl = document.getElementById("scribble-status");
+      const guessInput = document.getElementById("guess");
+      let matched = false;
 
-    function scribbleStartAutoScribble() {
-      const colors = ["#111111","#c00000","#0000c0","#00c000","#c000c0","#c0c000"];
-      let ax = 240, ay = 240;
-      const ctx = scribbleState.autoCtx;
-      scribbleState.autoScribbleInterval = setInterval(() => {
-        ctx.beginPath();
-        ctx.strokeStyle = colors[Math.floor(Math.random()*colors.length)];
-        ctx.lineWidth = 3 + Math.random()*12;
-        ctx.lineCap = "round";
-        const nx = ax + (Math.random()-0.5)*80;
-        const ny = ay + (Math.random()-0.5)*80;
-        ctx.moveTo(ax, ay);
-        ctx.lineTo(Math.max(10,Math.min(470,nx)), Math.max(10,Math.min(470,ny)));
-        ctx.stroke();
-        ax = Math.max(10,Math.min(470,nx));
-        ay = Math.max(10,Math.min(470,ny));
-      }, 200);
-    }
+      // Check teammate's drawing (canvas 0)
+      if (!scribbleState._teammateSolved && g === sw.myWord.toLowerCase()) {
+        scribbleState._teammateSolved = true;
+        const result = scribbleScoreGuess(0, 0, scribbleState.sessionTimer, sw.myPts);
+        scribbleShowSolved("scribble-teammate-panel");
+        if (statusEl) { statusEl.textContent = `Correct! ${sw.myWord.toUpperCase()} — ${result.total} pts (${result.mult}x)`; statusEl.className = "scribble-status correct"; }
+        matched = true;
+      }
 
-    function scribbleStopAutoScribble() {
-      clearInterval(scribbleState.autoScribbleInterval);
-      scribbleState.autoScribbleInterval = null;
-    }
+      // Check opponent's drawing (canvas 1)
+      if (!matched && !scribbleState._opponentSolved && g === sw.oppWord.toLowerCase()) {
+        scribbleState._opponentSolved = true;
+        const result = scribbleScoreGuess(0, 1, scribbleState.sessionTimer, sw.oppPts);
+        scribbleShowSolved("scribble-opp-panel");
+        scribbleRevealAllTiles();
+        if (statusEl) { statusEl.textContent = `Steal! ${sw.oppWord.toUpperCase()} — ${result.total} pts (${result.mult}x)`; statusEl.className = "scribble-status correct"; }
+        matched = true;
+      }
 
-    function scribbleRenderAutoOpponent() {
-      const oppCanvas = document.getElementById("scribble-opp-canvas");
-      if (!oppCanvas || !scribbleState.autoCanvas) return;
-      oppCanvas.getContext("2d").drawImage(scribbleState.autoCanvas, 0, 0);
-      if (scribbleState.phase === "drawing") requestAnimationFrame(scribbleRenderAutoOpponent);
+      if (!matched && guessInput) {
+        guessInput.classList.add("flash-wrong");
+        setTimeout(() => guessInput.classList.remove("flash-wrong"), 400);
+      }
+
+      if (scribbleState._teammateSolved && scribbleState._opponentSolved) {
+        scribbleEndDrawingSession("all-solved", scribbleState._sessionData);
+      }
     }
 
     // ── Scribble countdown ──
@@ -8816,6 +8807,7 @@ document.addEventListener('keydown', e => {
     function scribbleStartWordSelection() {
       scribbleState.phase = "word-select";
       scribbleState.myRole = scribbleDetermineRole(scribbleState.currentSession);
+      scribbleState._myWordPick = null; // stores this drawer's pick until both are ready
 
       // Show word select, hide others
       const ws = document.getElementById("scribble-word-select");
@@ -8839,6 +8831,7 @@ document.addEventListener('keydown', e => {
       const wsWaiting = document.getElementById("scribble-ws-waiting");
       if (wsWaiting) wsWaiting.style.display = "none";
 
+      // Generate word choices (each drawer gets their own set)
       const choices = [
         { word: scribblePickWord("easy"), difficulty: "easy", points: 50 },
         { word: scribblePickWord("medium"), difficulty: "medium", points: 75 },
@@ -8865,42 +8858,70 @@ document.addEventListener('keydown', e => {
           scribbleState.usedWords.add(c.word);
           choicesEl.querySelectorAll(".scribble-ws-choice").forEach(d => d.style.pointerEvents = "none");
           div.style.borderColor = "var(--gold)";
-          if (wsWaiting) wsWaiting.style.display = "";
-          clearInterval(wsCountdown);
-          // Simulate opponent choosing
-          const oppChoice = choices[Math.floor(Math.random() * 3)];
-          const oppWord = scribblePickWord(oppChoice.difficulty);
-          scribbleState.usedWords.add(oppWord);
-          setTimeout(() => scribbleStartDrawingSession(c.word, c.difficulty, c.points, oppWord, oppChoice.difficulty, oppChoice.points),
-            800 + Math.random() * 1500);
+          // Store pick locally — don't start drawing yet, wait for timer/both picks
+          scribbleState._myWordPick = { word: c.word, difficulty: c.difficulty, points: c.points };
+          if (wsWaiting) { wsWaiting.textContent = "Waiting for other drawer..."; wsWaiting.style.display = ""; }
+
+          // Sync pick to Firestore so host can track both drawers
+          if (isMultiplayer) {
+            syncState({ [`scribbleWordPicks.${myUid}`]: { word: c.word, difficulty: c.difficulty, points: c.points } });
+          }
         });
         choicesEl.appendChild(div);
       });
 
-      // Timer
+      // Timer — word select phase runs for the full duration. Drawing starts
+      // when the timer expires (ensuring both drawers start simultaneously)
+      // or when both drawers have picked (host detects via Firestore).
       let timeLeft = SCRIBBLE_CONFIG.wordSelectTime;
       const timerEl = document.getElementById("scribble-ws-timer");
       if (timerEl) { timerEl.textContent = timeLeft; timerEl.classList.remove("urgent"); }
 
-      const wsCountdown = setInterval(() => {
+      scribbleState._wsCountdown = setInterval(() => {
         timeLeft--;
         if (timerEl) {
           timerEl.textContent = timeLeft;
           if (timeLeft <= 3) timerEl.classList.add("urgent");
         }
         if (timeLeft <= 0) {
-          clearInterval(wsCountdown);
-          if (!picked) {
+          clearInterval(scribbleState._wsCountdown);
+          scribbleState._wsCountdown = null;
+          // Auto-pick if drawer hasn't chosen
+          if (scribbleState.myRole === "drawer" && !picked) {
             picked = true;
             const pick = choices[Math.floor(Math.random() * 3)];
             scribbleState.usedWords.add(pick.word);
-            const oppChoice = choices[Math.floor(Math.random() * 3)];
-            const oppWord = scribblePickWord(oppChoice.difficulty);
-            scribbleState.usedWords.add(oppWord);
-            scribbleStartDrawingSession(pick.word, pick.difficulty, pick.points, oppWord, oppChoice.difficulty, oppChoice.points);
+            scribbleState._myWordPick = pick;
+            if (isMultiplayer) {
+              syncState({ [`scribbleWordPicks.${myUid}`]: pick });
+            }
+          }
+          // Host triggers drawing start after a brief delay for sync
+          if (isHost || !isMultiplayer) {
+            setTimeout(() => scribbleHostStartDrawing(), 500);
           }
         }
       }, 1000);
+    }
+
+    // Host collects both drawers' picks and starts the drawing session.
+    // Called when timer expires or when both picks are detected.
+    function scribbleHostStartDrawing() {
+      if (scribbleState.phase !== "word-select") return;
+
+      // For now: each client uses their own pick as "myWord" and a
+      // placeholder for the opponent's word. In multiplayer, the host
+      // will eventually sync both words to all clients.
+      const myPick = scribbleState._myWordPick || { word: "mystery", difficulty: "medium", points: 75 };
+
+      // Generate an opponent word (placeholder until Firestore word sync)
+      const oppDiffs = ["easy", "medium", "hard"];
+      const oppDiff = oppDiffs[Math.floor(Math.random() * 3)];
+      const oppWord = scribblePickWord(oppDiff);
+      const oppPts = SCRIBBLE_CONFIG.difficultyPoints[oppDiff];
+      scribbleState.usedWords.add(oppWord);
+
+      scribbleStartDrawingSession(myPick.word, myPick.difficulty, myPick.points, oppWord, oppDiff, oppPts);
     }
 
     // ── Drawing session ──
@@ -8914,17 +8935,32 @@ document.addEventListener('keydown', e => {
       // Show role-appropriate view
       const drawerView = document.getElementById("scribble-drawer-view");
       const guesserView = document.getElementById("scribble-guesser-view");
-      const guessAreaEl = document.getElementById("scribble-guess-area");
+      const scribbleGuessArea = document.getElementById("scribble-guess-area");
       const isDrawer = scribbleState.myRole === "drawer";
+
+      // Always hide the scribble-specific guess area — use the main input-area instead
+      if (scribbleGuessArea) scribbleGuessArea.style.display = "none";
 
       if (isDrawer) {
         if (drawerView) drawerView.style.display = "flex";
         if (guesserView) guesserView.style.display = "none";
-        if (guessAreaEl) guessAreaEl.style.display = "none"; // Drawers don't guess
       } else {
         if (drawerView) drawerView.style.display = "none";
         if (guesserView) guesserView.style.display = "flex";
-        if (guessAreaEl) guessAreaEl.style.display = "flex";
+      }
+
+      // Show the main sidebar input-area for guessers
+      const mainInputArea = document.getElementById("input-area");
+      const sqa = document.getElementById("sidebar-question-answer");
+      if (!isDrawer) {
+        if (sqa) sqa.style.display = "flex";
+        if (mainInputArea) {
+          mainInputArea.style.display = "";
+          mainInputArea.classList.remove("offscreen-below", "input-enter");
+        }
+      } else {
+        // Hide sidebar input for drawers
+        if (sqa) sqa.style.display = "none";
       }
 
       // Reset tools to defaults
@@ -8953,25 +8989,21 @@ document.addEventListener('keydown', e => {
       const wordEl = document.getElementById("scribble-drawer-word");
       if (wordEl) { wordEl.style.display = ""; wordEl.textContent = myWord.toUpperCase(); wordEl.className = `scribble-drawer-word ${myDiff}`; }
 
-      // Init scoring
+      // Init scoring + store session words on state for scribbleSubmitGuess
       scribbleState.sessionScoring = scribbleInitSessionScoring();
-      let teammateSolved = false, opponentSolved = false;
+      scribbleState._sessionWords = { myWord, myDiff, myPts, oppWord, oppDiff, oppPts };
+      scribbleState._teammateSolved = false;
+      scribbleState._opponentSolved = false;
 
       // Timer
       scribbleState.sessionTimer = SCRIBBLE_CONFIG.drawDuration;
       scribbleUpdateTimer();
 
-      // Guess area
-      const guessInput = document.getElementById("scribble-guess-input");
-      const guessBtn = document.getElementById("scribble-guess-btn");
-      const statusEl = document.getElementById("scribble-status");
-      if (guessInput) { guessInput.disabled = false; guessInput.value = ""; }
-      if (guessBtn) guessBtn.disabled = false;
-      if (statusEl) { statusEl.textContent = ""; statusEl.className = "scribble-status"; }
-
-      // Start auto-scribbler
-      scribbleInitAutoScribbler();
-      scribbleStartAutoScribble();
+      // Enable the main guess input for guessers (routed via submitGuess → scribbleSubmitGuess)
+      const guessInput = document.getElementById("guess");
+      const messageEl = document.getElementById("message");
+      if (guessInput && !isDrawer) { guessInput.disabled = false; guessInput.value = ""; guessInput.placeholder = "Type your guess..."; guessInput.focus(); }
+      if (messageEl) messageEl.textContent = "";
 
       // Drawing starts disabled until countdown finishes
       scribbleState.drawingEnabled = false;
@@ -8979,46 +9011,13 @@ document.addEventListener('keydown', e => {
       if (drawCanvas) drawCanvas.classList.add("disabled");
 
       const sessionData = { myWord, myDiff, myPts, oppWord, oppDiff, oppPts };
-
-      // Guess handler
-      const handleGuess = () => {
-        if (!guessInput) return;
-        const guess = guessInput.value.trim().toLowerCase();
-        if (!guess) return;
-        let matched = false;
-
-        if (!teammateSolved && guess === myWord.toLowerCase()) {
-          teammateSolved = true;
-          const result = scribbleScoreGuess(0, 0, scribbleState.sessionTimer, myPts);
-          scribbleShowSolved("scribble-draw-panel");
-          if (statusEl) { statusEl.textContent = `Correct! ${myWord.toUpperCase()} — ${result.total} pts (${result.mult}x)`; statusEl.className = "scribble-status correct"; }
-          matched = true;
-        }
-        if (!matched && !opponentSolved && guess === oppWord.toLowerCase()) {
-          opponentSolved = true;
-          const result = scribbleScoreGuess(0, 1, scribbleState.sessionTimer, oppPts);
-          scribbleShowSolved("scribble-opp-panel");
-          scribbleRevealAllTiles();
-          if (statusEl) { statusEl.textContent = `Steal! ${oppWord.toUpperCase()} — ${result.total} pts (${result.mult}x)`; statusEl.className = "scribble-status correct"; }
-          matched = true;
-        }
-        if (!matched) {
-          if (guessInput) { guessInput.classList.add("flash-wrong"); setTimeout(() => guessInput.classList.remove("flash-wrong"), 400); }
-        }
-        if (guessInput) { guessInput.value = ""; guessInput.focus(); }
-        if (teammateSolved && opponentSolved) scribbleEndDrawingSession("all-solved", sessionData);
-      };
-
-      if (guessBtn) guessBtn.onclick = handleGuess;
-      if (guessInput) guessInput.onkeydown = e => { if (e.key === "Enter") handleGuess(); };
+      scribbleState._sessionData = sessionData;
 
       // Countdown, then enable drawing + start timers
       scribblePlayCountdown(document.querySelector(".scribble-canvas-wrap"), () => {
         scribbleState.phase = "drawing";
         scribbleState.drawingEnabled = true;
         if (drawCanvas) drawCanvas.classList.remove("disabled");
-
-        scribbleRenderAutoOpponent();
 
         scribbleState.sessionInterval = setInterval(() => {
           scribbleState.sessionTimer--;
@@ -9046,7 +9045,6 @@ document.addEventListener('keydown', e => {
 
       clearInterval(scribbleState.sessionInterval); scribbleState.sessionInterval = null;
       clearInterval(scribbleState.revealTimer); scribbleState.revealTimer = null;
-      scribbleStopAutoScribble();
 
       scribbleState.drawingEnabled = false;
       const drawCanvas = document.getElementById("scribble-draw-canvas");
@@ -11067,6 +11065,13 @@ document.addEventListener('keydown', e => {
 
     async function submitGuess(){const input=document.getElementById("guess");const guess=input.value.trim();
       if(_scoringInProgress){return;} // block all entry points while scoring
+      // Secret Scribble: route to scribble guess handler
+      if (scribbleState.active && scribbleState.phase === "drawing") {
+        input.value = "";
+        if (!guess) return;
+        scribbleSubmitGuess(guess);
+        return;
+      }
       // Face-off round: route to face-off evaluator before any normal-round logic
       if (faceoffState.active) {
         input.value = "";

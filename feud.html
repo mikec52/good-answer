@@ -3348,7 +3348,7 @@
 
     #scribble-draw-canvas { border-radius: 6px; box-shadow: inset 0 0 12px rgba(0,0,0,0.4); display: block; cursor: crosshair; }
     #scribble-draw-canvas.disabled { cursor: not-allowed !important; opacity: 0.7; }
-    #scribble-teammate-canvas { border-radius: 6px; box-shadow: inset 0 0 12px rgba(0,0,0,0.4); display: block; cursor: default; }
+    #scribble-teammate-canvas { border-radius: 6px; box-shadow: inset 0 0 12px rgba(0,0,0,0.4); display: block; cursor: default; background: #ffffff; }
     #scribble-opp-canvas { border-radius: 6px; display: block; cursor: default; box-shadow: none; }
     .scribble-opponent-wrap {
       position: relative; width: 380px; height: 380px; border-radius: 6px; overflow: hidden;
@@ -7237,7 +7237,20 @@ document.addEventListener('keydown', e => {
           // existing handlers process — no extra action needed here.
           break;
 
+        case 'scribble-word-select':
+          // Non-host: host started a new scribble session (usually session 2)
+          if (data.scribbleSession !== undefined && data.scribbleSession !== scribbleState.currentSession) {
+            scribbleState.currentSession = data.scribbleSession;
+          }
+          // Only transition if we're not already in word-select for this session
+          if (scribbleState.phase !== "word-select") {
+            scribbleStartWordSelection();
+          }
+          break;
+
         case 'scribble-drawing-start':
+          // Guard: don't re-enter drawing if we're already there or past it
+          if (scribbleState.phase === "drawing" || scribbleState.phase === "session-end" || scribbleState.phase === "summary") break;
           // Host synced the start of the drawing session with both team's words
           if (data.scribbleSessionWords) {
             // Stop the word-select countdown locally if it's still running
@@ -8907,6 +8920,17 @@ document.addEventListener('keydown', e => {
       scribbleState.myRole = scribbleDetermineRole(scribbleState.currentSession);
       console.log('[scribble] my role for session', scribbleState.currentSession, 'is', scribbleState.myRole);
 
+      // Host syncs phase to Firestore so stale scribble-drawing-start doesn't
+      // re-trigger when drawers write their word picks.
+      if (isMultiplayer && isHost) {
+        syncState({
+          phase: 'scribble-word-select',
+          scribbleSession: scribbleState.currentSession,
+          scribbleWordPicks: null,
+          scribbleCanvases: null,
+        });
+      }
+
       // Ensure container is visible (important for session 2+)
       const container = document.getElementById("scribble-container");
       if (container) container.style.display = "flex";
@@ -9098,7 +9122,8 @@ document.addEventListener('keydown', e => {
         if (guesserView) guesserView.style.display = "flex";
       }
 
-      // Show the main sidebar input-area for guessers
+      // Show the main sidebar input-area for guessers — reuse the same
+      // slide-up animation used by pickCategory for the feud question flow
       const mainInputArea = document.getElementById("input-area");
       const sqa = document.getElementById("sidebar-question-answer");
       const sqInput = document.getElementById("sq-zone-input");
@@ -9106,19 +9131,29 @@ document.addEventListener('keydown', e => {
       if (!isDrawer) {
         if (sqa) sqa.style.display = "flex";
         if (sqContent) sqContent.style.display = "none"; // no content-tv for scribble
-        if (sqInput) { sqInput.style.display = ""; sqInput.classList.remove("offscreen-below"); sqInput.classList.add("input-enter"); }
         if (mainInputArea) {
           mainInputArea.style.display = "";
           mainInputArea.classList.remove("hidden");
         }
-        // Update turn-header to reflect scribble guessing context
+        // Update turn-header + subtext to reflect scribble context
         const turnHeader = document.getElementById("turn-header");
         if (turnHeader) turnHeader.textContent = "Guess the drawings!";
         const turnSubtext = document.getElementById("turn-subtext");
         if (turnSubtext) turnSubtext.textContent = "Type your guess";
+        // Slide input-area up from below — same animation as feud rounds
+        if (sqInput) {
+          sqInput.classList.remove("input-enter", "input-exit");
+          sqInput.classList.add("offscreen-below");
+          // Next frame: trigger slide-in by swapping classes
+          requestAnimationFrame(() => {
+            sqInput.classList.remove("offscreen-below");
+            sqInput.classList.add("input-enter");
+          });
+        }
       } else {
         // Hide sidebar input-area for drawers (they don't guess)
         if (sqa) sqa.style.display = "none";
+        if (sqInput) sqInput.classList.add("offscreen-below");
       }
 
       // Reset tools to defaults
@@ -9137,10 +9172,12 @@ document.addEventListener('keydown', e => {
       const defaultSize = document.querySelector('.scribble-size-btn[data-size="8"]');
       if (defaultSize) defaultSize.classList.add("active");
 
-      // Reset canvases
+      // Reset canvases — all three start white
       scribbleClearDrawCanvas();
       const oppCanvas = document.getElementById("scribble-opp-canvas");
       if (oppCanvas) { const ctx = oppCanvas.getContext("2d"); ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, SCRIBBLE_CONFIG.canvasSize, SCRIBBLE_CONFIG.canvasSize); }
+      const teammateCanvas = document.getElementById("scribble-teammate-canvas");
+      if (teammateCanvas) { const ctx = teammateCanvas.getContext("2d"); ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, SCRIBBLE_CONFIG.canvasSize, SCRIBBLE_CONFIG.canvasSize); }
       scribbleResetTileGrid();
 
       // Show drawer's word (in the left-side panel)

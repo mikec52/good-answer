@@ -325,6 +325,12 @@
     color: white;
     mix-blend-mode: multiply;
     opacity: .85;
+    transition: transform 1s ease, mix-blend-mode 0.5s ease, opacity 0.8s ease;
+    }
+    #start-logo.logo-to-top {
+      transform: translateY(-180px) scale(0.5);
+      mix-blend-mode: normal;
+      opacity: 1;
     }
 
     #logo-good {
@@ -510,7 +516,7 @@
     #mode-select {
       position: absolute;
       inset: 0;
-      z-index: 15;
+      z-index: 21;
       display: none;
       flex-direction: column;
       align-items: center;
@@ -519,25 +525,29 @@
     }
     #mode-select h1 {
       font-family: "futura-100", sans-serif;
-      font-weight: 700;
-      font-size: 2.5rem;
+      font-weight: 500;
+      font-size: 1.5rem;
       text-transform: uppercase;
-      color: #fff;
+      color: rgba(255,255,255,0.7);
       letter-spacing: 0.06em;
     }
     .mode-buttons {
       display: flex;
-      gap: 40px;
+      flex-direction: column;
+      gap: 16px;
     }
     .mode-btn {
-      width: 220px;
-      padding: 32px 24px;
+      width: 400px;
+      padding: 16px 24px;
       background: rgba(17,17,17,0.75);
       backdrop-filter: blur(12px);
       border: 2px solid rgba(255,255,255,0.15);
       border-radius: 16px;
       cursor: pointer;
       text-align: center;
+      display: flex;
+      align-items: center;
+      gap: 16px;
       transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
     }
     .mode-btn:hover {
@@ -546,9 +556,8 @@
       box-shadow: 0 8px 32px rgba(251,163,0,0.2);
     }
     .mode-btn-icon {
-      font-size: 3rem;
-      margin-bottom: 12px;
-      display: block;
+      font-size: 2.2rem;
+      flex-shrink: 0;
     }
     .mode-btn-title {
       font-family: "futura-100", sans-serif;
@@ -564,6 +573,53 @@
       font-weight: 400;
       font-size: 0.85rem;
       color: rgba(255,255,255,0.5);
+    }
+    .mode-back-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: "futura-100", sans-serif;
+      font-weight: 500;
+      font-size: 1rem;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.06em;
+      padding: 8px 16px;
+      transition: color 0.2s ease;
+    }
+    .mode-back-btn:hover { color: #fba300; }
+    #mode-mascot {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-340px, 130px);
+      width: 128px;
+      height: 128px;
+      pointer-events: none;
+      background: url('dog_lookup_sheet.png') 0 0 / 1024px 128px;
+      animation: mode-mascot-look 3s step-end infinite;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+    #mode-mascot.visible { opacity: 1; }
+    /* Boomerang: 1,1,1,2,3,4,5,6,7,8,7,6,5,4,3,2 (16 steps, 3x hold on frame 1) */
+    @keyframes mode-mascot-look {
+      0%       { background-position: 0px 0; }      /* frame 1 (hold) */
+      6.25%    { background-position: 0px 0; }      /* frame 1 (hold) */
+      12.5%    { background-position: 0px 0; }      /* frame 1 (hold) */
+      18.75%   { background-position: -128px 0; }   /* frame 2 */
+      25%      { background-position: -256px 0; }   /* frame 3 */
+      31.25%   { background-position: -384px 0; }   /* frame 4 */
+      37.5%    { background-position: -512px 0; }   /* frame 5 */
+      43.75%   { background-position: -640px 0; }   /* frame 6 */
+      50%      { background-position: -768px 0; }   /* frame 7 */
+      56.25%   { background-position: -896px 0; }   /* frame 8 */
+      62.5%    { background-position: -768px 0; }   /* frame 7 */
+      68.75%   { background-position: -640px 0; }   /* frame 6 */
+      75%      { background-position: -512px 0; }   /* frame 5 */
+      81.25%   { background-position: -384px 0; }   /* frame 4 */
+      87.5%    { background-position: -256px 0; }   /* frame 3 */
+      93.75%   { background-position: -128px 0; }   /* frame 2 */
     }
     #mode-select.fade-in {
       animation: mode-fade-in 0.4s ease both;
@@ -1001,7 +1057,7 @@
       letter-spacing: 0.1em;
     }
     /* Per-button size overrides */
-    #setup-back-btn {
+    #setup-back-btn, #setup-mode-back-btn {
       --tp-glyph-size: 5.8rem; --tp-label-size: 1.5rem;
       position: absolute; left: 0%; top: 50%; transform: translateY(-50%);
     }
@@ -4244,6 +4300,8 @@
         <div class="mode-btn-desc">Friends join from their devices</div>
       </div>
     </div>
+    <button class="mode-back-btn" id="mode-back-btn" onclick="backToStartScreen()">◀ Back</button>
+    <div id="mode-mascot"></div>
   </div>
 
   <!-- Online lobby -->
@@ -4323,6 +4381,10 @@
           </div>
         </div>
       </div>
+      <button id="setup-mode-back-btn" class="transport-btn" onclick="backToModeFromSetup()">
+        <span class="transport-glyphs tp-play"><span class="tp-arrow">◀</span></span>
+        <span class="transport-label">Back</span>
+      </button>
       <button id="setup-next-btn" class="transport-btn" onclick="proceedToTeamSetup()" data-tip="setup-next">
         <span class="transport-glyphs tp-play"><span class="tp-arrow">▶</span></span>
         <span class="transport-label">Next</span>
@@ -7234,15 +7296,15 @@ document.addEventListener('keydown', e => {
       if (volMusicEl) volMusicEl.value = 0;
       applyVolumes();
 
-      // Dismiss start screen with full animated sequence
+      // Dismiss start screen — logo slides up, then mode-select appears
       startBgMusic();
       isMultiplayer = false;
       if (typeof _dismissStartScreen === 'function') _dismissStartScreen();
-      // Dev mode skips mode-select — auto-select local after a short delay
+      // Dev mode skips mode-select — auto-select local after logo transition + fade-in
       setTimeout(() => {
         const modeSelect = document.getElementById('mode-select');
         if (modeSelect && modeSelect.style.display === 'flex') selectLocalMode();
-      }, 1800);
+      }, 1200);
 
       // Pre-select Rounds mode with 2 rounds
       setGameMode('rounds');
@@ -11306,6 +11368,84 @@ document.addEventListener('keydown', e => {
     // ── Mode Select & Lobby ─────────────────────────────────────────
 
     // Fade out an element (with hidden-tab fallback), then call cb
+    function backToModeFromSetup() {
+      playTap(1);
+      const setup = document.getElementById('setup');
+      const modeSelect = document.getElementById('mode-select');
+      const startScreen = document.getElementById('start-screen');
+      const modeMascot = document.getElementById('mode-mascot');
+
+      // Slide setup out right
+      setup.style.transition = 'transform 0.5s cubic-bezier(0.2, 0, 0.3, 1)';
+      setup.style.transform = 'translateX(110%)';
+      setTimeout(() => {
+        setup.style.display = 'none';
+        setup.style.transition = '';
+      }, 600);
+
+      // Restore start screen backdrop (logo at top, no h1/copyright/mascot)
+      startScreen.style.display = '';
+      startScreen.style.pointerEvents = 'none';
+      startScreen.style.cursor = 'default';
+      startScreen.classList.remove('dismissing');
+      const logo = document.getElementById('start-logo');
+      if (logo) { logo.classList.add('logo-to-top'); logo.classList.remove('tv-off'); }
+
+      // Show mode select with mascot
+      backToModeSelect();
+      modeSelect.style.display = 'flex';
+      modeSelect.classList.remove('fade-out');
+      modeSelect.classList.add('fade-in');
+      if (modeMascot) {
+        requestAnimationFrame(() => modeMascot.classList.add('visible'));
+        setTimeout(() => modeMascot.classList.add('visible'), 50);
+      }
+    }
+
+    function backToStartScreen() {
+      playTap(1);
+      const modeSelect = document.getElementById('mode-select');
+      const startScreen = document.getElementById('start-screen');
+      const logo = document.getElementById('start-logo');
+      const h1 = startScreen.querySelector('h1');
+      const copyright = startScreen.querySelector('.copyright');
+      const mascot = document.getElementById('start-mascot-sprite');
+      const modeMascot = document.getElementById('mode-mascot');
+
+      // Hide mode select
+      modeSelect.style.display = 'none';
+      modeSelect.classList.remove('fade-in', 'fade-out');
+      if (modeMascot) modeMascot.classList.remove('visible');
+
+      // Reset mode-select content to initial state
+      backToModeSelect();
+
+      // Reverse logo transition
+      if (logo) logo.classList.remove('logo-to-top');
+
+      // Restore h1 + copyright
+      if (h1) { h1.classList.remove('start-fade-out'); h1.style.visibility = ''; h1.style.opacity = ''; }
+      if (copyright) { copyright.classList.remove('start-fade-out'); copyright.style.visibility = ''; copyright.style.opacity = ''; }
+
+      // Restore mascot — reset to start position and restart walk
+      if (mascot) {
+        mascot.classList.remove('start-fade-out');
+        mascot.style.display = '';
+      }
+      if (window._resetMascot) _resetMascot();
+
+      // Restore start screen interactivity
+      startScreen.style.pointerEvents = '';
+      startScreen.style.cursor = '';
+
+      // Re-register the click handler (original was { once: true })
+      startScreen.addEventListener('click', function() {
+        startBgMusic();
+        startScreen.style.pointerEvents = 'none';
+        _dismissStartScreen();
+      }, { once: true });
+    }
+
     function fadeOutScreen(el, cb) {
       let done = false;
       const finish = () => {
@@ -11326,6 +11466,7 @@ document.addEventListener('keydown', e => {
       const modeSelect = document.getElementById('mode-select');
       const setup = document.getElementById('setup');
       playTap(1);
+      if (window._dismissStartScreenFinal) _dismissStartScreenFinal();
       fadeOutScreen(modeSelect, () => {
         setup.style.transform = 'translateX(110%)';
         setup.style.display = '';
@@ -11343,21 +11484,29 @@ document.addEventListener('keydown', e => {
     function selectOnlineMode() {
       isMultiplayer = true;
       const modeSelect = document.getElementById('mode-select');
+      const btns = modeSelect.querySelector('.mode-buttons');
+      const backBtn = document.getElementById('mode-back-btn');
       playTap(1);
-      // Show create/join choice
-      modeSelect.querySelector('.mode-buttons').innerHTML = `
-        <div class="mode-btn" onclick="showCreateGame()">
-          <span class="mode-btn-icon">&#x2795;</span>
-          <div class="mode-btn-title">Create Game</div>
-          <div class="mode-btn-desc">Host a new session</div>
-        </div>
-        <div class="mode-btn" onclick="showJoinForm()">
-          <span class="mode-btn-icon">&#x1F517;</span>
-          <div class="mode-btn-title">Join Game</div>
-          <div class="mode-btn-desc">Enter a game code</div>
-        </div>
-      `;
-      modeSelect.querySelector('h1').textContent = 'Online Game';
+      btns.style.transition = 'opacity 0.25s ease';
+      btns.style.opacity = '0';
+      setTimeout(() => {
+        btns.innerHTML = `
+          <div class="mode-btn" onclick="showCreateGame()">
+            <span class="mode-btn-icon">&#x2795;</span>
+            <div class="mode-btn-title">Create Game</div>
+            <div class="mode-btn-desc">Host a new session</div>
+          </div>
+          <div class="mode-btn" onclick="showJoinForm()">
+            <span class="mode-btn-icon">&#x1F517;</span>
+            <div class="mode-btn-title">Join Game</div>
+            <div class="mode-btn-desc">Enter a game code</div>
+          </div>
+        `;
+        modeSelect.querySelector('h1').textContent = 'Online Game';
+        if (backBtn) backBtn.textContent = '◀ Back';
+        if (backBtn) backBtn.setAttribute('onclick', 'backToModeSelect()');
+        requestAnimationFrame(() => { btns.style.opacity = '1'; });
+      }, 250);
     }
 
     // Generate a short alphanumeric game code
@@ -11371,21 +11520,27 @@ document.addEventListener('keydown', e => {
     function showCreateGame() {
       playTap(1);
       const modeSelect = document.getElementById('mode-select');
-      modeSelect.querySelector('h1').textContent = 'Create Game';
-      modeSelect.querySelector('.mode-buttons').innerHTML = `
-        <div class="join-form">
-          <h2>Enter Your Name</h2>
-          <input type="text" id="create-name-input" placeholder="Your name" maxlength="18">
-          <div class="join-form-actions">
-            <button class="cancel-btn" onclick="backToModeSelect()">Back</button>
-            <button class="join-btn" onclick="submitCreateGame()">Create</button>
+      const btns = modeSelect.querySelector('.mode-buttons');
+      btns.style.transition = 'opacity 0.25s ease';
+      btns.style.opacity = '0';
+      setTimeout(() => {
+        modeSelect.querySelector('h1').textContent = 'Create Game';
+        btns.innerHTML = `
+          <div class="join-form">
+            <h2>Enter Your Name</h2>
+            <input type="text" id="create-name-input" placeholder="Your name" maxlength="18">
+            <div class="join-form-actions">
+              <button class="cancel-btn" onclick="backToOnlineMode()">Back</button>
+              <button class="join-btn" onclick="submitCreateGame()">Create</button>
+            </div>
           </div>
-        </div>
-      `;
-      document.getElementById('create-name-input').focus();
-      modeSelect.querySelector('.join-form').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') submitCreateGame();
-      });
+        `;
+        requestAnimationFrame(() => { btns.style.opacity = '1'; });
+        document.getElementById('create-name-input').focus();
+        modeSelect.querySelector('.join-form').addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') submitCreateGame();
+        });
+      }, 250);
     }
 
     async function submitCreateGame() {
@@ -11419,52 +11574,91 @@ document.addEventListener('keydown', e => {
         }
       });
 
-      // Transition to lobby
+      // Transition to lobby — dismiss start screen backdrop too
+      if (window._dismissStartScreenFinal) _dismissStartScreenFinal();
       fadeOutScreen(document.getElementById('mode-select'), () => showLobby());
     }
 
     function showJoinForm() {
       playTap(1);
       const modeSelect = document.getElementById('mode-select');
-      modeSelect.querySelector('h1').textContent = 'Join Game';
-      modeSelect.querySelector('.mode-buttons').innerHTML = `
-        <div class="join-form">
-          <h2>Enter Code</h2>
-          <input type="text" id="join-code-input" placeholder="Game code" maxlength="1"
-                 style="text-transform: uppercase; letter-spacing: 0.2em; font-size: 1.5rem;">
-          <input type="text" id="join-name-input" placeholder="Your name" maxlength="18">
-          <div class="join-error" id="join-error"></div>
-          <div class="join-form-actions">
-            <button class="cancel-btn" onclick="backToModeSelect()">Back</button>
-            <button class="join-btn" onclick="submitJoinGame()">Join</button>
+      const btns = modeSelect.querySelector('.mode-buttons');
+      btns.style.transition = 'opacity 0.25s ease';
+      btns.style.opacity = '0';
+      setTimeout(() => {
+        modeSelect.querySelector('h1').textContent = 'Join Game';
+        btns.innerHTML = `
+          <div class="join-form">
+            <h2>Enter Code</h2>
+            <input type="text" id="join-code-input" placeholder="Game code" maxlength="1"
+                   style="text-transform: uppercase; letter-spacing: 0.2em; font-size: 1.5rem;">
+            <input type="text" id="join-name-input" placeholder="Your name" maxlength="18">
+            <div class="join-error" id="join-error"></div>
+            <div class="join-form-actions">
+              <button class="cancel-btn" onclick="backToOnlineMode()">Back</button>
+              <button class="join-btn" onclick="submitJoinGame()">Join</button>
+            </div>
           </div>
-        </div>
-      `;
-      document.getElementById('join-code-input').focus();
-      // Allow Enter key to submit
-      const form = modeSelect.querySelector('.join-form');
-      form.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') submitJoinGame();
-      });
+        `;
+        requestAnimationFrame(() => { btns.style.opacity = '1'; });
+        document.getElementById('join-code-input').focus();
+        modeSelect.querySelector('.join-form').addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') submitJoinGame();
+        });
+      }, 250);
+    }
+
+    function backToOnlineMode() {
+      playTap(1);
+      const modeSelect = document.getElementById('mode-select');
+      const btns = modeSelect.querySelector('.mode-buttons');
+      const backBtn = document.getElementById('mode-back-btn');
+      btns.style.transition = 'opacity 0.25s ease';
+      btns.style.opacity = '0';
+      setTimeout(() => {
+        modeSelect.querySelector('h1').textContent = 'Online Game';
+        btns.innerHTML = `
+          <div class="mode-btn" onclick="showCreateGame()">
+            <span class="mode-btn-icon">&#x2795;</span>
+            <div class="mode-btn-title">Create Game</div>
+            <div class="mode-btn-desc">Host a new session</div>
+          </div>
+          <div class="mode-btn" onclick="showJoinForm()">
+            <span class="mode-btn-icon">&#x1F517;</span>
+            <div class="mode-btn-title">Join Game</div>
+            <div class="mode-btn-desc">Enter a game code</div>
+          </div>
+        `;
+        if (backBtn) backBtn.setAttribute('onclick', 'backToModeSelect()');
+        requestAnimationFrame(() => { btns.style.opacity = '1'; });
+      }, 250);
     }
 
     function backToModeSelect() {
       playTap(1);
       const modeSelect = document.getElementById('mode-select');
-      modeSelect.querySelector('h1').textContent = 'Choose Game Mode';
-      modeSelect.querySelector('.mode-buttons').innerHTML = `
-        <div class="mode-btn" onclick="selectLocalMode()">
-          <span class="mode-btn-icon">&#127968;</span>
-          <div class="mode-btn-title">Local Game</div>
-          <div class="mode-btn-desc">Same room, one screen</div>
-        </div>
-        <div class="mode-btn" onclick="selectOnlineMode()">
-          <span class="mode-btn-icon">&#127760;</span>
-          <div class="mode-btn-title">Online Game</div>
-          <div class="mode-btn-desc">Friends join from their devices</div>
-        </div>
-      `;
-      isMultiplayer = false;
+      const btns = modeSelect.querySelector('.mode-buttons');
+      const backBtn = document.getElementById('mode-back-btn');
+      btns.style.transition = 'opacity 0.25s ease';
+      btns.style.opacity = '0';
+      setTimeout(() => {
+        modeSelect.querySelector('h1').textContent = 'Choose Game Mode';
+        btns.innerHTML = `
+          <div class="mode-btn" onclick="selectLocalMode()">
+            <span class="mode-btn-icon">&#127968;</span>
+            <div class="mode-btn-title">Local Game</div>
+            <div class="mode-btn-desc">Same room, one screen</div>
+          </div>
+          <div class="mode-btn" onclick="selectOnlineMode()">
+            <span class="mode-btn-icon">&#127760;</span>
+            <div class="mode-btn-title">Online Game</div>
+            <div class="mode-btn-desc">Friends join from their devices</div>
+          </div>
+        `;
+        if (backBtn) backBtn.setAttribute('onclick', 'backToStartScreen()');
+        requestAnimationFrame(() => { btns.style.opacity = '1'; });
+        isMultiplayer = false;
+      }, 250);
     }
 
     async function submitJoinGame() {
@@ -11517,7 +11711,8 @@ document.addEventListener('keydown', e => {
         [`players.${myUid}`]: { name: myName, team: autoTeam, isHost: false, isCaptain: autoCaptain, online: true, joinedAt: Date.now() }
       });
 
-      // Transition to lobby
+      // Transition to lobby — dismiss start screen backdrop too
+      if (window._dismissStartScreenFinal) _dismissStartScreenFinal();
       fadeOutScreen(document.getElementById('mode-select'), () => showLobby());
     }
 
@@ -12037,164 +12232,138 @@ document.addEventListener('keydown', e => {
         gameRoot.style.setProperty('--bg-blob-base', BG_BLOB_DEFAULT);
       };
 
-      // ── Mascot state machine ──
+      // ── Mascot walk loop (left→right→left, off-screen to off-screen) ──
       (function() {
         const sprite = document.getElementById('start-mascot-sprite');
-        const WALK_SHEET    = 'dog_walk_sheet.png';
-        const STANDUP_SHEET = 'dog_standup_sheet.png';
-        const WAG_SHEET     = 'dog_tailwag_sheet.png';
-        // Preload all sheets to prevent blank flash on sheet swap.
-        // Two-pronged: (1) img.decode() guarantees pixel data is decoded,
-        // (2) a hidden div with all sheets as layered CSS backgrounds
-        // forces the browser to prepare them specifically for CSS rendering.
-        const _mascotSheets = [WALK_SHEET, STANDUP_SHEET, WAG_SHEET];
-        const _mascotPreloader = document.createElement('div');
-        _mascotPreloader.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;';
-        _mascotPreloader.style.backgroundImage = _mascotSheets.map(s => `url('${s}')`).join(', ');
-        document.body.appendChild(_mascotPreloader);
-        const _mascotReady = Promise.all(_mascotSheets.map(src => {
-          const img = new Image();
-          img.src = src;
-          return img.decode().catch(() => {});
-        }));
+        const WALK_SHEET = 'dog_walk_sheet.png';
+        const TOTAL_FRAMES = 9;
+        const FRAME_MS = 45;
+        const WALK_SPEED = 10.5;
+        const SPRITE_W = 180;
+        const CANVAS_W = 1280;
 
-        // bg-position percentages per frame count
-        function framePos(i, total) { return (i / (total - 1)) * 100 + '%'; }
+        // Preload walk sheet
+        const img = new Image();
+        img.src = WALK_SHEET;
+        const ready = img.decode().catch(() => {});
 
-        // State definitions
-        const states = [
-          { name: 'walk_right', sheet: WALK_SHEET, totalFrames: 9, frameMs: 67, bgSize: '900%', walk: true, dir: 'right', flip: true },
-          { name: 'sit_down',   sheet: STANDUP_SHEET, totalFrames: 9, frameMs: 120, bgSize: '900%', reverse: true, flip: true },
-          { name: 'tail_wag',   sheet: WAG_SHEET, totalFrames: 5, bgSize: '500%', frameMs: 300,
-            sequence: [0,1,2,3,4,3,2,1,0,1,2,3,4,3,2,1,0] },
-          { name: 'stand_up',   sheet: STANDUP_SHEET, totalFrames: 9, frameMs: 120, bgSize: '900%' },
-          { name: 'walk_left',  sheet: WALK_SHEET, totalFrames: 9, frameMs: 67, bgSize: '900%', walk: true, dir: 'left', flip: false },
-          { name: 'sit_down2',  sheet: STANDUP_SHEET, totalFrames: 9, frameMs: 120, bgSize: '900%', reverse: true },
-          { name: 'tail_wag2',  sheet: WAG_SHEET, totalFrames: 5, bgSize: '500%', frameMs: 300,
-            sequence: [0,1,2,3,4,3,2,1,0,1,2,3,4,3,2,1,0] },
-          { name: 'stand_up2',  sheet: STANDUP_SHEET, totalFrames: 9, frameMs: 120, bgSize: '900%', flip: true },
-        ];
-
-        let stateIdx = 0;
         let frame = 0;
-        let xPos = -180; // initial: off-screen left so dog walks in at start
-        let lastFlip = false;
-        const walkSpeed = 9;     // px per frame tick
-        const leftDest  = 40;    // walk_left stops here (visible, ~40px margin)
-        const rightDest = 1060;  // walk_right stops here (1280 - 180 sprite - 40 margin)
-
+        let xPos = -SPRITE_W;    // start off-screen left
+        let goingRight = true;
         let _mascotTimer = null;
         let _mascotStopped = false;
 
         function applyFrame() {
-          const st = states[stateIdx];
-          const seq = st.sequence;
-          let fi;
-          if (seq) {
-            fi = seq[frame];
-          } else if (st.reverse) {
-            fi = st.totalFrames - 1 - frame;
-          } else {
-            fi = frame;
-          }
-          sprite.style.backgroundPosition = framePos(fi, st.totalFrames) + ' 0';
-        }
-
-        function enterState() {
-          const st = states[stateIdx];
-          frame = 0;
-          sprite.style.backgroundImage = `url('${st.sheet}')`;
-          sprite.style.backgroundSize = st.bgSize + ' 100%';
-          sprite.style.transform = st.flip ? 'scaleX(-1)' : '';
-          if (st.flip) lastFlip = true;
-          else if (st.walk) lastFlip = false;
-          applyFrame();
-          _mascotTimer = setInterval(tick, st.frameMs);
+          const pct = (frame / (TOTAL_FRAMES - 1)) * 100;
+          sprite.style.backgroundPosition = pct + '% 0';
         }
 
         function tick() {
           if (_mascotStopped) return;
-          const st = states[stateIdx];
-          const maxFrames = st.sequence ? st.sequence.length : st.totalFrames;
+          frame = (frame + 1) % TOTAL_FRAMES;
+          applyFrame();
 
-          if (st.walk) {
-            // Advance walk frame (loops)
-            frame = (frame + 1) % st.totalFrames;
-            applyFrame();
-            // Move position based on direction
-            const movingLeft = st.dir === 'left';
-            xPos += movingLeft ? -walkSpeed : walkSpeed;
-            sprite.style.left = xPos + 'px';
+          xPos += goingRight ? WALK_SPEED : -WALK_SPEED;
+          sprite.style.left = xPos + 'px';
+          // scaleX(-1) = facing right (sprite sheet faces left by default)
+          sprite.style.transform = goingRight ? 'scaleX(-1)' : '';
 
-            // Check if reached destination
-            const arrived = movingLeft ? (xPos <= leftDest) : (xPos >= rightDest);
-            if (arrived) {
-              // Walk to center on next pass — alternate between edges
-              clearInterval(_mascotTimer);
-              nextState();
-            }
-          } else {
-            // Non-walk: play through frames once
-            frame++;
-            if (frame >= maxFrames) {
-              clearInterval(_mascotTimer);
-              nextState();
-            } else {
-              applyFrame();
-            }
+          // Off-screen? Pause 1s then reverse direction
+          if (goingRight && xPos >= CANVAS_W) {
+            clearInterval(_mascotTimer);
+            setTimeout(() => {
+              if (_mascotStopped) return;
+              goingRight = false;
+              _mascotTimer = setInterval(tick, FRAME_MS);
+            }, 1000);
+          } else if (!goingRight && xPos <= -SPRITE_W) {
+            clearInterval(_mascotTimer);
+            setTimeout(() => {
+              if (_mascotStopped) return;
+              goingRight = true;
+              _mascotTimer = setInterval(tick, FRAME_MS);
+            }, 1000);
           }
         }
 
-        function nextState() {
-          stateIdx = (stateIdx + 1) % states.length;
-          enterState();
-        }
-
-        // Kick off once all sheets are decoded and CSS-ready
         sprite.style.left = xPos + 'px';
-        _mascotReady.then(() => {
-          if (!_mascotStopped) enterState();
+        sprite.style.transform = 'scaleX(-1)';
+        ready.then(() => {
+          if (!_mascotStopped) {
+            applyFrame();
+            _mascotTimer = setInterval(tick, FRAME_MS);
+          }
         });
 
-        // Expose stop for dismiss
         window._stopMascot = function() {
           _mascotStopped = true;
           clearInterval(_mascotTimer);
         };
+
+        window._resetMascot = function() {
+          _mascotStopped = false;
+          clearInterval(_mascotTimer);
+          xPos = -SPRITE_W;
+          goingRight = true;
+          frame = 0;
+          sprite.style.left = xPos + 'px';
+          sprite.style.transform = 'scaleX(-1)';
+          applyFrame();
+          _mascotTimer = setInterval(tick, FRAME_MS);
+        };
       })();
 
-      // Shared dismiss sequence: crossfade blobs → TV-off logo → fade screen.
-      // Used by both normal click and dev mode.
+      // Phase 1: Logo slides to top + shrinks, h1/copyright fade, dog stays.
+      // Mode select fades in on top. Start screen stays visible as backdrop.
       window._dismissStartScreen = function() {
-        if (window._stopMascot) window._stopMascot();
         const logo      = document.getElementById('start-logo');
         const h1        = startScreen.querySelector('h1');
         const copyright = startScreen.querySelector('.copyright');
-        const mascot = document.getElementById('start-mascot-sprite');
         const modeSelect = document.getElementById('mode-select');
 
-        // 1. Fade out h1 + copyright + mascot together (0.5s)
+        // Fade out h1, copyright, and mascot
         if (h1) h1.classList.add('start-fade-out');
         if (copyright) copyright.classList.add('start-fade-out');
+        const mascot = document.getElementById('start-mascot-sprite');
         if (mascot) mascot.classList.add('start-fade-out');
-
-        // 2. After fade completes (1s), TV-off the logo
+        // Explicit hide after fade (hidden-tab fallback for throttled animations)
+        // Use visibility:hidden (not display:none) to preserve flex layout — avoids
+        // reflowing #start-content which would shift the logo's transform base position.
         setTimeout(() => {
-          if (logo) logo.classList.add('tv-off');
-          playPowerdown(0.5);
+          if (h1) { h1.style.visibility = 'hidden'; h1.style.opacity = '0'; }
+          if (copyright) { copyright.style.visibility = 'hidden'; copyright.style.opacity = '0'; }
+          if (mascot) { mascot.style.display = 'none'; }
+          if (window._stopMascot) window._stopMascot();
         }, 1000);
 
-        // 3. After TV-off completes (~500ms anim), fade CRT screen + show mode select
+        // Logo slides to top center + shrinks 50% (CSS transition)
+        if (logo) logo.classList.add('logo-to-top');
+
+        // After logo transition settles, show mode select + mascot
         setTimeout(() => {
-          startScreen.classList.add('dismissing');
+          startScreen.style.pointerEvents = 'none'; // clicks fall through to mode-select
+          startScreen.style.cursor = 'default';
           modeSelect.style.display = 'flex';
           modeSelect.classList.add('fade-in');
-        }, 1300);
+          const modeMascot = document.getElementById('mode-mascot');
+          if (modeMascot) {
+            requestAnimationFrame(() => modeMascot.classList.add('visible'));
+            setTimeout(() => modeMascot.classList.add('visible'), 50); // hidden-tab fallback
+          }
+        }, 1000);
+      };
 
+      // Phase 2: Final dismissal when a mode is selected.
+      // Fades out start screen (logo, dog, CRT) behind mode-select.
+      window._dismissStartScreenFinal = function() {
+        if (window._stopMascot) window._stopMascot();
+        startScreen.classList.add('dismissing');
+        const hide = () => { startScreen.style.display = 'none'; };
         startScreen.addEventListener('animationend', function(e) {
           if (e.target !== startScreen) return;
-          startScreen.style.display = 'none';
+          hide();
         }, { once: true });
+        setTimeout(hide, 500); // hidden-tab fallback
       };
 
       startScreen.addEventListener('click', function() {

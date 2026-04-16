@@ -3448,8 +3448,14 @@
 
     #scribble-summary { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 80%; max-width: 400px; }
     .scribble-summary-title { font-family: "Bitcount Single", monospace; font-size: 1.6rem; color: #fba300; }
+    #scribble-summary-body,
+    #scribble-summary-body * { color: #ffffff; }
+    /* Preserve team-colored scores and muted row headers */
+    #scribble-summary-body .scribble-pts.red { color: #ff5555 !important; }
+    #scribble-summary-body .scribble-pts.blue { color: #4c8cff !important; }
+    #scribble-summary-body .scribble-summary-session h3 { color: #aaaaaa !important; }
     .scribble-summary-session { padding: 8px 12px; margin-bottom: 6px; background: #1a1a1a; border-radius: 6px; width: 100%; }
-    .scribble-summary-session h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 6px; }
+    .scribble-summary-session h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
     .scribble-summary-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 0.8rem; }
     .scribble-pts { font-family: "Bitcount Single", monospace; font-size: 0.95rem; }
     .scribble-pts.red { color: #ff5555; }
@@ -7942,7 +7948,10 @@ document.addEventListener('keydown', e => {
     function setPhaseText(phase, text) {
       const span = document.querySelector(`#phase-indicator .ph-${phase}`);
       if (!span) return;
-      span.textContent = text;
+      // innerHTML (not textContent) so callers can pass HTML like
+      // <span class="red">Team</span> for inline team-colored names.
+      // fitByCharCount reads the visible text via textContent.
+      span.innerHTML = text;
       fitByCharCount(span, 40);
     }
 
@@ -9720,13 +9729,13 @@ document.addEventListener('keydown', e => {
       // Store totals for the onComplete callback
       scribbleState._roundTotals = { redScore: totalRed, blueScore: totalBlue };
 
-      // Add Continue button to summary
-      const continueBtn = document.createElement("button");
-      continueBtn.className = "btn action-btn";
-      continueBtn.textContent = "Continue";
-      continueBtn.style.marginTop = "12px";
-      continueBtn.onclick = scribbleFinishRound;
-      ss.appendChild(continueBtn);
+      // Remove any stale continue buttons from a previous round (defensive)
+      ss.querySelectorAll('.scribble-continue-btn').forEach(b => b.remove());
+
+      // Auto-finish the round after a brief pause so players can read the
+      // summary. Ready Up appears in the main input-area (home base) via
+      // handleModuleComplete, not as a separate button on the summary.
+      setTimeout(() => { scribbleFinishRound(); }, 1500);
     }
 
     function scribbleFinishRound() {

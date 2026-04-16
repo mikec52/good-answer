@@ -344,6 +344,14 @@
       padding: 2px 6px;
     }
 
+    #start-mascot-sprite {
+      position: absolute;
+      bottom: 60px;
+      width: 180px;
+      height: 180px;
+      pointer-events: none;
+      background: url('dog_walk_sheet.png') 0 0 / 900% 100%;
+    }
     #start-screen h1 {
       font-size: 2rem;
       font-family: "Bitcount Single";
@@ -707,18 +715,71 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
+    }
+    .lobby-player-list li .lobby-player-name {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: left;
+    }
+    .lobby-player-list li .lobby-player-host-badge,
+    .lobby-player-list li .lobby-make-captain-btn {
+      flex-shrink: 0;
     }
     .lobby-player-list li.is-me {
       background: rgba(251,163,0,0.15);
     }
     .lobby-player-host-badge {
       font-size: 0.7rem;
-      background: #fba300;
-      color: #111;
+      background: #666;
+      color: #fff;
       padding: 1px 6px;
       border-radius: 4px;
       font-weight: 700;
       text-transform: uppercase;
+    }
+    .lobby-player-host-badge.lobby-captain-badge {
+      background: #fba300;
+      color: #111;
+    }
+    .lobby-make-captain-btn {
+      font-family: inherit;
+      font-size: 0.7rem;
+      background: rgba(251,163,0,0.15);
+      color: #fba300;
+      border: 1px solid rgba(251,163,0,0.5);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-left: 2px;
+    }
+    .lobby-make-captain-btn:hover {
+      background: rgba(251,163,0,0.3);
+      color: #fff;
+    }
+    /* In-game scoreboard role badges (C = captain, H = host) */
+    .scoreboard-role-badge {
+      display: inline-block;
+      font-family: futura-100, sans-serif;
+      font-size: 0.55rem;
+      font-weight: 700;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 3px;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .scoreboard-role-badge.role-captain {
+      background: #fba300;
+      color: #111;
+    }
+    .scoreboard-role-badge.role-host {
+      background: #666;
+      color: #fff;
     }
     .lobby-join-team-btn {
       display: block;
@@ -2115,7 +2176,7 @@
       padding: 14px 32px;
       min-width: 600px;
       max-width: 600px;
-      height: 60%;
+      height: 72%;
       margin-bottom: -2px;
       color: #fff;
       font-family: "futura-100", sans-serif;
@@ -3014,6 +3075,162 @@
     .cat-mult-badge.board-badge:hover {
       transform: translateY(-50%) perspective(500px) rotateY(22.5deg) rotateX(-7.5deg);
     }
+
+    /* Face-off Round container — two side-by-side battle boards */
+    #faceoff-container {
+      display: none;
+      flex-direction: row;
+      gap: 16px;
+      width: 100%;
+      height: 100%;
+      padding: 12px;
+      box-sizing: border-box;
+    }
+    #faceoff-container.active { display: flex; }
+    .faceoff-side {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(17,17,17,0.5);
+      border-radius: 10px;
+      padding: 10px;
+      box-sizing: border-box;
+      transition: opacity 0.3s ease;
+      overflow: hidden; /* clip the cover plate slide-down within the side boundary */
+    }
+    .faceoff-side.inactive { opacity: 0.55; }
+    .faceoff-side { position: relative; }
+    /* Cover plate — overlays question + board area until countdown completes */
+    .faceoff-cover {
+      position: absolute;
+      top: 36px; /* below the side-header */
+      left: 0; right: 0; bottom: 0;
+      background: #222;
+      border-radius: 0 0 10px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .faceoff-cover.revealed {
+      transform: translateY(100%);
+      pointer-events: none;
+    }
+    .faceoff-cover-label {
+      font-family: "dazzle-unicase", sans-serif;
+      font-size: 1.2rem;
+      color: #fba300;
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
+    }
+    .faceoff-cover-countdown {
+      font-family: "Bitcount Single", monospace;
+      font-size: 3rem;
+      color: #fff;
+      min-height: 3.5rem;
+    }
+    .faceoff-cover-go {
+      font-family: "dazzle-unicase", sans-serif;
+      font-size: 2.5rem;
+      color: #fba300;
+      animation: faceoff-go-pulse 0.3s ease-out;
+    }
+    @keyframes faceoff-go-pulse {
+      from { transform: scale(1.4); opacity: 1; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .faceoff-side-header {
+      font-family: "dazzle-unicase", sans-serif;
+      font-size: 1.1rem;
+      color: #fba300;
+      text-align: center;
+      letter-spacing: 0.08em;
+    }
+    .faceoff-players {
+      font-family: "futura-100", sans-serif;
+      font-size: 0.95rem;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .faceoff-player-red { color: var(--red-text, #ff5555); font-weight: 700; }
+    .faceoff-player-blue { color: var(--blue-text, #4c8cff); font-weight: 700; }
+    .faceoff-vs {
+      color: #888;
+      font-size: 0.75rem;
+      font-style: italic;
+    }
+    .faceoff-question {
+      font-family: "futura-100", sans-serif;
+      font-size: 0.85rem;
+      color: #fff;
+      text-align: center;
+      min-height: 36px;
+      line-height: 1.2;
+    }
+    .faceoff-timer {
+      font-family: "Bitcount Single", monospace;
+      font-size: 1.4rem;
+      color: #fba300;
+      text-align: center;
+    }
+    .faceoff-timer.warning { color: #ff5555; animation: faceoff-timer-pulse 0.5s ease-in-out infinite alternate; }
+    @keyframes faceoff-timer-pulse {
+      from { opacity: 1; transform: scale(1); }
+      to { opacity: 0.7; transform: scale(1.05); }
+    }
+    .faceoff-board {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-height: 0;
+    }
+    .faceoff-tile {
+      background: #111;
+      border-radius: 4px;
+      padding: 6px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: "futura-100", sans-serif;
+      font-size: 0.85rem;
+      color: #888;
+      min-height: 24px;
+    }
+    .faceoff-tile.revealed-red {
+      background: var(--red-bg, #990b0b);
+      color: #fff;
+    }
+    .faceoff-tile.revealed-blue {
+      background: var(--blue-bg, #053977);
+      color: #fff;
+    }
+    .faceoff-tile.revealed-missed {
+      background: #444;
+      color: #999;
+    }
+    .faceoff-tile-text { flex: 1; text-align: left; }
+    .faceoff-tile-pts { font-weight: 700; margin-left: 8px; }
+    .faceoff-tile-player { font-size: 0.65rem; opacity: 0.85; margin-left: 8px; }
+    .faceoff-battle-total {
+      font-family: "futura-100", sans-serif;
+      font-size: 0.95rem;
+      color: #fff;
+      text-align: center;
+      padding-top: 4px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .faceoff-battle-total-red { color: var(--red-text, #ff5555); font-weight: 700; }
+    .faceoff-battle-total-blue { color: var(--blue-text, #4c8cff); font-weight: 700; }
 
     /* Board stats — streak, mult, category mult */
     .board-stats {
@@ -3921,19 +4138,19 @@
       border: 6px solid transparent;
     }
     #tooltip[data-placement="above"]::after {
-      bottom: -12px; left: 50%; transform: translateX(-50%);
+      bottom: -12px; left: var(--tip-arrow-x, 50%); transform: translateX(-50%);
       border-top-color: var(--tip-bg);
     }
     #tooltip[data-placement="below"]::after {
-      top: -12px; left: 50%; transform: translateX(-50%);
+      top: -12px; left: var(--tip-arrow-x, 50%); transform: translateX(-50%);
       border-bottom-color: var(--tip-bg);
     }
     #tooltip[data-placement="right"]::after {
-      left: -12px; top: 50%; transform: translateY(-50%);
+      left: -12px; top: var(--tip-arrow-y, 50%); transform: translateY(-50%);
       border-right-color: var(--tip-bg);
     }
     #tooltip[data-placement="left"]::after {
-      right: -12px; top: 50%; transform: translateY(-50%);
+      right: -12px; top: var(--tip-arrow-y, 50%); transform: translateY(-50%);
       border-left-color: var(--tip-bg);
     }
     #tooltip-desc {
@@ -4008,6 +4225,7 @@
       <div id="start-logo"><span id="logo-good">GOOD</span><br><span id="logo-answer">ANSWER</span></div>
       <h1>Click anywhere to start</h1>
     </div>
+    <div id="start-mascot-sprite"></div>
     <div class="copyright">© Buffano Games</div>
   </div>
 
@@ -4303,6 +4521,41 @@
                 </div>
               </div>
               <!-- speed boost indicator moved to #game-root level -->
+            </div>
+            <!-- Face-off Round container: two side-by-side battle boards. Hidden until face-off triggers. -->
+            <div id="faceoff-container" style="display:none;">
+              <div id="faceoff-battle-0" class="faceoff-side">
+                <div class="faceoff-side-header">Battle 1</div>
+                <div class="faceoff-players">
+                  <span class="faceoff-player-red">&nbsp;</span>
+                  <span class="faceoff-vs">vs</span>
+                  <span class="faceoff-player-blue">&nbsp;</span>
+                </div>
+                <div class="faceoff-cover" id="faceoff-cover-0">
+                  <div class="faceoff-cover-label">GET READY</div>
+                  <div class="faceoff-cover-countdown"></div>
+                </div>
+                <div class="faceoff-question">&nbsp;</div>
+                <div class="faceoff-timer">1:00</div>
+                <div class="faceoff-board"></div>
+                <div class="faceoff-battle-total">Total: <span class="faceoff-battle-total-red">0</span> / <span class="faceoff-battle-total-blue">0</span></div>
+              </div>
+              <div id="faceoff-battle-1" class="faceoff-side">
+                <div class="faceoff-side-header">Battle 2</div>
+                <div class="faceoff-players">
+                  <span class="faceoff-player-red">&nbsp;</span>
+                  <span class="faceoff-vs">vs</span>
+                  <span class="faceoff-player-blue">&nbsp;</span>
+                </div>
+                <div class="faceoff-cover" id="faceoff-cover-1">
+                  <div class="faceoff-cover-label">UP NEXT</div>
+                  <div class="faceoff-cover-countdown"></div>
+                </div>
+                <div class="faceoff-question">&nbsp;</div>
+                <div class="faceoff-timer">1:00</div>
+                <div class="faceoff-board"></div>
+                <div class="faceoff-battle-total">Total: <span class="faceoff-battle-total-red">0</span> / <span class="faceoff-battle-total-blue">0</span></div>
+              </div>
             </div>
           </div>
 
@@ -5207,46 +5460,58 @@
       const players = Object.values(stats);
       if (players.length === 0) return [];
 
-      // Shuffle a copy of the definitions
+      // Shuffle a copy of the definitions (randomizes which awards win the 6-slot cap
+      // when more than 6 are eligible; order does not influence tie-breaking)
       const shuffled = [...awardDefs];
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
 
-      // Pass 1: collect all candidates, immediately assign clear winners (no ties)
-      const awarded = new Set();   // player names already given an award
+      // Single pass: assign each award to its rightful winner. On ties, randomize
+      // among the tied candidates with the fewest awards already received.
+      const awardCounts = {}; // player name → number of awards so far
       const results = [];
-      const deferred = [];         // tied awards to resolve in pass 2
 
       for (const def of shuffled) {
-        if (results.length + deferred.length >= 12) break; // generous cap for pass 2
+        if (results.length >= 6) break;
         const fn = awardComputers[def.compute];
         if (!fn) continue;
         const candidates = fn(players, matchLog);
         if (candidates.length === 0) continue;
+
+        let pick;
         if (candidates.length === 1) {
-          results.push({ id: def.id, name: def.name, player: candidates[0].player, team: candidates[0].team });
-          awarded.add(candidates[0].player);
+          pick = candidates[0];
         } else {
-          deferred.push({ def, candidates });
+          // Tie-break: restrict to candidates with the minimum existing award count
+          const minCount = Math.min(...candidates.map(c => awardCounts[c.player] || 0));
+          const leastAwarded = candidates.filter(c => (awardCounts[c.player] || 0) === minCount);
+          pick = leastAwarded[Math.floor(Math.random() * leastAwarded.length)];
         }
-      }
 
-      // Pass 2: resolve ties — prefer players who don't already have an award, then randomize
-      for (const { def, candidates } of deferred) {
-        if (results.length >= 6) break;
-        const withoutAward = candidates.filter(p => !awarded.has(p.player));
-        const pool = withoutAward.length > 0 ? withoutAward : candidates;
-        const pick = pool[Math.floor(Math.random() * pool.length)];
         results.push({ id: def.id, name: def.name, player: pick.player, team: pick.team });
-        awarded.add(pick.player);
+        awardCounts[pick.player] = (awardCounts[pick.player] || 0) + 1;
       }
 
-      return results.slice(0, 6);
+      return results;
     }
 
-    function playVictoryAnimation(winnerIdx) {
+    function renderVictoryAwards(awards) {
+      const awardsEl = document.querySelector('.victory-awards');
+      if (!awardsEl) return;
+      if (awards.length > 0) {
+        const items = awards.map(a => {
+          const cls = a.team === 0 ? 'red' : 'blue';
+          return `<li data-tip="award-${a.id}" data-tip-placement="below"><span class="award-name">${a.name}</span><span class="${cls}">${a.player}</span></li>`;
+        }).join('');
+        awardsEl.innerHTML = `<div class="victory-awards-heading">Awards</div><ul class="awards-list">${items}</ul>`;
+      } else {
+        awardsEl.innerHTML = '';
+      }
+    }
+
+    function playVictoryAnimation(winnerIdx, awards = []) {
       // Set up both canvases
       VICTORY.cvBack  = document.getElementById('victory-canvas-back');
       VICTORY.cvFront = document.getElementById('victory-canvas-front');
@@ -5283,18 +5548,8 @@
         panel.style.setProperty('--victory-header-h', titleBottom + 'px');
       });
 
-      // Compute and display awards
-      const awards = computeAwards();
-      const awardsEl = backdrop.querySelector('.victory-awards');
-      if (awards.length > 0) {
-        const items = awards.map(a => {
-          const cls = a.team === 0 ? 'red' : 'blue';
-          return `<li data-tip="award-${a.id}" data-tip-placement="below"><span class="award-name">${a.name}</span><span class="${cls}">${a.player}</span></li>`;
-        }).join('');
-        awardsEl.innerHTML = `<div class="victory-awards-heading">Awards</div><ul class="awards-list">${items}</ul>`;
-      } else {
-        awardsEl.innerHTML = '';
-      }
+      // Display awards (pre-computed by endGame, or empty if non-host awaiting sync)
+      renderVictoryAwards(awards);
 
       // Store winner for play-again flow and reset vote state
       _postGameWinnerIdx = winnerIdx;
@@ -5776,7 +6031,13 @@
       const elCenterX = rect.left + rect.width / 2;
       const elCenterY = rect.top + rect.height / 2;
       let x, y, placement;
-      const forcedPlacement = target.dataset.tipPlacement;
+      let forcedPlacement = target.dataset.tipPlacement;
+      // Auto-flip forced below/above when element is near the edge they'd clip off
+      if (forcedPlacement === 'below' && elCenterY > canvasRect.top + canvasRect.height * 0.8) {
+        forcedPlacement = 'above';
+      } else if (forcedPlacement === 'above' && elCenterY < canvasRect.top + canvasRect.height * 0.2) {
+        forcedPlacement = 'below';
+      }
       if (forcedPlacement === 'below') {
         placement = 'below';
         x = rect.left + rect.width / 2 - tipRect.width / 2;
@@ -5820,6 +6081,17 @@
       _tip.el.style.left = x + 'px';
       _tip.el.style.top  = y + 'px';
       _tip.el.dataset.placement = placement;
+      // Point the arrow at the true target center (handles clamping + small inline targets)
+      if (placement === 'above' || placement === 'below') {
+        // Arrow x in tooltip-local coords, clamped with 12px padding from tip edges
+        const arrowLocalX = Math.max(12, Math.min(elCenterX - x, tipRect.width - 12));
+        _tip.el.style.setProperty('--tip-arrow-x', arrowLocalX + 'px');
+        _tip.el.style.removeProperty('--tip-arrow-y');
+      } else {
+        const arrowLocalY = Math.max(12, Math.min(elCenterY - y, tipRect.height - 12));
+        _tip.el.style.setProperty('--tip-arrow-y', arrowLocalY + 'px');
+        _tip.el.style.removeProperty('--tip-arrow-x');
+      }
     }
     function hideTooltip() {
       _tipEls();
@@ -6217,6 +6489,31 @@ document.addEventListener('keydown', e => {
           return; // Host's state write will trigger a new snapshot for reconciliation
         }
 
+        // Host-only: process pending face-off actions. This is a map keyed
+        // by uid so two simultaneous non-host submissions don't overwrite
+        // each other. Process each entry, clear after.
+        if (isHost && faceoffState.active && data.pendingFaceoffActions) {
+          const entries = Object.entries(data.pendingFaceoffActions)
+            .filter(([uid, action]) => action && uid !== myUid);
+          if (entries.length > 0) {
+            // Sort by clientTs for best-effort fairness (real server-authoritative
+            // ordering comes when we migrate to Cloud Functions).
+            entries.sort(([, a], [, b]) => (a.clientTs || 0) - (b.clientTs || 0));
+            // Clear all entries we're about to process
+            const clearUpdates = {};
+            for (const [uid] of entries) {
+              clearUpdates[`pendingFaceoffActions.${uid}`] = window._fb.deleteField();
+            }
+            window._fb.updateDoc(gameRef, clearUpdates).catch(e => console.warn('clear pendingFaceoffActions failed:', e));
+            // Evaluate each guess in order
+            for (const [uid, action] of entries) {
+              evaluateFaceoffGuess(action.guess, uid);
+            }
+            _prevSnapshot = data;
+            return; // Host's state writes will trigger new snapshots
+          }
+        }
+
         // Skip ALL self-echoes: if this write came from us, we already
         // applied the changes locally. The old check (matching _writeId)
         // broke when stale echoes arrived after _lastWriteId had advanced,
@@ -6328,6 +6625,55 @@ document.addEventListener('keydown', e => {
         matchLog = [...data.matchLog];
       }
 
+      // ── Host-computed awards ──
+      if (data.awards && data.awards.length > 0) {
+        _syncedAwards = [...data.awards];
+        // If victory dialog is already showing, render awards into it
+        // (non-host reaches endGame before this sync arrives)
+        if (gameEnded) renderVictoryAwards(_syncedAwards);
+      }
+
+      // ── Face-off state sync ──
+      // This block is the CANONICAL entry point for non-host clients entering
+      // face-off. Exit animations mirror the category-select phase transition.
+      // Also handles mid-battle tile updates and battle transitions.
+      if (data.faceoffState) {
+        const prevBattle = faceoffState.currentBattle;
+        const wasActive = faceoffState.active;
+        hydrateFaceoffState(data.faceoffState);
+        if (faceoffState.active && !wasActive) {
+          // Entering face-off on non-host: snap-transition (no exit animations).
+          // The host already did exit animations via advanceRound(). Non-host
+          // just needs to swap the UI state. Attempting async exit animations
+          // was causing the setup to hang when animations didn't complete.
+          _scoringInProgress = false;
+          initRoundState();
+          setupFaceoffUI();
+          startBattle(faceoffState.currentBattle);
+        } else if (faceoffState.active) {
+          // Mid-battle update: re-render current battle tiles
+          renderFaceoffBoard(0);
+          renderFaceoffBoard(1);
+          updateFaceoffBattleTotalDisplay(0);
+          updateFaceoffBattleTotalDisplay(1);
+          // Battle transition? Run full startBattle to get countdown + cover reveal
+          if (faceoffState.currentBattle !== prevBattle) {
+            startBattle(faceoffState.currentBattle);
+          } else {
+            updateFaceoffRoleUI();
+          }
+        } else if (!faceoffState.active && faceoffState.completed && wasActive) {
+          // Face-off just ended. Host already folded into teamScores and synced.
+          // Non-host: update scores from sync, then trigger victory flow.
+          if (faceoffState.timerInterval) { clearInterval(faceoffState.timerInterval); faceoffState.timerInterval = null; }
+          if (data.teamScores) teamScores = [...data.teamScores];
+          updateScores();
+          if (!gameEnded) {
+            endGameByRounds();
+          }
+        }
+      }
+
       // ── Round number ──
       if (data.roundNumber !== undefined && data.roundNumber !== (prev?.roundNumber ?? 0)) {
         roundNumber = data.roundNumber;
@@ -6392,6 +6738,7 @@ document.addEventListener('keydown', e => {
               if (submitBtn) submitBtn.disabled = true;
               flipTile(i, 'correct', lastResult.points, lastResult.mult).then(() => {
                 _scoringInProgress = false;
+                deactivateSpeedBoost();
                 if (guessInput) guessInput.disabled = false;
                 if (submitBtn) submitBtn.disabled = false;
                 // Re-apply role UI in case this client's turn was gated
@@ -6607,6 +6954,12 @@ document.addEventListener('keydown', e => {
             endRound(data.roundResultMsg, data.roundWinner);
           }
           break;
+        case 'faceoff':
+          // Face-off entry is handled by the faceoffState hydration block in
+          // reconcileLocalState (Phase 1), which runs BEFORE this phase handler.
+          // That block detects active=false→true, runs exit animations, and calls
+          // setupFaceoffUI + startBattle. Nothing to do here.
+          break;
         case 'play-again':
           // Host triggered play-again — non-host clients just reset state and
           // dismiss the victory panel. The upcoming category-select phase will
@@ -6629,6 +6982,39 @@ document.addEventListener('keydown', e => {
           _readyPlayersMap = {};
           if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
           _readyCountdownEnd = null;
+          // Tear down face-off DOM if it was showing
+          resetFaceoffState();
+          {
+            const _foc = document.getElementById('faceoff-container');
+            if (_foc) { _foc.classList.remove('active'); _foc.style.display = 'none'; }
+            const _bwR = document.getElementById('board-wrapper');
+            if (_bwR) _bwR.style.display = '';
+            const _ctvR = document.getElementById('content-tv');
+            if (_ctvR) _ctvR.style.display = '';
+            // Restore round-info children hidden by face-off
+            const _riR = document.getElementById('round-info');
+            if (_riR) {
+              const _foL = _riR.querySelector('.faceoff-round-label');
+              if (_foL) _foL.remove();
+              const _rc = document.getElementById('roundCounter');
+              const _ro = _riR.querySelector('.round-of');
+              const _rt = document.getElementById('roundTarget');
+              if (_rc) { _rc.style.display = ''; }
+              if (_ro) _ro.style.display = '';
+              if (_rt) { _rt.style.display = ''; _rt.textContent = data.maxRounds || maxRounds || '—'; }
+            }
+            const _thR = document.getElementById('turn-header');
+            if (_thR) { _thR.style.display = ''; _thR.innerHTML = ''; }
+            const _tsR = document.getElementById('turn-subtext');
+            if (_tsR) _tsR.style.setProperty('--fit-base', '2rem');
+            const _iaR = document.getElementById('input-area');
+            if (_iaR) _iaR.style.background = '';
+            const _piR = document.getElementById('phase-indicator');
+            if (_piR) _piR.style.background = '';
+            // Restore sidebar
+            const _scs = document.getElementById('sidebar-category-select');
+            if (_scs) _scs.style.display = '';
+          }
           // Dismiss victory panel (sync — no await needed, just fire and forget)
           slideOutVictoryPanel();
           break;
@@ -6759,6 +7145,8 @@ document.addEventListener('keydown', e => {
     // Update UI based on whether this client is the active player
     function updateRoleUI(activeUid) {
       if (!isMultiplayer) return;
+      // Face-off has its own role UI — don't let normal turn logic override it
+      if (faceoffState.active) { updateFaceoffRoleUI(); return; }
       const isActive = (activeUid === myUid);
       const guessInput = document.getElementById('guess');
       const inputArea = document.getElementById('input-area');
@@ -6832,7 +7220,7 @@ document.addEventListener('keydown', e => {
       for (let i = 0; i < questions.length; i++) {
         const cat = questions[i].category;
         catCount[cat] = (catCount[cat] || 0) + 1;
-        if (catCount[cat] <= 3) devModeAllowedQuestions.add(i);
+        if (catCount[cat] <= 10) devModeAllowedQuestions.add(i);
       }
     }
 
@@ -7185,6 +7573,7 @@ document.addEventListener('keydown', e => {
       teamScores = [0, 0]; usedQuestions = [];
       roundNumber = 0; playerIndex = [0, 0];
       startingTeam = Math.floor(Math.random() * 2);
+      resetFaceoffState();
 
       teamNames[0] = document.getElementById("redTeamName").value.trim() || "Red Team";
       teamNames[1] = document.getElementById("blueTeamName").value.trim() || "Blue Team";
@@ -7292,10 +7681,16 @@ document.addEventListener('keydown', e => {
     }
 
     async function advanceRound() {
-      if (roundNumber === 0) teamTurn = startingTeam;
-      else { teamTurn = 1 - startingTeam; startingTeam = teamTurn; }
-      roundNumber++;
-      document.getElementById("roundCounter").textContent = roundNumber;
+      // Detect whether we're advancing into the Face-off Round (final + not yet played).
+      // Face-off doesn't bump roundNumber or flip teamTurn — it's a parallel round type.
+      const faceoffPending = gameMode === 'rounds' && roundNumber >= maxRounds && !faceoffState.completed;
+
+      if (!faceoffPending) {
+        if (roundNumber === 0) teamTurn = startingTeam;
+        else { teamTurn = 1 - startingTeam; startingTeam = teamTurn; }
+        roundNumber++;
+        document.getElementById("roundCounter").textContent = roundNumber;
+      }
 
       // Animate sidebar + board elements out before changing colors or resetting state.
       const contentTvExit = document.getElementById("content-tv");
@@ -7343,15 +7738,23 @@ document.addEventListener('keydown', e => {
           activeUid: getActivePlayerUid()?.substring(0,8),
           amActive: amIActivePlayer(),
           teamTurn, teamPlayerUids: teamPlayerUids.map(t => t.map(u => u.substring(0,8))),
+          faceoffPending,
         });
       }
       if (isMultiplayer && !isHost) {
-        // Non-host: show a waiting state until host syncs category picks
+        // Non-host: show a waiting state until host syncs category picks / face-off state
         document.getElementById("sidebar-category-select").style.display = "flex";
         document.getElementById("sidebar-question-answer").style.display = "none";
         document.getElementById("input-area").classList.add("hidden");
-        const bw = document.getElementById("board-wrapper");
-        if (bw) { bw.classList.remove("slide-in"); bw.classList.add("offscreen"); }
+        const bw2 = document.getElementById("board-wrapper");
+        if (bw2) { bw2.classList.remove("slide-in"); bw2.classList.add("offscreen"); }
+        return;
+      }
+
+      // Face-off branch: host/local generates face-off questions + players and
+      // syncs. Non-host clients receive via the 'faceoff' phase transition.
+      if (faceoffPending) {
+        hostStartFaceoffRound();
         return;
       }
 
@@ -7407,6 +7810,675 @@ document.addEventListener('keydown', e => {
     // Shared data for synced category display in multiplayer
     let _syncedCategoryPicks = null; // { picks: [...], hasSurvey, multipliers: {}, questions: {} }
     let _preSelectedQuestions = null; // { category: { question, answers, _poolIdx } }
+    let _syncedAwards = null; // awards computed by host, synced to all clients
+
+    // ── Face-off Round state ──
+    // Fixed additional round at the end of every game. Two parallel 1v1 battles,
+    // each 60s, both teams input simultaneously, 2x multiplier applied to totals
+    // before victory is determined. See CLAUDE.md "Face-off Round" section.
+    let faceoffState = {
+      active: false,
+      completed: false,
+      currentBattle: 0,
+      questions: [null, null],
+      playerUids: [[null, null], [null, null]],   // [[b1T0, b1T1], [b2T0, b2T1]]
+      playerNames: [[null, null], [null, null]],
+      revealed: [[], []],
+      revealedData: [[], []],                     // each entry: { team, points, player } or null
+      battleScores: [[0, 0], [0, 0]],             // [[b1T0, b1T1], [b2T0, b2T1]]
+      battleExpiry: [null, null],                 // ms timestamps
+      battleGuesses: [[], []],                    // for duplicate detection (normalized)
+      timerInterval: null,
+    };
+
+    function resetFaceoffState() {
+      if (faceoffState.timerInterval) { clearInterval(faceoffState.timerInterval); }
+      faceoffState._countdownActive = false;
+      faceoffState = {
+        active: false,
+        completed: false,
+        currentBattle: 0,
+        questions: [null, null],
+        playerUids: [[null, null], [null, null]],
+        playerNames: [[null, null], [null, null]],
+        revealed: [[], []],
+        revealedData: [[], []],
+        battleScores: [[0, 0], [0, 0]],
+        battleExpiry: [null, null],
+        battleGuesses: [[], []],
+        timerInterval: null,
+      };
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Face-off Round implementation
+    // ─────────────────────────────────────────────────────────────────────
+
+    // Host/local: pick two Survey questions and two random player pairs, sync,
+    // and set up the UI. Must be called from advanceRound() after exit animations
+    // and state resets — NOT a standalone entry point.
+    function hostStartFaceoffRound() {
+      // Safety: don't re-enter if already active or completed
+      if (faceoffState.active || faceoffState.completed) return;
+
+      // Pick two unused Survey questions
+      const pool = questions.map((q, idx) => ({ q, idx }))
+        .filter(obj => !usedQuestions.includes(obj.idx) && obj.q.category === 'Survey'
+          && (!devModeAllowedQuestions || devModeAllowedQuestions.has(obj.idx)));
+      if (pool.length < 2) {
+        // Not enough Survey questions — fall back to any category
+        const anyPool = questions.map((q, idx) => ({ q, idx }))
+          .filter(obj => !usedQuestions.includes(obj.idx));
+        if (anyPool.length < 2) {
+          // Really no questions left; skip face-off and end game
+          console.warn('[face-off] not enough questions, skipping to endGame');
+          faceoffState.completed = true;
+          endGameByRounds();
+          return;
+        }
+        pool.push(...anyPool.slice(0, 2));
+      }
+      // Shuffle and take two
+      const shuffledPool = [...pool].sort(() => Math.random() - 0.5);
+      const q1 = shuffledPool[0];
+      const q2 = shuffledPool[1];
+      usedQuestions.push(q1.idx, q2.idx);
+
+      // Pick two random players per team for each battle
+      // Battle 1 uses [team0[0], team1[0]], Battle 2 uses [team0[1], team1[1]]
+      // where [0] and [1] are random picks (same player twice if only 1 available)
+      function pickPair(teamIdx) {
+        const pool = (isMultiplayer ? teamPlayerUids[teamIdx] : teamPlayers[teamIdx]) || [];
+        if (pool.length === 0) return [null, null];
+        if (pool.length === 1) return [pool[0], pool[0]];
+        // Shuffle and take first two
+        const shuffled = [...pool].sort(() => Math.random() - 0.5);
+        return [shuffled[0], shuffled[1]];
+      }
+      const redPair = pickPair(0);
+      const bluePair = pickPair(1);
+
+      // Map uids back to names if multiplayer
+      function nameFor(teamIdx, playerRef) {
+        if (!isMultiplayer) return playerRef; // already a name
+        const idx = teamPlayerUids[teamIdx].indexOf(playerRef);
+        return idx >= 0 ? teamPlayers[teamIdx][idx] : playerRef;
+      }
+
+      faceoffState.questions = [q1.q, q2.q];
+      faceoffState.playerUids = [
+        [redPair[0], bluePair[0]],
+        [redPair[1], bluePair[1]],
+      ];
+      faceoffState.playerNames = [
+        [nameFor(0, redPair[0]), nameFor(1, bluePair[0])],
+        [nameFor(0, redPair[1]), nameFor(1, bluePair[1])],
+      ];
+      faceoffState.revealed = [
+        Array(q1.q.answers.length).fill(false),
+        Array(q2.q.answers.length).fill(false),
+      ];
+      faceoffState.revealedData = [
+        Array(q1.q.answers.length).fill(null),
+        Array(q2.q.answers.length).fill(null),
+      ];
+      faceoffState.battleScores = [[0, 0], [0, 0]];
+      faceoffState.battleGuesses = [[], []];
+      faceoffState.currentBattle = 0;
+      faceoffState.active = true;
+      faceoffState.completed = false;
+
+      // Sync to all clients — clear readyPlayers so checkReadyAdvance stops firing
+      if (isMultiplayer) {
+        syncState({
+          faceoffState: serializeFaceoffState(),
+          phase: 'faceoff',
+          readyPlayers: {},
+          readyCountdown: null,
+        });
+      }
+
+      // Local: drive the UI directly
+      setupFaceoffUI();
+      startBattle(0);
+    }
+
+    // Serialize faceoffState into a Firestore-safe shape.
+    // CRITICAL: Firestore rejects nested arrays (e.g. [[1,2],[3,4]]).
+    // All per-battle arrays are stored as battle-keyed maps: { "0": [...], "1": [...] }.
+    function serializeFaceoffState() {
+      return {
+        active: faceoffState.active,
+        completed: faceoffState.completed,
+        currentBattle: faceoffState.currentBattle,
+        questions: faceoffState.questions.map(q => q ? {
+          question: q.question || '',
+          category: q.category || '',
+          answers: (q.answers || []).map(a => ({
+            text: a.text || '',
+            display: a.display || null,
+            points: a.points || 0,
+            variants: a.variants || null,
+          })),
+        } : null),
+        // Per-battle fields → keyed maps instead of nested arrays
+        playerUids: {
+          0: faceoffState.playerUids[0] || [null, null],
+          1: faceoffState.playerUids[1] || [null, null],
+        },
+        playerNames: {
+          0: faceoffState.playerNames[0] || [null, null],
+          1: faceoffState.playerNames[1] || [null, null],
+        },
+        revealed: {
+          0: [...(faceoffState.revealed[0] || [])],
+          1: [...(faceoffState.revealed[1] || [])],
+        },
+        revealedData: {
+          0: (faceoffState.revealedData[0] || []).map(d => d ? { team: d.team, points: d.points, player: d.player || null } : null),
+          1: (faceoffState.revealedData[1] || []).map(d => d ? { team: d.team, points: d.points, player: d.player || null } : null),
+        },
+        battleScores: {
+          0: faceoffState.battleScores[0] || [0, 0],
+          1: faceoffState.battleScores[1] || [0, 0],
+        },
+        battleExpiry: [faceoffState.battleExpiry[0] || null, faceoffState.battleExpiry[1] || null],
+        battleGuesses: {
+          0: [...(faceoffState.battleGuesses[0] || [])],
+          1: [...(faceoffState.battleGuesses[1] || [])],
+        },
+      };
+    }
+
+    // Hydrate local faceoffState from synced Firestore data.
+    // Converts battle-keyed maps back to arrays (inverse of serializeFaceoffState).
+    function hydrateFaceoffState(synced) {
+      if (!synced) return;
+      faceoffState.active = !!synced.active;
+      faceoffState.completed = !!synced.completed;
+      faceoffState.currentBattle = synced.currentBattle || 0;
+      faceoffState.questions = synced.questions || [null, null];
+      // Per-battle fields: synced as maps { "0": [...], "1": [...] }, convert to arrays
+      const mapToArr = (m, fallback) => m ? [m[0] || fallback[0], m[1] || fallback[1]] : fallback;
+      faceoffState.playerUids = mapToArr(synced.playerUids, [[null, null], [null, null]]);
+      faceoffState.playerNames = mapToArr(synced.playerNames, [[null, null], [null, null]]);
+      faceoffState.revealed = mapToArr(synced.revealed, [[], []]);
+      faceoffState.revealedData = mapToArr(synced.revealedData, [[], []]);
+      faceoffState.battleScores = mapToArr(synced.battleScores, [[0, 0], [0, 0]]);
+      faceoffState.battleExpiry = synced.battleExpiry || [null, null];
+      faceoffState.battleGuesses = mapToArr(synced.battleGuesses, [[], []]);
+    }
+
+    // DOM prep: hide normal game elements, show faceoff container, swap round counter label.
+    function setupFaceoffUI() {
+      // Hide the normal board and sidebar question content
+      const boardWrapper = document.getElementById('board-wrapper');
+      if (boardWrapper) boardWrapper.style.display = 'none';
+      const contentTv = document.getElementById('content-tv');
+      if (contentTv) contentTv.style.display = 'none';
+      // Also hide the sidebar category select area (could be visible from round transition)
+      const sidebarCatSelect = document.getElementById('sidebar-category-select');
+      if (sidebarCatSelect) sidebarCatSelect.style.display = 'none';
+      // Show the face-off container
+      const foc = document.getElementById('faceoff-container');
+      if (foc) {
+        foc.style.display = 'flex';
+        foc.classList.add('active');
+      }
+      // Keep "ROUND" label consistent. Hide the "X of Y" children inside round-info
+      // and show a FACEOFF label instead — keeps roundCounter alive in the DOM.
+      const roundLabel = document.getElementById('round-label');
+      const roundInfo = document.getElementById('round-info');
+      if (roundLabel) roundLabel.textContent = 'Round';
+      if (roundInfo) {
+        roundInfo.style.display = '';
+        // Hide existing children (roundCounter, "of", roundTarget)
+        const rc = document.getElementById('roundCounter');
+        const ro = roundInfo.querySelector('.round-of');
+        const rt = document.getElementById('roundTarget');
+        if (rc) rc.style.display = 'none';
+        if (ro) ro.style.display = 'none';
+        if (rt) rt.style.display = 'none';
+        // Add faceoff label if not already present
+        let foLabel = roundInfo.querySelector('.faceoff-round-label');
+        if (!foLabel) {
+          foLabel = document.createElement('span');
+          foLabel.className = 'faceoff-round-label';
+          foLabel.style.fontSize = '2rem';
+          foLabel.style.display = 'flex';
+          foLabel.style.alignItems = 'center';
+          foLabel.style.justifyContent = 'center';
+          foLabel.style.height = '100%';
+          roundInfo.appendChild(foLabel);
+        }
+        foLabel.textContent = 'FACEOFF';
+      }
+
+      // ── Phase indicator: "FACE-OFF" + "FINAL ROUND" in smaller text ──
+      // Bypass setPhaseText (which runs fitByCharCount on plain text) and
+      // set innerHTML directly for the two-line layout.
+      try {
+        const phSpan = document.querySelector('#phase-indicator .ph-gameplay');
+        if (phSpan) {
+          phSpan.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;line-height:1.2;"><span style="font-size:1.5rem;">FACE-OFF</span><span style="font-size:0.85rem;opacity:0.7;">FINAL ROUND</span></div>';
+          phSpan.style.setProperty('--fit-scale', '1');
+          phSpan.style.justifyContent = 'center';
+        }
+        setPhase('gameplay');
+      } catch (e) {}
+
+      // ── Clear stale ready-up state so checkReadyAdvance doesn't fire during face-off ──
+      _readyPlayersMap = {};
+      if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
+      _readyCountdownEnd = null;
+
+      // ── Neutral colors: no team owns this round ──
+      // Phase indicator → neutral dark
+      const pi = document.getElementById('phase-indicator');
+      if (pi) {
+        pi.classList.remove('team-red', 'team-blue', 'round-glow');
+        pi.style.background = '#222';
+      }
+      // Input area → neutral dark
+      const inputArea = document.getElementById('input-area');
+      if (inputArea) {
+        inputArea.classList.remove('team-red', 'team-blue', 'hidden');
+        inputArea.style.background = '#222';
+      }
+      const turnInputBox = document.getElementById('turn-input-box');
+      if (turnInputBox) {
+        turnInputBox.classList.remove('team-red', 'team-blue');
+        turnInputBox.style.display = '';
+      }
+      // Turn header/subtext — clear "Player X is up" leftover
+      const turnHeader = document.getElementById('turn-header');
+      if (turnHeader) turnHeader.innerHTML = '';
+      const turnSubtext = document.getElementById('turn-subtext');
+      if (turnSubtext) turnSubtext.textContent = '';
+      // Blob background → neutral black
+      document.getElementById('game-root')?.style.setProperty('--bg-blob-base', '#111');
+      // Question box → neutral
+      const qbox = document.getElementById('question-box');
+      if (qbox) qbox.classList.remove('team-red', 'team-blue');
+
+      // Make sure input area is visible for active players
+      const szi = document.getElementById('sq-zone-input');
+      if (szi) {
+        szi.classList.remove('offscreen-below', 'input-exit');
+        if (!szi.classList.contains('input-enter')) szi.classList.add('input-enter');
+      }
+    }
+
+    // Render one battle's board from faceoffState into its DOM container.
+    function renderFaceoffBoard(battleIdx) {
+      const container = document.querySelector(`#faceoff-battle-${battleIdx} .faceoff-board`);
+      if (!container) return;
+      const q = faceoffState.questions[battleIdx];
+      if (!q) { container.innerHTML = ''; return; }
+      container.innerHTML = '';
+      for (let i = 0; i < q.answers.length; i++) {
+        const ans = q.answers[i];
+        const revealed = faceoffState.revealed[battleIdx][i];
+        const data = faceoffState.revealedData[battleIdx][i];
+        const tile = document.createElement('div');
+        tile.className = 'faceoff-tile';
+        tile.dataset.tileIdx = i;
+        if (revealed && data) {
+          tile.classList.add(data.team === 0 ? 'revealed-red' : data.team === 1 ? 'revealed-blue' : 'revealed-missed');
+          const display = ans.display || ans.text;
+          tile.innerHTML = `<span class="faceoff-tile-text">${display}</span>${data.player ? `<span class="faceoff-tile-player">${data.player}</span>` : ''}<span class="faceoff-tile-pts">${data.points || 0}</span>`;
+        } else {
+          tile.innerHTML = `<span class="faceoff-tile-text">—</span><span class="faceoff-tile-pts">${i + 1}</span>`;
+        }
+        container.appendChild(tile);
+      }
+      // Update the question text
+      const qEl = document.querySelector(`#faceoff-battle-${battleIdx} .faceoff-question`);
+      if (qEl) qEl.textContent = q.question || '';
+      // Update player name display (red vs blue)
+      const redPlayerEl = document.querySelector(`#faceoff-battle-${battleIdx} .faceoff-player-red`);
+      const bluePlayerEl = document.querySelector(`#faceoff-battle-${battleIdx} .faceoff-player-blue`);
+      if (redPlayerEl) redPlayerEl.textContent = faceoffState.playerNames[battleIdx][0] || '';
+      if (bluePlayerEl) bluePlayerEl.textContent = faceoffState.playerNames[battleIdx][1] || '';
+      // Update battle total display
+      updateFaceoffBattleTotalDisplay(battleIdx);
+    }
+
+    function updateFaceoffBattleTotalDisplay(battleIdx) {
+      const side = document.getElementById(`faceoff-battle-${battleIdx}`);
+      if (!side) return;
+      const redEl = side.querySelector('.faceoff-battle-total-red');
+      const blueEl = side.querySelector('.faceoff-battle-total-blue');
+      if (redEl) redEl.textContent = faceoffState.battleScores[battleIdx][0];
+      if (blueEl) blueEl.textContent = faceoffState.battleScores[battleIdx][1];
+    }
+
+    // Start a specific battle (host-driven; non-host mirrors via sync).
+    // Runs the cover-plate countdown before enabling input and starting the timer.
+    function startBattle(battleIdx) {
+      faceoffState.currentBattle = battleIdx;
+      // Visually mark the active side
+      [0, 1].forEach(i => {
+        const side = document.getElementById(`faceoff-battle-${i}`);
+        if (side) side.classList.toggle('inactive', i !== battleIdx);
+      });
+      // Reset covers: active battle shows "GET READY", other shows "UP NEXT" unless already revealed
+      [0, 1].forEach(i => {
+        const cover = document.getElementById(`faceoff-cover-${i}`);
+        if (!cover) return;
+        if (i === battleIdx) {
+          // Active battle: reset and show countdown cover
+          cover.classList.remove('revealed');
+          const label = cover.querySelector('.faceoff-cover-label');
+          const countdown = cover.querySelector('.faceoff-cover-countdown');
+          if (label) label.textContent = 'GET READY';
+          if (countdown) countdown.textContent = '';
+        } else if (i < battleIdx) {
+          // Already completed battle: keep cover revealed (don't re-cover)
+          cover.classList.add('revealed');
+        } else {
+          // Future battle: show "UP NEXT"
+          cover.classList.remove('revealed');
+          const label = cover.querySelector('.faceoff-cover-label');
+          const countdown = cover.querySelector('.faceoff-cover-countdown');
+          if (label) label.textContent = 'UP NEXT';
+          if (countdown) countdown.textContent = '';
+        }
+      });
+      // Render both boards (hidden behind covers; battle 1 stays visible after reveal)
+      renderFaceoffBoard(0);
+      renderFaceoffBoard(1);
+      // Disable input during countdown
+      const guessInput = document.getElementById('guess');
+      const submitBtn = document.querySelector('#turn-body .action-btn');
+      if (guessInput) guessInput.disabled = true;
+      if (submitBtn) submitBtn.disabled = true;
+      // Run 5-second countdown, then reveal + start timer
+      runBattleCountdown(battleIdx);
+    }
+
+    // 5-second countdown on the cover plate → "GO!" → reveal → start battle timer.
+    function runBattleCountdown(battleIdx) {
+      faceoffState._countdownActive = true;
+      const cover = document.getElementById(`faceoff-cover-${battleIdx}`);
+      if (!cover) { faceoffState._countdownActive = false; activateBattle(battleIdx); return; }
+      const label = cover.querySelector('.faceoff-cover-label');
+      const cdEl = cover.querySelector('.faceoff-cover-countdown');
+      let count = 5;
+      if (label) label.textContent = 'GET READY';
+      if (cdEl) cdEl.textContent = count;
+      const interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+          if (cdEl) cdEl.textContent = count;
+        } else {
+          clearInterval(interval);
+          // Flash "GO!" for 300ms then reveal
+          if (label) label.textContent = '';
+          if (cdEl) cdEl.innerHTML = '<span class="faceoff-cover-go">GO!</span>';
+          setTimeout(() => {
+            cover.classList.add('revealed');
+            activateBattle(battleIdx);
+          }, 300);
+        }
+      }, 1000);
+    }
+
+    // Called after countdown finishes: sets timer, enables input, starts the actual battle.
+    function activateBattle(battleIdx) {
+      faceoffState._countdownActive = false;
+      // Host sets expiry and syncs; non-host reads expiry from sync
+      if (!isMultiplayer || isHost) {
+        faceoffState.battleExpiry[battleIdx] = Date.now() + 60000;
+        if (isMultiplayer) {
+          syncState({ faceoffState: serializeFaceoffState() });
+        }
+      }
+      startFaceoffTimer();
+      updateFaceoffRoleUI();
+      // Focus input for active player
+      const guessInput = document.getElementById('guess');
+      if (guessInput && !guessInput.disabled) {
+        setTimeout(() => guessInput.focus(), 100);
+      }
+    }
+
+    // Local countdown reading battleExpiry; called by all clients.
+    function startFaceoffTimer() {
+      if (faceoffState.timerInterval) clearInterval(faceoffState.timerInterval);
+      const tick = () => {
+        const b = faceoffState.currentBattle;
+        const expiry = faceoffState.battleExpiry[b];
+        if (!expiry) return;
+        const remaining = Math.max(0, expiry - Date.now());
+        const secs = Math.ceil(remaining / 1000);
+        const mm = Math.floor(secs / 60);
+        const ss = secs % 60;
+        const display = `${mm}:${ss.toString().padStart(2, '0')}`;
+        const timerEl = document.querySelector(`#faceoff-battle-${b} .faceoff-timer`);
+        if (timerEl) {
+          timerEl.textContent = display;
+          timerEl.classList.toggle('warning', secs <= 10 && secs > 0);
+        }
+        if (remaining <= 0) {
+          clearInterval(faceoffState.timerInterval);
+          faceoffState.timerInterval = null;
+          // Only host ends the battle on expiry (authoritative)
+          if (!isMultiplayer || isHost) {
+            endBattle(b);
+          }
+        }
+      };
+      tick();
+      faceoffState.timerInterval = setInterval(tick, 250);
+    }
+
+    // Control which client's input is enabled during face-off,
+    // and show personalized messages ("YOU'RE UP NOW" vs "WAITING").
+    function updateFaceoffRoleUI() {
+      if (!faceoffState.active) return;
+      const b = faceoffState.currentBattle;
+      const guessInput = document.getElementById('guess');
+      const submitBtn = document.querySelector('#turn-body .action-btn');
+      const turnHeader = document.getElementById('turn-header');
+      const turnSubtext = document.getElementById('turn-subtext');
+      let amIActive = false;
+      if (!isMultiplayer) {
+        amIActive = true;
+      } else {
+        amIActive = myUid === faceoffState.playerUids[b][0] || myUid === faceoffState.playerUids[b][1];
+      }
+      // During countdown, keep input disabled regardless of active status
+      const duringCountdown = !!faceoffState._countdownActive;
+      if (guessInput) {
+        guessInput.disabled = !amIActive || duringCountdown;
+        if (amIActive && !duringCountdown) guessInput.placeholder = 'Enter your guess';
+      }
+      if (submitBtn) submitBtn.disabled = !amIActive || duringCountdown;
+      // Personalized message — show turn-header (normally display:none) with no inline style overrides
+      if (turnHeader) {
+        turnHeader.style.display = 'block';
+        turnHeader.innerHTML = amIActive
+          ? 'YOU\'RE UP NOW'
+          : 'WAITING FOR OTHER PLAYERS';
+      }
+      if (turnSubtext) {
+        turnSubtext.style.setProperty('--fit-scale', '1');
+        turnSubtext.style.setProperty('--fit-base', '1rem');
+        turnSubtext.textContent = amIActive
+          ? `Battle ${b + 1}`
+          : `Battle ${b + 1} in progress`;
+      }
+      if (amIActive && guessInput && !guessInput.disabled) {
+        setTimeout(() => guessInput.focus(), 100);
+      }
+    }
+
+    // Evaluate a face-off guess (host/local only).
+    function evaluateFaceoffGuess(guess, byUid) {
+      if (!faceoffState.active) return;
+      const b = faceoffState.currentBattle;
+      const q = faceoffState.questions[b];
+      if (!q) return;
+
+      // Determine which team this uid belongs to
+      let team = -1;
+      if (!isMultiplayer) {
+        // In local mode, attribute to the active player's team from playerUids (which stores names)
+        const nameRef = faceoffState.playerUids[b]; // [team0Name, team1Name] in local
+        // Local mode uses names as refs; we don't actually know which player pressed the button.
+        // Simplest: alternate attribution based on guess order — or always ask which team.
+        // For now in local mode, use a simple toggle: whoever guessed most recently alternates.
+        // This is imperfect but acceptable until multiplayer is the primary test path.
+        team = faceoffState._localTurnToggle = (faceoffState._localTurnToggle === 0 ? 1 : 0);
+      } else {
+        if (byUid === faceoffState.playerUids[b][0]) team = 0;
+        else if (byUid === faceoffState.playerUids[b][1]) team = 1;
+        else return; // not an active player
+      }
+
+      const normalized = (guess || '').toLowerCase().trim();
+      if (!normalized) return;
+
+      // Duplicate check per battle
+      if (faceoffState.battleGuesses[b].includes(normalized)) {
+        // Soft-reject: same visual as normal duplicate
+        const inp = document.getElementById('guess');
+        if (inp && !inp.disabled) {
+          inp.classList.remove('input-shake');
+          void inp.offsetWidth;
+          inp.classList.add('input-shake');
+          playSound(sfxNeutralBeep);
+        }
+        return;
+      }
+      faceoffState.battleGuesses[b].push(normalized);
+
+      // Match against the question's answers
+      let foundIdx = -1;
+      for (let i = 0; i < q.answers.length; i++) {
+        if (faceoffState.revealed[b][i]) continue;
+        if (answerMatches(guess, q.answers[i])) {
+          foundIdx = i;
+          break;
+        }
+      }
+
+      const playerName = team === 0 ? faceoffState.playerNames[b][0] : faceoffState.playerNames[b][1];
+
+      if (foundIdx >= 0) {
+        const ans = q.answers[foundIdx];
+        const pts = ans.points || 0;
+        faceoffState.revealed[b][foundIdx] = true;
+        faceoffState.revealedData[b][foundIdx] = { team, points: pts, player: playerName };
+        faceoffState.battleScores[b][team] += pts;
+        playCorrect(foundIdx === 0);
+        renderFaceoffBoard(b);
+        // Log to matchLog for awards (face-off has no streak/multiplier)
+        logGuess({
+          player: playerName, team, guess, outcome: 'correct',
+          points: pts, multiplier: null, streak: null, streakBroken: 0,
+          isSteal: false, question: q.question, category: q.category,
+        });
+        // Sync to all clients (include matchLog so non-host awards compute correctly)
+        if (isMultiplayer) {
+          syncState({ faceoffState: serializeFaceoffState(), matchLog: matchLog.map(e => ({ ...e })) });
+        }
+        // Check for all-revealed → end battle
+        if (faceoffState.revealed[b].every(r => r)) {
+          setTimeout(() => endBattle(b), 800);
+        }
+      } else {
+        // Wrong answer — shake + strike sound (no strike count)
+        const inp = document.getElementById('guess');
+        if (inp && !inp.disabled) {
+          inp.classList.remove('input-shake');
+          void inp.offsetWidth;
+          inp.classList.add('input-shake');
+        }
+        playSound(sfxWrong);
+        // Log wrong guess to matchLog
+        logGuess({
+          player: playerName, team, guess, outcome: 'wrong',
+          points: null, multiplier: null, streak: null, streakBroken: 0,
+          isSteal: false, question: q.question, category: q.category,
+        });
+      }
+    }
+
+    // Non-host writes pendingFaceoffActions; host evaluates locally.
+    async function submitFaceoffGuess(guess) {
+      if (!faceoffState.active) return;
+      if (!isMultiplayer || isHost) {
+        evaluateFaceoffGuess(guess, myUid);
+        return;
+      }
+      // Non-host: write pending face-off action keyed by uid
+      try {
+        await window._fb.updateDoc(gameRef, {
+          [`pendingFaceoffActions.${myUid}`]: { guess, clientTs: Date.now(), battleIdx: faceoffState.currentBattle, uid: myUid }
+        });
+      } catch (e) {
+        console.warn('submitFaceoffGuess failed:', e);
+      }
+    }
+
+    // End a single battle: reveal missed tiles and advance to next battle or end face-off.
+    function endBattle(battleIdx) {
+      if (!faceoffState.active) return;
+      // Clear timer
+      if (faceoffState.timerInterval) {
+        clearInterval(faceoffState.timerInterval);
+        faceoffState.timerInterval = null;
+      }
+      faceoffState.battleExpiry[battleIdx] = null;
+      // Mark any unrevealed tiles as missed
+      for (let i = 0; i < faceoffState.revealed[battleIdx].length; i++) {
+        if (!faceoffState.revealed[battleIdx][i]) {
+          faceoffState.revealed[battleIdx][i] = true;
+          const ans = faceoffState.questions[battleIdx].answers[i];
+          faceoffState.revealedData[battleIdx][i] = { team: 'missed', points: ans.points || 0, player: null };
+        }
+      }
+      renderFaceoffBoard(battleIdx);
+      if (isMultiplayer && isHost) {
+        syncState({ faceoffState: serializeFaceoffState() });
+      }
+      // Advance
+      setTimeout(() => {
+        if (battleIdx === 0) {
+          startBattle(1);
+          if (isMultiplayer && isHost) {
+            syncState({ faceoffState: serializeFaceoffState() });
+          }
+        } else {
+          endFaceoffRound();
+        }
+      }, 1500);
+    }
+
+    // Wrap the face-off: apply 2x, fold scores into team totals, trigger endGame.
+    function endFaceoffRound() {
+      if (!faceoffState.active) return;
+      faceoffState.active = false;
+      faceoffState.completed = true;
+      // Sum both battles and apply 2x
+      const red = (faceoffState.battleScores[0][0] + faceoffState.battleScores[1][0]) * 2;
+      const blue = (faceoffState.battleScores[0][1] + faceoffState.battleScores[1][1]) * 2;
+      teamScores[0] += red;
+      teamScores[1] += blue;
+      updateScores();
+      if (isMultiplayer && isHost) {
+        syncState({
+          faceoffState: serializeFaceoffState(),
+          teamScores: [...teamScores],
+        });
+      }
+      // Brief pause then end game
+      setTimeout(() => {
+        endGameByRounds();
+      }, 2000);
+    }
 
     function showCategorySelection(syncedData) {
       const pillsAreaRef = document.getElementById("category-pills-area");
@@ -7426,6 +8498,7 @@ document.addEventListener('keydown', e => {
         // Active player (or local mode): generate randomly
         const remainingIdx = questions.map((q, idx) => !usedQuestions.includes(idx) && (!devModeAllowedQuestions || devModeAllowedQuestions.has(idx)) ? idx : null).filter(i => i !== null);
         hasSurvey = remainingIdx.some(i => questions[i].category === 'Survey');
+        if (!hasSurvey) console.warn('[category-select] No Survey questions remaining! usedQuestions count:', usedQuestions.length, 'total questions:', questions.length, 'remaining:', remainingIdx.length);
         const objCats = [...new Set(remainingIdx.filter(i => questions[i].category !== 'Survey').map(i => questions[i].category))];
         if (objCats.length === 0 && !hasSurvey) { endGame("No more questions available."); return; }
         picks = [];
@@ -8388,6 +9461,8 @@ document.addEventListener('keydown', e => {
     }
 
     function updateTurn() {
+      // Face-off is a neutral round — don't apply team turn colors/text
+      if (faceoffState.active) return;
       const isRed = teamTurn === 0;
       const teamName = isRed ? teamNames[0] : teamNames[1];
       const teamClass = isRed ? "team-red" : "team-blue";
@@ -8502,13 +9577,20 @@ document.addEventListener('keydown', e => {
         const players = teamPlayers[team];
         const curIdx = playerIndex[team] % players.length;
         const isActiveTeam = team === teamTurn;
+        const capUid = getCurrentCaptainUid(team);
         const itemHtml = (name, i) => {
+          const uid = teamPlayerUids[team]?.[i];
+          const isCap = uid && uid === capUid;
+          const isHst = uid && uid === hostUid;
+          const badges =
+            (isCap ? '<span class="scoreboard-role-badge role-captain" data-tip="scoreboard-captain">C</span>' : '') +
+            (isHst ? '<span class="scoreboard-role-badge role-host" data-tip="scoreboard-host">H</span>' : '');
           if (i === curIdx && isActiveTeam) {
-            const content = `<span class="player-arrow">►</span><span class="player-name">${name}</span>`;
+            const content = `<span class="player-arrow">►</span>${badges}<span class="player-name">${name}</span>`;
             return `<li class="player-active">${content}</li>`;
           }
-          if (i === curIdx) return `<li class="player-next">${name}</li>`;
-          return `<li>${name}</li>`;
+          if (i === curIdx) return `<li class="player-next">${badges}${name}</li>`;
+          return `<li>${badges}${name}</li>`;
         };
         const singleCopy = players.map(itemHtml).join("");
         const needsMarquee = players.length >= MARQUEE_MIN_PLAYERS;
@@ -8564,6 +9646,13 @@ document.addEventListener('keydown', e => {
 
     async function submitGuess(){const input=document.getElementById("guess");const guess=input.value.trim();
       if(_scoringInProgress){return;} // block all entry points while scoring
+      // Face-off round: route to face-off evaluator before any normal-round logic
+      if (faceoffState.active) {
+        input.value = "";
+        if (!guess) return;
+        submitFaceoffGuess(guess);
+        return;
+      }
       input.value="";if(!guess||!currentQuestion)return;
 
       // Non-host multiplayer: check duplicates locally (instant feedback), then
@@ -8816,23 +9905,33 @@ document.addEventListener('keydown', e => {
       header.innerHTML = msg;
       const isLastRound = gameMode === 'rounds' && roundNumber >= maxRounds;
 
-      // Final round: auto-reveal remaining answers, then trigger victory
-      if (isLastRound) {
+      // Final normal round with no face-off pending: straight to victory
+      if (isLastRound && faceoffState.completed) {
         setTimeout(() => revealAll(), 3000 / gameSpeed);
         endGameByRounds();
         return;
       }
 
+      // isLastRound && !faceoffState.completed: fall through to ready-up UI.
+      // The ready-up consensus will call enterFaceoffRound() via checkReadyAdvance.
+      // Local mode shows a "Face-off Round" button instead of "Next Round".
+      const faceoffPending = isLastRound && !faceoffState.completed;
+
       if (isMultiplayer) {
         // Multiplayer: Ready Up consensus — all players must ready before advancing
         body.innerHTML = `
-          ${make3dBtn('Ready Up', 'readyUp()', '', 'ready-up')}
+          ${make3dBtn(faceoffPending ? 'Ready for Face-off' : 'Ready Up', 'readyUp()', '', 'ready-up')}
           <div id="ready-status" style="text-align:center; margin-top:8px; font-family:futura-100,sans-serif; font-size:0.85rem; color:#aaa;"></div>
         `;
       } else {
-        // Local mode: direct advance
+        // Local mode: direct advance (advanceRound branches to face-off if pending)
         body.innerHTML = `
-          ${make3dBtn('Next Round', 'advanceRound()', '', 'next-round')}
+          ${make3dBtn(
+            faceoffPending ? 'Face-off Round' : 'Next Round',
+            'advanceRound()',
+            '',
+            faceoffPending ? 'faceoff-advance' : 'next-round'
+          )}
         `;
       }
 
@@ -8909,6 +10008,8 @@ document.addEventListener('keydown', e => {
     }
 
     function checkReadyAdvance() {
+      // Face-off has its own flow — don't let stale ready state trigger advanceRound
+      if (faceoffState.active) return;
       const allUids = [...teamPlayerUids[0], ...teamPlayerUids[1]];
       const allReady = allUids.length > 0 && allUids.every(uid => _readyPlayersMap[uid]);
       const timedOut = _readyCountdownEnd && Date.now() >= _readyCountdownEnd;
@@ -8918,10 +10019,11 @@ document.addEventListener('keydown', e => {
         console.log('[multi] checkReadyAdvance → ADVANCING (allReady=' + allReady + ' timedOut=' + timedOut + ')');
         if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
         if (amDesignatedAdvancer()) {
+          // advanceRound() detects face-off pending internally and branches.
           advanceRound();
         }
         // Non-designated clients will advance when they receive the
-        // category-select phase transition via onSnapshot
+        // category-select or faceoff phase transition via onSnapshot
       }
     }
 
@@ -9170,6 +10272,10 @@ document.addEventListener('keydown', e => {
           roundResultMsg: null,
           roundWinner: null,
           roundPhaseText: null,
+          // Clear face-off state from previous game so it doesn't re-hydrate
+          faceoffState: null,
+          pendingFaceoffActions: null,
+          awards: null,
         });
       } else if (!isMultiplayer) {
         startingTeam = Math.floor(Math.random() * 2);
@@ -9231,17 +10337,52 @@ document.addEventListener('keydown', e => {
       document.getElementById("message").textContent = "";
       document.getElementById("turn-input-box").style.display = "";
 
-      // Board wrapper — force to offscreen (no animation classes)
+      // Face-off reset: tear down container, restore normal board/tv visibility,
+      // restore round counter label, re-hide turn-header
+      resetFaceoffState();
+      const foc = document.getElementById('faceoff-container');
+      if (foc) { foc.classList.remove('active'); foc.style.display = 'none'; }
+      const rl = document.getElementById('round-label');
+      const ri = document.getElementById('round-info');
+      if (rl) rl.textContent = 'Round';
+      if (ri) {
+        ri.style.display = '';
+        // Remove faceoff label and restore original children
+        const foLabel = ri.querySelector('.faceoff-round-label');
+        if (foLabel) foLabel.remove();
+        const rc2 = document.getElementById('roundCounter');
+        const ro2 = ri.querySelector('.round-of');
+        const rt2 = document.getElementById('roundTarget');
+        if (rc2) { rc2.style.display = ''; rc2.textContent = '0'; }
+        if (ro2) ro2.style.display = '';
+        if (rt2) { rt2.style.display = ''; rt2.textContent = maxRounds || '—'; }
+      }
+      const th = document.getElementById('turn-header');
+      if (th) { th.style.display = ''; th.innerHTML = ''; }
+      const ts = document.getElementById('turn-subtext');
+      if (ts) { ts.style.setProperty('--fit-base', '2rem'); }
+      // Restore input-area and phase-indicator inline styles that face-off may have set
+      const iaReset = document.getElementById('input-area');
+      if (iaReset) iaReset.style.background = '';
+      const piReset = document.getElementById('phase-indicator');
+      if (piReset) piReset.style.background = '';
+      if (ri) ri.style.display = '';
+
+      // Board wrapper — force to offscreen (no animation classes).
+      // Clear inline display:none that face-off may have set.
       const bw = document.getElementById("board-wrapper");
       if (bw) {
+        bw.style.display = '';
         bw.classList.remove("slide-in");
         bw.classList.add("offscreen");
         bw.style.transform = '';
       }
 
-      // Content-tv — reset to hidden (pre-CRT-on state)
+      // Content-tv — reset to hidden (pre-CRT-on state).
+      // Clear inline display:none that face-off may have set.
       const ctv = document.getElementById("content-tv");
       if (ctv) {
+        ctv.style.display = '';
         ctv.classList.remove("slide-out-left", "tv-on");
         ctv.classList.add("ct-hidden");
         ctv.style.animation = '';
@@ -9472,14 +10613,27 @@ document.addEventListener('keydown', e => {
 
     function endGame(msg, winnerOverride = null) {
       const winner = winnerOverride !== null ? winnerOverride : (teamScores[0] >= teamScores[1] ? 0 : 1);
-      // Populate sidebar endRound area (retained for returning to the board)
-      document.getElementById("endRound").innerHTML=`
-        ${msg}
-        ${make3dBtn('Fast Money Round', `startFastMoney(${winner})`, 'action-btn-fm')}`;
+      // Populate sidebar endRound area (retained for returning to the board).
+      // Fast Money Round button removed — replaced by the Face-off Round which
+      // runs automatically before endGame fires. Fast Money code is still on
+      // disk (orphaned) and can be resurrected later if desired.
+      document.getElementById("endRound").innerHTML = msg;
       document.getElementById("turn-input-box").style.display="none";
       gameEnded = true;
+
+      // Host/local computes awards; non-host receives them via Firestore sync
+      let awards = [];
+      if (!isMultiplayer || isHost) {
+        awards = computeAwards();
+        if (isMultiplayer && isHost) {
+          syncState({ gameEnded: true, awards: awards });
+        }
+      }
+      // Non-host: awards arrive via a later snapshot — reconcileLocalState
+      // will call renderVictoryAwards() when data.awards is received
+
       // Launch victory overlay (dialog + particles)
-      playVictoryAnimation(winner);
+      playVictoryAnimation(winner, awards);
     }
 
     async function resetGameConfirm() {
@@ -9496,8 +10650,34 @@ document.addEventListener('keydown', e => {
       hidePhaseIndicator();
       gameSpeedSetting = 1;
       setGameSpeed(1);
-      teamScores=[0,0];usedQuestions=[];roundNumber=0;gameEnded=false;matchLog=[];playerIndex=[0,0];startingTeam=0;
+      teamScores=[0,0];usedQuestions=[];roundNumber=0;gameEnded=false;matchLog=[];playerIndex=[0,0];startingTeam=0;_syncedAwards=null;
       gameMode='rounds';maxRounds=0;lastRoundWinner=-1;
+      resetFaceoffState();
+      // Tear down face-off DOM if it was active and restore normal game elements
+      const foc = document.getElementById('faceoff-container');
+      if (foc) { foc.classList.remove('active'); foc.style.display = 'none'; }
+      const boardWrapperRestore = document.getElementById('board-wrapper');
+      if (boardWrapperRestore) boardWrapperRestore.style.display = '';
+      const contentTvRestore = document.getElementById('content-tv');
+      if (contentTvRestore) contentTvRestore.style.display = '';
+      const roundLabelRestore = document.getElementById('round-label');
+      const roundInfoRestore = document.getElementById('round-info');
+      if (roundLabelRestore) roundLabelRestore.textContent = 'Round';
+      if (roundInfoRestore) {
+        roundInfoRestore.style.display = '';
+        const foLabel = roundInfoRestore.querySelector('.faceoff-round-label');
+        if (foLabel) foLabel.remove();
+        const rc2 = document.getElementById('roundCounter');
+        const ro2 = roundInfoRestore.querySelector('.round-of');
+        const rt2 = document.getElementById('roundTarget');
+        if (rc2) { rc2.style.display = ''; rc2.textContent = '0'; }
+        if (ro2) ro2.style.display = '';
+        if (rt2) { rt2.style.display = ''; rt2.textContent = '—'; }
+      }
+      const thRestore = document.getElementById('turn-header');
+      if (thRestore) { thRestore.style.display = ''; thRestore.innerHTML = ''; }
+      const tsRestore = document.getElementById('turn-subtext');
+      if (tsRestore) { tsRestore.style.setProperty('--fit-base', '2rem'); }
       resetSetupSteps();
       clearInterval(fm.timerInterval);
       document.getElementById("setup").style.display="block";
@@ -10182,7 +11362,7 @@ document.addEventListener('keydown', e => {
 
     // Generate a short alphanumeric game code
     function generateGameCode() {
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/1/O/0 confusion
+      const chars = '123'; // dev testing only — restore full set before shipping
       let code = '';
       for (let i = 0; i < 1; i++) code += chars[Math.floor(Math.random() * chars.length)];
       return code;
@@ -10230,12 +11410,12 @@ document.addEventListener('keydown', e => {
         hostUid: myUid,
         status: 'lobby',
         createdAt: window._fb.serverTimestamp(),
-        maxRounds: 4,
+        maxRounds: 2,
         gameSpeed: gameSpeedSetting || 1,
         teamNames: ['Red Team', 'Blue Team'],
         teamScores: [0, 0],
         players: {
-          [myUid]: { name: myName, team: 0, isHost: true, online: true, joinedAt: Date.now() }
+          [myUid]: { name: myName, team: 0, isHost: true, isCaptain: true, online: true, joinedAt: Date.now() }
         }
       });
 
@@ -10329,9 +11509,12 @@ document.addEventListener('keydown', e => {
       }
       const autoTeam = redCount <= blueCount ? 0 : 1;
 
+      // Captain if joining an empty team (no existing captain on that team)
+      const autoCaptain = !Object.values(players).some(p => p.team === autoTeam && p.isCaptain);
+
       // Add self to players map
       await window._fb.updateDoc(gameRef, {
-        [`players.${myUid}`]: { name: myName, team: autoTeam, isHost: false, online: true, joinedAt: Date.now() }
+        [`players.${myUid}`]: { name: myName, team: autoTeam, isHost: false, isCaptain: autoCaptain, online: true, joinedAt: Date.now() }
       });
 
       // Transition to lobby
@@ -10422,10 +11605,34 @@ document.addEventListener('keydown', e => {
       // Sort chronologically (first joiner at top)
       let redCount = 0, blueCount = 0, unassignedCount = 0;
       const sortedEntries = Object.entries(players).sort(([, a], [, b]) => (a.joinedAt || 0) - (b.joinedAt || 0));
+      // Identify current captain per team for reassign-authorization checks
+      const myTeam = players[myUid]?.team;
+      const amCaptainOfMyTeam = (myTeam === 0 || myTeam === 1) && players[myUid]?.isCaptain;
+      const canReassignCaptain = amCaptainOfMyTeam || isHost;
       for (const [uid, p] of sortedEntries) {
         const li = document.createElement('li');
         if (uid === myUid) li.classList.add('is-me');
-        li.innerHTML = `${p.name}${p.isHost ? ' <span class="lobby-player-host-badge">Host</span>' : ''}`;
+        const hostBadge = p.isHost ? ' <span class="lobby-player-host-badge" data-tip="lobby-host" data-tip-placement="below">HOST</span>' : '';
+        const capBadge = p.isCaptain ? ' <span class="lobby-player-host-badge lobby-captain-badge" data-tip="lobby-captain" data-tip-placement="below">CAPTAIN</span>' : '';
+        // "Make captain" button: only visible to captain/host, only for non-captain teammates on a real team
+        const showMakeCap = canReassignCaptain
+          && !p.isCaptain
+          && (p.team === 0 || p.team === 1)
+          && p.team === myTeam
+          && uid !== myUid;
+        const makeCapBtn = showMakeCap
+          ? ` <button class="lobby-make-captain-btn" data-tip="lobby-make-captain" data-tip-placement="below" onclick="reassignCaptain('${uid}')">MAKE CAPTAIN</button>`
+          : '';
+        // Escape player name to avoid HTML injection, then wrap in ellipsis-capable span
+        const nameSafe = document.createElement('span');
+        nameSafe.className = 'lobby-player-name';
+        nameSafe.textContent = p.name;
+        li.appendChild(nameSafe);
+        // Append remaining badges/buttons as trusted HTML (they're built from static strings + controlled uid)
+        const tail = document.createElement('span');
+        tail.style.display = 'contents';
+        tail.innerHTML = `${hostBadge}${capBadge}${makeCapBtn}`;
+        li.appendChild(tail);
         if (p.team === 0) { redList.appendChild(li); redCount++; }
         else if (p.team === 1) { blueList.appendChild(li); blueCount++; }
         else { unassignedList.appendChild(li); unassignedCount++; }
@@ -10498,9 +11705,59 @@ document.addEventListener('keydown', e => {
     async function joinTeam(teamIdx) {
       if (!gameRef || !myUid) return;
       playTap(1);
-      await window._fb.updateDoc(gameRef, {
-        [`players.${myUid}.team`]: teamIdx
-      });
+
+      // Read current state so we can handle captain transfer
+      const snap = await window._fb.getDoc(gameRef);
+      const players = snap.data()?.players || {};
+      const me = players[myUid] || {};
+      const oldTeam = me.team;
+
+      const updates = { [`players.${myUid}.team`]: teamIdx };
+
+      if (oldTeam !== teamIdx) {
+        // If I was captain of old team, transfer captaincy to next earliest teammate
+        if (me.isCaptain) {
+          updates[`players.${myUid}.isCaptain`] = false;
+          const nextOldCap = Object.entries(players)
+            .filter(([uid, p]) => uid !== myUid && p.team === oldTeam)
+            .sort(([, a], [, b]) => (a.joinedAt || 0) - (b.joinedAt || 0))[0];
+          if (nextOldCap) updates[`players.${nextOldCap[0]}.isCaptain`] = true;
+        }
+        // If joining a team (not Undecided) and it has no captain, I become captain
+        if (teamIdx === 0 || teamIdx === 1) {
+          const newTeamHasCaptain = Object.entries(players).some(
+            ([uid, p]) => uid !== myUid && p.team === teamIdx && p.isCaptain
+          );
+          if (!newTeamHasCaptain) {
+            updates[`players.${myUid}.isCaptain`] = true;
+          }
+        }
+      }
+
+      await window._fb.updateDoc(gameRef, updates);
+    }
+
+    async function reassignCaptain(newCaptainUid) {
+      if (!gameRef || !myUid) return;
+      playTap(1);
+      const snap = await window._fb.getDoc(gameRef);
+      const players = snap.data()?.players || {};
+      const target = players[newCaptainUid];
+      if (!target || (target.team !== 0 && target.team !== 1)) return;
+      const myTeam = players[myUid]?.team;
+      const amCaptainOfTargetTeam = myTeam === target.team && players[myUid]?.isCaptain;
+      if (!amCaptainOfTargetTeam && !isHost) return;
+
+      // Find current captain on target team
+      const oldCapEntry = Object.entries(players).find(
+        ([uid, p]) => p.team === target.team && p.isCaptain
+      );
+
+      const updates = { [`players.${newCaptainUid}.isCaptain`]: true };
+      if (oldCapEntry && oldCapEntry[0] !== newCaptainUid) {
+        updates[`players.${oldCapEntry[0]}.isCaptain`] = false;
+      }
+      await window._fb.updateDoc(gameRef, updates);
     }
 
     function copyGameCode() {
@@ -10528,10 +11785,18 @@ document.addEventListener('keydown', e => {
             // Delete the entire game document — kicks all players
             await window._fb.deleteDoc(gameRef);
           } else {
-            // Remove self from players map
-            await window._fb.updateDoc(gameRef, {
-              [`players.${myUid}`]: window._fb.deleteField()
-            });
+            // If leaver is a captain, transfer captaincy to next earliest teammate
+            const snap = await window._fb.getDoc(gameRef);
+            const players = snap.data()?.players || {};
+            const me = players[myUid] || {};
+            const updates = { [`players.${myUid}`]: window._fb.deleteField() };
+            if (me.isCaptain && (me.team === 0 || me.team === 1)) {
+              const nextCap = Object.entries(players)
+                .filter(([uid, p]) => uid !== myUid && p.team === me.team)
+                .sort(([, a], [, b]) => (a.joinedAt || 0) - (b.joinedAt || 0))[0];
+              if (nextCap) updates[`players.${nextCap[0]}.isCaptain`] = true;
+            }
+            await window._fb.updateDoc(gameRef, updates);
           }
         } catch (e) {
           console.warn('leaveLobby cleanup failed:', e);
@@ -10574,26 +11839,78 @@ document.addEventListener('keydown', e => {
         else if (p.team === 1) bluePlayers.push({ uid, name: p.name });
       }
 
+      // Lock captain identity per team (first player with isCaptain === true)
+      const redCaptainUid = sortedPlayers.find(([, p]) => p.team === 0 && p.isCaptain)?.[0]
+        || redPlayers[0]?.uid || null;
+      const blueCaptainUid = sortedPlayers.find(([, p]) => p.team === 1 && p.isCaptain)?.[0]
+        || bluePlayers[0]?.uid || null;
+
       // Write game start state — host determines startingTeam
       const _startingTeam = Math.floor(Math.random() * 2);
       _lobbyStartingTeam = _startingTeam; // host saves its own value directly
       await window._fb.updateDoc(gameRef, {
         status: 'playing',
         teamPlayers: { 0: redPlayers, 1: bluePlayers },
+        teamCaptainUids: [redCaptainUid, blueCaptainUid],
         maxRounds: data.maxRounds || 4,
         gameSpeed: data.gameSpeed || 1,
         startingTeam: _startingTeam,
+        // Clear ALL stale game-state fields from previous games on the same Firestore doc.
+        // updateDoc merges, so old fields like categoryPicks persist unless explicitly nulled.
+        faceoffState: null,
+        pendingFaceoffActions: null,
+        awards: null,
+        gameEnded: false,
+        readyPlayers: {},
+        readyCountdown: null,
+        categoryPicks: null,
+        pendingAction: null,
+        currentQuestion: null,
+        revealed: null,
+        revealedData: null,
+        matchLog: [],
+        guessHistory: [],
+        lastResult: null,
+        roundResultMsg: null,
+        roundWinner: null,
+        roundPhaseText: null,
+        phase: null,
+        roundNumber: 0,
+        teamScores: [0, 0],
+        strikes: 0,
+        currentStreak: 0,
+        answerMultiplier: 1.0,
+        roundScore: 0,
+        stealPhase: false,
+        categoryMultiplier: 1,
+        playerIndex: [0, 0],
+        usedQuestions: [],
       });
 
       // Host transitions to game — inject the sorted teamPlayers into data
       // so transitionFromLobbyToGame uses the same canonical order as non-host clients
       data.teamPlayers = { 0: redPlayers, 1: bluePlayers };
+      data.teamCaptainUids = [redCaptainUid, blueCaptainUid];
       data.startingTeam = _startingTeam;
       transitionFromLobbyToGame(data);
     }
 
     // Parallel UID array for multiplayer player lookups
     let teamPlayerUids = [[], []];
+    // Locked at game start (first captain per team); null in local/single-player mode
+    let teamCaptainUids = [null, null];
+    // Host UID (synced from Firestore at game start so all clients know who the host is)
+    let hostUid = null;
+
+    // Returns the current captain UID for a team, with disconnect fallback.
+    // If the locked captain is no longer present in teamPlayerUids[team], returns
+    // the earliest remaining player on that team (effectively advancing captaincy).
+    function getCurrentCaptainUid(team) {
+      const locked = teamCaptainUids?.[team];
+      const roster = teamPlayerUids?.[team] || [];
+      if (locked && roster.includes(locked)) return locked;
+      return roster[0] || null;
+    }
 
     function transitionFromLobbyToGame(data) {
       if (unsubGameSnap) { unsubGameSnap(); unsubGameSnap = null; }
@@ -10620,6 +11937,11 @@ document.addEventListener('keydown', e => {
         teamNames = [data.teamNames?.[0] || 'Red Team', data.teamNames?.[1] || 'Blue Team'];
         teamPlayers = [redNames, blueNames];
         teamPlayerUids = [redUids, blueUids];
+        // Lock captain identity and host UID for the duration of the game
+        teamCaptainUids = data.teamCaptainUids
+          ? [data.teamCaptainUids[0] || null, data.teamCaptainUids[1] || null]
+          : [redUids[0] || null, blueUids[0] || null];
+        hostUid = data.hostUid || null;
         maxRounds = data.maxRounds || 4;
         gameSpeedSetting = data.gameSpeed || 1;
         setGameSpeed(gameSpeedSetting);
@@ -10650,6 +11972,7 @@ document.addEventListener('keydown', e => {
       teamTurn = startingTeam;
       playerIndex = [0, 0];
       usedQuestions = [];
+      resetFaceoffState();
 
       // Set scoreboard team labels
       const redLabelH4 = document.querySelector("#red-score-box .team-label h4");
@@ -10714,17 +12037,146 @@ document.addEventListener('keydown', e => {
         gameRoot.style.setProperty('--bg-blob-base', BG_BLOB_DEFAULT);
       };
 
+      // ── Mascot state machine ──
+      (function() {
+        const sprite = document.getElementById('start-mascot-sprite');
+        const WALK_SHEET    = 'dog_walk_sheet.png';
+        const STANDUP_SHEET = 'dog_standup_sheet.png';
+        const WAG_SHEET     = 'dog_tailwag_sheet.png';
+        // Preload all sheets to prevent blank flash on sheet swap.
+        // Two-pronged: (1) img.decode() guarantees pixel data is decoded,
+        // (2) a hidden div with all sheets as layered CSS backgrounds
+        // forces the browser to prepare them specifically for CSS rendering.
+        const _mascotSheets = [WALK_SHEET, STANDUP_SHEET, WAG_SHEET];
+        const _mascotPreloader = document.createElement('div');
+        _mascotPreloader.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;';
+        _mascotPreloader.style.backgroundImage = _mascotSheets.map(s => `url('${s}')`).join(', ');
+        document.body.appendChild(_mascotPreloader);
+        const _mascotReady = Promise.all(_mascotSheets.map(src => {
+          const img = new Image();
+          img.src = src;
+          return img.decode().catch(() => {});
+        }));
+
+        // bg-position percentages per frame count
+        function framePos(i, total) { return (i / (total - 1)) * 100 + '%'; }
+
+        // State definitions
+        const states = [
+          { name: 'walk_right', sheet: WALK_SHEET, totalFrames: 9, frameMs: 67, bgSize: '900%', walk: true, dir: 'right', flip: true },
+          { name: 'sit_down',   sheet: STANDUP_SHEET, totalFrames: 9, frameMs: 120, bgSize: '900%', reverse: true, flip: true },
+          { name: 'tail_wag',   sheet: WAG_SHEET, totalFrames: 5, bgSize: '500%', frameMs: 300,
+            sequence: [0,1,2,3,4,3,2,1,0,1,2,3,4,3,2,1,0] },
+          { name: 'stand_up',   sheet: STANDUP_SHEET, totalFrames: 9, frameMs: 120, bgSize: '900%' },
+          { name: 'walk_left',  sheet: WALK_SHEET, totalFrames: 9, frameMs: 67, bgSize: '900%', walk: true, dir: 'left', flip: false },
+          { name: 'sit_down2',  sheet: STANDUP_SHEET, totalFrames: 9, frameMs: 120, bgSize: '900%', reverse: true },
+          { name: 'tail_wag2',  sheet: WAG_SHEET, totalFrames: 5, bgSize: '500%', frameMs: 300,
+            sequence: [0,1,2,3,4,3,2,1,0,1,2,3,4,3,2,1,0] },
+          { name: 'stand_up2',  sheet: STANDUP_SHEET, totalFrames: 9, frameMs: 120, bgSize: '900%', flip: true },
+        ];
+
+        let stateIdx = 0;
+        let frame = 0;
+        let xPos = -180; // initial: off-screen left so dog walks in at start
+        let lastFlip = false;
+        const walkSpeed = 9;     // px per frame tick
+        const leftDest  = 40;    // walk_left stops here (visible, ~40px margin)
+        const rightDest = 1060;  // walk_right stops here (1280 - 180 sprite - 40 margin)
+
+        let _mascotTimer = null;
+        let _mascotStopped = false;
+
+        function applyFrame() {
+          const st = states[stateIdx];
+          const seq = st.sequence;
+          let fi;
+          if (seq) {
+            fi = seq[frame];
+          } else if (st.reverse) {
+            fi = st.totalFrames - 1 - frame;
+          } else {
+            fi = frame;
+          }
+          sprite.style.backgroundPosition = framePos(fi, st.totalFrames) + ' 0';
+        }
+
+        function enterState() {
+          const st = states[stateIdx];
+          frame = 0;
+          sprite.style.backgroundImage = `url('${st.sheet}')`;
+          sprite.style.backgroundSize = st.bgSize + ' 100%';
+          sprite.style.transform = st.flip ? 'scaleX(-1)' : '';
+          if (st.flip) lastFlip = true;
+          else if (st.walk) lastFlip = false;
+          applyFrame();
+          _mascotTimer = setInterval(tick, st.frameMs);
+        }
+
+        function tick() {
+          if (_mascotStopped) return;
+          const st = states[stateIdx];
+          const maxFrames = st.sequence ? st.sequence.length : st.totalFrames;
+
+          if (st.walk) {
+            // Advance walk frame (loops)
+            frame = (frame + 1) % st.totalFrames;
+            applyFrame();
+            // Move position based on direction
+            const movingLeft = st.dir === 'left';
+            xPos += movingLeft ? -walkSpeed : walkSpeed;
+            sprite.style.left = xPos + 'px';
+
+            // Check if reached destination
+            const arrived = movingLeft ? (xPos <= leftDest) : (xPos >= rightDest);
+            if (arrived) {
+              // Walk to center on next pass — alternate between edges
+              clearInterval(_mascotTimer);
+              nextState();
+            }
+          } else {
+            // Non-walk: play through frames once
+            frame++;
+            if (frame >= maxFrames) {
+              clearInterval(_mascotTimer);
+              nextState();
+            } else {
+              applyFrame();
+            }
+          }
+        }
+
+        function nextState() {
+          stateIdx = (stateIdx + 1) % states.length;
+          enterState();
+        }
+
+        // Kick off once all sheets are decoded and CSS-ready
+        sprite.style.left = xPos + 'px';
+        _mascotReady.then(() => {
+          if (!_mascotStopped) enterState();
+        });
+
+        // Expose stop for dismiss
+        window._stopMascot = function() {
+          _mascotStopped = true;
+          clearInterval(_mascotTimer);
+        };
+      })();
+
       // Shared dismiss sequence: crossfade blobs → TV-off logo → fade screen.
       // Used by both normal click and dev mode.
       window._dismissStartScreen = function() {
+        if (window._stopMascot) window._stopMascot();
         const logo      = document.getElementById('start-logo');
         const h1        = startScreen.querySelector('h1');
         const copyright = startScreen.querySelector('.copyright');
+        const mascot = document.getElementById('start-mascot-sprite');
         const modeSelect = document.getElementById('mode-select');
 
-        // 1. Fade out h1 + copyright together (0.5s)
+        // 1. Fade out h1 + copyright + mascot together (0.5s)
         if (h1) h1.classList.add('start-fade-out');
         if (copyright) copyright.classList.add('start-fade-out');
+        if (mascot) mascot.classList.add('start-fade-out');
 
         // 2. After fade completes (1s), TV-off the logo
         setTimeout(() => {

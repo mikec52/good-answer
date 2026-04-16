@@ -43,4 +43,8 @@ award-the-jock,evergreen,Go sports!,Scored the most points in Sports categories
 award-multitudes,evergreen,You're like an onion,Scored points in more unique categories than anyone else
 award-frequent-flyer,evergreen,Where in the world?,Scored the most points in Geography categories
 award-hoi-polloi,evergreen,Person of the people,Scored the most points in Pop Culture categories
-award-sergeis-fez,evergreen,Legally we can't say that rhymes with something,Scored the most points in Survey categories
+award-sergeis-fez,evergreen,Legally we can't say that rhymes with something,Scored the most points in Survey categorieslobby-host,evergreen,Running the show,The host manages game settings and can reassign captains in the lobby
+lobby-captain,evergreen,Team leader,Captains decide how to use team prizes. The captain or host can reassign this role before the game starts
+lobby-make-captain,help,Pass the torch,Make this player your team's captain
+scoreboard-captain,evergreen,Team captain,Makes decisions about team prizes. Locked at game start; auto-passes if the captain disconnects
+scoreboard-host,evergreen,Game host,Created this session and manages settings

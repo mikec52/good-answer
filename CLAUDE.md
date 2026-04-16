@@ -58,7 +58,52 @@ The goal is a polished, distributable game app without migrating away from the c
 - **Phase 1 (current goal)**: Owner-hosted. Mike is always the session host; others join as players at a shared URL.
 - **Phase 2 (future)**: Self-serve hosting. Other users can independently spin up and host their own game sessions.
 
+**Character mascots (exploratory):** A host character and his dog that react to game moments (correct answers, strikes, steals, etc.), adding personality. Early asset experiments use frame-swap animation (JS `setInterval` cycling preloaded PNGs). The long-term asset pipeline uses Replicate models trained on reference images for consistent, animation-ready sprite frames. Not a confirmed feature — experimental and low priority.
+
 **What this avoids:** No migration to Unity or Phaser. The current stack is the final stack. Phaser would only be reconsidered if animation/visual polish becomes a hard blocker — not anticipated.
+
+---
+
+## Feature Roadmap
+
+Planned features grouped by rough workload tier. Each entry has tags for feasibility (✅ clean fit / ⚠️ feasible with friction / ❌ not feasible) and workload (🟢 quick win / 🟡 moderate / 🔴 heavy lift). Update this list as items ship or new features are added.
+
+### Quick Wins 🟢
+
+- **Category multiplier round-end animation** ✅ 🟢 — The category multiplier currently applies silently during round-end scoring. Needs dramatic reveal: badge flies to round total, pulses, count-up applies the multiplier visibly. CSS + `anim.sequence`, no system touches.
+- **Randomize turn order at game start** ✅ 🟢 — Currently `transitionFromLobbyToGame` sorts team arrays by UID for determinism. Replace with host-generated random permutation synced to Firestore. Keeps determinism across clients.
+- **Separate turn order for category selection** ✅ 🟢 — Add `categoryPlayerIndex` parallel to `playerIndex`, advanced independently. Small touch to `pickCategory()` and `advanceRound()`. Bonus: unlocks minigame-specific turn orders later.
+- **Pixel art for awards (lower priority)** ✅ 🟢 — Content addition only. Wire `<img>` tags into victory dialog award list items after assets exist.
+
+### Moderate 🟡
+
+- ~~**Rebrand Fast Money → Lightning Round**~~ → shipped as **Face-off Round** (see CLAUDE.md "Face-off Round" section). Two 1v1 battles with simultaneous input from random player pairs, 60s timer each, 2x multiplier on totals, always runs at the end of every game. Follow-up work: styling pass, voting-based player selection, polished transitions, Cloud Functions migration for fair same-answer race ordering.
+- **Turn timer** ✅ 🟡 — Per-turn countdown with visual indicator. Host-authoritative: host writes expiry timestamp, all clients display. On expiry, auto-strike or auto-submit. Touches `submitGuess` flow.
+- **Quests** ✅ 🟡 — Randomized per-round goals with small progress overlay (e.g. "First to 3 top-3 answers → 300pts bonus"). Needs: quest definition JSON (like `awards.json`), progress hooks in `submitGuess`, overlay UI, completion rewards. Moderate because it touches the gameplay loop.
+- **Minigame: Number is Correct** ✅ 🟡 — Price-is-Right style numeric question. Closest without going over wins. Simpler than Circle of Prizes: single question screen, one guess per player/team, reveal animation. Open question: numeric question bank source (new pool or tagged subset of existing).
+- **4-player mode** ⚠️ 🟡 — Each player is their own "team." Strikes pass control to next player, scoring becomes per-player. Current team-based structures (`teamScores[2]`, `teamTurn`, `teamPlayerUids[2][]`) need to generalize. Tradeoff: generalize the data model (cleaner, bigger upfront lift) or branch on a `mode` flag (faster, accumulates debt). Lean toward generalize.
+- **Prizes (items system)** ⚠️ 🟡 — **Captains shipped (unblocked)** (first-player-to-join = captain, per agreement). Then: prize pool JSON, end-of-round award flow (winner picks first, loser gets leftover), 3-slot team inventory, use/discard actions gated to captain, steal-a-prize right on steal-round wins. Effect types (bonus points, clear strikes, streak/mult boosts) each need a gameplay hook. Inventory system is contained; effects are the spread.
+- **Animated host + dog characters** ⚠️ 🟡 — Asset pipeline is the unknown. Start screen already has placeholder dog frame-swap. Need: reaction triggers (correct, strike, steal, round end, victory), frame sets per reaction, positioning. Friction: asset generation via Replicate-trained models for consistent sprite frames. Workload is mostly asset creation + hook wiring.
+
+### Heavy 🔴
+
+- **Minigame: Circle of Prizes** ✅ 🔴 — Wheel-of-Fortune final round clone. Pre-revealed letters, turn-based letter guessing, word guess to win. Brand new game mode: custom UI, letter-bank state, keyboard input, scoring rules. Mid-game event slot is fine architecturally; the game itself is a significant build.
+- **Real-time buzz-in round opener** ⚠️ 🔴 — Current Firestore sync has 200–500ms latency, so buzz races can't be decided by true network timing. **Agreed path: build host-authoritative first** (host picks winner by Firestore write receipt order — "good enough"), upgrade to Cloud Functions (server-authoritative, requires Blaze plan) once the game proves out. Needs new UI (buzzer state, simultaneous question reveal, buzz animation) and a new turn-start flow. Underlying buzz system is reusable for other minigame modes — builds compound value.
+- **Round timer (experimental)** ⚠️ 🔴 — Fundamentally restructures the round loop. Currently: one question per round, N rounds. Proposed: one 5-min round with boards cycling as they complete. Needs: round-level vs board-level state separation, question cycling logic, cross-board score aggregation, timer-driven round end. Big rewrite of the core loop. Keep experimental for now.
+- **Stat tracking for Google-authed accounts** ⚠️ 🔴 — Dependency: Google Sign-In must be actually enabled (currently wired but deferred). Then: per-user profile docs in Firestore, post-game stat aggregation, profile/history UI, privacy review. Gated to Google-authed users only; guests excluded. Heavy because it adds a whole new surface area (profiles) on top of enabling auth for real.
+
+### Needs to Land First (dependencies)
+
+- ~~**Captains feature**~~ — ✅ shipped. Prizes is now unblocked.
+
+### Suggested Working Order
+
+1. Quick wins (category multiplier animation, randomize turn order, separate category turn order) — immediate polish, near-zero risk
+2. ~~Lightning Round~~ → ✅ shipped as Face-off Round; styling iteration next
+3. ~~Captains feature~~ → ✅ shipped. Prizes now unblocked.
+4. Prizes — first major gameplay expansion (unblocked)
+5. Minigames (Number is Correct before Circle of Prizes — smaller build, lower risk)
+6. Everything else as appetite dictates
 
 ---
 
@@ -133,14 +178,12 @@ Between rounds, all players see a "Ready Up" button. First click starts a 10-sec
 
 ### What's Left (priority order)
 
-1. **Host submit button stays clickable during teammate's turn** — after host's scoring animation, `updateRoleUI` should disable the button but timing may not always work. Non-host side is confirmed working. Needs more testing.
-2. **Return-to-lobby turn desync (intermittent)** — one test showed host thinking it was player 4's turn while non-hosts showed player 1. Could not reproduce on subsequent tests. Debug logging added to `category-select` and `play-again` phase transitions to capture state if it recurs.
-3. **Awards accuracy** — `matchLog` player/team mapping may have issues. With host-authoritative model, host should compute awards and sync the results.
-4. **Speed boost bug** — spacebar fast-forward persists after round-ending steal. `deactivateSpeedBoost()` fires too early in the steal path.
-5. **Safari visual polish** — content-tv clipping issues. Deferring Safari pass until Chrome build is stable.
-6. **Lobby UX (future)** — Captain role for Blue team (first Blue player chronologically), team name editing in lobby, team color selection.
-7. **No disconnect handling** — host leaving mid-game strands all players. Lobby back button handles pre-game disconnect, but mid-game disconnects are unhandled.
-8. **Debug logging cleanup** — diagnostic `console.log` statements in `category-select` transition, `play-again` transition, and `host syncing category-select` should be removed once multiplayer flows are stable.
+1. **Return-to-lobby turn desync (intermittent)** — one test showed host thinking it was player 4's turn while non-hosts showed player 1. Could not reproduce on subsequent tests. Debug logging added to `category-select` and `play-again` phase transitions to capture state if it recurs. Monitoring.
+2. **Safari visual polish** — content-tv clipping issues. Deferred until feature development stabilizes — the content-tv aesthetic may change before a Safari pass is worthwhile.
+3. **Lobby UX (future)** — team name editing in lobby, team color selection.
+4. **No disconnect handling** — host leaving mid-game strands all players. Lobby back button handles pre-game disconnect, but mid-game disconnects are unhandled.
+5. **Debug logging cleanup** — diagnostic `console.log` statements in `category-select` transition, `play-again` transition, and `host syncing category-select` should be removed once multiplayer flows are stable.
+6. **Face-off UI polish** — cover plate clipping, countdown animation timing on non-host, turn-header/turn-subtext styling consistency, neutral color refinements. Functional but needs visual iteration.
 
 ### What Was Fixed (April 14 session)
 
@@ -156,7 +199,16 @@ Between rounds, all players see a "Ready Up" button. First click starts a 10-sec
 - **Non-host input focus** — `updateRoleUI` now focuses guess input when it's the player's turn, but only after `sq-zone-input` has finished its slide-in (prevents browser forcing offscreen element visible). `setupQuestionScreenForSpectator` focuses input at end of `anim.sequence`.
 - **Spectator tooltip access** — `pointer-events: none` moved from `.cat-row` to child `.btn-3d`/`.action-btn` elements via `.spectator-disabled` class, preserving hover for tooltips.
 
-### What Was Fixed (April 15 session)
+### What Was Fixed (April 15 session, part 2)
+
+- **Host submit button during teammate's turn** — confirmed fixed. `updateRoleUI` correctly disables the submit button after host's scoring animation completes.
+- **Speed boost non-host persistence** — `deactivateSpeedBoost()` was only called inside `submitGuess()` (host-only code path). Non-host clients go through `reconcileLocalState` → `flipTile().then()`, which cleared `_scoringInProgress` but never deactivated speed boost. Added `deactivateSpeedBoost()` to the non-host's `flipTile().then()` callback in reconcile.
+- **Victory dialog height** — increased from 60% to 72% of canvas height (+~80px) to better fit action buttons and vote status notices.
+- **Awards host-synced** — `computeAwards()` used `Math.random()` shuffle independently on each client, causing tied awards to resolve differently per device. Fix: host computes awards in `endGame()` and syncs the result array to Firestore (`data.awards`). Non-host reads `_syncedAwards` from reconcile instead of computing locally. `playVictoryAnimation(winnerIdx, awards)` now receives pre-computed awards. Local/single-player mode unchanged (computes locally as before).
+- **Awards tie-breaking simplified** — replaced two-pass system (which spread tied awards across players by preferring unawarded ones) with single-pass logic. On ties, candidates are filtered to the subset with the fewest existing awards this game, then randomized within that subset. A player who legitimately earns multiple awards outright can sweep.
+- **Captains feature (lobby + scoreboard)** — added first-player-to-join = captain per team, displayed in lobby with a gold "C" badge. Captain or host can reassign via per-teammate "↑C" button (only visible to same-team, same-authorized viewer). Captaincy locked at `lobbyStartGame` via new `teamCaptainUids` field in Firestore, read into local `teamCaptainUids` + `hostUid` at `transitionFromLobbyToGame`. In-game scoreboard shows C (gold) and H (gray) badges before player names in `updatePlayerPanels`. `getCurrentCaptainUid(team)` helper returns locked captain if still in `teamPlayerUids[team]`, else falls back to first remaining player — disconnect-proof even though disconnect detection itself isn't wired up yet. Tooltips added for all 4 badge types + the make-captain button.
+
+### What Was Fixed (April 15 session, part 1)
 
 #### Victory Dialog & Post-Game Flow
 - **Victory dialog redesigned** — "Dismiss" button replaced with toggle arrow (▼/▲) in header corner. Three action buttons in a CSS grid row: "Play Again" (consensus), "Return to Lobby" (timer), "Exit to Menu" (individual). Vote status text below buttons.
@@ -198,11 +250,90 @@ Between rounds, all players see a "Ready Up" button. First click starts a 10-sec
 ### Parallel Data Structures (multiplayer-specific)
 
 - **`teamPlayerUids = [[], []]`** — parallel to `teamPlayers`, stores Firebase UIDs. Set by `transitionFromLobbyToGame()` from host-written `data.teamPlayers` arrays (sorted by UID for determinism).
+- **`teamCaptainUids = [null, null]`** — locked captain UID per team at `transitionFromLobbyToGame`. Host writes `teamCaptainUids` to Firestore alongside `teamPlayers`. Used by `getCurrentCaptainUid(team)` helper which falls back to `teamPlayerUids[team][0]` if the locked captain is no longer in the roster (disconnect fallback).
+- **`hostUid`** — synced from Firestore game doc at game start so all clients can render the H badge. Independent of the local `isHost` boolean.
 - **`_lobbyStartingTeam`** — host-determined starting team, passed through Firestore so all clients agree.
 - **`_syncedCategoryPicks`** — `{ picks, hasSurvey, multipliers, questions }` object synced by the host. Includes pre-selected questions per category.
 - **`_preSelectedQuestions`** — `{ category: { question, answers, _poolIdx } }` local cache. Host generates at category time; non-host clients receive via synced `categoryPicks.questions`.
 - **`_prevSnapshot`** — last Firestore snapshot data, used by `reconcileLocalState` for diffing.
 - **`_readyPlayersMap`** — `{ uid: true }` map tracking ready-up clicks. `_readyCountdownEnd` / `_readyCountdownInterval` for the 10-second timer.
+- **`_syncedAwards`** — host-computed awards array synced in `endGame()`. Non-host reads this in reconcile and renders via `renderVictoryAwards()` — arrives as a separate snapshot after the round-result sync, so non-host's victory dialog shows empty awards briefly then populates.
+
+### Captains Feature
+
+First player to join each team is captain by default. Players have `isCaptain: boolean` in the Firestore `players` map. Rules:
+
+- **Create game** — creator gets `isCaptain: true`
+- **Join game** — new player gets captain if their auto-assigned team has no current captain
+- **`joinTeam(teamIdx)`** — on team change, transfers captaincy: if leaver was captain, next earliest `joinedAt` on old team inherits; if new team has no captain, mover becomes captain
+- **`leaveLobby()`** — if leaver is captain, next earliest teammate inherits before the player entry is deleted
+- **`reassignCaptain(newCaptainUid)`** — lobby-only, callable by current team captain or host. Batched `updateDoc` flips `isCaptain` on old/new captains
+- **`lobbyStartGame()`** — locks captain UIDs into Firestore `teamCaptainUids: [red, blue]` alongside `teamPlayers`
+- **`transitionFromLobbyToGame()`** — reads `teamCaptainUids` and `hostUid` from synced data into locals
+- **`getCurrentCaptainUid(team)`** — returns locked captain if still in `teamPlayerUids[team]`, else `teamPlayerUids[team][0]` (disconnect fallback; dormant until disconnect detection is wired up)
+
+UI: gold "C" badge in lobby next to captain name; small "↑C" button for non-captain teammates visible only to captain/host. In-game scoreboard shows C (gold) and H (gray) badges inline before the player name in `updatePlayerPanels`'s `itemHtml` closure. Tooltips for all badges + make-captain button in `tooltips.csv`. Captains are prerequisite for the Prizes system.
+
+### Face-off Round
+
+A fixed additional round that runs at the end of every game before the victory dialog. Replaces the old Fast Money concept as the primary endgame feature. Two parallel 1v1 battles, each 60s, with simultaneous input from the two selected players. Scores get a flat 2x multiplier and fold into `teamScores[]` before the winner is determined.
+
+**Flow**:
+1. Final normal round ends → `endRound()` detects `isLastRound && !faceoffState.completed` and schedules `enterFaceoffRound()` after a 5s pause (scaled by gameSpeed)
+2. Host picks two unused Survey questions and two random player pairs (one per battle per team)
+3. Host syncs `faceoffState` + `phase: 'faceoff'`; all clients call `setupFaceoffUI()` + `startBattle(0)`
+4. Battle 1 plays out on the left; Battle 2 plays out on the right afterwards
+5. On all-revealed or timer expiry, `endBattle()` reveals remaining tiles as missed, advances to next battle or calls `endFaceoffRound()`
+6. `endFaceoffRound()` applies 2x, folds into teamScores, triggers normal `endGameByRounds()` flow for victory dialog + awards
+
+**State**: `faceoffState` object near the multiplayer state block. Reset by `resetFaceoffState()` called from `startGame`, `startGameFromLobby`, `resetGame`, and `resetGameUI`. Includes `active`, `completed`, `currentBattle`, `questions[2]`, `playerUids[2][2]`, `playerNames[2][2]`, `revealed[2][]`, `revealedData[2][]`, `battleScores[2][2]`, `battleExpiry[2]`, `battleGuesses[2][]`, `timerInterval`.
+
+**Round counter**: `setupFaceoffUI()` swaps `#round-label` text from "Round" to "FACEOFF" and hides `#round-info`. Both are restored in `resetGame` and `resetGameUI`.
+
+**DOM**: `#faceoff-container` is a flex row with two `#faceoff-battle-{0,1}` children, each containing `.faceoff-question`, `.faceoff-timer`, `.faceoff-board`, `.faceoff-battle-total`. Hidden by default (`display: none`), shown via `setupFaceoffUI()` which also hides `#board-wrapper` and `#content-tv`.
+
+**Input routing**: `submitGuess()` has an early branch — if `faceoffState.active`, routes to `submitFaceoffGuess()` which forks by client:
+- Local / host: calls `evaluateFaceoffGuess(guess, myUid)` directly
+- Non-host multiplayer: writes `pendingFaceoffActions.${myUid} = { guess, clientTs, battleIdx }` — a map (not single field) so simultaneous submissions don't overwrite each other. Host picks them up in `reconcileLocalState`, sorts by `clientTs`, processes each and clears via `deleteField`.
+
+**Latency caveat**: host has a ~300ms advantage on same-answer races because its submissions don't round-trip. Known and accepted. The `clientTs` field is already captured so the eventual Cloud Functions migration can use it for fair server-authoritative ordering.
+
+**Timer**: host writes `battleExpiry[currentBattle]` as a wall-clock ms timestamp. All clients run a local 250ms-tick countdown reading the synced expiry. On expiry, only the host calls `endBattle()` (authoritative). Warning class `.warning` applies at ≤10s remaining.
+
+**Player selection**: random each time. `enterFaceoffRound()` shuffles `teamPlayerUids[team]` (or `teamPlayers[team]` in local mode) and picks the first two. 1-player teams use the same player for both battles; 3+ player teams leave positions 2+ out of the face-off. For voting-based selection later, swap the shuffle logic at one call site.
+
+**Local mode attribution**: local mode has only one input field, so `evaluateFaceoffGuess` uses a `_localTurnToggle` to alternate which team gets credit. This is imperfect and explicitly acknowledged as a placeholder — multiplayer is the primary test path.
+
+**Fast Money legacy**: the old Fast Money code (`fm` state object, `startFastMoney`, `fastmoney_questions.json`, `#fast-money` DOM) is still on disk but orphaned. The "Fast Money Round" button has been removed from `endGame()`. Nothing calls `startFastMoney` anymore. Safe to delete entirely in a future cleanup pass.
+
+### Firestore State Cleanup Across Games
+
+When the same Firestore document is reused across games (play-again or return-to-lobby → new game), `updateDoc` merges fields rather than replacing, so stale game state from the previous game persists unless explicitly cleared. Two code paths handle this:
+
+- **`executePlayAgain`** — syncs `faceoffState: null, pendingFaceoffActions: null, awards: null` alongside the play-again payload (scores, round number, etc.)
+- **`lobbyStartGame`** — when starting a new game from lobby, comprehensively clears ALL game-state fields: `faceoffState`, `pendingFaceoffActions`, `awards`, `gameEnded`, `readyPlayers`, `readyCountdown`, `categoryPicks`, `pendingAction`, `currentQuestion`, `revealed`, `revealedData`, `matchLog`, `guessHistory`, `lastResult`, `roundResultMsg`, `roundWinner`, `roundPhaseText`, `phase`, `roundNumber`, `teamScores`, `strikes`, `currentStreak`, `answerMultiplier`, `roundScore`, `stealPhase`, `categoryMultiplier`, `playerIndex`, `usedQuestions`
+
+This prevents stale fields from a previous game (especially `faceoffState.completed` and `categoryPicks`) from bleeding into the new game's reconcile snapshots.
+
+### Lobby UI Updates (April 15–16 sessions)
+
+- **Player name alignment**: names left-justified (`.lobby-player-name` with `flex: 1; text-align: left`), badges right-anchored via flex layout
+- **Name truncation**: `.lobby-player-name` uses `text-overflow: ellipsis; overflow: hidden; white-space: nowrap` — badges stay full-size while long names truncate
+- **Badges**: HOST (gray), CAPTAIN (gold), MAKE CAPTAIN (gold border button) — all with `data-tip-placement="below"` and full-word labels
+- **Game code**: limited to characters `1`, `2`, `3` for dev testing (restore full charset before shipping). 1-character length (restore to 4-5 for production).
+- **Default rounds**: online games default to 2 rounds (`maxRounds: 2` in `submitCreateGame`)
+
+### Tooltip Positioning Improvements
+
+The tooltip arrow now tracks the true target center instead of always pointing at `left: 50%` of the tooltip body:
+
+- **CSS variables**: `--tip-arrow-x` (for above/below placements) and `--tip-arrow-y` (for left/right) replace the hardcoded `left: 50%` / `top: 50%` in `#tooltip::after` rules
+- **JS calculation**: after viewport-edge clamping, `showTooltip` computes the arrow's position as `targetCenterX - tooltipLeft` (or Y equivalent), clamped to 12px padding from tooltip edges
+- **Auto-flip**: forced `data-tip-placement="below"` auto-flips to `above` if the target is in the bottom 20% of the canvas; `above` flips to `below` if in the top 20%
+
+### Dev Mode Question Pool
+
+`computeDevModeQuestions()` limits the available question pool per category. Increased from 3 to **10** per category to support multiple consecutive games with face-off (each game uses 2 normal questions + 2 face-off Survey questions from the pool). `usedQuestions` persists across play-again to prevent repeats within a session.
 
 ---
 
@@ -1611,15 +1742,19 @@ Player performance awards computed from `matchLog` data and displayed in the vic
 
 `parentCat(cat)` maps raw category strings to parent categories using the same logic as `getCategoryClass()`: Science, Geography, Pop Culture, Sports, Survey.
 
-### Tie Resolution — Two-Pass System
+### Tie Resolution — Single-Pass, Least-Awarded Preference
 
-**Pass 1** — iterate shuffled award definitions. If a compute function returns exactly 1 candidate, assign immediately and add the player to the `awarded` set. If multiple candidates (tie), defer.
+Single pass over shuffled award definitions. For each award:
+1. Compute function returns candidates
+2. **Single candidate:** assigned immediately
+3. **Multiple tied candidates:** filter to the subset with the fewest awards received so far this game, then randomize within that subset
 
-**Pass 2** — for each deferred tie:
-1. Prefer candidates NOT already in the `awarded` set (spread awards across players)
-2. If all tied candidates already have awards (or none do), pick randomly
+Tracked via `awardCounts` map (player name → count) incremented after each assignment. A player who legitimately earns multiple awards outright can sweep — the tie-break only applies when the compute function itself returns more than one candidate. Definition order is shuffled so that when more than 6 awards are eligible, which 6 get assigned is randomized.
 
-This ensures maximum award diversity across players.
+Examples:
+- A/B/C tie for an award. All have 0 existing awards → 1/3 chance each
+- A/B/C tie. A has 2 awards, B and C have 1 each → B and C split 50/50, A excluded
+- A/B/C tie. A has 2, B has 1, C has 0 → C wins 100% of the time
 
 ### Adding New Awards
 

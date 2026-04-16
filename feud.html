@@ -8509,9 +8509,14 @@ document.addEventListener('keydown', e => {
     function scribbleDetermineRole(sessionIdx) {
       // In a 2v2, session 0 = players at index 0 draw, index 1 guess.
       // Session 1 = players at index 1 draw, index 0 guess.
-      // For auto-scribbler testing, always be the drawer.
-      // TODO: In real multiplayer, check myUid against teamPlayerUids[myTeam][sessionIdx]
-      return "drawer";
+      if (!isMultiplayer || !myUid) return "drawer"; // local/fallback
+
+      // Check if myUid matches either team's drawer for this session
+      for (let team = 0; team < 2; team++) {
+        const drawIdx = sessionIdx % (teamPlayerUids[team]?.length || 1);
+        if (teamPlayerUids[team]?.[drawIdx] === myUid) return "drawer";
+      }
+      return "guesser";
     }
 
     function enterScribbleRound() {

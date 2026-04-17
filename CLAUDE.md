@@ -132,13 +132,48 @@ Net LOC goes down; N×N coupling between modules goes away.
 
 Several entrance/exit animations currently assume specific DOM adjacency or sidebar geometry — content-tv's tv-on, the typewriter, cat-label marquee, sq-zone-input slide-up, board-wrapper slide-in from above. After reparenting, these need a pass to make sure they still feel right in their new container context. Expected to be minor (keyframe origins, clipping parents) but needs once-over.
 
+### 7. Phase reconcile robustness (spotty-network recovery)
+
+Firestore's `onSnapshot` only delivers the **latest** document state, not every intermediate transition. A client whose write aborts or whose tab is momentarily starved of CPU can miss a snapshot and arrive at the next phase mid-flow. Most of our reconcile handlers assume linear progression (`phase N-1 → N`) and gate on local state — so when a client catches up from phase N-2 to phase N, the handler for N silently no-ops because the guard fails, and the client gets stuck.
+
+**Canonical symptom (2026-04-17, scribble):** Player 3's Firestore write aborted during `scribbleStartWordSelection`'s auto-pick, they missed `scribble-drawing-start`, and the subsequent `scribble-session-end` handler rejected because `scribbleState.phase !== "drawing"`. Their local scribble flow never completed — `scribbleFinishRound → handleModuleComplete` never ran — so no Ready Up button ever appeared. Input-area was stuck on the word-select "disabled" text. A targeted safety net was added in the `round-result` handler to force the Ready Up UI when `lastResult.outcome === 'module-complete'` and input-area isn't already in action mode. That's a patch, not a cure.
+
+**The real fix is design-level.** Every reconcile `case '<phase>':` handler should treat itself as "bring the client to this phase's canonical state" — idempotent, no assumption about prior local state. Replace the current pattern of:
+
+```js
+case 'scribble-session-end':
+  if (scribbleState.phase === "drawing" || scribbleState.phase === "countdown") {
+    scribbleApplyEndDrawingSession(...);
+  }
+```
+
+…with handlers that either (a) fast-forward through skipped intermediate steps using fields the snapshot still carries (e.g. `scribbleSessionWords` persists across phases), or (b) render the target phase's UI directly regardless of local state.
+
+**Dirtiest offenders (audit targets):**
+
+- **Scribble:** every handler gates on `scribbleState.phase`. Biggest desync surface. Word-select, drawing-start, session-end, summary all need review.
+- **Faceoff:** entry/exit gates on `faceoffState.active` transitions. Missing `faceoff` snapshot leaves non-host on ranked-round UI with stale scoreboard; missing `round-result` after face-off end leaves non-host with face-off container still showing.
+- **Steal-chance:** handler assumes client saw `gameplay` first. Probably fine (gameplay state is idempotent) but worth verifying.
+- **Ready-up countdown:** `readyCountdown` start is a timestamp, but the countdown display is driven by a local interval started in reconcile. A client that joins mid-countdown starts counting from the wrong point.
+- **Category-select re-entry on play-again:** already has specific handling; check it still holds up under missed snapshots.
+
+**Non-goals:**
+- Don't try to replay missed animations. Recovery is about consistent state, not visual continuity.
+- Don't add a polling fallback. Snapshot delivery is reliable once the connection re-stabilizes; the gap is handler tolerance, not delivery.
+
+**Workload:** medium — mechanical, but needs a careful pass per handler. Scribble is the biggest chunk. Faceoff is next. The others are mostly verification.
+
+**Why this matters:** distinguishes "game that can crash on you at any moment" from "game that feels stable." The bugs this prevents are the worst kind for users — no obvious cause, can't reproduce on demand, makes the game feel broken.
+
 ### Execution order and scope
 
 - **Step 1:** ✅ Done — thinking/documentation only, captured above.
 - **Steps 2+3:** ✅ Done (2026-04-17). Sidebar is evergreen-only (`#phase-indicator` + `#sq-zone-input`). `#module-canvas` introduced in `#zone-board-main` holding `#category-pills-area`, `#content-tv`, `#round-type-picker-container`, `#board-wrapper`, `#faceoff-container`, `#scribble-container`. `#category-pills-area` is `position: absolute` inside the canvas so it doesn't displace sibling module children. Verified: all modules complete end-to-end, faceoff runs, play-again + return-to-lobby flows are clean. Known follow-up: `#content-tv` and `#board-wrapper` need a sizing pass for High Five/Survey inside the new canvas — they currently overlap/overflow because their dimensions were tuned for the sidebar, not the main zone.
-- **Step 4:** medium. Writing the cleanup function is small; the value is deleting the code it replaces. Observed symptoms (catalogued above) are the regression checklist.
-- **Step 5:** small-to-medium. Mechanical code removal once 2–4 are stable.
+- **Step 4:** ✅ Done (2026-04-17). `resetModuleCanvas()` added near `advanceRound`; wired into `advanceRound` between exit animations and `updateTurn`, and into non-host `category-select` reconcile path. Verified flows 1–4 (ranked×3, ranked→scribble→ranked, scribble→scribble, any→faceoff non-host). Flow 5 (input-area drift) deferred to Step 5 — currently masked by a `margin-top: 0` workaround on `#sq-zone-input`; the real verification happens when that workaround is removed.
+- **Step 4b:** ✅ Done (2026-04-17). `resetEvergreenRegions()` added next to `resetModuleCanvas`; called at the tail of `resetGameUI()` (play-again, return-to-lobby, lobby→game) and near the top of `resetGame()` (exit-to-menu). Clears inline `transform` / `margin` / `background` + stale animation classes on `#phase-indicator`, `#sq-zone-input`, `#input-area`, and `#scoreboard` so game-boundary entry animations start from a clean baseline. Defensive — no visible regressions on flows that already worked, but removes the accumulation class of bugs (e.g. "evergreens clipped above canvas on play-again after faceoff").
+- **Step 5:** small-to-medium. Mechanical code removal once 2–4 are stable. **Must include:** remove the `margin-top: 0` workaround on `#sq-zone-input` and re-run flow 5 from Step 4's verification list. If drift returns, the root cause is still in `setInputAreaMode` / `showInputArea` / `sq-zone-content` visibility manipulations — fix before closing Step 5.
 - **Step 6:** small polish after structure settles.
+- **Step 7:** medium. Independent of 4–6 — can be done any time after steps 2+3 landed. Scribble handlers are the highest-value target.
 
 ### Guiding principle — phase-indicator as reference design
 
@@ -266,6 +301,17 @@ Between rounds, all players see a "Ready Up" button. First click starts a 10-sec
 4. **No disconnect handling** — host leaving mid-game strands all players. Lobby back button handles pre-game disconnect, but mid-game disconnects are unhandled.
 5. **Debug logging cleanup** — diagnostic `console.log` statements in `category-select` transition, `play-again` transition, and `host syncing category-select` should be removed once multiplayer flows are stable.
 6. **Face-off UI polish** — cover plate clipping, countdown animation timing on non-host, turn-header/turn-subtext styling consistency, neutral color refinements. Functional but needs visual iteration.
+
+### What Was Fixed (April 17 session)
+
+- **Scribble word-select short-circuit on host-last-to-pick** — host's own `syncState({scribbleWordPicks.${myUid}: pick})` is skipped by the snapshot listener (self-echo), so `scribbleState._wordPicks[hostUid]` was never populated. When host was the LAST drawer to pick, `scribbleHostMaybeStartEarly` never saw both picks and the 10s timer ran full duration. Fixed by mirroring the host's own pick into `_wordPicks` locally at the drawer click handler + the auto-pick countdown path. Also added session-start reset: `_wordPicks = {}` at the top of `scribbleStartWordSelection` so stale picks from a prior session don't false-positive.
+- **Scribble phase indicator stuck on "pick a round type"** — `enterScribbleRound` now calls `setPhaseText("gameplay", "LET'S SCRIBBLE!")` + `setPhase("gameplay")` to override the leftover round-type-select text for the duration of the round.
+- **Scribble word bank CSV wired up** — `SCRIBBLE_WORD_BANK` now loads from `scribblewords.csv` at page load (50 easy / 50 medium / 50 hard). Uses the existing `parseCSVLine` helper. Hardcoded seed arrays remain as offline fallback.
+- **Input-area active during round-type-select** — `updateRoleUI` was clobbering `setInputAreaMode({mode:'disabled'})`'s state by re-enabling the guess input based on whose turn it was. Added a `moduleOwnsInput` guard: when `#input-area` has `data-ia-mode` of `'disabled'` or `'action'`, `updateRoleUI` no longer touches the input/submit button. Matches the existing subtext-skip pattern.
+- **Module-complete Ready Up safety net** — in the `round-result` reconcile handler, if `lastResult.outcome === 'module-complete'` and `#input-area` isn't already in `'action'` mode, force-apply `setInputAreaMode('action', {Ready Up})` using the synced `roundResultMsg`. Recovery path for clients that missed intermediate scribble phase snapshots (e.g. via transient Firestore write failures) — without this, the module's own completion path never runs locally and the player is stuck on the mid-module input-area text. Idempotent; safe when the module's path also ran.
+- **Pre-Blaze Cleanup Refactor Step 4 landed** — `resetModuleCanvas()` added (feud.html). See "Pre-Blaze Cleanup Refactor" section above for details.
+- **Pre-Blaze Cleanup Refactor Step 4b landed** — `resetEvergreenRegions()` added (feud.html). Defensive baseline for game-boundary transitions. See same section.
+- **Active diagnostic log** — `console.log('[endRound]', {...})` at `endRound`'s entry. Temporary; logs `_lastRoundWasModule`, `iaMode`, `isHost`, `roundNumber`, etc. Planted to diagnose the "Ready for Face-off button only shown to host after module×3→feud sequence" bug (on radar). Remove once confirmed + fixed.
 
 ### What Was Fixed (April 14 session)
 

@@ -1508,7 +1508,7 @@
       padding: 0 8px 0 0;
     }
     /* Bottom-anchor the input home base inside the sidebar */
-    #sq-zone-input   { margin-top: auto; flex-shrink: 0; }
+    #sq-zone-input   { flex-shrink: 0; }
 
     /* Content TV — 300×300 "screen" that wraps cat-label + question-box */
     #content-tv {
@@ -7151,6 +7151,7 @@ document.addEventListener('keydown', e => {
           // just needs to swap the UI state. Attempting async exit animations
           // was causing the setup to hang when animations didn't complete.
           _scoringInProgress = false;
+          resetModuleCanvas();
           initRoundState();
           setupFaceoffUI();
           startBattle(faceoffState.currentBattle);
@@ -7295,7 +7296,11 @@ document.addEventListener('keydown', e => {
       }
 
       // ── Ready-up consensus ──
-      if (data.readyPlayers !== undefined) {
+      // Skip readyPlayers updates while advancing: late-arriving pre-advance
+      // snapshots can repopulate _readyPlayersMap and fire a spurious second
+      // checkReadyAdvance once _advancingRound clears. See advanceRound's
+      // finally block for the companion delayed reset.
+      if (data.readyPlayers !== undefined && !_advancingRound) {
         const newMap = data.readyPlayers || {};
         const changed = JSON.stringify(newMap) !== JSON.stringify(_readyPlayersMap);
         if (changed) {
@@ -7388,13 +7393,11 @@ document.addEventListener('keydown', e => {
               _bw.style.transform = '';
               _bw.classList.add("offscreen");
             }
-            // Hide scribble container if it's still lingering from a previous round
-            const sc = document.getElementById("scribble-container");
-            if (sc) sc.style.display = "none";
             (async () => {
               if (_contentTv && !_contentTv.classList.contains("ct-hidden")) {
                 await anim.play(_contentTv, "slide-out-left");
               }
+              resetModuleCanvas();
               updateTurn();
               initRoundState();
               document.getElementById("roundCounter").textContent = roundNumber;
@@ -7489,6 +7492,7 @@ document.addEventListener('keydown', e => {
                   }
                 },
               ]);
+              resetModuleCanvas();
               updateTurn();
               initRoundState();
               document.getElementById("roundCounter").textContent = roundNumber;
@@ -7563,6 +7567,31 @@ document.addEventListener('keydown', e => {
             }
             document.getElementById("turn-input-box").style.display = "";
             endRound(data.roundResultMsg, data.roundWinner);
+
+            // Module-complete safety net: if the local module's completion path
+            // never ran (e.g. client missed scribble-drawing-start or
+            // scribble-session-end due to transient Firestore errors), then
+            // handleModuleComplete's setInputAreaMode('action') — which is the
+            // source of the Ready Up button — never fired. Players get stuck
+            // on the module's mid-flow input-area text with no way to advance.
+            // Force-apply the action-mode Ready Up here using the synced
+            // round-result message. Idempotent: setInputAreaMode toggles
+            // canonical rows, so this is safe even when the module's path
+            // already ran locally.
+            if (data.lastResult?.outcome === 'module-complete') {
+              const ia2 = document.getElementById('input-area');
+              if (ia2 && ia2.getAttribute('data-ia-mode') !== 'action') {
+                showInputArea();
+                setInputAreaMode({
+                  mode: 'action',
+                  header: data.roundResultMsg,
+                  subtext: 'Ready up to continue',
+                  buttonText: 'Ready Up',
+                  onButtonClick: readyUp,
+                  teamColor: data.roundWinner ?? 0,
+                });
+              }
+            }
           }
           break;
         case 'faceoff':
@@ -7664,6 +7693,13 @@ document.addEventListener('keydown', e => {
       // Content-tv + board-wrapper are revealed by their entry animations below.
       const _pills = document.getElementById("category-pills-area");
       if (_pills) _pills.style.display = "none";
+
+      // Restore display on canvas slots the ranked flow needs visible.
+      // Canonical state (resetModuleCanvas) leaves these display:none.
+      const _ctvRestore = document.getElementById("content-tv");
+      if (_ctvRestore) _ctvRestore.style.display = "";
+      const _bwRestore = document.getElementById("board-wrapper");
+      if (_bwRestore) _bwRestore.style.display = "";
 
       // Phase indicator
       setPhaseText("gameplay", `${teamNames[teamTurn]} has the board`);
@@ -7774,7 +7810,15 @@ document.addEventListener('keydown', e => {
       const inputArea = document.getElementById('input-area');
       const turnSubtext = document.getElementById('turn-subtext');
 
-      if (guessInput) {
+      // When a module or the orchestrator has set the input-area to
+      // 'disabled' or 'action' (round-type picker, scribble states,
+      // Ready Up), don't re-enable input/submit from the feud turn logic.
+      // Same principle as the subtext skip below — data-ia-mode is the
+      // single source of truth for module-owned states.
+      const iaMode = inputArea?.getAttribute('data-ia-mode');
+      const moduleOwnsInput = iaMode === 'disabled' || iaMode === 'action';
+
+      if (guessInput && !moduleOwnsInput) {
         // Don't re-enable input if a scoring animation is in progress —
         // the flipTile .then() callback will re-enable when it completes
         guessInput.disabled = _scoringInProgress ? true : !isActive;
@@ -7788,7 +7832,7 @@ document.addEventListener('keydown', e => {
       // Hide submit button for spectators
       // But NOT during round-result phase — all players need Ready Up / Reveal All
       const inRoundResult = document.getElementById('phase-indicator')?.dataset.phase === 'round-result';
-      if (!inRoundResult) {
+      if (!inRoundResult && !moduleOwnsInput) {
         const submitBtns = inputArea?.querySelectorAll('.action-btn');
         if (submitBtns) {
           submitBtns.forEach(btn => {
@@ -8417,18 +8461,10 @@ document.addEventListener('keydown', e => {
       const catMultEl = document.getElementById("cat-mult-indicator");
       if (catMultEl) catMultEl.style.display = "none";
 
-      // Clean up category header elements from previous round
-      const oldCatLabel = document.getElementById("cat-label");
-      if (oldCatLabel) oldCatLabel.remove();
-      document.querySelectorAll(".board-footer > .cat-mult-badge").forEach(el => el.remove());
-      // Reset content-tv + question-box + input-area to hidden states
-      // so the entry sequence replays cleanly next round
-      const ctv = document.getElementById("content-tv");
-      if (ctv) {
-        ctv.classList.remove("slide-out-left", "tv-on");
-        ctv.classList.add("ct-hidden");
-      }
-      // question-box is always visible inside content-tv — no fade classes needed
+      // Canvas state (content-tv, cat-label, board-footer badges) is reset
+      // by resetModuleCanvas in advanceRound. initRoundState can also fire
+      // from the getNewQuestion path though, so keep the sq-zone-input
+      // reset (it's module-input feud entry expects to animate from below).
       const szi = document.getElementById("sq-zone-input");
       if (szi) {
         szi.classList.remove("input-enter", "input-exit");
@@ -8449,6 +8485,171 @@ document.addEventListener('keydown', e => {
           ${make3dBtn('Submit', 'submitGuess()', '', 'submit-guess')}
         </div>`;
       updateBoard(); updateScores(); updateStrikes(); updateStreakDisplay(); updateHistory(); updateTurn();
+    }
+
+    // Restores #module-canvas to a canonical empty baseline between modules.
+    // Called once per round transition inside advanceRound, after the exit
+    // animations finish and before the next module sets itself up. Each
+    // module can then assume a clean slate and no longer needs its own
+    // defensive cleanup matrix at entry.
+    //
+    // Scope is tight: module-canvas children only. Evergreens
+    // (#phase-indicator, #sq-zone-input, #scoreboard) only get stale animation
+    // classes stripped — no transform reset, no re-entry. Game-boundary
+    // transitions (play-again, return-to-lobby, exit-to-menu, new-game-start)
+    // are a separate concern (Step 4b).
+    //
+    // Idempotent — safe to call repeatedly.
+    function resetModuleCanvas() {
+      // 1. Module-canvas children → canonical empty state
+
+      // Round-type picker
+      const picker = document.getElementById("round-type-picker-container");
+      if (picker) {
+        picker.style.display = "none";
+        picker.innerHTML = "";
+      }
+
+      // Board-wrapper: hidden in flex flow (display:none), off-canvas via class
+      const bw = document.getElementById("board-wrapper");
+      if (bw) {
+        bw.style.display = "none";
+        bw.style.transform = "";
+        bw.classList.remove("slide-in", "board-ready");
+        bw.classList.add("offscreen");
+      }
+
+      // Faceoff container
+      const foc = document.getElementById("faceoff-container");
+      if (foc) {
+        foc.style.display = "none";
+        foc.classList.remove("active");
+      }
+
+      // Scribble container + sub-panels. Wipe sub-panels so scribble's next
+      // entry starts from a known sub-state — don't trust the module's own
+      // internal state machine for inter-module cleanliness.
+      const scribble = document.getElementById("scribble-container");
+      if (scribble) scribble.style.display = "none";
+      ["scribble-word-select", "scribble-game", "scribble-summary"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "none";
+      });
+
+      // Content-TV
+      const ctv = document.getElementById("content-tv");
+      if (ctv) {
+        ctv.style.display = "none";
+        ctv.style.opacity = "";
+        ctv.style.transform = "";
+        ctv.classList.remove("tv-on", "slide-out-left");
+        ctv.classList.add("ct-hidden");
+      }
+
+      // Category pills area (absolute-positioned, but hide for certainty)
+      const pills = document.getElementById("category-pills-area");
+      if (pills) {
+        pills.style.display = "none";
+        pills.style.animationDelay = "";
+        pills.classList.remove("pills-slide-in");
+        pills.innerHTML = "";
+      }
+
+      // 2. Module-scoped DOM children injected at runtime → removed
+
+      // #cat-label (inserted into #content-tv by pickCategory)
+      const catLabel = document.getElementById("cat-label");
+      if (catLabel) catLabel.remove();
+
+      // Category multiplier badges dangling in the board footer
+      document.querySelectorAll(".board-footer > .cat-mult-badge.board-badge").forEach(el => el.remove());
+
+      // Scribble solved overlays (belt-and-braces — container already hidden)
+      document.querySelectorAll(".scribble-solved-overlay").forEach(el => el.remove());
+
+      // 3. Evergreen animation-class hygiene — strip stale classes only
+
+      // #phase-indicator: clear .ph-exiting from any child .ph-span. Do NOT
+      // touch data-phase (orchestrator owns that) or slide-in/offscreen (those
+      // are game-boundary concerns).
+      document.querySelectorAll("#phase-indicator .ph-span.ph-exiting").forEach(el => {
+        el.classList.remove("ph-exiting");
+      });
+
+      // #sq-zone-input: clear .input-exit. Leave .input-enter / .offscreen-below
+      // alone — showInputArea + setInputAreaMode own home-base visibility.
+      const szi = document.getElementById("sq-zone-input");
+      if (szi) szi.classList.remove("input-exit");
+    }
+
+    // Step 4b: Evergreen reset between games.
+    //
+    // Restores #phase-indicator, #sq-zone-input (+ its #input-area parent),
+    // and #scoreboard to canonical pre-game state at game-boundary
+    // transitions (play-again, return-to-lobby, exit-to-menu, lobby→game).
+    // Clears accumulated inline transform/margin/background and stale
+    // animation-state classes so the new game's entry animations layer on
+    // clean baselines rather than inheriting residual state from the
+    // previous game (observed symptom: evergreens clipped above canvas on
+    // play-again after face-off).
+    //
+    // Scope: evergreens only. Module-canvas children are resetModuleCanvas's
+    // job. Input-area visibility/mode during gameplay is setInputAreaMode +
+    // showInputArea. This helper is for game-boundary seams only.
+    //
+    // Idempotent — safe to call repeatedly. Baseline state for each element
+    // matches what the HTML skeleton declares at page load.
+    function resetEvergreenRegions() {
+      // Phase indicator: baseline = .offscreen (above canvas), no data-phase,
+      // no team color, no glow. showPhaseIndicator() re-adds .slide-in.
+      const pi = document.getElementById("phase-indicator");
+      if (pi) {
+        pi.style.transform = "";
+        pi.style.margin = "";
+        pi.style.marginTop = "";
+        pi.style.marginBottom = "";
+        pi.style.background = "";
+        pi.classList.remove("round-glow", "slide-in", "team-red", "team-blue");
+        pi.removeAttribute("data-phase");
+        pi.querySelectorAll(".ph-span.ph-exiting").forEach(el => el.classList.remove("ph-exiting"));
+        if (!pi.classList.contains("offscreen")) pi.classList.add("offscreen");
+      }
+
+      // Sq-zone-input: baseline = .offscreen-below (below canvas), no
+      // enter/exit classes. showInputArea() re-enters.
+      const szi = document.getElementById("sq-zone-input");
+      if (szi) {
+        szi.style.transform = "";
+        szi.style.margin = "";
+        szi.style.marginTop = "";
+        szi.style.marginBottom = "";
+        szi.classList.remove("input-enter", "input-exit");
+        if (!szi.classList.contains("offscreen-below")) szi.classList.add("offscreen-below");
+      }
+
+      // Input-area (home-base parent): strip inline background that face-off
+      // may have set + residual transform/margin. Team-color classes cleared;
+      // updateTurn() on new-game start sets the correct one. Baseline = hidden.
+      const ia = document.getElementById("input-area");
+      if (ia) {
+        ia.style.background = "";
+        ia.style.transform = "";
+        ia.style.margin = "";
+        ia.classList.remove("team-red", "team-blue");
+        if (!ia.classList.contains("hidden")) ia.classList.add("hidden");
+      }
+
+      // Scoreboard: baseline = .offscreen (above canvas). New-game entry
+      // (startGameFromLobby / startGame) re-adds .slide-in to drop it in.
+      const sb = document.getElementById("scoreboard");
+      if (sb) {
+        sb.style.transform = "";
+        sb.style.margin = "";
+        sb.style.marginTop = "";
+        sb.style.marginBottom = "";
+        sb.classList.remove("slide-in");
+        if (!sb.classList.contains("offscreen")) sb.classList.add("offscreen");
+      }
     }
 
     async function advanceRound() {
@@ -8487,11 +8688,6 @@ document.addEventListener('keydown', e => {
       // wrongly suppressing feud's endRound UI. Clear it here for certainty.
       window._lastRoundWasModule = false;
 
-      // Hide any lingering module containers (scribble summary stays up during
-      // ready-up, gets hidden here when the next round kicks off).
-      const sc = document.getElementById("scribble-container");
-      if (sc) sc.style.display = "none";
-
       // Animate sidebar + board elements out before changing colors or resetting state.
       const contentTvExit = document.getElementById("content-tv");
       const szInput = document.getElementById("sq-zone-input");
@@ -8525,6 +8721,11 @@ document.addEventListener('keydown', e => {
           }
         },
       ]);
+
+      // Exit animations complete — wipe the module canvas to a canonical
+      // empty baseline before the next module sets up. Replaces the per-
+      // module defensive cleanup that used to live at each entry point.
+      resetModuleCanvas();
 
       // Now safe to update turn colors and reset state
       updateTurn();
@@ -8574,7 +8775,11 @@ document.addEventListener('keydown', e => {
       showRoundTypePicker();
 
       } finally {
-        _advancingRound = false;
+        // Delay clearing the guard so late-arriving ready-up snapshots can't
+        // slip past checkReadyAdvance's phase guard during the ~400ms window
+        // where showRoundTypePicker schedules setPhase('category-select') via
+        // anim.wait (data-phase stays 'round-result' until then).
+        setTimeout(() => { _advancingRound = false; }, 800);
       }
     }
 
@@ -8583,23 +8788,8 @@ document.addEventListener('keydown', e => {
     // ─────────────────────────────────────────────────────────────────────
 
     function showRoundTypePicker(syncedData) {
-      // Make sure the legacy sidebar pills area is quiet during picker mode.
-      const pillsAreaRef = document.getElementById("category-pills-area");
-      if (pillsAreaRef) {
-        pillsAreaRef.classList.remove("pills-slide-in");
-        pillsAreaRef.innerHTML = "";
-      }
-
-      // Keep pills area hidden during round-type picker mode (picker uses
-      // its own container).
-      const _pillsPicker = document.getElementById("category-pills-area");
-      if (_pillsPicker) _pillsPicker.style.display = "none";
-
-      // Board-wrapper takes layout flow space even when .offscreen transforms
-      // it up; the picker sitting above it would push it into view. Force
-      // display:none during the picker so the picker claims the full zone.
-      const _bwHidePicker = document.getElementById("board-wrapper");
-      if (_bwHidePicker) _bwHidePicker.style.display = "none";
+      // Canvas is already clean (resetModuleCanvas ran in advanceRound).
+      // Just claim the picker container.
 
       // Determine available modules (check min player counts)
       const teamSizes = isMultiplayer
@@ -8685,17 +8875,15 @@ document.addEventListener('keydown', e => {
 
     // Hide the round-type picker container. Called on transition out of
     // the picker (module entry / category-select for feud modules).
+    // Each module is responsible for restoring whatever display state it
+    // needs on its own children — the canvas is otherwise in its canonical
+    // empty baseline from resetModuleCanvas.
     function hideRoundTypePicker() {
       const pickerArea = document.getElementById("round-type-picker-container");
       if (pickerArea) {
         pickerArea.style.display = "none";
         pickerArea.innerHTML = "";
       }
-      // Restore board-wrapper's display (showRoundTypePicker set it to none
-      // so the picker could claim the full zone). It stays offscreen via
-      // the .offscreen class until the active module slides it in.
-      const bwRestore = document.getElementById("board-wrapper");
-      if (bwRestore) bwRestore.style.display = "";
     }
 
     function onRoundTypePick(moduleKey) {
@@ -8921,29 +9109,13 @@ document.addEventListener('keydown', e => {
       }
     }
 
-    // Restores the main game UI elements that non-feud modules hide on
-    // entry. Resets their CSS state so advanceRound() works cleanly.
+    // Restores the main game UI for Ready Up / round-result display after
+    // a non-feud module completes. The module's summary panel (e.g. scribble
+    // summary) stays visible until advanceRound fires resetModuleCanvas.
+    // Just ensure input-area (home base) is visible.
     function restoreMainGameUI() {
-      // Input-area stays visible (home base philosophy) — callers use
-      // showInputArea() + setInputAreaMode() to set its content.
-      // NOTE: if a module container (scribble) is still visible, we do NOT
-      // re-show board-wrapper / content-tv — adding them back into the
-      // flex flow would push the module's summary panel down. advanceRound
-      // hides the module container first, then calls restoreMainGameUI
-      // again implicitly via its own setup path.
-      const sc = document.getElementById("scribble-container");
-      const moduleVisible = sc && getComputedStyle(sc).display !== "none";
-      if (!moduleVisible) {
-        const bw = document.getElementById("board-wrapper");
-        if (bw) { bw.style.display = ""; bw.classList.add("offscreen"); }
-        const ct = document.getElementById("content-tv");
-        if (ct) { ct.style.display = ""; ct.classList.add("ct-hidden"); ct.classList.remove("tv-on", "slide-out-left"); }
-      }
       const ia = document.getElementById("input-area");
       if (ia) { ia.style.display = ""; ia.classList.remove("hidden"); }
-      // Pills area stays hidden — callers re-show it when needed
-      const pills = document.getElementById("category-pills-area");
-      if (pills) pills.style.display = "none";
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -9050,18 +9222,40 @@ document.addEventListener('keydown', e => {
     // Secret Scribble — Round entry + game loop
     // ─────────────────────────────────────────────────────────────────────
 
-    // Temporary word bank — will be replaced by CSV loader
+    // Word bank — populated at page load from scribblewords.csv (see loader
+    // below). Hardcoded seed set is a fallback for offline/fetch-fail runs
+    // so scribble still has something to draw from. CSV format:
+    //   Word,Difficulty      (difficulty column is case-insensitive)
     const SCRIBBLE_WORD_BANK = {
-      easy: ["sun","tree","cat","dog","house","ball","fish","car","hat","star",
-             "moon","book","cup","boat","key","bird","apple","heart","chair","clock"],
-      medium: ["guitar","volcano","surfing","snowman","penguin","campfire","basketball",
-               "rainbow","waterfall","pizza","castle","anchor","crown","telescope",
-               "lighthouse","sunflower","submarine","butterfly","robot","scarecrow"],
-      hard: ["astronaut","birthday cake","roller coaster","pirate ship","treasure chest",
-             "hot air balloon","skyscraper","fireworks","helicopter","treehouse",
-             "mermaid","tornado","octopus","spaceship","dinosaur","wizard","igloo",
-             "cowboy","dragon","volcano"]
+      easy: ["sun","tree","cat","dog","house","ball","fish","car","hat","star"],
+      medium: ["guitar","volcano","surfing","snowman","penguin","pizza","castle","telescope"],
+      hard: ["astronaut","roller coaster","pirate ship","helicopter","tornado","octopus"]
     };
+
+    // Load the real word pool from scribblewords.csv. Replaces the seed
+    // arrays in place so any code already holding a reference to
+    // SCRIBBLE_WORD_BANK still sees the loaded data. Silent on failure —
+    // the seed fallback above keeps the game runnable offline.
+    fetch('scribblewords.csv')
+      .then(r => r.text())
+      .then(csv => {
+        const loaded = { easy: [], medium: [], hard: [] };
+        csv.split('\n').slice(1).forEach(line => {
+          if (!line.trim()) return;
+          const [word, difficulty] = parseCSVLine(line);
+          if (!word || !difficulty) return;
+          const key = difficulty.trim().toLowerCase();
+          if (loaded[key]) loaded[key].push(word.trim());
+        });
+        if (loaded.easy.length)   SCRIBBLE_WORD_BANK.easy   = loaded.easy;
+        if (loaded.medium.length) SCRIBBLE_WORD_BANK.medium = loaded.medium;
+        if (loaded.hard.length)   SCRIBBLE_WORD_BANK.hard   = loaded.hard;
+        console.log('[scribble] loaded word bank:',
+          `easy=${SCRIBBLE_WORD_BANK.easy.length}`,
+          `medium=${SCRIBBLE_WORD_BANK.medium.length}`,
+          `hard=${SCRIBBLE_WORD_BANK.hard.length}`);
+      })
+      .catch(e => console.warn('[scribble] failed to load scribblewords.csv, using seed bank', e));
 
     function scribblePickWord(difficulty) {
       const pool = SCRIBBLE_WORD_BANK[difficulty].filter(w => !scribbleState.usedWords.has(w));
@@ -9628,23 +9822,22 @@ document.addEventListener('keydown', e => {
         }
       }
 
-      // Clear stale UI state from any previous scribble round
+      // Clear stale UI state from any previous scribble round. resetModuleCanvas
+      // already nuked solved overlays + wiped display on sibling canvas slots;
+      // these are scribble-internal UI bits that live inside #scribble-container.
       const statusEl = document.getElementById("scribble-status");
       if (statusEl) { statusEl.textContent = ""; statusEl.className = "scribble-status"; }
       const wsWaiting = document.getElementById("scribble-ws-waiting");
       if (wsWaiting) { wsWaiting.textContent = "Waiting for other drawer..."; wsWaiting.style.display = "none"; }
-      document.querySelectorAll(".scribble-solved-overlay").forEach(el => el.remove());
-
-      // Hide main game board + content-tv + pills, but keep input-area visible as home base
-      const bw = document.getElementById("board-wrapper");
-      if (bw) bw.style.display = "none";
-      const ct = document.getElementById("content-tv");
-      if (ct) ct.style.display = "none";
-      const pills = document.getElementById("category-pills-area");
-      if (pills) pills.style.display = "none";
 
       // Input-area stays as the player's home base — always visible
       showInputArea();
+
+      // Phase indicator: override the leftover "pick a round type" text for
+      // the duration of the scribble round. Uses the 'gameplay' span since
+      // scribble is active play, not a waiting/selection state.
+      setPhaseText("gameplay", "LET'S SCRIBBLE!");
+      setPhase("gameplay");
 
       const container = document.getElementById("scribble-container");
       if (container) container.style.display = "flex";
@@ -9678,6 +9871,13 @@ document.addEventListener('keydown', e => {
       scribbleState._teammateSolved = false;
       scribbleState._opponentSolved = false;
       scribbleState._myWordPick = null;
+      // Clear stale word picks locally. Host-authored clears (syncing
+      // scribbleWordPicks: null below) don't reach the host via reconcile
+      // due to self-echo skip — so stale picks from a prior session would
+      // cause scribbleHostMaybeStartEarly to false-positive or the late
+      // scribbleHostStartDrawing path to use stale data.
+      scribbleState._wordPicks = {};
+      scribbleState._wsStartingEarly = false;
 
       scribbleState.phase = "word-select";
       scribbleState.myRole = scribbleDetermineRole(thisSession);
@@ -9783,8 +9983,18 @@ document.addEventListener('keydown', e => {
           // Small delay lets the card-flash register before the write +
           // any resulting "both picked → start drawing" race.
           if (isMultiplayer) {
+            const pickPayload = { word: c.word, difficulty: c.difficulty, points: c.points };
             setTimeout(() => {
-              syncState({ [`scribbleWordPicks.${myUid}`]: { word: c.word, difficulty: c.difficulty, points: c.points } });
+              syncState({ [`scribbleWordPicks.${myUid}`]: pickPayload });
+              // Host: mirror own pick locally since self-echo is skipped in
+              // the snapshot listener. Without this, when the host is the
+              // LAST drawer to pick, scribbleHostMaybeStartEarly never sees
+              // both picks and the 10s timer runs out before drawing starts.
+              if (isHost) {
+                if (!scribbleState._wordPicks) scribbleState._wordPicks = {};
+                scribbleState._wordPicks[myUid] = pickPayload;
+                scribbleHostMaybeStartEarly();
+              }
             }, SCRIBBLE_CONFIG.pickLockInDelay);
           } else {
             // Local mode: host also checks for early start directly.
@@ -9818,6 +10028,11 @@ document.addEventListener('keydown', e => {
             scribbleState._myWordPick = pick;
             if (isMultiplayer) {
               syncState({ [`scribbleWordPicks.${myUid}`]: pick });
+              // Host: mirror own auto-pick locally (self-echo skipped).
+              if (isHost) {
+                if (!scribbleState._wordPicks) scribbleState._wordPicks = {};
+                scribbleState._wordPicks[myUid] = pick;
+              }
             }
           }
           // Host triggers drawing start after a brief delay for sync
@@ -10554,16 +10769,9 @@ document.addEventListener('keydown', e => {
       faceoffState.battleGuesses = mapToArr(synced.battleGuesses, [[], []]);
     }
 
-    // DOM prep: hide normal game elements, show faceoff container, swap round counter label.
+    // DOM prep: show faceoff container, swap round counter label.
+    // Canvas is already clean (resetModuleCanvas ran in advanceRound).
     function setupFaceoffUI() {
-      // Hide the normal board and sidebar question content
-      const boardWrapper = document.getElementById('board-wrapper');
-      if (boardWrapper) boardWrapper.style.display = 'none';
-      const contentTv = document.getElementById('content-tv');
-      if (contentTv) contentTv.style.display = 'none';
-      // Also hide the category pills (could be visible from round transition)
-      const pillsArea = document.getElementById('category-pills-area');
-      if (pillsArea) pillsArea.style.display = 'none';
       // Show the face-off container
       const foc = document.getElementById('faceoff-container');
       if (foc) {
@@ -11053,7 +11261,12 @@ document.addEventListener('keydown', e => {
           categoryMultipliers = { 'Survey': rollCategoryMultiplier() };
           if (isMultiplayer) {
             _syncedCategoryPicks = { picks: [], hasSurvey: true, multipliers: { ...categoryMultipliers }, questions: _preSelectedQuestions };
-            syncState({ categoryPicks: _syncedCategoryPicks, phase: 'category-select', activePlayerUid: getActivePlayerUid(), roundNumber, teamTurn, startingTeam, currentQuestion: null, revealed: [], revealedData: [], roundScore: 0, strikes: 0, currentStreak: 0, answerMultiplier: 1.0, stealPhase: false, lastResult: null, readyPlayers: {}, readyCountdown: null, guessHistory: [], pendingAction: null, playerIndex: [...playerIndex] });
+            // Survey module: no category UI on non-host. Skip syncing
+            // phase:'category-select' so non-host doesn't render a lone
+            // "Survey" pill. pickCategory's phase:'gameplay' sync (fires
+            // immediately after) drives the non-host transition directly
+            // from 'round-type-selected' → 'gameplay'.
+            syncState({ categoryPicks: _syncedCategoryPicks, activePlayerUid: getActivePlayerUid(), roundNumber, teamTurn, startingTeam, currentQuestion: null, revealed: [], revealedData: [], roundScore: 0, strikes: 0, currentStreak: 0, answerMultiplier: 1.0, stealPhase: false, lastResult: null, readyPlayers: {}, readyCountdown: null, guessHistory: [], pendingAction: null, playerIndex: [...playerIndex] });
           }
           pickCategory('Survey');
           return;
@@ -11564,6 +11777,7 @@ document.addEventListener('keydown', e => {
       // Slide board wrapper in (starts immediately alongside content-tv)
       const bw = document.getElementById("board-wrapper");
       if (bw) {
+        bw.style.display = "";
         bw.classList.remove("offscreen", "board-ready");
         bw.classList.add("slide-in");
         // tap2 near landing (70% of 0.5s = ~350ms)
@@ -12508,6 +12722,20 @@ document.addEventListener('keydown', e => {
       const qbox2 = document.getElementById("question-box");
       if (qbox2) { qbox2.classList.remove("team-red","team-blue"); qbox2.classList.add(endTeamClass); }
 
+      // DIAGNOSTIC (temporary — backlog item: "Ready for Face-off not shown
+      // on non-hosts after module-module-module-feud sequence"). Remove once
+      // confirmed. Logs which branch endRound takes on each client so we can
+      // tell if _lastRoundWasModule leaked across rounds on non-hosts.
+      console.log('[endRound]', {
+        isHost: typeof isHost !== 'undefined' ? isHost : null,
+        _lastRoundWasModule: !!window._lastRoundWasModule,
+        iaMode: document.getElementById('input-area')?.getAttribute('data-ia-mode') ?? null,
+        roundNumber,
+        maxRounds,
+        scoringTeam,
+        faceoffCompleted: faceoffState?.completed,
+      });
+
       // If a module (scribble, etc.) just completed, skip the feud-style
       // turn-body innerHTML replacement — handleModuleComplete already
       // set up the Ready Up button via setInputAreaMode. Feud's endRound
@@ -13095,6 +13323,12 @@ document.addEventListener('keydown', e => {
         sb.classList.remove("slide-in");
         sb.classList.add("offscreen");
       }
+
+      // Evergreen reset (Step 4b) — final pass clearing inline transform/
+      // margin/background and stale animation classes on phase-indicator,
+      // sq-zone-input + input-area, and scoreboard. Runs last so it's the
+      // canonical baseline after everything above.
+      resetEvergreenRegions();
     }
 
     let _returningToLobby = false; // guard against double-execution from snapshots
@@ -13314,6 +13548,10 @@ document.addEventListener('keydown', e => {
       updateBlobColor();
       // Slide phase indicator out of view — stays hidden until next startGame
       hidePhaseIndicator();
+      // Evergreen reset (Step 4b) — clear accumulated inline transform/
+      // margin/background on phase-indicator, sq-zone-input + input-area,
+      // and scoreboard so the next game-entry animations start from baseline.
+      resetEvergreenRegions();
       gameSpeedSetting = 1;
       setGameSpeed(1);
       teamScores=[0,0];usedQuestions=[];roundNumber=0;gameEnded=false;matchLog=[];playerIndex=[0,0];startingTeam=0;_syncedAwards=null;

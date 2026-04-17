@@ -48,3 +48,7 @@ lobby-captain,evergreen,Team leader,Captains decide how to use team prizes. The 
 lobby-make-captain,help,Pass the torch,Make this player your team's captain
 scoreboard-captain,evergreen,Team captain,Makes decisions about team prizes. Locked at game start; auto-passes if the captain disconnects
 scoreboard-host,evergreen,Game host,Created this session and manages settings
+gem-emerald,evergreen,A modest shine,Round total will be multiplied by 1.5x
+gem-sapphire,evergreen,Deep blue bonus,Round total will be multiplied by 2x
+gem-amethyst,evergreen,Rare and rich,Round total will be multiplied by 2.5x
+gem-topaz,evergreen,Jackpot,Round total will be multiplied by 3x

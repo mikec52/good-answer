@@ -128,9 +128,14 @@ With the architecture clarified, pass through each module's entry/exit to remove
 
 Net LOC goes down; N×N coupling between modules goes away.
 
-### 6. Animation audit against the new structure
+### 6. Screen-by-screen polish pass
 
-Several entrance/exit animations currently assume specific DOM adjacency or sidebar geometry — content-tv's tv-on, the typewriter, cat-label marquee, sq-zone-input slide-up, board-wrapper slide-in from above. After reparenting, these need a pass to make sure they still feel right in their new container context. Expected to be minor (keyframe origins, clipping parents) but needs once-over.
+General UI polish across the game, walked through in play order rather than by concern. Not an isolated animation pass — no single animation is broken enough to need its own dedicated pass. Instead: go screen by screen (start screen → setup → lobby → category select → gameplay → steal → round result → round type picker → scribble flow → faceoff → victory → play-again) and tweak whatever needs it at that screen — layout, copy, spacing, colors, animation timing, transitions — all together in one pass per screen.
+
+Animation-specific things to keep an eye out for during this pass (carried over from what was going to be Step 6):
+
+- Entrance/exit animations that assume specific DOM adjacency or sidebar geometry after the Steps 2–4 reparenting: content-tv's tv-on, the typewriter, cat-label marquee, sq-zone-input slide-up, board-wrapper slide-in from above. Keyframe origins and clipping parents may need small adjustments.
+- `#content-tv` and `#board-wrapper` sizing inside the new `#module-canvas` (follow-up from Step 2+3) — dimensions were tuned for the sidebar and may need retuning for the main zone.
 
 ### 7. Phase reconcile robustness (spotty-network recovery)
 
@@ -171,9 +176,17 @@ case 'scribble-session-end':
 - **Steps 2+3:** ✅ Done (2026-04-17). Sidebar is evergreen-only (`#phase-indicator` + `#sq-zone-input`). `#module-canvas` introduced in `#zone-board-main` holding `#category-pills-area`, `#content-tv`, `#round-type-picker-container`, `#board-wrapper`, `#faceoff-container`, `#scribble-container`. `#category-pills-area` is `position: absolute` inside the canvas so it doesn't displace sibling module children. Verified: all modules complete end-to-end, faceoff runs, play-again + return-to-lobby flows are clean. Known follow-up: `#content-tv` and `#board-wrapper` need a sizing pass for High Five/Survey inside the new canvas — they currently overlap/overflow because their dimensions were tuned for the sidebar, not the main zone.
 - **Step 4:** ✅ Done (2026-04-17). `resetModuleCanvas()` added near `advanceRound`; wired into `advanceRound` between exit animations and `updateTurn`, and into non-host `category-select` reconcile path. Verified flows 1–4 (ranked×3, ranked→scribble→ranked, scribble→scribble, any→faceoff non-host). Flow 5 (input-area drift) deferred to Step 5 — currently masked by a `margin-top: 0` workaround on `#sq-zone-input`; the real verification happens when that workaround is removed.
 - **Step 4b:** ✅ Done (2026-04-17). `resetEvergreenRegions()` added next to `resetModuleCanvas`; called at the tail of `resetGameUI()` (play-again, return-to-lobby, lobby→game) and near the top of `resetGame()` (exit-to-menu). Clears inline `transform` / `margin` / `background` + stale animation classes on `#phase-indicator`, `#sq-zone-input`, `#input-area`, and `#scoreboard` so game-boundary entry animations start from a clean baseline. Defensive — no visible regressions on flows that already worked, but removes the accumulation class of bugs (e.g. "evergreens clipped above canvas on play-again after faceoff").
-- **Step 5:** small-to-medium. Mechanical code removal once 2–4 are stable. **Must include:** remove the `margin-top: 0` workaround on `#sq-zone-input` and re-run flow 5 from Step 4's verification list. If drift returns, the root cause is still in `setInputAreaMode` / `showInputArea` / `sq-zone-content` visibility manipulations — fix before closing Step 5.
-- **Step 6:** small polish after structure settles.
-- **Step 7:** medium. Independent of 4–6 — can be done any time after steps 2+3 landed. Scribble handlers are the highest-value target.
+- **Step 5:** ✅ Done (2026-04-17). Dead-code pass landed with several tied-in home-base improvements:
+  - `#turn-header` / `#turn-subtext` roles swapped so the semantic names match the layout (header = big primary line, subtext = small secondary line). Wrapped both in a new `#turn-message` parent; `#input-area` bumped 250 → 300px.
+  - `#input-area` now anchors to the bottom-left of the sidebar via `margin-top: auto` on `#sq-zone-input`. The old `margin-top: 0` workaround is gone. No drift observed.
+  - Dead `#message` div removed (CSS rule, HTML, and all 4 JS references). `#input-area` now bleeds off the canvas bottom (square bottom corners, `margin-bottom: -2px`, `padding-bottom: 5px`).
+  - Disabled `#guess` background changed to `#c5c5c5` for a clearer disabled affordance.
+  - `.team-name` span wrapper scopes team color to the player-name token inside turn-message instead of coloring the whole line. All subtext/header writers updated (`updateRoleUI`, `showRoundTypePicker`, `showCategorySelection`, `updateTurn`, plus `animateTurnSwap` now uses `innerHTML` to preserve the span on restore).
+  - "Chance to steal" header renders during steal phase via `showHeader: !!stealPhase` path (now moot since turn-header is always visible, but the call remains).
+  - `#player-inventory` now shows a "PRIZES" label (0.8rem futura-100, top-center) as a placeholder for the items system.
+  - `#sq-zone-input` is intentionally **retained**, not removed. It's reserved as a placeholder for future content above the input-area — the margin-top-auto anchor already positions it correctly whether empty or populated.
+- **Step 6:** ⏭ Next. Screen-by-screen polish pass — see Step 6 body above.
+- **Step 7:** medium. Independent of 4–6 — can be done any time after steps 2+3 landed. Scribble handlers are the highest-value target. No rush — safety precaution rather than blocker.
 
 ### Guiding principle — phase-indicator as reference design
 
@@ -312,6 +325,34 @@ Between rounds, all players see a "Ready Up" button. First click starts a 10-sec
 - **Pre-Blaze Cleanup Refactor Step 4 landed** — `resetModuleCanvas()` added (feud.html). See "Pre-Blaze Cleanup Refactor" section above for details.
 - **Pre-Blaze Cleanup Refactor Step 4b landed** — `resetEvergreenRegions()` added (feud.html). Defensive baseline for game-boundary transitions. See same section.
 - **Active diagnostic log** — `console.log('[endRound]', {...})` at `endRound`'s entry. Temporary; logs `_lastRoundWasModule`, `iaMode`, `isHost`, `roundNumber`, etc. Planted to diagnose the "Ready for Face-off button only shown to host after module×3→feud sequence" bug (on radar). Remove once confirmed + fixed.
+
+### Round-Type Picker Polish (April 17 session, part 2)
+
+Visual + UX pass on the round-type picker (`showRoundTypePicker`):
+
+- **Sequential gem reveal** — all 3 cards slide in first (staggered), then gems hop in left-to-right with 650ms gap (matches `rt-gem-hop` duration). Each gem reveal plays a glint SFX.
+- **Exit slide-up on selection** — new `rt-card-slide-up` keyframe + `.rt-sliding-out` class; `hideRoundTypePicker` staggers cards out at 70ms intervals before clearing the container. Cards retreat behind the scoreboard.
+- **Gem color palette swap** — `--rt-gem-color` CSS variable per tier: emerald `#00a90d`, sapphire `#4c8cff`, amethyst `#d803ff`, topaz `#fe5815`. `.rt-gem-value` text colors match.
+- **Gem + value lift together on hover** — identical `transform` + `rt-gem-lift-nudge` animation applied to both `.rt-gem img` and `.rt-gem .rt-gem-value`.
+- **Amethyst + topaz pulse glow** — `rt-card-glow-pulse` keyframe uses `color-mix(in srgb, var(--rt-gem-color) N%, transparent)` for a gem-tinted box-shadow aura on the two highest tiers.
+- **Gem tooltips** — added 4 entries to `tooltips.csv` (`gem-emerald`, `gem-sapphire`, `gem-amethyst`, `gem-topaz`) describing each tier's multiplier. Category-row tooltip (`data-tip="cat-pill"`) removed — redundant with gem tooltip coverage.
+- **`rt-picker-grid` bleed** — `margin-top: -5px` so cards tuck up under the scoreboard for a cleaner seam.
+- **Phase indicator centering** — `.ph-span` now `position: absolute; inset: 0` with flex centering so every phase's text sits visually centered in the 140px band, not left-anchored.
+- **Rt-card glint** — attempted and removed. The sweep animation had mid-cycle stalling and z-index/blend issues we couldn't cleanly solve in this pass. Keyframe + `::after` rule deleted; revisit later if the pulse glow alone feels too static.
+
+### Scribble Polish (April 17 session, part 2)
+
+- **Scribble panel labels team-colored** — `.scribble-panel-label.team-red` / `.team-blue` CSS rules added. `setupScribbleDrawingSession` (guesser branch) assigns the class so teammate label uses viewer's team color, opponent label uses the other team's color. Gap between the label strip and its canvas panel reduced to 0 for a flush look.
+- **Word-pick time 10s → 15s** — `wordSelectTime` constant bumped. Gives drawers more breathing room when weighing three difficulty options.
+
+### Music Polish (April 17 session, part 2)
+
+- **Per-track volume -20% across the board** — `MUSIC_TRACKS` (`maintheme`, `roundselect`, `draw`) and `PLAYLIST_TRACKS` (`bossa`, `ranked`) all at `vol: 0.32–0.4` (from 0.4–0.5). Each track's `vol` multiplies with `volumeMaster × volumeMusic` in the crossfade gain math.
+- **`volumeMusic` default restored to 1.0** — was `0.6` as a temporary reduction; mix balance now lives in per-track `vol` instead.
+
+### Crashes Fixed (April 17 session, part 2)
+
+- **`myTeam is not defined` in `scribbleStartDrawingSession`** — the guesser-branch label-coloring block referenced a bare `myTeam` that wasn't in that function's scope (caller `scribbleEnterDrawingForMyTeam` derives it locally, but the function itself doesn't receive it). Crashed on every non-host client's drawing-start reconcile, preventing canvases + tile grid from rendering. Fixed by re-deriving `_myTeam` inside the guesser branch via the standard `(isMultiplayer && myUid && teamPlayerUids[1]?.includes(myUid)) ? 1 : 0` pattern.
 
 ### What Was Fixed (April 14 session)
 

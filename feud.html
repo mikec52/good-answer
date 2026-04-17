@@ -1507,8 +1507,23 @@
       overflow: hidden;
       padding: 0 8px 0 0;
     }
-    /* Bottom-anchor the input home base inside the sidebar */
-    #sq-zone-input   { flex-shrink: 0; }
+    /* Bottom-anchor the input home base inside the sidebar.
+       margin-top: auto pushes sq-zone-input to the bottom of
+       the sidebar's flex column; the gap between phase-indicator
+       and input-area grows/shrinks with canvas height. */
+    #sq-zone-input   { flex-shrink: 0; margin-top: auto; }
+
+    /* Ranked-question row — content-tv (300px) left of board-wrapper */
+    #ranked-row {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 20px;
+      width: 100%;
+      padding: 0 20px;
+      box-sizing: border-box;
+    }
 
     /* Content TV — 300×300 "screen" that wraps cat-label + question-box */
     #content-tv {
@@ -1518,7 +1533,7 @@
       position: relative;
       overflow: hidden;
       flex-shrink: 0;
-      margin: 30px auto 10px auto;
+      margin: 30px 0 10px 0;
       display: flex;
       flex-direction: column;
       /* Vignette shadow moved to ::after so it renders above children */
@@ -1671,7 +1686,7 @@
       line-height: 1.3;
       width: 100%;
       border-radius: 0px 0px 30px 30px;
-      overflow: hidden;
+      overflow: visible;
       background: color-mix(in srgb, var(--red-bg) 90%, black);
       /* transition is defined below (round-glow section) to include box-shadow */
       /* Initial off-canvas state — JS removes .offscreen to slide in */
@@ -1706,6 +1721,8 @@
       inset: 0;
       display: none;
       align-items: center;
+      justify-content: center;
+      text-align: center;
       padding: 0 16px;
       box-sizing: border-box;
       opacity: 0;
@@ -1824,23 +1841,344 @@
        a richer visual panel. Centered horizontally, generous vertical
        padding, sized to fit its children. */
     #round-type-picker-container {
-      width: 70%;
-      margin: 40px auto 0 auto;
-      padding: 16px;
-      border-radius: 20px;
-      background: rgba(17, 17, 17, 0.35);
+      width: 96%;
+      margin: 0 auto;
+      padding: 0;
+      background: transparent;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      align-items: stretch;
-      gap: 12px;
     }
     #round-type-picker-container .rt-picker-grid {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
+      flex-direction: row;
+      align-items: stretch;
+      justify-content: center;
+      gap: 14px;
+      margin-top: -5px;
     }
+    .rt-card {
+      flex: 1 1 0;
+      min-width: 0;
+      height: 400px;
+      padding: 0;
+      box-sizing: border-box;
+      background: rgba(17, 17, 17, 0.55);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-top: none;
+      border-radius: 0 0 18px 18px;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.06), 0 6px 18px rgba(0,0,0,0.35);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      overflow: hidden;
+      text-align: center;
+      color: #fff;
+      cursor: pointer;
+      transform: translateY(-110%);
+      transition: transform 0.25s ease, box-shadow 0.2s ease;
+      font-family: "futura-100";
+    }
+    .rt-card.rt-sliding-in {
+      animation: rt-card-slide-down calc(0.45s / var(--speed)) cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    @keyframes rt-card-slide-down {
+      from { transform: translateY(-110%); }
+      to   { transform: translateY(0); }
+    }
+    .rt-card.rt-sliding-out {
+      animation: rt-card-slide-up calc(0.4s / var(--speed)) cubic-bezier(0.64, 0, 0.78, 0) both;
+    }
+    @keyframes rt-card-slide-up {
+      from { transform: translateY(0); }
+      to   { transform: translateY(-110%); }
+    }
+    .rt-card:hover:not(.rt-disabled) {
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.1), 0 10px 26px rgba(0,0,0,0.45);
+    }
+    .rt-card:hover:not(.rt-disabled) .rt-card-body {
+      background: rgba(34, 34, 34, 0.65);
+    }
+    .rt-card.rt-disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .rt-card-title {
+      flex: 0 0 auto;
+      padding: 14px 10px;
+      height: calc(2.35rem * 1.15 * 2 + 28px);
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "futura-100";
+      font-weight: 700;
+      font-size: 2.35rem;
+      letter-spacing: 1px;
+      color: #fff;
+      text-transform: uppercase;
+      line-height: 1.15;
+      background: var(--cat-solid, #fba300);
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .rt-card-body {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 16px;
+      transition: background 0.2s ease;
+    }
+    .rt-card-desc {
+      font-size: 1.75rem;
+      line-height: 1.35;
+      color: #d8d8d8;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Round multiplier gem badge ──
+       Straddles the seam between rt-card-title and rt-card-body (vertically
+       centered on the border between them). Per-tier color variables drive
+       both the text fill and the card border glow. */
+    .rt-card { position: relative; }
+    /* Fake border overlay — lets us fade in a gem-colored border without
+       layout shift. ::after is reserved in case other states want it. */
+    .rt-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border: 6px solid transparent;
+      border-radius: inherit;
+      transition: border-color 0.45s ease;
+      z-index: 3;
+    }
+
+    /* Pulsing gem-colored glow — amethyst + topaz only */
+    .rt-card.rt-has-gem.rt-gem-revealed.rt-tier-amethyst,
+    .rt-card.rt-has-gem.rt-gem-revealed.rt-tier-topaz {
+      animation: rt-card-glow-pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes rt-card-glow-pulse {
+      0%, 100% {
+        transform: translateY(0);
+        box-shadow: inset 0 2px 0 rgba(255,255,255,0.06),
+                    0 6px 18px rgba(0,0,0,0.35),
+                    0 0 10px 0 color-mix(in srgb, var(--rt-gem-color) 40%, transparent);
+      }
+      50% {
+        transform: translateY(0);
+        box-shadow: inset 0 2px 0 rgba(255,255,255,0.1),
+                    0 6px 22px rgba(0,0,0,0.4),
+                    0 0 26px 6px color-mix(in srgb, var(--rt-gem-color) 75%, transparent);
+      }
+    }
+    .rt-card.rt-has-gem.rt-gem-revealed::before {
+      /* Omit top border so the card bleeds into the scoreboard/module
+         canvas seam above — just left, right, and bottom get the tier tint. */
+      border-top-color: transparent;
+      border-right-color: var(--rt-gem-color, transparent);
+      border-bottom-color: var(--rt-gem-color, transparent);
+      border-left-color: var(--rt-gem-color, transparent);
+    }
+
+    /* Phase-indicator gem — latched after round-type pick, hangs half off
+       the bottom-right edge of #phase-indicator, removed when the round's
+       multiplier effect has resolved at round end. Inherits the same
+       tier classes (.rt-tier-*) and visual layers (img, glint, sparkles,
+       value label) as the round-type picker gems. */
+    #phase-indicator .rt-gem.ph-gem {
+      position: absolute;
+      top: auto;
+      right: auto;
+      left: 50%;
+      bottom: -20px;
+      transform: translate(-50%, 0) scale(0);
+      width: 40px;
+      height: 40px;
+      z-index: 20;
+    }
+    #phase-indicator .rt-gem.ph-gem .rt-gem-value {
+      font-size: 1.2rem;
+    }
+    #phase-indicator .rt-gem.ph-gem.rt-gem-hop {
+      animation: ph-gem-hop 0.5s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes ph-gem-hop {
+      0%   { transform: translate(-50%, -40px) scale(0);    }
+      55%  { transform: translate(-50%, 0)     scale(1.15); }
+      70%  { transform: translate(-50%, -6px)  scale(0.95); }
+      85%  { transform: translate(-50%, 0)     scale(1.04); }
+      100% { transform: translate(-50%, 0)     scale(1);    }
+    }
+    .rt-gem {
+      position: absolute;
+      left: 50%;
+      top: calc(2.35rem * 1.15 * 2 + 28px);
+      transform: translate(-50%, -50%) scale(0);
+      width: 80px;
+      height: 80px;
+      pointer-events: auto;
+      z-index: 4;
+      transition: transform 0.3s ease;
+    }
+    /* Pick-up-and-set-down hover — applied to <img> only (not the wrapper)
+       so it never interferes with the wrapper's rt-gem-hop reveal
+       animation. Replacing the wrapper's animation property on hover
+       caused the reveal to restart from scale(0) when hover ended, which
+       is what manifested as the gem "blinking out". */
+    .rt-gem img, .rt-gem .rt-gem-value {
+      transition: transform 0.3s ease, filter 0.3s ease;
+    }
+    .rt-gem.rt-gem-hop:hover img {
+      transform: translateY(-4px) perspective(600px) rotateX(-4deg);
+      animation: rt-gem-lift-nudge 0.3s ease;
+      filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5))
+              drop-shadow(0 6px 8px rgba(0, 0, 0, 0.6))
+              drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+    }
+    .rt-gem.rt-gem-hop:hover .rt-gem-value {
+      transform: translateY(-4px) perspective(600px) rotateX(-4deg);
+      animation: rt-gem-lift-nudge 0.3s ease;
+    }
+    @keyframes rt-gem-lift-nudge {
+      0%   { transform: translateY(-4px) perspective(600px) rotateX(-4deg) rotate(0deg); }
+      25%  { transform: translateY(-4px) perspective(600px) rotateX(-4deg) rotate(-0.5deg); }
+      55%  { transform: translateY(-4px) perspective(600px) rotateX(-4deg) rotate(0.4deg); }
+      80%  { transform: translateY(-4px) perspective(600px) rotateX(-4deg) rotate(-0.2deg); }
+      100% { transform: translateY(-4px) perspective(600px) rotateX(-4deg) rotate(0deg); }
+    }
+    .rt-gem img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+    }
+    .rt-gem-value {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Bungee", sans-serif;
+      font-size: 2.2rem;
+      letter-spacing: 1px;
+      padding-top: 3px;
+      -webkit-text-stroke: 2px #fff;
+      paint-order: stroke fill;
+      filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.55));
+    }
+    /* Tier-color CSS variable lives on the card so ::before can see it for
+       the border tint. Gem element inherits it automatically. */
+    .rt-tier-emerald  { --rt-gem-color: #00a90d; }
+    .rt-tier-sapphire { --rt-gem-color: #4c8cff; }
+    .rt-tier-amethyst { --rt-gem-color: #d803ff; }
+    .rt-tier-topaz    { --rt-gem-color: #fe5815; }
+    .rt-gem-emerald  .rt-gem-value { color: #00a90d; }
+    .rt-gem-sapphire .rt-gem-value { color: #4c8cff; }
+    .rt-gem-amethyst .rt-gem-value { color: #d803ff; }
+    .rt-gem-topaz    .rt-gem-value { color: #fe5815; }
+
+    /* Glint sweep across gem surface — masked by each gem's PNG alpha for
+       pixel-perfect fit to its shape. */
+    .rt-gem::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(
+        115deg,
+        transparent 35%,
+        rgba(255, 255, 255, 0.0) 45%,
+        rgba(255, 255, 255, 0.85) 50%,
+        rgba(255, 255, 255, 0.0) 55%,
+        transparent 65%
+      );
+      background-size: 250% 250%;
+      background-position: 150% 150%;
+      mix-blend-mode: screen;
+      mask-size: 100% 100%;
+      mask-repeat: no-repeat;
+      mask-position: center;
+      -webkit-mask-size: 100% 100%;
+      -webkit-mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      animation: rt-glint-sweep 4.2s ease-in-out infinite;
+    }
+    .rt-gem-emerald::after  { mask-image: url(emerald.png);  -webkit-mask-image: url(emerald.png);  animation-delay: 0s; }
+    .rt-gem-sapphire::after { mask-image: url(sapphire.png); -webkit-mask-image: url(sapphire.png); animation-delay: 1.0s; }
+    .rt-gem-amethyst::after { mask-image: url(amethyst.png); -webkit-mask-image: url(amethyst.png); animation-delay: 2.1s; }
+    .rt-gem-topaz::after    { mask-image: url(topaz.png);    -webkit-mask-image: url(topaz.png);    animation-delay: 3.1s; }
+
+    @keyframes rt-glint-sweep {
+      0%   { background-position: 150% 150%; }
+      15%  { background-position: 150% 150%; }
+      33%  { background-position: -50% -50%; }
+      100% { background-position: -50% -50%; }
+    }
+
+    /* Hop/slam/bounce entry — fires after the card has fully slid in.
+       Starts at scale 0, pops up and back down into a settled state with
+       slight overshoot bounces. */
+    .rt-gem.rt-gem-hop {
+      animation: rt-gem-hop calc(0.65s / var(--speed)) cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes rt-gem-hop {
+      0%   { transform: translate(-50%, -50%) scale(0)    translateY(-40px); }
+      55%  { transform: translate(-50%, -50%) scale(1.15) translateY(0);     }
+      70%  { transform: translate(-50%, -50%) scale(0.95) translateY(-6px);  }
+      85%  { transform: translate(-50%, -50%) scale(1.04) translateY(0);     }
+      100% { transform: translate(-50%, -50%) scale(1)    translateY(0);     }
+    }
+
+    /* Sparkle layer — intermittent twinkles around the gem. Scales in
+       intensity by tier via the existing gem-badges.html pattern, compacted
+       here to 6 slots since the card gems are smaller than the test env. */
+    .rt-gem-sparkles {
+      position: absolute;
+      inset: -14%;
+      pointer-events: none;
+    }
+    .rt-sparkle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #fff;
+      clip-path: polygon(
+        50% 0%, 58% 42%, 100% 50%, 58% 58%,
+        50% 100%, 42% 58%, 0% 50%, 42% 42%
+      );
+      opacity: 0;
+      transform: scale(0);
+      filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));
+      animation: rt-sparkle-twinkle var(--rt-sparkle-cycle, 3.2s) ease-in-out infinite;
+      animation-delay: var(--rt-sparkle-delay, 0s);
+    }
+    @keyframes rt-sparkle-twinkle {
+      0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+      8%       { opacity: var(--rt-sparkle-peak, 0.9); transform: scale(1) rotate(45deg); }
+      16%      { opacity: 0; transform: scale(0) rotate(90deg); }
+    }
+    /* Per-tier sparkle intensity */
+    .rt-gem-emerald  .rt-sparkle { --rt-sparkle-cycle: 4.5s; --rt-sparkle-peak: 0.75; }
+    .rt-gem-sapphire .rt-sparkle { --rt-sparkle-cycle: 3.8s; --rt-sparkle-peak: 0.85; }
+    .rt-gem-amethyst .rt-sparkle { --rt-sparkle-cycle: 3.2s; --rt-sparkle-peak: 0.95; }
+    .rt-gem-topaz    .rt-sparkle { --rt-sparkle-cycle: 2.6s; --rt-sparkle-peak: 1.0;  }
+    /* Only higher tiers show more sparkles */
+    .rt-gem-emerald  .rt-sparkle:nth-child(n+3),
+    .rt-gem-sapphire .rt-sparkle:nth-child(n+4),
+    .rt-gem-amethyst .rt-sparkle:nth-child(n+5) { display: none; }
+    /* 6 positions */
+    .rt-sparkle.s1 { top: 14%; left: 22%; --rt-sparkle-delay: 0.0s;  width: 10px; height: 10px; }
+    .rt-sparkle.s2 { top: 32%; left: 78%; --rt-sparkle-delay: 0.9s;  width: 12px; height: 12px; }
+    .rt-sparkle.s3 { top: 68%; left: 18%; --rt-sparkle-delay: 1.8s;  width: 8px;  height: 8px;  }
+    .rt-sparkle.s4 { top: 78%; left: 74%; --rt-sparkle-delay: 2.4s;  width: 10px; height: 10px; }
+    .rt-sparkle.s5 { top: 8%;  left: 62%; --rt-sparkle-delay: 0.4s;  width: 12px; height: 12px; }
+    .rt-sparkle.s6 { top: 88%; left: 40%; --rt-sparkle-delay: 1.4s;  width: 10px; height: 10px; }
     #category-pills-area.pills-slide-in {
       animation: pills-slide-in calc(0.4s / var(--speed)) ease-out both;
     }
@@ -2842,8 +3180,10 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      width: 70%;
-      margin: 0 auto;
+      flex: 1 1 auto;
+      max-width: 600px;
+      min-width: 0;
+      margin: 0;
       box-sizing: border-box;
       transition: transform calc(0.5s / var(--speed)) ease;
     }
@@ -3329,7 +3669,7 @@
     }
     #scribble-word-select { display: flex; flex-direction: column; align-items: center; gap: 18px; width: 100%; max-width: 640px; }
     #scribble-word-select.ws-fly-in { animation: ws-fly-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
-    .scribble-ws-title { font-family: "Bitcount Single", monospace; font-size: 1.4rem; color: #fba300; opacity: 0; animation: ws-fade-in 0.45s ease 80ms forwards; }
+    .scribble-ws-title { font-family: "futura-100", sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 1.4rem; color: #fba300; opacity: 0; animation: ws-fade-in 0.45s ease 80ms forwards; }
     .scribble-ws-timer {
       font-family: "Bitcount Single", monospace; font-size: 2rem; color: #e0e0e0;
       opacity: 0; animation: ws-fade-in 0.45s ease 160ms forwards;
@@ -3384,7 +3724,9 @@
     .scribble-ws-choice.medium .scribble-ws-difficulty { color: #4c8cff; }
     .scribble-ws-choice.hard .scribble-ws-difficulty { color: #fb8c00; }
     .scribble-ws-word {
-      font-family: "Bitcount Single", monospace;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      letter-spacing: 1px;
       font-size: 1.35rem; line-height: 1.1;
       text-transform: uppercase;
       word-break: break-word;
@@ -3400,7 +3742,7 @@
       color: #bbb;
     }
     .scribble-ws-waiting {
-      font-family: "Bitcount Single", monospace; font-size: 1rem; color: #999;
+      font-family: "futura-100", sans-serif; font-weight: 500; letter-spacing: 1px; font-size: 1rem; color: #999;
       min-height: 1.4em;
       opacity: 0; animation: ws-fade-in 0.4s ease 600ms forwards;
       transition: color 0.2s ease;
@@ -3433,8 +3775,27 @@
     }
     .scribble-timer { font-family: "Bitcount Single", monospace; font-size: 1.6rem; color: #fba300; }
     .scribble-timer.warning { color: #ff4444; animation: pulse 0.5s ease-in-out infinite alternate; }
-    .scribble-panel { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-    .scribble-panel-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #888; }
+    .scribble-panel { display: flex; flex-direction: column; align-items: center; gap: 0; }
+    /* Tab-style label beneath each guesser canvas. Negative margin-top pulls
+       the tab up so it visually "hangs" off the canvas bottom edge. */
+    .scribble-panel-label {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #e0e0e0;
+      background: #1a1a1a;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+      padding: 5px 18px;
+      margin-top: -1px;
+      align-self: center;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+    }
+    .scribble-panel-label.team-red  { background: var(--red-bg);  color: #fff; border-color: rgba(255,255,255,0.25); }
+    .scribble-panel-label.team-blue { background: var(--blue-bg); color: #fff; border-color: rgba(255,255,255,0.25); }
     .scribble-canvas-wrap { position: relative; }
 
     /* Drawer layout: word on left, canvas on right */
@@ -3443,7 +3804,7 @@
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       min-width: 160px; padding-top: 80px;
     }
-    .scribble-drawer-hint { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+    .scribble-drawer-hint { font-family: "futura-100", sans-serif; font-weight: 500; font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
 
     /* Guesser layout: two canvases side by side */
     .scribble-guesser-layout { display: flex; gap: 16px; justify-content: center; }
@@ -3495,7 +3856,7 @@
     .scribble-edge-text-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
     .scribble-brush-bar { display: flex; gap: 3px; align-items: center; }
-    .scribble-brush-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-right: 3px; }
+    .scribble-brush-label { font-family: "futura-100", sans-serif; font-weight: 500; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-right: 3px; }
     .scribble-size-btn {
       width: 30px; height: 30px; border: 2px solid #444; border-radius: 5px; background: #2a2a2a;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -3510,7 +3871,7 @@
     }
     .scribble-eraser-dot::after { content: "\2715"; font-size: 0.5rem; font-weight: 700; color: #ff4444; }
 
-    .scribble-drawer-word { font-family: "Bitcount Single", monospace; font-size: 1.8rem; padding: 10px 18px; border-radius: 8px; background: #1a1a1a; text-align: center; text-transform: uppercase; }
+    .scribble-drawer-word { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 2px; font-size: 1.8rem; padding: 10px 18px; border-radius: 8px; background: #1a1a1a; text-align: center; text-transform: uppercase; }
     .scribble-drawer-word.easy { color: #44cc44; border: 1px solid rgba(68,204,68,0.3); }
     .scribble-drawer-word.medium { color: #4c8cff; border: 1px solid rgba(76,140,255,0.3); }
     .scribble-drawer-word.hard { color: #fb8c00; border: 1px solid rgba(251,140,0,0.3); }
@@ -3518,18 +3879,18 @@
     .scribble-guess-area { display: flex; gap: 6px; width: 100%; max-width: 800px; }
     .scribble-guess-input {
       flex: 1; padding: 6px 10px; border: 2px solid #444; border-radius: 5px; background: #1a1a1a;
-      color: #e0e0e0; font-family: inherit; font-size: 0.9rem; outline: none;
+      color: #e0e0e0; font-family: "futura-100", sans-serif; font-weight: 500; font-size: 0.9rem; outline: none;
     }
     .scribble-guess-input:focus { border-color: #fba300; }
     .scribble-guess-input.flash-wrong { border-color: #ff4444; background: #331111; }
     .scribble-guess-input:disabled { opacity: 0.5; }
     .scribble-guess-submit {
       padding: 6px 14px; border: 2px solid #fba300; border-radius: 5px; background: #3a2a00;
-      color: #fba300; cursor: pointer; font-family: inherit; font-size: 0.9rem; font-weight: 700; text-transform: uppercase;
+      color: #fba300; cursor: pointer; font-family: "futura-100", sans-serif; letter-spacing: 1px; font-size: 0.9rem; font-weight: 700; text-transform: uppercase;
     }
     .scribble-guess-submit:disabled { opacity: 0.5; }
 
-    .scribble-status { font-family: "Bitcount Single", monospace; font-size: 1rem; min-height: 1.2rem; text-align: center; }
+    .scribble-status { font-family: "futura-100", sans-serif; font-weight: 500; letter-spacing: 1px; font-size: 1rem; min-height: 1.2rem; text-align: center; }
     .scribble-status.correct { color: #44ff44; }
     .scribble-status.timeup { color: #ff4444; }
 
@@ -3537,14 +3898,14 @@
       position: absolute; inset: 0; background: rgba(0,0,0,0.75); display: flex;
       align-items: center; justify-content: center; z-index: 50; border-radius: 6px; pointer-events: none;
     }
-    .scribble-countdown-text { font-family: "Bitcount Single", monospace; font-size: 3rem; color: #fba300; animation: scribble-countdown-pop 0.8s ease-out; }
+    .scribble-countdown-text { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; font-size: 3rem; color: #fba300; animation: scribble-countdown-pop 0.8s ease-out; }
     @keyframes scribble-countdown-pop { 0% { transform: scale(2); opacity: 0; } 30% { transform: scale(1); opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
 
     .scribble-solved-overlay {
       position: absolute; inset: 0; background: rgba(68,204,68,0.15); border: 2px solid #44cc44;
       border-radius: 6px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 60;
     }
-    .scribble-solved-overlay span { font-family: "Bitcount Single", monospace; font-size: 2rem; color: #44cc44; }
+    .scribble-solved-overlay span { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; font-size: 2rem; color: #44cc44; }
 
     #scribble-summary { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 80%; max-width: 400px; }
     #scribble-summary.ss-fly-in { animation: ss-fly-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
@@ -3552,7 +3913,7 @@
       0%   { opacity: 0; transform: translateY(28px) scale(0.96); }
       100% { opacity: 1; transform: translateY(0) scale(1); }
     }
-    .scribble-summary-title { font-family: "Bitcount Single", monospace; font-size: 1.6rem; color: #fba300; }
+    .scribble-summary-title { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; font-size: 1.6rem; color: #fba300; }
     #scribble-summary-body,
     #scribble-summary-body * { color: #ffffff; }
     /* Preserve team-colored scores and muted row headers */
@@ -3560,8 +3921,8 @@
     #scribble-summary-body .scribble-pts.blue { color: #4c8cff !important; }
     #scribble-summary-body .scribble-summary-session h3 { color: #aaaaaa !important; }
     .scribble-summary-session { padding: 8px 12px; margin-bottom: 6px; background: #1a1a1a; border-radius: 6px; width: 100%; }
-    .scribble-summary-session h3 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-    .scribble-summary-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 0.8rem; }
+    .scribble-summary-session h3 { font-family: "futura-100", sans-serif; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .scribble-summary-row { font-family: "futura-100", sans-serif; font-weight: 500; letter-spacing: 1px; display: flex; justify-content: space-between; padding: 2px 0; font-size: 0.8rem; }
     .scribble-pts { font-family: "Bitcount Single", monospace; font-size: 0.95rem; }
     .scribble-pts.red { color: #ff5555; }
     .scribble-pts.blue { color: #4c8cff; }
@@ -3693,13 +4054,15 @@
       100% { transform: translateY(0) scale(1); }
     }
 
-    /* Input */
-    #input-area { width: 100%; border-radius: 10px; border: 3px solid transparent; overflow: hidden; box-sizing: border-box; font-family: "futura-100"; text-transform: uppercase; min-height: 250px; max-height: 250px; display: flex; flex-direction: column;}
-    #input-area.team-red  { border-color: var(--red-bg);  background: color-mix(in srgb, var(--red-bg)  80%, black); }
-    #input-area.team-blue { border-color: var(--blue-bg); background: color-mix(in srgb, var(--blue-bg) 80%, black); }
+    /* Input — evergreen neutral background; no team color on the container */
+    #input-area { width: 100%; border-radius: 10px 10px 0 0; border: 3px solid #333; border-bottom: none; overflow: hidden; box-sizing: border-box; font-family: "futura-100"; text-transform: uppercase; min-height: 300px; max-height: 300px; display: flex; flex-direction: column; background: #222; padding-bottom: 5px; margin-bottom: -2px; }
     #input-area.hidden { display: none; }
-    #player-inventory { height: 45px; border-radius: 50px; margin: 0px 15px 10px 15px; background: rgba(0,0,0,0.35); box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.05); }
+    #player-inventory { height: 45px; border-radius: 50px; margin: 0px 15px 0 15px; background: rgba(0,0,0,0.35); box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: flex-start; font-family: "futura-100"; font-size: 0.8rem; color: #cfcfcf; letter-spacing: 2px; }
     input[type="text"] { padding: 8px; font-size: 1rem; }
+    /* Guess input: off-white field, readable placeholder, works in all modes */
+    #guess { background: #f5f5f5; color: #111; border: 1px solid #bbb; }
+    #guess::placeholder { color: #888; opacity: 1; }
+    #guess:disabled { background: #c5c5c5; color: #666; }
     .btn {
       padding: 8px 14px;
       font-size: 1rem;
@@ -3746,20 +4109,22 @@
       height: 100%;
     }
 
-    #turn-header {
-      display: none;
-    }
-
-    #turn-body {
-      background: transparent;
-      padding: 12px 16px;
+    /* Turn-message region: fixed-height container for header (primary)
+       + subtext (secondary). Both lines are always rendered — empty
+       subtext reserves its space so the layout doesn't jitter. */
+    #turn-message {
+      flex-shrink: 0;
+      padding: 14px 16px 6px 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      flex: 1;
-      justify-content: space-between;
+      justify-content: center;
+      gap: 4px;
+      min-height: 110px;
+      box-sizing: border-box;
     }
-    #turn-subtext {
+    /* Primary big line (was #turn-subtext) */
+    #turn-header {
       --fit-base: 2rem;
       font-size: calc(var(--fit-base) * var(--fit-scale, 1));
       font-weight: bold;
@@ -3769,12 +4134,39 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      color: #fff;
+      text-align: center;
     }
-    #input-area.team-red  #turn-subtext { color: var(--red-text); }
-    #input-area.team-blue #turn-subtext { color: var(--blue-text); }
+    /* Secondary small line (was #turn-header) */
+    #turn-subtext {
+      margin: 0;
+      min-height: 1.2rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      letter-spacing: 1px;
+      color: #cfcfcf;
+      text-align: center;
+      opacity: 0.9;
+      flex-shrink: 0;
+    }
+    #turn-subtext:empty { visibility: hidden; }
+    /* Team color applies only to .team-name spans, in either line */
+    #input-area.team-red  #turn-message .team-name { color: var(--red-text); }
+    #input-area.team-blue #turn-message .team-name { color: var(--blue-text); }
+
+    #turn-body {
+      background: transparent;
+      padding: 6px 16px 12px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      justify-content: flex-end;
+    }
     /* Turn swap animation — current player pops up, slams back down,
-       text swaps to next player mid-flight with a scale pop on landing. */
-    #turn-subtext.turn-swapping {
+       text swaps to next player mid-flight with a scale pop on landing.
+       Applied to #turn-header (the big primary line) after the rename. */
+    #turn-header.turn-swapping {
       animation: turn-swap calc(0.45s / var(--speed)) ease-in-out;
     }
     @keyframes turn-swap {
@@ -3822,7 +4214,6 @@
     }
 
     /* Message */
-    #message { margin-top: 8px; font-weight: bold; color: #cc0000; transition: opacity 0.5s ease; }
 
     /* History link */
     /* Speed boost indicator — dead center of game canvas, CSS triangles */
@@ -4772,24 +5163,26 @@
           <span class="ph-span ph-round-result"></span>
         </div>
 
-        <!-- Input-area home base — bottom-anchored via margin-top:auto.
-             Module code never mutates this; it's driven by setInputAreaMode(). -->
+        <!-- Input-area home base. Module code never mutates this; it's
+             driven by setInputAreaMode(). Bottom-anchoring TBD — see
+             Step 5 of Pre-Blaze Cleanup Refactor. -->
         <div id="sq-zone-input" class="offscreen-below">
           <div id="input-area">
             <div id="turn-input-box" class="team-red">
-              <div id="turn-header">Red Team has the board</div>
-              <div id="turn-body">
+              <div id="turn-message">
+                <div id="turn-header">Red Team has the board</div>
                 <div id="turn-subtext">Player is up</div>
+              </div>
+              <div id="turn-body">
                 <div class="turn-input-row">
-                  <input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="Enter your guess" onkeydown="if(event.key==='Enter'&&!_scoringInProgress)submitGuess()" data-tip="guess-input" />
+                  <input type="text" id="guess" placeholder="Enter your guess" onkeydown="if(event.key==='Enter'&&!_scoringInProgress)submitGuess()" data-tip="guess-input" />
                   <button class="btn action-btn" onclick="submitGuess()" data-tip="submit-guess">Submit</button>
                 </div>
               </div>
             </div>
             <div id="endRound"></div>
-            <div id="player-inventory" data-tip="player-inventory"></div>
+            <div id="player-inventory" data-tip="player-inventory">PRIZES</div>
           </div>
-          <div id="message"></div>
         </div>
 
       </div><!-- end #sidebar-zone -->
@@ -4837,6 +5230,9 @@
                the sidebar so the sidebar can stay evergreen. -->
           <div id="category-pills-area"></div>
 
+          <!-- Ranked-question row: content-tv (300px) on the left, board-wrapper
+               on the right. Flex row so they sit side-by-side in the module canvas. -->
+          <div id="ranked-row">
           <!-- Content-TV: category label + question text + CRT overlays.
                Relocated here from the sidebar. Slides in from left during
                ranked-question entry. -->
@@ -4886,6 +5282,7 @@
               </div>
               <!-- speed boost indicator moved to #game-root level -->
             </div>
+          </div><!-- end #ranked-row -->
             <!-- Face-off Round container: two side-by-side battle boards. Hidden until face-off triggers. -->
             <div id="faceoff-container" style="display:none;">
               <div id="faceoff-battle-0" class="faceoff-side">
@@ -4980,17 +5377,17 @@
                 <!-- GUESSER VIEW: teammate canvas left, opponent canvas right -->
                 <div id="scribble-guesser-view" class="scribble-guesser-layout" style="display:none;">
                   <div class="scribble-panel" id="scribble-teammate-panel">
-                    <div class="scribble-panel-label" id="scribble-teammate-label">Teammate</div>
                     <div class="scribble-canvas-wrap">
                       <canvas id="scribble-teammate-canvas" width="380" height="380"></canvas>
                     </div>
+                    <div class="scribble-panel-label" id="scribble-teammate-label">Teammate</div>
                   </div>
                   <div class="scribble-panel" id="scribble-opp-panel">
-                    <div class="scribble-panel-label" id="scribble-opp-label">Opponent</div>
                     <div class="scribble-opponent-wrap" id="scribble-opponent-wrap">
                       <canvas id="scribble-opp-canvas" width="380" height="380"></canvas>
                       <div class="scribble-tile-grid" id="scribble-tile-grid"></div>
                     </div>
+                    <div class="scribble-panel-label" id="scribble-opp-label">Opponent</div>
                   </div>
                 </div>
 
@@ -5466,28 +5863,33 @@
 
     initKeystrokeSfx("phonetype.wav");
 
-    // ── Chime SFX — badge bounce sound ────────────────────────
-    let chimeBuffer = null;
-
-    async function initChimeSfx(url) {
-      try {
-        if (!tickAudioCtx) tickAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const response = await fetch(url);
-        const arrayBuf = await response.arrayBuffer();
-        chimeBuffer = await tickAudioCtx.decodeAudioData(arrayBuf);
-      } catch (e) {
-        console.warn("Chime SFX failed to load:", e);
+    // ── Glint SFX — gem reveal sounds (one per tier) ──────────
+    // Replaces the prior chime SFX; also used for category-multiplier coin
+    // badge bounces (coin tier → gem tier: bronze→emerald, silver→sapphire, gold→topaz).
+    const glintBuffers = { emerald: null, sapphire: null, amethyst: null, topaz: null };
+    const GLINT_FILES = {
+      emerald:  "glint1.wav",
+      sapphire: "glint2.wav",
+      amethyst: "glint3.wav",
+      topaz:    "glint4.wav",
+    };
+    async function initGlintSfx() {
+      if (!tickAudioCtx) tickAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      for (const [tier, file] of Object.entries(GLINT_FILES)) {
+        try {
+          const response = await fetch(file);
+          const arrayBuf = await response.arrayBuffer();
+          glintBuffers[tier] = await tickAudioCtx.decodeAudioData(arrayBuf);
+        } catch (e) {
+          console.warn(`Glint ${tier} failed to load:`, e);
+        }
       }
     }
-
-    /**
-     * Play chime with optional pitch shift.
-     * @param {number} [rate=1] — playback rate (higher = higher pitch)
-     */
-    function playChime(rate = 1, volume = 0.5) {
-      if (!chimeBuffer || !tickAudioCtx || !soundEnabled) return;
+    function playGlint(tier, volume = 0.7, rate = 1) {
+      const buf = glintBuffers[tier];
+      if (!buf || !tickAudioCtx || !soundEnabled) return;
       const source = tickAudioCtx.createBufferSource();
-      source.buffer = chimeBuffer;
+      source.buffer = buf;
       source.playbackRate.value = rate;
       const gainNode = tickAudioCtx.createGain();
       gainNode.gain.value = volume * (soundEnabled ? volumeMaster : 0) * volumeSfx;
@@ -5495,8 +5897,7 @@
       gainNode.connect(tickAudioCtx.destination);
       source.start();
     }
-
-    initChimeSfx("chime.wav");
+    initGlintSfx();
 
     // ── Zoop SFX — speed stepper sound with pitch modulation ──
     let zoopBuffer = null;
@@ -6298,38 +6699,161 @@
     document.addEventListener("click", resumeTickCtx, { once: true });
     document.addEventListener("keydown", resumeTickCtx, { once: true });
 
-    // ── Background music — simple loop ──────────────────────
-    const bgMusic = new Audio("balbg.mp3");
-    bgMusic.loop = true;
-    let bgPlaying = false;
+    // ── Music manager — state-based tracks with crossfades ──
+    // Modes: 'maintheme' | 'roundselect' | 'draw' | 'playlist' | null (silent)
+    // Playlist auto-advances through a shuffled queue of bossa + ranked.
+    let soundEnabled = true;
+    let volumeMaster = 1, volumeMusic = 1, volumeSfx = 1;
+
+    // Per-track `vol` is a baseline multiplier applied on top of the global
+    // music volume — lets us attenuate individual tracks that were mastered
+    // hotter than the rest. All tracks reduced 50% from raw; roundselect
+    // reduced 60% because the looped melody sits louder than the others.
+    const MUSIC_TRACKS = {
+      maintheme:   { src: "maintheme.mp3",   loop: true, vol: 0.4 },
+      roundselect: { src: "roundselect.mp3", loop: true, vol: 0.32 },
+      draw:        { src: "draw.mp3",        loop: true, vol: 0.4 },
+    };
+    const PLAYLIST_TRACKS = [
+      { src: "bossa.mp3",  vol: 0.4 },
+      { src: "ranked.mp3", vol: 0.4 },
+    ];
+    const CROSSFADE_MS = 3500;
 
     function getMusicGain() {
       return (soundEnabled ? volumeMaster : 0) * volumeMusic;
     }
 
-    function startBgMusic() {
-      if (bgPlaying) return;
-      bgPlaying = true;
-      bgMusic.volume = getMusicGain();
-      bgMusic.play();
+    // Two audio slots for A/B crossfade
+    const musicSlots = [
+      { audio: new Audio(), mode: null, src: null, ratio: 0, trackVol: 1 },
+      { audio: new Audio(), mode: null, src: null, ratio: 0, trackVol: 1 },
+    ];
+    musicSlots.forEach(s => { s.audio.preload = "auto"; s.audio.volume = 0; });
+    let activeSlot = 0;
+    let currentMode = null;
+    let _fadeInterval = null;
+
+    // Playlist queue — shuffled, refilled on empty
+    let playlistQueue = [];
+    function _refillPlaylist() {
+      playlistQueue = PLAYLIST_TRACKS.slice().sort(() => Math.random() - 0.5);
+    }
+    function _nextPlaylistTrack() {
+      if (!playlistQueue.length) _refillPlaylist();
+      return playlistQueue.shift();
     }
 
+    function _applySlotVolumes() {
+      const gain = getMusicGain();
+      musicSlots.forEach(s => {
+        s.audio.volume = gain * s.ratio * (s.trackVol ?? 1);
+      });
+    }
+
+    function _startCrossfade(fromSlot, toSlot) {
+      if (_fadeInterval) clearInterval(_fadeInterval);
+      const steps = 48;
+      const stepMs = CROSSFADE_MS / steps;
+      let step = 0;
+      _fadeInterval = setInterval(() => {
+        step++;
+        const p = step / steps;
+        if (fromSlot) fromSlot.ratio = 1 - p;
+        if (toSlot)   toSlot.ratio = p;
+        _applySlotVolumes();
+        if (step >= steps) {
+          clearInterval(_fadeInterval);
+          _fadeInterval = null;
+          if (fromSlot) {
+            fromSlot.audio.pause();
+            fromSlot.audio.currentTime = 0;
+            fromSlot.ratio = 0;
+            fromSlot.mode = null;
+            fromSlot.src = null;
+          }
+          if (toSlot) toSlot.ratio = 1;
+          _applySlotVolumes();
+        }
+      }, stepMs);
+    }
+
+    function _loadSlot(slot, src, loop, trackVol = 1) {
+      slot.audio.src = src;
+      slot.audio.loop = !!loop;
+      slot.src = src;
+      slot.trackVol = trackVol;
+      slot.audio.volume = 0;
+      slot.ratio = 0;
+      // Fire-and-forget; browser autoplay policies apply.
+      const p = slot.audio.play();
+      if (p && p.catch) p.catch(() => {});
+    }
+
+    function _onPlaylistEnded(e) {
+      // Only react for the current active playlist slot
+      const slot = musicSlots[activeSlot];
+      if (!slot || slot.mode !== 'playlist') return;
+      if (e.target !== slot.audio) return;
+      const next = _nextPlaylistTrack();
+      const fromSlot = slot;
+      const toIdx = 1 - activeSlot;
+      const toSlot = musicSlots[toIdx];
+      toSlot.mode = 'playlist';
+      _loadSlot(toSlot, next.src, false, next.vol);
+      activeSlot = toIdx;
+      _startCrossfade(fromSlot, toSlot);
+    }
+    musicSlots.forEach(s => s.audio.addEventListener('ended', _onPlaylistEnded));
+
+    function setMusicMode(mode) {
+      if (mode === currentMode) return;
+      currentMode = mode;
+
+      const fromSlot = musicSlots[activeSlot].mode ? musicSlots[activeSlot] : null;
+      const toIdx = fromSlot ? (1 - activeSlot) : activeSlot;
+      const toSlot = musicSlots[toIdx];
+
+      if (mode === null) {
+        if (fromSlot) _startCrossfade(fromSlot, null);
+        return;
+      }
+
+      let src, loop, trackVol;
+      if (mode === 'playlist') {
+        const t = _nextPlaylistTrack();
+        src = t.src; loop = false; trackVol = t.vol;
+      } else if (MUSIC_TRACKS[mode]) {
+        src = MUSIC_TRACKS[mode].src;
+        loop = MUSIC_TRACKS[mode].loop;
+        trackVol = MUSIC_TRACKS[mode].vol ?? 1;
+      } else {
+        return;
+      }
+
+      toSlot.mode = mode;
+      _loadSlot(toSlot, src, loop, trackVol);
+      activeSlot = toIdx;
+      _startCrossfade(fromSlot, toSlot);
+    }
+
+    // Back-compat: legacy call sites still call startBgMusic / stopBgMusic.
+    // Default entry music is maintheme; callers can override via setMusicMode.
+    let bgPlaying = false;
+    function startBgMusic() {
+      bgPlaying = true;
+      setMusicMode('maintheme');
+    }
     function stopBgMusic() {
       bgPlaying = false;
-      bgMusic.pause();
-      bgMusic.currentTime = 0;
+      setMusicMode(null);
     }
 
-    const bgTracks = [bgMusic];
     const sfxTracks = [sfxCorrect, sfxWrong, sfxGoodAnswer, sfxSurveySays, sfxRoundEnd, sfxDecreaseBlip, sfxNeutralBeep, sfxNegativeBeep];
-
-    let soundEnabled = true;
-    let volumeMaster = 1, volumeMusic = 0, volumeSfx = 1;
 
     function applyVolumes() {
       const gain = soundEnabled ? volumeMaster : 0;
-      // Only set the active bg track volume (avoid overriding crossfade ratios)
-      if (bgPlaying) bgMusic.volume = gain * volumeMusic;
+      _applySlotVolumes();
       sfxTracks.forEach(t => t.volume = gain * volumeSfx * (t.baseVolume || 1));
     }
     applyVolumes();
@@ -6804,6 +7328,12 @@ document.addEventListener('keydown', e => {
     let answerMultiplier = 1.0;
     let categoryMultiplier = 1;
     let categoryMultipliers = {};
+
+    // Round multiplier — rolled per round-type card at picker time, latched
+    // onto the round when a card is picked, applied at round end AFTER
+    // categoryMultiplier. Stacks multiplicatively with categoryMultiplier.
+    let currentRoundMultiplier = 1;
+    let _roundTypePickMultipliers = {}; // ephemeral: moduleKey → multiplier, used during picker display
 
     let devMode = false;
     let devModeAllowedQuestions = null;
@@ -7409,12 +7939,16 @@ document.addEventListener('keydown', e => {
         case 'round-type-selected':
           // Non-host: host picked a round type, dispatch accordingly
           currentRoundType = data.selectedRoundType;
+          currentRoundMultiplier = data.selectedRoundMultiplier || 1;
           // Picker is leaving — hide the round-type picker panel and drop
           // picker-mode so the sidebar's category-select panel can take
           // over for feud modules, or the module's own UI for non-feud.
           hideRoundTypePicker();
+          if (currentRoundMultiplier > 1) showPhaseGem(currentRoundMultiplier);
           if (data.selectedRoundType === 'secret-scribble') {
             enterScribbleRound(handleModuleComplete);
+          } else {
+            setMusicMode('playlist');
           }
           // For high-five and survey, the host will follow up with a
           // 'category-select' or 'gameplay' phase transition that the
@@ -7467,9 +8001,8 @@ document.addEventListener('keydown', e => {
             if (data.teamTurn !== undefined) teamTurn = data.teamTurn;
             if (data.startingTeam !== undefined) startingTeam = data.startingTeam;
 
-            // Animate sidebar + board elements out (mirrors host advanceRound)
+            // Animate board + content-tv out (input-area stays visible as home base)
             const _contentTv = document.getElementById("content-tv");
-            const _szInput = document.getElementById("sq-zone-input");
             const _bw = document.getElementById("board-wrapper");
             if (_bw && _bw.classList.contains("slide-in")) {
               _bw.classList.remove("slide-in");
@@ -7479,19 +8012,9 @@ document.addEventListener('keydown', e => {
               _bw.classList.add("offscreen");
             }
             (async () => {
-              await anim.sequence([
-                async () => {
-                  if (_szInput && _szInput.classList.contains("input-enter")) {
-                    _szInput.classList.remove("input-enter");
-                    await anim.play(_szInput, "input-exit");
-                  }
-                },
-                async () => {
-                  if (_contentTv && !_contentTv.classList.contains("ct-hidden")) {
-                    await anim.play(_contentTv, "slide-out-left");
-                  }
-                },
-              ]);
+              if (_contentTv && !_contentTv.classList.contains("ct-hidden")) {
+                await anim.play(_contentTv, "slide-out-left");
+              }
               resetModuleCanvas();
               updateTurn();
               initRoundState();
@@ -7645,8 +8168,7 @@ document.addEventListener('keydown', e => {
             }
             const _thR = document.getElementById('turn-header');
             if (_thR) { _thR.style.display = ''; _thR.innerHTML = ''; }
-            const _tsR = document.getElementById('turn-subtext');
-            if (_tsR) _tsR.style.setProperty('--fit-base', '2rem');
+            _clearTurnSubtextFit();
             const _iaR = document.getElementById('input-area');
             if (_iaR) _iaR.style.background = '';
             const _piR = document.getElementById('phase-indicator');
@@ -7855,10 +8377,10 @@ document.addEventListener('keydown', e => {
       // that text owns the subtext and must not be clobbered.
       const iaModeRoleUI = inputArea?.getAttribute('data-ia-mode');
       const skipSubtextOverride = iaModeRoleUI === 'disabled' || iaModeRoleUI === 'action';
-      if (turnSubtext && !isActive && !skipSubtextOverride) {
+      if (!isActive && !skipSubtextOverride) {
         const activePlayer = findPlayerName(activeUid);
         if (activePlayer) {
-          turnSubtext.textContent = `${activePlayer}'s turn`;
+          setInputAreaMode({ mode: 'guess', subtext: `<span class="team-name">${activePlayer}</span>'s turn` });
         }
       }
     }
@@ -8199,6 +8721,18 @@ document.addEventListener('keydown', e => {
     //   setInputAreaMode({ mode: 'action', header: 'Red Team won!',
     //                      buttonText: 'Ready Up', onButtonClick: readyUp });
     // ─────────────────────────────────────────────────────────────────────
+    // Clears the turn-header fit-base + fit-scale inline styles so the
+    // CSS default (2rem base, 1 scale) applies again. Use at game-boundary
+    // resets where face-off's 1rem base or stale shrink-scale might linger.
+    // (Formerly _clearTurnSubtextFit — retained as alias for compatibility.)
+    function _clearTurnMessageFit() {
+      const th = document.getElementById('turn-header');
+      if (!th) return;
+      th.style.removeProperty('--fit-base');
+      th.style.removeProperty('--fit-scale');
+    }
+    const _clearTurnSubtextFit = _clearTurnMessageFit;
+
     function setInputAreaMode(opts) {
       const {
         mode = 'guess',
@@ -8208,6 +8742,8 @@ document.addEventListener('keydown', e => {
         buttonText,
         onButtonClick,
         teamColor,
+        subtextFitBase,   // e.g. '1rem' for face-off; omit for default (2rem via CSS)
+        showHeader,       // true = force turn-header display:block; false = hide; omit = leave as-is
       } = opts || {};
 
       const turnInputBox = document.getElementById('turn-input-box');
@@ -8224,9 +8760,21 @@ document.addEventListener('keydown', e => {
       // updateRoleUI fires (e.g. from a reconcile echo during an await).
       if (inputAreaEl) inputAreaEl.setAttribute('data-ia-mode', mode);
 
-      // Header + subtext
-      if (header !== undefined && turnHeader) turnHeader.innerHTML = header;
-      if (subtext !== undefined && turnSubtext) turnSubtext.textContent = subtext;
+      // showHeader option is obsolete post-rename — turn-header is always
+      // visible now. Left as a no-op so existing callers don't break.
+
+      // Header is the BIG primary line — gets fitByCharCount so long team
+      // names / messages shrink cleanly. Subtext is the smaller secondary
+      // line and renders at fixed size (empty → visibility:hidden via CSS).
+      if (header !== undefined && turnHeader) {
+        if (subtextFitBase) turnHeader.style.setProperty('--fit-base', subtextFitBase);
+        else                turnHeader.style.removeProperty('--fit-base');
+        turnHeader.innerHTML = header;
+        fitByCharCount(turnHeader, 12, turnHeader.textContent);
+      }
+      if (subtext !== undefined && turnSubtext) {
+        turnSubtext.innerHTML = subtext;
+      }
 
       // Team color on the box
       if (turnInputBox && teamColor !== undefined) {
@@ -8242,7 +8790,7 @@ document.addEventListener('keydown', e => {
       if (!inputRow) {
         inputRow = document.createElement('div');
         inputRow.className = 'turn-input-row';
-        inputRow.innerHTML = `<input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="${inputPlaceholder}" onkeydown="if(event.key==='Enter'&&!_scoringInProgress)submitGuess()" data-tip="guess-input" /><button class="btn action-btn" onclick="submitGuess()" data-tip="submit-guess">Submit</button>`;
+        inputRow.innerHTML = `<input type="text" id="guess" placeholder="${inputPlaceholder}" onkeydown="if(event.key==='Enter'&&!_scoringInProgress)submitGuess()" data-tip="guess-input" /><button class="btn action-btn" onclick="submitGuess()" data-tip="submit-guess">Submit</button>`;
         turnBody.appendChild(inputRow);
       }
       if (!actionRow) {
@@ -8261,6 +8809,7 @@ document.addEventListener('keydown', e => {
           actionRow.style.display = 'none';
           if (guessInput) {
             guessInput.disabled = false;
+            guessInput.value = '';
             guessInput.placeholder = inputPlaceholder;
           }
           if (submitBtn) { submitBtn.disabled = false; submitBtn.style.display = ''; }
@@ -8321,8 +8870,8 @@ document.addEventListener('keydown', e => {
     function showInputArea() {
       const sqi = document.getElementById('sq-zone-input');
       const ia = document.getElementById('input-area');
-      if (sqi) { sqi.style.display = ''; sqi.classList.remove('offscreen-below', 'input-exit'); sqi.classList.add('input-enter'); }
-      if (ia) { ia.style.display = ''; ia.classList.remove('hidden'); }
+      if (sqi) { sqi.classList.remove('offscreen-below', 'input-exit'); sqi.classList.add('input-enter'); }
+      if (ia) ia.classList.remove('hidden');
     }
     function setPhaseTeamColor(teamIdx) {
       const pi = document.getElementById("phase-indicator");
@@ -8383,6 +8932,7 @@ document.addEventListener('keydown', e => {
     }
 
     function startGame() {
+      setMusicMode('playlist');
       gameMode = 'rounds';
       maxRounds = parseInt(document.getElementById('roundsInput').value) || 2;
       targetScore = Infinity;
@@ -8458,6 +9008,7 @@ document.addEventListener('keydown', e => {
       _prevMultiplier = 1.0;
       _streakDisplayGeneration++;
       categoryMultiplier = 1;
+      currentRoundMultiplier = 1;
       const catMultEl = document.getElementById("cat-mult-indicator");
       if (catMultEl) catMultEl.style.display = "none";
 
@@ -8475,15 +9026,12 @@ document.addEventListener('keydown', e => {
 
       document.getElementById("question").textContent = "";
       document.getElementById("questionActions").style.display = "none";
-      document.getElementById("message").textContent = "";
       document.getElementById("endRound").innerHTML = "";
       document.getElementById("turn-input-box").style.display = "";
-      document.getElementById("turn-body").innerHTML = `
-        <div id="turn-subtext"></div>
-        <div class="turn-input-row">
-          <input type="text" id="guess" placeholder="Enter your guess" onkeydown="if(event.key==='Enter'&&!_scoringInProgress)submitGuess()" data-tip="guess-input" />
-          ${make3dBtn('Submit', 'submitGuess()', '', 'submit-guess')}
-        </div>`;
+      // Note: turn-body contents (subtext + input/action rows) are managed
+      // idempotently by setInputAreaMode. The subsequent updateTurn() below
+      // will call it in 'guess' mode, which creates canonical rows if
+      // missing and clears any stale input value.
       updateBoard(); updateScores(); updateStrikes(); updateStreakDisplay(); updateHistory(); updateTurn();
     }
 
@@ -8613,6 +9161,7 @@ document.addEventListener('keydown', e => {
         pi.removeAttribute("data-phase");
         pi.querySelectorAll(".ph-span.ph-exiting").forEach(el => el.classList.remove("ph-exiting"));
         if (!pi.classList.contains("offscreen")) pi.classList.add("offscreen");
+        hidePhaseGem();
       }
 
       // Sq-zone-input: baseline = .offscreen-below (below canvas), no
@@ -8731,18 +9280,6 @@ document.addEventListener('keydown', e => {
       updateTurn();
       initRoundState();
 
-      // Reset input-area from any previous round's module state (e.g. Ready Up)
-      // to a neutral waiting state. The next module will override with its own
-      // context once it sets up.
-      showInputArea();
-      setInputAreaMode({
-        mode: 'disabled',
-        header: 'New round',
-        subtext: 'Setting up...',
-        inputPlaceholder: 'Wait for round type selection',
-        teamColor: teamTurn,
-      });
-
       // In multiplayer, only the active player generates and syncs categories.
       // The spectator waits for Firestore to deliver the picks via reconcileLocalState.
       if (isMultiplayer) {
@@ -8790,6 +9327,7 @@ document.addEventListener('keydown', e => {
     function showRoundTypePicker(syncedData) {
       // Canvas is already clean (resetModuleCanvas ran in advanceRound).
       // Just claim the picker container.
+      setMusicMode('roundselect');
 
       // Determine available modules (check min player counts)
       const teamSizes = isMultiplayer
@@ -8810,8 +9348,8 @@ document.addEventListener('keydown', e => {
       setInputAreaMode({
         mode: 'disabled',
         header: amIPickingPlayer ? 'PICK A ROUND TYPE' : `Waiting on ${catPromptName}...`,
-        subtext: amIPickingPlayer ? 'Choose from the cards' : 'They are picking a round type',
-        inputPlaceholder: amIPickingPlayer ? 'Select a round type above' : 'Wait for round type selection',
+        subtext: amIPickingPlayer ? "It's your turn to pick" : `<span class="team-name">${catPromptName}</span> is picking a round type`,
+        inputPlaceholder: amIPickingPlayer ? 'Make a selection to advance' : 'Waiting...',
         teamColor: teamTurn,
       });
 
@@ -8820,37 +9358,88 @@ document.addEventListener('keydown', e => {
       // in the sidebar during round selection. This is a placeholder layout;
       // round-type selection is slated for a richer visual redesign.
       const moduleKeys = syncedData?.roundTypePicks || Object.keys(ROUND_MODULES);
+
+      // Round-multiplier rolls per card. Host/local rolls fresh. Non-host
+      // reads from synced data. Latched on pick via hostProcessRoundTypePick.
+      if (syncedData?.roundTypeMultipliers) {
+        _roundTypePickMultipliers = { ...syncedData.roundTypeMultipliers };
+      } else {
+        _roundTypePickMultipliers = {};
+        moduleKeys.forEach(key => {
+          _roundTypePickMultipliers[key] = rollRoundMultiplier();
+        });
+      }
+
       let pickerHtml = '<div class="rt-picker-grid">';
       moduleKeys.forEach(key => {
         const mod = ROUND_MODULES[key];
         if (!mod) return;
         const disabled = minTeamSize < mod.minPlayersPerTeam;
         const cc = mod.colorClass || '';
-        const disabledClass = disabled ? ' spectator-disabled' : '';
-        const disabledAttr = disabled ? ' style="pointer-events:none;opacity:0.35;"' : '';
+        const disabledClass = disabled ? ' rt-disabled' : '';
         const tipAttr = disabled ? ` data-tip="rt-disabled"` : ` data-tip="rt-${key}"`;
-        const s = `<span>${mod.label}</span>`.repeat(4);
-        pickerHtml += `<div class="cat-row ${cc}${disabledClass}"${disabledAttr}${tipAttr}><button class="cat-select-btn btn-3d ${cc}" onclick="onRoundTypePick('${key}')"${disabled ? ' disabled' : ''}>${s}</button></div>`;
+        const clickAttr = disabled ? '' : ` onclick="onRoundTypePick('${key}')"`;
+        const desc = mod.description || '';
+        const gem = getRoundMultiplierGem(_roundTypePickMultipliers[key] || 1);
+        const hasGemClass = gem ? ` rt-has-gem rt-tier-${gem.tier}` : '';
+        const gemHtml = gem
+          ? `<div class="rt-gem rt-gem-${gem.tier}" data-tip="gem-${gem.tier}">` +
+              `<img src="${gem.img}" alt="${gem.label}" />` +
+              `<div class="rt-gem-sparkles">` +
+                `<div class="rt-sparkle s1"></div>` +
+                `<div class="rt-sparkle s2"></div>` +
+                `<div class="rt-sparkle s3"></div>` +
+                `<div class="rt-sparkle s4"></div>` +
+                `<div class="rt-sparkle s5"></div>` +
+                `<div class="rt-sparkle s6"></div>` +
+              `</div>` +
+              `<div class="rt-gem-value">${gem.label}</div>` +
+            `</div>`
+          : '';
+        pickerHtml += `<div class="rt-card ${cc}${disabledClass}${hasGemClass}"${tipAttr}${clickAttr}>` +
+                        `<div class="rt-card-title">${mod.label}</div>` +
+                        `<div class="rt-card-body"><div class="rt-card-desc">${desc}</div></div>` +
+                        gemHtml +
+                      `</div>`;
       });
       pickerHtml += '</div>';
 
       const pickerArea = document.getElementById("round-type-picker-container");
       pickerArea.innerHTML = pickerHtml;
       pickerArea.style.display = "flex";
-      setup3dBtns();
 
-      // Stagger slide-ins (same pattern as category pills)
-      const rows = pickerArea.querySelectorAll(".cat-row");
-      anim.stagger(rows, { gap: TIMING.catRowStagger });
-      rows.forEach((row, i) => {
-        anim.timer(row, (i * TIMING.catRowStagger) / gameSpeed, () => playSlit(1, 0.4));
+      // Stagger slide-downs — minimal delay between cards
+      const cards = pickerArea.querySelectorAll(".rt-card");
+      const cardStagger = 80; // ms
+      const cardSlideMs = 450; // must match rt-card-slide-down duration in CSS
+      cards.forEach((card, i) => {
+        anim.setDelay(card, i * cardStagger);
+        card.classList.add("rt-sliding-in");
+        anim.timer(card, (i * cardStagger) / gameSpeed, () => playSlit(1, 0.35));
       });
 
-      // Multiplayer sync — host broadcasts available types
+      // Gems reveal after all cards have landed, left-to-right sequentially so
+      // each gem's hop finishes before the next begins — more of a "moment".
+      const gemHopMs = 650; // matches rt-gem-hop duration
+      const allCardsLandedMs = (cards.length - 1) * cardStagger + cardSlideMs + 120;
+      cards.forEach((card, i) => {
+        const gem = card.querySelector(".rt-gem");
+        if (!gem) return;
+        const gemOffset = (allCardsLandedMs + i * gemHopMs) / gameSpeed;
+        anim.timer(card, gemOffset, () => {
+          card.classList.add("rt-gem-revealed");
+          gem.classList.add("rt-gem-hop");
+          const gemTier = gem.className.match(/rt-gem-(emerald|sapphire|amethyst|topaz)/);
+          if (gemTier) playGlint(gemTier[1], 0.7);
+        });
+      });
+
+      // Multiplayer sync — host broadcasts available types + multipliers
       if (isMultiplayer && isHost) {
         syncState({
           phase: 'round-type-select',
           roundTypePicks: moduleKeys,
+          roundTypeMultipliers: { ..._roundTypePickMultipliers },
           activePlayerUid: getActivePlayerUid(),
           roundNumber,
           teamTurn,
@@ -8859,16 +9448,16 @@ document.addEventListener('keydown', e => {
           readyPlayers: {},
           readyCountdown: null,
           selectedRoundType: null,
+          selectedRoundMultiplier: null,
           pendingAction: null,
         });
       }
 
       // Disable picker for non-active players in multiplayer
       if (isMultiplayer && !amIActivePlayer()) {
-        pickerArea.querySelectorAll(".cat-row").forEach(row => {
-          const btn = row.querySelector("button");
-          if (btn) btn.style.pointerEvents = "none";
-          row.classList.add("spectator-disabled");
+        pickerArea.querySelectorAll(".rt-card").forEach(card => {
+          card.style.pointerEvents = "none";
+          card.classList.add("spectator-disabled");
         });
       }
     }
@@ -8880,10 +9469,29 @@ document.addEventListener('keydown', e => {
     // empty baseline from resetModuleCanvas.
     function hideRoundTypePicker() {
       const pickerArea = document.getElementById("round-type-picker-container");
-      if (pickerArea) {
+      if (!pickerArea) return;
+      const cards = pickerArea.querySelectorAll(".rt-card");
+      if (!cards.length) {
         pickerArea.style.display = "none";
         pickerArea.innerHTML = "";
+        return;
       }
+      const exitStagger = 70; // ms between successive card exits
+      const exitMs = 400;     // must match rt-card-slide-up duration
+      cards.forEach((card, i) => {
+        // Clear the entry-stagger delay so exit isn't inherited.
+        card.style.animationDelay = "";
+        anim.setDelay(card, i * exitStagger);
+        card.classList.remove("rt-sliding-in");
+        // Force reflow so the upcoming animation replays cleanly.
+        void card.offsetWidth;
+        card.classList.add("rt-sliding-out");
+      });
+      const totalMs = ((cards.length - 1) * exitStagger + exitMs + 40) / gameSpeed;
+      setTimeout(() => {
+        pickerArea.style.display = "none";
+        pickerArea.innerHTML = "";
+      }, totalMs);
     }
 
     function onRoundTypePick(moduleKey) {
@@ -8893,12 +9501,14 @@ document.addEventListener('keydown', e => {
         // Non-host: send pending action to host
         syncState({ pendingAction: { type: 'selectRoundType', moduleKey, uid: myUid } });
         // Disable picker while waiting
-        document.querySelectorAll("#round-type-picker-container .cat-row button").forEach(b => b.style.pointerEvents = "none");
+        document.querySelectorAll("#round-type-picker-container .rt-card").forEach(c => c.style.pointerEvents = "none");
       }
     }
 
     function hostProcessRoundTypePick(moduleKey) {
       currentRoundType = moduleKey;
+      // Latch the pre-rolled round multiplier onto the round.
+      currentRoundMultiplier = _roundTypePickMultipliers[moduleKey] || 1;
       // Picker selection made — hide the picker panel and leave picker-mode.
       hideRoundTypePicker();
 
@@ -8906,15 +9516,21 @@ document.addEventListener('keydown', e => {
       if (isMultiplayer) {
         syncState({
           selectedRoundType: moduleKey,
+          selectedRoundMultiplier: currentRoundMultiplier,
           phase: 'round-type-selected',
           pendingAction: null,
         });
       }
 
+      // Latch the gem onto phase-indicator; cleared at round end.
+      if (currentRoundMultiplier > 1) showPhaseGem(currentRoundMultiplier);
+
       // Dispatch to appropriate module
       if (moduleKey === 'high-five') {
+        setMusicMode('playlist');
         hostProcessRoundTypePick_highFive();
       } else if (moduleKey === 'survey') {
+        setMusicMode('playlist');
         hostProcessRoundTypePick_survey();
       } else if (moduleKey === 'secret-scribble') {
         enterScribbleRound(handleModuleComplete);
@@ -9030,6 +9646,7 @@ document.addEventListener('keydown', e => {
     const ROUND_MODULES = {
       'high-five': {
         label: 'High Five',
+        description: 'Pick a trivia category and rank the top five answers.',
         colorClass: 'cat-science',
         minPlayersPerTeam: 1,
         enter(onComplete) { hostProcessRoundTypePick_highFive(); },
@@ -9037,6 +9654,7 @@ document.addEventListener('keydown', e => {
       },
       'survey': {
         label: 'Survey',
+        description: 'Guess how the crowd answered an open-ended question.',
         colorClass: 'cat-survey',
         minPlayersPerTeam: 1,
         enter(onComplete) { hostProcessRoundTypePick_survey(); },
@@ -9044,6 +9662,7 @@ document.addEventListener('keydown', e => {
       },
       'secret-scribble': {
         label: 'Secret Scribble',
+        description: 'Draw your secret word while the other team tries to steal it.',
         colorClass: 'cat-popculture',
         minPlayersPerTeam: 2,
         enter(onComplete) { enterScribbleRound(onComplete); },
@@ -9059,6 +9678,16 @@ document.addEventListener('keydown', e => {
       // endRound() from wiping the input-area turn-body when the
       // round-result phase syncs from the host.
       window._lastRoundWasModule = true;
+      setMusicMode('playlist');
+
+      // Round multiplier applies to BOTH teams' totals in scribble since
+      // it's not winner-take-all. Category multiplier doesn't apply here
+      // (scribble doesn't have a category). Applied before folding into
+      // teamScores so the synced value is the final post-multiplier total.
+      const rm = currentRoundMultiplier || 1;
+      redScore = Math.round(redScore * rm);
+      blueScore = Math.round(blueScore * rm);
+      if (rm > 1) hidePhaseGem();
 
       // Only the host folds scores into teamScores and syncs. Non-hosts
       // receive the canonical teamScores via the host's syncAfterGuess
@@ -9115,7 +9744,7 @@ document.addEventListener('keydown', e => {
     // Just ensure input-area (home base) is visible.
     function restoreMainGameUI() {
       const ia = document.getElementById("input-area");
-      if (ia) { ia.style.display = ""; ia.classList.remove("hidden"); }
+      if (ia) ia.classList.remove("hidden");
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -9128,7 +9757,7 @@ document.addEventListener('keydown', e => {
       tileSize: 95, // canvasSize / gridSize
       drawDuration: 60,
       revealInterval: 4,
-      wordSelectTime: 10,
+      wordSelectTime: 15,
       // Pause (ms) after both drawers lock in their picks before drawing
       // starts — gives everyone a beat to see "both ready" before the
       // countdown overlay runs.
@@ -9802,6 +10431,7 @@ document.addEventListener('keydown', e => {
     }
 
     function enterScribbleRound(onComplete) {
+      setMusicMode('draw');
       scribbleState._onComplete = onComplete || null;
       scribbleState.active = true;
       scribbleState.currentSession = 0;
@@ -10202,6 +10832,18 @@ document.addEventListener('keydown', e => {
       } else {
         if (drawerView) drawerView.style.display = "none";
         if (guesserView) guesserView.style.display = "flex";
+        // Color panel labels by team: teammate = my team, opponent = other
+        const _myTeam = (isMultiplayer && myUid && teamPlayerUids[1]?.includes(myUid)) ? 1 : 0;
+        const tml = document.getElementById("scribble-teammate-label");
+        const opl = document.getElementById("scribble-opp-label");
+        if (tml) {
+          tml.classList.remove("team-red", "team-blue");
+          tml.classList.add(_myTeam === 0 ? "team-red" : "team-blue");
+        }
+        if (opl) {
+          opl.classList.remove("team-red", "team-blue");
+          opl.classList.add(_myTeam === 0 ? "team-blue" : "team-red");
+        }
       }
 
       // Input-area home base: stays visible for all players. Content
@@ -10284,9 +10926,7 @@ document.addEventListener('keydown', e => {
 
       // Enable the main guess input for guessers (routed via submitGuess → scribbleSubmitGuess)
       const guessInput = document.getElementById("guess");
-      const messageEl = document.getElementById("message");
       if (guessInput && !isDrawer) { guessInput.disabled = false; guessInput.value = ""; guessInput.placeholder = "Type your guess..."; guessInput.focus(); }
-      if (messageEl) messageEl.textContent = "";
 
       // Clear any lingering status message from previous session/round
       const statusEl = document.getElementById("scribble-status");
@@ -10843,11 +11483,15 @@ document.addEventListener('keydown', e => {
         turnInputBox.classList.remove('team-red', 'team-blue');
         turnInputBox.style.display = '';
       }
-      // Turn header/subtext — clear "Player X is up" leftover
+      // Turn header/subtext — clear "Player X is up" leftover. Header text
+      // gets cleared directly (setInputAreaMode would re-tag data-ia-mode
+      // prematurely); subtext fit inline styles are cleared via helper so
+      // face-off's 1rem base and any stale scale don't carry forward.
       const turnHeader = document.getElementById('turn-header');
-      if (turnHeader) turnHeader.innerHTML = '';
+      if (turnHeader) { turnHeader.style.display = ''; turnHeader.innerHTML = ''; }
       const turnSubtext = document.getElementById('turn-subtext');
       if (turnSubtext) turnSubtext.textContent = '';
+      _clearTurnSubtextFit();
       // Blob background → neutral black
       document.getElementById('game-root')?.style.setProperty('--bg-blob-base', '#111');
       // Question box → neutral
@@ -10964,6 +11608,11 @@ document.addEventListener('keydown', e => {
     // 5-second countdown on the cover plate → "GO!" → reveal → start battle timer.
     function runBattleCountdown(battleIdx) {
       faceoffState._countdownActive = true;
+      // Refresh input-area messaging now that we know the current battle +
+      // countdown state. Without this call the input-area shows whatever was
+      // there before face-off (Ready Up button, round-type picker prompt,
+      // previous battle's spectator text) until activateBattle fires 5s later.
+      updateFaceoffRoleUI();
       const cover = document.getElementById(`faceoff-cover-${battleIdx}`);
       if (!cover) { faceoffState._countdownActive = false; activateBattle(battleIdx); return; }
       const label = cover.querySelector('.faceoff-cover-label');
@@ -11042,39 +11691,44 @@ document.addEventListener('keydown', e => {
     function updateFaceoffRoleUI() {
       if (!faceoffState.active) return;
       const b = faceoffState.currentBattle;
-      const guessInput = document.getElementById('guess');
-      const submitBtn = document.querySelector('#turn-body .action-btn');
-      const turnHeader = document.getElementById('turn-header');
-      const turnSubtext = document.getElementById('turn-subtext');
       let amIActive = false;
       if (!isMultiplayer) {
         amIActive = true;
       } else {
         amIActive = myUid === faceoffState.playerUids[b][0] || myUid === faceoffState.playerUids[b][1];
       }
-      // During countdown, keep input disabled regardless of active status
       const duringCountdown = !!faceoffState._countdownActive;
-      if (guessInput) {
-        guessInput.disabled = !amIActive || duringCountdown;
-        if (amIActive && !duringCountdown) guessInput.placeholder = 'Enter your guess';
+      const canInput = amIActive && !duringCountdown;
+
+      let header, subtext, placeholder;
+      if (amIActive && duringCountdown) {
+        header = "YOU'RE UP NEXT";
+        subtext = `Battle ${b + 1}`;
+        placeholder = 'Get ready...';
+      } else if (amIActive) {
+        header = "YOU'RE UP NOW";
+        subtext = `Battle ${b + 1}`;
+        placeholder = 'Enter your guess';
+      } else if (duringCountdown) {
+        header = 'WAITING FOR YOUR BATTLE';
+        subtext = `Battle ${b + 1} is starting`;
+        placeholder = 'Get ready...';
+      } else {
+        header = 'WAITING FOR YOUR BATTLE';
+        subtext = `Battle ${b + 1} in progress`;
+        placeholder = 'Waiting...';
       }
-      if (submitBtn) submitBtn.disabled = !amIActive || duringCountdown;
-      // Personalized message — show turn-header (normally display:none) with no inline style overrides
-      if (turnHeader) {
-        turnHeader.style.display = 'block';
-        turnHeader.innerHTML = amIActive
-          ? 'YOU\'RE UP NOW'
-          : 'WAITING FOR OTHER PLAYERS';
-      }
-      if (turnSubtext) {
-        turnSubtext.style.setProperty('--fit-scale', '1');
-        turnSubtext.style.setProperty('--fit-base', '1rem');
-        turnSubtext.textContent = amIActive
-          ? `Battle ${b + 1}`
-          : `Battle ${b + 1} in progress`;
-      }
-      if (amIActive && guessInput && !guessInput.disabled) {
-        setTimeout(() => guessInput.focus(), 100);
+
+      setInputAreaMode({
+        mode: canInput ? 'guess' : 'disabled',
+        header, subtext,
+        subtextFitBase: '1rem',
+        showHeader: true,
+        inputPlaceholder: placeholder,
+      });
+      if (canInput) {
+        const guessInput = document.getElementById('guess');
+        if (guessInput) setTimeout(() => guessInput.focus(), 100);
       }
     }
 
@@ -11372,6 +12026,19 @@ document.addEventListener('keydown', e => {
       // just drives the normal text swap.
       anim.wait(TIMING.phaseTextEnterDelay).then(() => setPhase("category-select"));
 
+      // Restore input-area home base. initRoundState hides sq-zone-input;
+      // canonicalize its visibility + content here so host and non-host
+      // paths share one source of truth during category selection.
+      showInputArea();
+      const amPicker = !isMultiplayer || amIActivePlayer();
+      setInputAreaMode({
+        mode: 'disabled',
+        header: amPicker ? 'PICK A CATEGORY' : `Waiting on ${catPromptName}...`,
+        subtext: amPicker ? 'Choose a category' : `<span class="team-name">${catPromptName}</span> is picking a category`,
+        inputPlaceholder: amPicker ? 'Make a selection to advance' : 'Waiting...',
+        teamColor: teamTurn,
+      });
+
       // Populate pills — trivia group, divider, survey group
       const getCategoryClass = (cat) => {
         const c = cat.toLowerCase();
@@ -11392,7 +12059,7 @@ document.addEventListener('keydown', e => {
         // Category class on BOTH the row and the button so the row
         // inherits the `--cat-face` / `--cat-solid` CSS variables for
         // its own glow/CRT animations during Path B exit.
-        return `<div class="cat-row${cc ? ' ' + cc : ''}" data-tip="cat-pill"><button class="cat-select-btn btn-3d${cc ? ' ' + cc : ''}" onclick="onCategoryClick('${cat.replace(/'/g,"\\'")}')">${s}</button>${badge}</div>`;
+        return `<div class="cat-row${cc ? ' ' + cc : ''}"><button class="cat-select-btn btn-3d${cc ? ' ' + cc : ''}" onclick="onCategoryClick('${cat.replace(/'/g,"\\'")}')">${s}</button>${badge}</div>`;
       };
       let pillsHtml = '<div class="trivia-categories">';
       picks.forEach(c => { pillsHtml += makeBtn(c, c); });
@@ -11448,12 +12115,15 @@ document.addEventListener('keydown', e => {
         const tier = badge.classList.contains("coin-gold") ? "coin-gold"
                    : badge.classList.contains("coin-silver") ? "coin-silver"
                    : "coin-bronze";
+        const gemTier = tier === "coin-gold"   ? "topaz"
+                      : tier === "coin-silver" ? "sapphire"
+                      :                          "emerald";
         const times = badgeBounceTimes[tier] || badgeBounceTimes["coin-bronze"];
         times.forEach((t, bi) => {
           // Pitch and volume escalate per successive bounce
           const rate = 1.0 + bi * 0.15;
           const vol = 0.3 + bi * 0.2;   // 0.3 → 0.5 → 0.7
-          setTimeout(() => { playChime(rate, vol); emitSparkles(badge); }, (delay + t) / gameSpeed);
+          setTimeout(() => { playGlint(gemTier, vol, rate); emitSparkles(badge); }, (delay + t) / gameSpeed);
         });
       });
 
@@ -11480,7 +12150,6 @@ document.addEventListener('keydown', e => {
       if (pillsAreaEl) pillsAreaEl.style.display = "";
       const contentTvEl = document.getElementById("content-tv");
       if (contentTvEl) contentTvEl.style.display = "none";
-      document.getElementById("input-area").classList.add("hidden");
       // Slide the pills area in from the left — content is fully composited
       // off-screen before it becomes visible.
       if (pillsAreaRef) {
@@ -12021,36 +12690,50 @@ document.addEventListener('keydown', e => {
     }
 
     function awardRoundScore(team, callback) {
-      const finalScore = Math.round(roundScore * categoryMultiplier);
-      if (categoryMultiplier > 1) {
-        // Interstitial animation: pulse the indicator, count up the total
-        const indicator = document.getElementById("cat-mult-indicator");
-        const totalEl = document.getElementById("board-round-total");
-        if (indicator) indicator.classList.add("mult-activate");
-        const startVal = roundScore;
+      // Two sequential multiplier beats: category first, then round.
+      // Round multiplier stacks multiplicatively on top of category.
+      const afterCat = Math.round(roundScore * categoryMultiplier);
+      const afterRound = Math.round(afterCat * currentRoundMultiplier);
+      const hasCat = categoryMultiplier > 1;
+      const hasRound = currentRoundMultiplier > 1;
+      const totalEl = document.getElementById("board-round-total");
+      const indicator = document.getElementById("cat-mult-indicator");
+
+      const animateStep = (startVal, endVal) => new Promise(resolve => {
+        if (startVal === endVal) { resolve(); return; }
         const steps = 20;
         const stepTime = 40 / gameSpeed;
         let step = 0;
-        const countUp = setInterval(() => {
+        const iv = setInterval(() => {
           step++;
           const progress = step / steps;
-          const current = Math.round(startVal + (finalScore - startVal) * progress);
+          const current = Math.round(startVal + (endVal - startVal) * progress);
           if (totalEl) totalEl.textContent = current;
           if (step >= steps) {
-            clearInterval(countUp);
-            roundScore = finalScore;
-            if (totalEl) totalEl.textContent = finalScore;
-            teamScores[team] += finalScore;
-            updateScores();
-            if (indicator) indicator.classList.remove("mult-activate");
-            setTimeout(() => callback(finalScore), 400 / gameSpeed);
+            clearInterval(iv);
+            if (totalEl) totalEl.textContent = endVal;
+            setTimeout(resolve, 400 / gameSpeed);
           }
         }, stepTime);
-      } else {
-        teamScores[team] += finalScore;
+      });
+
+      (async () => {
+        if (hasCat) {
+          if (indicator) indicator.classList.add("mult-activate");
+          await animateStep(roundScore, afterCat);
+          if (indicator) indicator.classList.remove("mult-activate");
+        }
+        if (hasRound) {
+          // TODO: polish pass — pulse a round-multiplier badge here.
+          await animateStep(afterCat, afterRound);
+          hidePhaseGem();
+        }
+        roundScore = afterRound;
+        if (totalEl) totalEl.textContent = afterRound;
+        teamScores[team] += afterRound;
         updateScores();
-        callback(finalScore);
-      }
+        callback(afterRound);
+      })();
     }
 
     async function flipTile(index, type, earnedTotal, appliedMult) {
@@ -12166,6 +12849,70 @@ document.addEventListener('keydown', e => {
       if (strikeStat) { strikeStat.classList.remove('strikes-fade-out', 'strikes-full'); if (strikes >= 3) strikeStat.classList.add('strikes-full'); }
     }
 
+    // Rolls a round-level multiplier for a single round-type card.
+    // Weights: 3x=5%, 2.5x=10%, 2x=20%, 1.5x=40%, else 1x (25%).
+    // devMode: higher density for testing.
+    function rollRoundMultiplier() {
+      if (devMode) {
+        const r = Math.random();
+        if (r < 0.2) return 3;
+        if (r < 0.4) return 2.5;
+        if (r < 0.6) return 2;
+        if (r < 0.85) return 1.5;
+        return 1;
+      }
+      const roll = Math.random();
+      if (roll < 0.05) return 3;
+      if (roll < 0.15) return 2.5;
+      if (roll < 0.35) return 2;
+      if (roll < 0.75) return 1.5;
+      return 1;
+    }
+
+    // Maps a round multiplier value to its gem tier metadata.
+    // Returns null if mult <= 1 (no gem to display).
+    function getRoundMultiplierGem(mult) {
+      if (mult >= 3)   return { tier: 'topaz',    img: 'topaz.png',    label: '3x'   };
+      if (mult >= 2.5) return { tier: 'amethyst', img: 'amethyst.png', label: '2.5x' };
+      if (mult >= 2)   return { tier: 'sapphire', img: 'sapphire.png', label: '2x'   };
+      if (mult >= 1.5) return { tier: 'emerald',  img: 'emerald.png',  label: '1.5x' };
+      return null;
+    }
+
+    // Latch the round's gem onto #phase-indicator once a round type with
+    // a multiplier is chosen. Stays visible until the multiplier's effect
+    // resolves at round end (see hidePhaseGem callers).
+    function showPhaseGem(mult) {
+      const gem = getRoundMultiplierGem(mult);
+      const ph = document.getElementById("phase-indicator");
+      if (!ph || !gem) return;
+      hidePhaseGem();
+      const el = document.createElement("div");
+      el.className = `rt-gem ph-gem rt-gem-${gem.tier} rt-tier-${gem.tier}`;
+      el.id = "ph-gem";
+      el.innerHTML =
+        `<img src="${gem.img}" alt="${gem.label}" />` +
+        `<div class="rt-gem-sparkles">` +
+          `<div class="rt-sparkle s1"></div>` +
+          `<div class="rt-sparkle s2"></div>` +
+          `<div class="rt-sparkle s3"></div>` +
+          `<div class="rt-sparkle s4"></div>` +
+          `<div class="rt-sparkle s5"></div>` +
+          `<div class="rt-sparkle s6"></div>` +
+        `</div>` +
+        `<div class="rt-gem-value">${gem.label}</div>`;
+      ph.appendChild(el);
+      // Kick the hop on the next frame so the initial scale(0) applies first.
+      requestAnimationFrame(() => {
+        el.classList.add("rt-gem-hop");
+        playGlint(gem.tier, 0.7);
+      });
+    }
+    function hidePhaseGem() {
+      const el = document.getElementById("ph-gem");
+      if (el) el.remove();
+    }
+
     function rollCategoryMultiplier() {
       if (devMode) {
         if (Math.random() < 0.5) return 3;
@@ -12268,14 +13015,6 @@ document.addEventListener('keydown', e => {
 
       updateBlobColor(isRed ? 'red' : 'blue');
 
-      const box     = document.getElementById("turn-input-box");
-      const header  = document.getElementById("turn-header");
-      const subtext = document.getElementById("turn-subtext");
-
-      if (box) {
-        box.classList.remove("team-red", "team-blue");
-        box.classList.add(teamClass);
-      }
       const inputArea = document.getElementById("input-area");
       if (inputArea) { inputArea.classList.remove("team-red","team-blue"); inputArea.classList.add(teamClass); }
       const qbox = document.getElementById("question-box");
@@ -12292,18 +13031,27 @@ document.addEventListener('keydown', e => {
       const iaMode = document.getElementById('input-area')?.getAttribute('data-ia-mode');
       const skipTurnText = iaMode === 'disabled' || iaMode === 'action';
 
-      if (stealPhase) {
-        const stealCur = teamPlayers[teamTurn][playerIndex[teamTurn] % teamPlayers[teamTurn].length];
-        if (!skipTurnText) {
-          if (header)  header.textContent  = `${teamName} can STEAL!`;
-          if (subtext) { subtext.textContent = stealCur ? `${stealCur} is up` : "One guess for the steal..."; fitByCharCount(subtext, 12); }
+      if (!skipTurnText) {
+        const cur = teamPlayers[teamTurn][playerIndex[teamTurn] % teamPlayers[teamTurn].length];
+        // Active-player-first perspective: in MP, if I'm the active one show
+        // "You're up!"; spectators get overridden to "{name}'s turn" by
+        // updateRoleUI below. In local mode fall back to "{name} is up".
+        const iAmActive = isMultiplayer ? amIActivePlayer() : false;
+        const header = stealPhase
+          ? 'Chance to steal'
+          : `${teamName} has the board`;
+        let subtext;
+        if (stealPhase) {
+          subtext = iAmActive ? "You're up!" : (cur ? `<span class="team-name">${cur}</span> is up` : 'One guess for the steal...');
+        } else {
+          subtext = iAmActive ? "You're up!" : (cur ? `<span class="team-name">${cur}</span> is up` : `<span class="team-name">${teamName}</span> is up`);
         }
+        setInputAreaMode({ mode: 'guess', header, subtext, teamColor: teamTurn, showHeader: !!stealPhase });
       } else {
-        if (!skipTurnText) {
-          if (header) header.textContent = `${teamName} has the board`;
-          const cur = teamPlayers[teamTurn][playerIndex[teamTurn] % teamPlayers[teamTurn].length];
-          if (subtext) { subtext.textContent = cur ? `${cur} is up` : `${teamName} is up`; fitByCharCount(subtext, 12); }
-        }
+        // Module-owned mode: still sync turn-input-box team color since the
+        // active team may have flipped this turn.
+        const box = document.getElementById("turn-input-box");
+        if (box) { box.classList.remove("team-red","team-blue"); box.classList.add(teamClass); }
       }
 
       document.getElementById("red-score-box").classList.toggle("active-team", teamTurn === 0);
@@ -12318,26 +13066,28 @@ document.addEventListener('keydown', e => {
      *  back down, and swaps to the next player's name mid-flight.
      *  Falls back to a plain updateTurn() if the text doesn't change. */
     function animateTurnSwap() {
-      const subtext = document.getElementById("turn-subtext");
-      const oldText = subtext?.textContent;
+      // Post-rename: the big primary "current player" line lives in
+      // #turn-header. Swap animation targets it directly.
+      const headerEl = document.getElementById("turn-header");
+      const oldHtml = headerEl?.innerHTML;
 
       // Let updateTurn set new text + all other state (team color, blobs, etc.)
       updateTurn();
 
-      const newText = subtext?.textContent;
-      if (!subtext || oldText === newText) return;
+      const newHtml = headerEl?.innerHTML;
+      if (!headerEl || oldHtml === newHtml) return;
 
-      // Restore old text, kick off animation
-      subtext.textContent = oldText;
-      subtext.classList.remove("turn-swapping");
-      void subtext.offsetWidth; // reflow to allow replay
-      subtext.classList.add("turn-swapping");
+      // Restore old content, kick off animation
+      headerEl.innerHTML = oldHtml;
+      headerEl.classList.remove("turn-swapping");
+      void headerEl.offsetWidth; // reflow to allow replay
+      headerEl.classList.add("turn-swapping");
 
       // Swap text at the top of the jump (~35% of 450ms ≈ 160ms)
-      setTimeout(() => { subtext.textContent = newText; fitByCharCount(subtext, 12); }, 160 / gameSpeed);
+      setTimeout(() => { headerEl.innerHTML = newHtml; fitByCharCount(headerEl, 12, headerEl.textContent); }, 160 / gameSpeed);
 
-      subtext.addEventListener("animationend", () => {
-        subtext.classList.remove("turn-swapping");
+      headerEl.addEventListener("animationend", () => {
+        headerEl.classList.remove("turn-swapping");
       }, { once: true });
     }
 
@@ -12591,7 +13341,6 @@ document.addEventListener('keydown', e => {
       const found=foundIdx!==-1;
       if(found){currentStreak++;answerMultiplier=1+(currentStreak*0.2);playCorrect(foundIdx===0);}else{const brokeStreak=currentStreak;currentStreak=0;answerMultiplier=1.0;playWrong();strikes++;guessHistory.push({player:playerName,team:teamTurn,guess:guess,result:"✗ Wrong"});
         logGuess({ player: individualPlayer, team: teamTurn, guess, outcome: 'wrong', streak: 0, streakBroken: brokeStreak });}playerIndex[teamTurn]=(playerIndex[teamTurn]+1)%teamPlayers[teamTurn].length;
-      document.getElementById("message").textContent="";
       if(found){
         const guessInput=document.getElementById("guess");
         const submitBtn=document.querySelector('#turn-body .action-btn');
@@ -12710,51 +13459,13 @@ document.addEventListener('keydown', e => {
 
     function endRound(msg, scoringTeam) {
       lastRoundWinner = scoringTeam;
-      const box    = document.getElementById("turn-input-box");
-      const header = document.getElementById("turn-header");
-      const body   = document.getElementById("turn-body");
 
       const endTeamClass = scoringTeam===0?"team-red":"team-blue";
-      box.classList.remove("team-red","team-blue");
-      box.classList.add(endTeamClass);
       const inputArea2 = document.getElementById("input-area");
       if (inputArea2) { inputArea2.classList.remove("team-red","team-blue"); inputArea2.classList.add(endTeamClass); }
       const qbox2 = document.getElementById("question-box");
       if (qbox2) { qbox2.classList.remove("team-red","team-blue"); qbox2.classList.add(endTeamClass); }
 
-      // DIAGNOSTIC (temporary — backlog item: "Ready for Face-off not shown
-      // on non-hosts after module-module-module-feud sequence"). Remove once
-      // confirmed. Logs which branch endRound takes on each client so we can
-      // tell if _lastRoundWasModule leaked across rounds on non-hosts.
-      console.log('[endRound]', {
-        isHost: typeof isHost !== 'undefined' ? isHost : null,
-        _lastRoundWasModule: !!window._lastRoundWasModule,
-        iaMode: document.getElementById('input-area')?.getAttribute('data-ia-mode') ?? null,
-        roundNumber,
-        maxRounds,
-        scoringTeam,
-        faceoffCompleted: faceoffState?.completed,
-      });
-
-      // If a module (scribble, etc.) just completed, skip the feud-style
-      // turn-body innerHTML replacement — handleModuleComplete already
-      // set up the Ready Up button via setInputAreaMode. Feud's endRound
-      // would clobber that with a duplicate/conflicting button.
-      if (window._lastRoundWasModule) {
-        window._lastRoundWasModule = false;
-        // Still set header message so the team-colored "X won with Y pts!" shows
-        header.innerHTML = msg;
-        // Auto-reveal and ready-state reset still needed
-        if (isMultiplayer) {
-          _readyPlayersMap = {};
-          if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
-          _readyCountdownEnd = null;
-          updateReadyStatus();
-        }
-        return;
-      }
-
-      header.innerHTML = msg;
       const isLastRound = gameMode === 'rounds' && roundNumber >= maxRounds;
 
       // Final normal round with no face-off pending: straight to victory
@@ -12764,28 +13475,28 @@ document.addEventListener('keydown', e => {
         return;
       }
 
-      // isLastRound && !faceoffState.completed: fall through to ready-up UI.
-      // The ready-up consensus will call enterFaceoffRound() via checkReadyAdvance.
-      // Local mode shows a "Face-off Round" button instead of "Next Round".
       const faceoffPending = isLastRound && !faceoffState.completed;
+      const buttonText = isMultiplayer
+        ? (faceoffPending ? 'Ready for Face-off' : 'Ready Up')
+        : (faceoffPending ? 'Face-off Round' : 'Next Round');
+      const onButtonClick = isMultiplayer ? readyUp : advanceRound;
 
-      if (isMultiplayer) {
-        // Multiplayer: Ready Up consensus — all players must ready before advancing
-        body.innerHTML = `
-          ${make3dBtn(faceoffPending ? 'Ready for Face-off' : 'Ready Up', 'readyUp()', '', 'ready-up')}
-          <div id="ready-status" style="text-align:center; margin-top:8px; font-family:futura-100,sans-serif; font-size:0.85rem; color:#aaa;"></div>
-        `;
-      } else {
-        // Local mode: direct advance (advanceRound branches to face-off if pending)
-        body.innerHTML = `
-          ${make3dBtn(
-            faceoffPending ? 'Face-off Round' : 'Next Round',
-            'advanceRound()',
-            '',
-            faceoffPending ? 'faceoff-advance' : 'next-round'
-          )}
-        `;
-      }
+      // Single-writer: setInputAreaMode owns the round-result UI. Idempotent
+      // — if a module already set action mode (e.g. handleModuleComplete),
+      // this overwrites with the canonical feud msg without a double button.
+      setInputAreaMode({
+        mode: 'action',
+        header: msg,
+        subtext: isMultiplayer ? 'Ready up to continue' : 'Click to continue',
+        buttonText,
+        onButtonClick,
+        teamColor: scoringTeam,
+      });
+
+      // Clear the legacy module flag — its responsibility (avoiding double
+      // Ready Up buttons when both paths wrote via innerHTML) no longer
+      // exists under the single-writer model.
+      window._lastRoundWasModule = false;
 
       // Auto-reveal remaining answers after 3 seconds
       setTimeout(() => revealAll(), 3000 / gameSpeed);
@@ -13218,7 +13929,6 @@ document.addEventListener('keydown', e => {
       document.getElementById("question").textContent = "";
       document.getElementById("questionActions").style.display = "none";
       document.getElementById("endRound").innerHTML = "";
-      document.getElementById("message").textContent = "";
       document.getElementById("turn-input-box").style.display = "";
 
       // Face-off reset: tear down container, restore normal board/tv visibility,
@@ -13244,8 +13954,7 @@ document.addEventListener('keydown', e => {
       }
       const th = document.getElementById('turn-header');
       if (th) { th.style.display = ''; th.innerHTML = ''; }
-      const ts = document.getElementById('turn-subtext');
-      if (ts) { ts.style.setProperty('--fit-base', '2rem'); }
+      _clearTurnSubtextFit();
       // Restore input-area and phase-indicator inline styles that face-off may have set
       const iaReset = document.getElementById('input-area');
       if (iaReset) iaReset.style.background = '';
@@ -13336,6 +14045,7 @@ document.addEventListener('keydown', e => {
     async function executeReturnToLobby() {
       if (_returningToLobby) return;
       _returningToLobby = true;
+      setMusicMode('maintheme');
 
       // 1. Stop game listener FIRST to prevent snapshot interference during animations
       gameEnded = false;
@@ -13444,6 +14154,7 @@ document.addEventListener('keydown', e => {
 
     function exitToMainMenu() {
       // Individual action — does not affect other players' state
+      setMusicMode('maintheme');
       stopVictoryAnimation();
       clearPostGameVoteState();
       stopGameListener();
@@ -13512,6 +14223,7 @@ document.addEventListener('keydown', e => {
       if(await showConfirm(`Apply ${sign}${val} points to ${name}?`, { title: 'Edit Score' })){teamScores[team]+=val;el.value=0;updateScores();checkForWinner();}}
 
     function endGame(msg, winnerOverride = null) {
+      setMusicMode('maintheme');
       const winner = winnerOverride !== null ? winnerOverride : (teamScores[0] >= teamScores[1] ? 0 : 1);
       // Populate sidebar endRound area (retained for returning to the board).
       // Fast Money Round button removed — replaced by the Face-off Round which
@@ -13543,6 +14255,8 @@ document.addEventListener('keydown', e => {
     }
 
     function resetGame(){
+      setMusicMode('maintheme');
+      hidePhaseGem();
       stopVictoryAnimation();
       clearPostGameVoteState();
       updateBlobColor();
@@ -13580,8 +14294,7 @@ document.addEventListener('keydown', e => {
       }
       const thRestore = document.getElementById('turn-header');
       if (thRestore) { thRestore.style.display = ''; thRestore.innerHTML = ''; }
-      const tsRestore = document.getElementById('turn-subtext');
-      if (tsRestore) { tsRestore.style.setProperty('--fit-base', '2rem'); }
+      _clearTurnSubtextFit();
       resetSetupSteps();
       clearInterval(fm.timerInterval);
       document.getElementById("setup").style.display="block";

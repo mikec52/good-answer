@@ -110,6 +110,12 @@ roundEnd → boardClean → roundStart (or selectRound)
 
 Each module's entry function can then assume a clean slate. All current defensive cleanup code at the top of module entry points (`initRoundState`'s cat-label removal, `setupFaceoffUI`'s hides, `enterScribbleRound`'s clears, etc.) goes away.
 
+**Observed symptoms (regression cases for when `boardClean` lands):**
+
+- **Scribble scoreboard/summary retained on faceoff screen** (non-host view). After a scribble round ends and faceoff begins, the scribble UI (session summary, per-team boxes) stays visible behind/around the faceoff layout. Root cause: `setupFaceoffUI` (feud.html:~10533) hides `board-wrapper` and `content-tv` but does not hide `scribble-container` or its scoreboard children. Each module's entry has its own hand-maintained cross-module cleanup matrix, and the matrix is incomplete. `boardClean` replaces all of these with one call.
+- **Input-area drift on non-host clients.** Something pushes `#input-area` progressively further down the sidebar until it's the non-host's turn to guess, at which point it re-settles. Symptom of mixed-lifetime sidebar/module-canvas layout mutations that aren't reset between phases — module transitions leave residual spacer/margin/offset state on shared ancestors. Should verify this goes away once `boardClean` normalizes the canvas and sidebar geometry between modules.
+- **Evergreen regions clipped above canvas on new-game start after faceoff.** On play-again after a faceoff-completed game, the phase indicator and scoreboard both render pushed up past the canvas top edge (only their bottom slivers visible). Simultaneously the round-type picker renders with duplicated/ghosted pill text and the old "PICKING A ROUND TYPE" phase span overlaps the input-area. Suggests faceoff→victory→play-again leaves residual `transform`, `margin`, or position state on shared ancestors that the new game's entry animations layer on top of instead of starting from baseline. Step 4's `boardClean` (plus an evergreen reset for sidebar + scoreboard transforms) is the right hammer — any inline fix now would just re-check boxes that the refactor removes entirely.
+
 ### 5. Dead-code audit, module by module
 
 With the architecture clarified, pass through each module's entry/exit to remove code that was only there to defend against the old mixed-lifetime containers:
@@ -118,6 +124,7 @@ With the architecture clarified, pass through each module's entry/exit to remove
 - `showInputArea`'s defensive `sq-zone-content` handling
 - Faceoff's `#board-wrapper` and `#content-tv` hides
 - `setInputAreaMode` gymnastics that exist because sidebar layout was fragile
+- **Single-writer contract for `#turn-subtext`.** Currently ~8 call sites write to it; only `updateTurn()` and `animateTurnSwap()` call `fitByCharCount` afterward. The rest (`setInputAreaMode`, faceoff reset, `resetGame`'s 2rem `--fit-base` reset, the raw HTML default) leave `--fit-scale` stale. Observed symptom: during ranked-question gameplay, host sees `#turn-subtext` at 27.4px while non-host sees 32px — host passed through `updateTurn()` with a 14-char name (scale 0.857 baked in), non-host's mirror path went through `setInputAreaMode` and never fitted. Fix shape: route every text update through `setInputAreaMode` (matching the `#phase-indicator` / `setPhase` single-writer model), and have `setInputAreaMode` call `fitByCharCount` internally. Also clear `--fit-scale` wherever `--fit-base` is reset.
 
 Net LOC goes down; N×N coupling between modules goes away.
 
@@ -127,9 +134,9 @@ Several entrance/exit animations currently assume specific DOM adjacency or side
 
 ### Execution order and scope
 
-- **Step 1:** thinking/documentation only, done above.
-- **Steps 2+3:** biggest single lift. One focused session. Touches HTML structure, CSS layout, every module's entry/exit.
-- **Step 4:** medium. Writing the cleanup function is small; the value is deleting the code it replaces.
+- **Step 1:** ✅ Done — thinking/documentation only, captured above.
+- **Steps 2+3:** ✅ Done (2026-04-17). Sidebar is evergreen-only (`#phase-indicator` + `#sq-zone-input`). `#module-canvas` introduced in `#zone-board-main` holding `#category-pills-area`, `#content-tv`, `#round-type-picker-container`, `#board-wrapper`, `#faceoff-container`, `#scribble-container`. `#category-pills-area` is `position: absolute` inside the canvas so it doesn't displace sibling module children. Verified: all modules complete end-to-end, faceoff runs, play-again + return-to-lobby flows are clean. Known follow-up: `#content-tv` and `#board-wrapper` need a sizing pass for High Five/Survey inside the new canvas — they currently overlap/overflow because their dimensions were tuned for the sidebar, not the main zone.
+- **Step 4:** medium. Writing the cleanup function is small; the value is deleting the code it replaces. Observed symptoms (catalogued above) are the regression checklist.
 - **Step 5:** small-to-medium. Mechanical code removal once 2–4 are stable.
 - **Step 6:** small polish after structure settles.
 
@@ -605,6 +612,16 @@ Fix:
 - `advanceRound` explicitly clears `_readyCountdownInterval`, `_readyCountdownEnd`, `_readyPlayersMap`
 - `checkReadyAdvance` guards: only advances if `#phase-indicator [data-phase]` is `round-result`. Otherwise cleans up state and returns.
 - Non-host's `round-type-select` phase handler also clears these locally (same cleanup as host's advanceRound)
+
+### `_advancingRound` reentry guard (2026-04-17)
+
+A cousin of the ready-countdown-leak bug, same shape, different trigger window. Symptom: on the final round of a play-again game ending in a scribble round, faceoff would silently not run — the round-type picker appeared instead, the user picked High Five, and the winner was announced mid-question. Log showed two back-to-back `checkReadyAdvance → ADVANCING` entries and two `advanceRound gate` entries firing in the same event-loop tick, with `phase=faceoff` (writeId=73) immediately overwritten by `phase=round-type-select` (writeId=74).
+
+Root cause: two non-host clients wrote identical `round-result` snapshots with the full ready map back-to-back. The host's listener re-ran `checkReadyAdvance` on both, and the existing DOM-phase guard (`phase-indicator.dataset.phase === 'round-result'`) doesn't catch same-tick reentry because `advanceRound` is async — the DOM attribute doesn't flip until after the ~900ms exit-animation await sequence.
+
+Fix: synchronous `_advancingRound` boolean flag (declared next to `_readyCountdownInterval`), set at the top of `advanceRound` before any `await`, cleared in a `try { ... } finally` wrapper covering all exit paths. `checkReadyAdvance` early-returns when the flag is set. Mirrors the `_scoringInProgress` and `_returningToLobby` patterns — idiomatic for async state-mutating critical sections in this codebase.
+
+Only the synchronous flag catches this race; DOM checks and Firestore atomicity can't, because both racing handlers run before any async work completes.
 
 ### Known outstanding bugs (as of session end on multi-scribble)
 

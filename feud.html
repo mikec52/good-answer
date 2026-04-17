@@ -1497,20 +1497,18 @@
       padding: 0 20px;
       gap: 0;
     }
-    /* Sidebar zone (25%) — always visible, content toggled per screen */
+    /* Sidebar zone (25%) — evergreen only: phase-indicator + input-area.
+       overflow:hidden clips sq-zone-input's off-canvas slide (translateY 400%). */
     #sidebar-zone {
       flex: 0 0 25%;
       min-width: 0;
       display: flex;
       flex-direction: column;
-      overflow: visible;
+      overflow: hidden;
       padding: 0 8px 0 0;
     }
-    #sidebar-category-select { display: flex; flex-direction: column; flex: 1; }
-    /* overflow: hidden clips content-tv's fly-in and sq-zone-input's off-canvas slide. */
-    #sidebar-question-answer { display: none; flex-direction: column; height: 100%; overflow: hidden; }
-    #sq-zone-content { flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 0; }
-    #sq-zone-input   { flex-shrink: 0; }
+    /* Bottom-anchor the input home base inside the sidebar */
+    #sq-zone-input   { margin-top: auto; flex-shrink: 0; }
 
     /* Content TV — 300×300 "screen" that wraps cat-label + question-box */
     #content-tv {
@@ -1781,14 +1779,18 @@
     #header-zone {
       flex: 0 0 auto;
     }
-    /* Game board zone: board + strikes + input */
-    #game-board-zone {
+    /* Module canvas — sole slot for module-scoped UI (category pills,
+       content-tv, round-type picker, board-wrapper, faceoff, scribble).
+       Collapses the former #game-board-zone + #game-area into one container. */
+    #module-canvas {
       flex: 1;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
       overflow: hidden;
       min-width: 0;
+      box-sizing: border-box;
+      position: relative;
     }
 
     #category-pills-area {
@@ -1797,12 +1799,24 @@
       align-items: center;
       padding: 12px 0;
       border-radius: 20px;
-      margin: 10px 0px;
+      /* Width-constrained + centered in the wider module-canvas context.
+         Absolute-positioned so pills don't push other module children
+         (board-wrapper, content-tv) out of flex flow. Centered via
+         auto left/right margins (not transform — pills-slide-in uses transform). */
+      position: absolute;
+      top: 10px;
+      left: 0;
+      right: 0;
+      width: 300px;
+      max-width: 100%;
+      margin-left: auto;
+      margin-right: auto;
       background: rgba(17, 17, 17, 0.35);
       /* Locked height — prevents the pills area from shrinking when the
          selected cat-row goes `position: absolute` during the exit tumble. */
       min-height: 480px;
       box-sizing: border-box;
+      z-index: 2;
     }
 
     /* Round-type picker container — lives in #game-area, parallel to
@@ -2620,12 +2634,7 @@
       to   { transform: translateY(0); }
     }
 
-    /* Game area: board container */
-    #game-area {
-      width: 100%;
-      margin: -1px 0 0 0;
-      box-sizing: border-box;
-    }
+    /* #game-area merged into #module-canvas (see sidebar-zone region). */
 
     /* Round display — label on #222 frame, value in #111 field */
     #round-display {
@@ -4750,12 +4759,12 @@
     <!-- Zone: Board (flex row: sidebar 25% | main 75%) -->
     <div id="zone-board">
 
-      <!-- Sidebar zone (25%) — content switches per screen -->
+      <!-- Sidebar zone (25%) — evergreen only: phase-indicator + input-area home base -->
       <div id="sidebar-zone">
 
-        <!-- Persistent phase-indicator header (sits above panel-swap area).
-             Slides in once at game start, out only at resetGame. Content is
-             driven by phase spans inside; the container stays put. -->
+        <!-- Persistent phase-indicator header. Slides in once at game start,
+             out only at resetGame. Content driven by phase spans inside;
+             the container stays put. -->
         <div id="phase-indicator" class="team-red" data-tip="phase-indicator">
           <span class="ph-span ph-category-select"></span>
           <span class="ph-span ph-gameplay"></span>
@@ -4763,46 +4772,24 @@
           <span class="ph-span ph-round-result"></span>
         </div>
 
-        <!-- Panel A: Category select -->
-        <div id="sidebar-category-select">
-          <div id="category-pills-area"></div>
-        </div>
-
-        <!-- Panel B: Question answer (3-row grid) -->
-        <div id="sidebar-question-answer">
-          <!-- Row 2: Category + Question -->
-          <div id="sq-zone-content">
-            <div id="content-tv" class="ct-hidden">
-              <div id="question-box">
-                <div id="question"></div>
-                <div id="questionActions">
-                  <a class="question-options-link" onclick="showQuestionOptions()" data-tip="question-options">Question options</a>
-                  <a class="question-options-link" id="history-link" onclick="showAnswerHistory()" data-tip="answer-history">Answer History</a>
+        <!-- Input-area home base — bottom-anchored via margin-top:auto.
+             Module code never mutates this; it's driven by setInputAreaMode(). -->
+        <div id="sq-zone-input" class="offscreen-below">
+          <div id="input-area">
+            <div id="turn-input-box" class="team-red">
+              <div id="turn-header">Red Team has the board</div>
+              <div id="turn-body">
+                <div id="turn-subtext">Player is up</div>
+                <div class="turn-input-row">
+                  <input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="Enter your guess" onkeydown="if(event.key==='Enter'&&!_scoringInProgress)submitGuess()" data-tip="guess-input" />
+                  <button class="btn action-btn" onclick="submitGuess()" data-tip="submit-guess">Submit</button>
                 </div>
               </div>
-              <div id="content-tv-vignette"></div>
             </div>
+            <div id="endRound"></div>
+            <div id="player-inventory" data-tip="player-inventory"></div>
           </div>
-          <!-- Row 3: Input area -->
-          <div id="sq-zone-input" class="offscreen-below">
-            <!-- Answer history link moved into #questionActions -->
-            <div id="input-area">
-              <div id="turn-input-box" class="team-red">
-                <div id="turn-header">Red Team has the board</div>
-                <div id="turn-body">
-                  <div id="turn-subtext">Player is up</div>
-                  <div class="turn-input-row">
-                    <input type="text" id="guess" style="background-color: rgba(173, 216, 230, 0.5);" placeholder="Enter your guess" onkeydown="if(event.key==='Enter'&&!_scoringInProgress)submitGuess()" data-tip="guess-input" />
-                    <button class="btn action-btn" onclick="submitGuess()" data-tip="submit-guess">Submit</button>
-                  </div>
-                </div>
-              </div>
-              <div id="endRound"></div>
-              <div id="player-inventory" data-tip="player-inventory"></div>
-            </div>
-            <div id="message"></div>
-          </div>
-
+          <div id="message"></div>
         </div>
 
       </div><!-- end #sidebar-zone -->
@@ -4840,18 +4827,34 @@
           </div>
         </div><!-- end #header-zone -->
 
-        <!-- Game board zone: board + strikes + input -->
-        <div id="game-board-zone">
+        <!-- Module canvas — single slot for all module-scoped UI. Each module
+             owns this canvas while active; orchestrator toggles visibility of
+             children between modules. Evergreen containers (phase-indicator,
+             input-area, scoreboard) live outside. -->
+        <div id="module-canvas">
 
-          <!-- Board: fm-style grid -->
-          <div id="game-area">
-            <!-- Round-type picker — lives here (not in the sidebar) so the
-                 sidebar's input-area home base stays visible during round
-                 selection. Hidden by default; populated + shown by
-                 showRoundTypePicker(). Redesign target: more visual panels
-                 explaining each round type, scoring, etc. -->
-            <div id="round-type-picker-container" style="display:none;"></div>
-            <div id="board-wrapper" class="offscreen">
+          <!-- Category pills (ranked-question rounds) — relocated here from
+               the sidebar so the sidebar can stay evergreen. -->
+          <div id="category-pills-area"></div>
+
+          <!-- Content-TV: category label + question text + CRT overlays.
+               Relocated here from the sidebar. Slides in from left during
+               ranked-question entry. -->
+          <div id="content-tv" class="ct-hidden">
+            <div id="question-box">
+              <div id="question"></div>
+              <div id="questionActions">
+                <a class="question-options-link" onclick="showQuestionOptions()" data-tip="question-options">Question options</a>
+                <a class="question-options-link" id="history-link" onclick="showAnswerHistory()" data-tip="answer-history">Answer History</a>
+              </div>
+            </div>
+            <div id="content-tv-vignette"></div>
+          </div>
+
+          <!-- Round-type picker. Hidden by default; populated + shown by
+               showRoundTypePicker(). Redesign target: richer visual panels. -->
+          <div id="round-type-picker-container" style="display:none;"></div>
+          <div id="board-wrapper" class="offscreen">
               <div class="board-header">
                 <span></span>
                 <span>Answers</span>
@@ -5004,9 +5007,8 @@
                 <div class="scribble-summary-totals" id="scribble-summary-totals"></div>
               </div>
             </div>
-          </div>
 
-        </div><!-- end #game-board-zone -->
+        </div><!-- end #module-canvas -->
 
       </div><!-- end #zone-board-main -->
     </div><!-- end #zone-board -->
@@ -6865,6 +6867,7 @@ document.addEventListener('keydown', e => {
     let _readyPlayersMap = {};       // { uid: true } — who has clicked Ready
     let _readyCountdownEnd = null;   // Date.now() + 10000 when countdown starts
     let _readyCountdownInterval = null; // setInterval ID for countdown ticks
+    let _advancingRound = false;     // reentry guard for advanceRound() — blocks double-fire from back-to-back ready-map snapshots
 
     // ── Post-Game Vote State ──
     let _playAgainVotes = {};        // { uid: true }
@@ -7619,9 +7622,6 @@ document.addEventListener('keydown', e => {
             if (_iaR) _iaR.style.background = '';
             const _piR = document.getElementById('phase-indicator');
             if (_piR) _piR.style.background = '';
-            // Restore sidebar
-            const _scs = document.getElementById('sidebar-category-select');
-            if (_scs) _scs.style.display = '';
           }
           // Dismiss victory panel (sync — no await needed, just fire and forget)
           slideOutVictoryPanel();
@@ -7660,9 +7660,10 @@ document.addEventListener('keydown', e => {
     function setupQuestionScreenForSpectator() {
       if (!currentQuestion) return;
 
-      // Swap sidebar panels
-      document.getElementById("sidebar-category-select").style.display = "none";
-      document.getElementById("sidebar-question-answer").style.display = "flex";
+      // Hide module-canvas elements that shouldn't be present during gameplay.
+      // Content-tv + board-wrapper are revealed by their entry animations below.
+      const _pills = document.getElementById("category-pills-area");
+      if (_pills) _pills.style.display = "none";
 
       // Phase indicator
       setPhaseText("gameplay", `${teamNames[teamTurn]} has the board`);
@@ -8271,13 +8272,11 @@ document.addEventListener('keydown', e => {
 
     // Ensures the input-area itself is visible (no offscreen/input-enter management).
     // Called by modules that want to guarantee the home base is shown.
+    // With the evergreen-sidebar refactor, the sidebar itself is always visible;
+    // this helper only needs to make sure sq-zone-input has slid into view.
     function showInputArea() {
-      const sqa = document.getElementById('sidebar-question-answer');
       const sqi = document.getElementById('sq-zone-input');
-      const sqc = document.getElementById('sq-zone-content');
       const ia = document.getElementById('input-area');
-      if (sqa) sqa.style.display = 'flex';
-      if (sqc) { sqc.style.visibility = 'hidden'; sqc.style.display = ''; }
       if (sqi) { sqi.style.display = ''; sqi.classList.remove('offscreen-below', 'input-exit'); sqi.classList.add('input-enter'); }
       if (ia) { ia.style.display = ''; ia.classList.remove('hidden'); }
     }
@@ -8372,8 +8371,7 @@ document.addEventListener('keydown', e => {
       document.getElementById("setup").style.display = "none";
       document.getElementById("game").style.display = "flex";
       document.getElementById("ribbon-scroller").style.display = "none";
-      // Hide sidebar panels until showCategorySelection populates and reveals
-      document.getElementById("sidebar-category-select").style.display = "none";
+      // Input-area starts hidden until the first round entry animates it in
       document.getElementById("input-area").classList.add("hidden");
       document.getElementById("roundTarget").textContent = maxRounds || '—';
 
@@ -8420,7 +8418,6 @@ document.addEventListener('keydown', e => {
       if (catMultEl) catMultEl.style.display = "none";
 
       // Clean up category header elements from previous round
-      document.querySelectorAll("#sq-zone-content > .cat-row").forEach(el => el.remove());
       const oldCatLabel = document.getElementById("cat-label");
       if (oldCatLabel) oldCatLabel.remove();
       document.querySelectorAll(".board-footer > .cat-mult-badge").forEach(el => el.remove());
@@ -8455,6 +8452,16 @@ document.addEventListener('keydown', e => {
     }
 
     async function advanceRound() {
+      // Reentry guard: checkReadyAdvance can fire twice in the same tick when
+      // back-to-back non-host ready-map snapshots arrive before the phase-
+      // indicator DOM attribute flips. Without this flag, the second call
+      // would wrongly advance the round again (e.g. silently overwriting a
+      // freshly-written faceoff phase with round-type-select).
+      if (_advancingRound) return;
+      _advancingRound = true;
+
+      try {
+
       // Detect whether we're advancing into the Face-off Round (final + not yet played).
       // Face-off doesn't bump roundNumber or flip teamTurn — it's a parallel round type.
       const faceoffPending = gameMode === 'rounds' && roundNumber >= maxRounds && !faceoffState.completed;
@@ -8548,11 +8555,10 @@ document.addEventListener('keydown', e => {
       }
       if (isMultiplayer && !isHost) {
         // Non-host: show a waiting state until host syncs category picks / face-off state.
-        // Sidebar pills area stays hidden; input-area home base shown. The
-        // round-type picker will materialize in #game-board-zone when the
-        // host syncs the round-type-select phase.
-        document.getElementById("sidebar-category-select").style.display = "none";
-        document.getElementById("sidebar-question-answer").style.display = "flex";
+        // Input-area home base stays visible. The round-type picker will materialize
+        // in #module-canvas when the host syncs the round-type-select phase.
+        const _pills = document.getElementById("category-pills-area");
+        if (_pills) _pills.style.display = "none";
         const bw2 = document.getElementById("board-wrapper");
         if (bw2) { bw2.classList.remove("slide-in"); bw2.classList.add("offscreen"); }
         return;
@@ -8566,6 +8572,10 @@ document.addEventListener('keydown', e => {
       }
 
       showRoundTypePicker();
+
+      } finally {
+        _advancingRound = false;
+      }
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -8580,11 +8590,10 @@ document.addEventListener('keydown', e => {
         pillsAreaRef.innerHTML = "";
       }
 
-      // Sidebar-category-select hidden (pills relocated to #game-board-zone),
-      // sidebar-question-answer shown so the input-area home base is visible
-      // while picking a round type.
-      document.getElementById("sidebar-category-select").style.display = "none";
-      document.getElementById("sidebar-question-answer").style.display = "flex";
+      // Keep pills area hidden during round-type picker mode (picker uses
+      // its own container).
+      const _pillsPicker = document.getElementById("category-pills-area");
+      if (_pillsPicker) _pillsPicker.style.display = "none";
 
       // Board-wrapper takes layout flow space even when .offscreen transforms
       // it up; the picker sitting above it would push it into view. Force
@@ -8617,7 +8626,7 @@ document.addEventListener('keydown', e => {
       });
 
       // Build picker HTML — rendered into #round-type-picker-container in
-      // #game-area (NOT the sidebar). Keeps the input-area home base visible
+      // #module-canvas (NOT the sidebar). Keeps the input-area home base visible
       // in the sidebar during round selection. This is a placeholder layout;
       // round-type selection is slated for a richer visual redesign.
       const moduleKeys = syncedData?.roundTypePicks || Object.keys(ROUND_MODULES);
@@ -8917,9 +8926,6 @@ document.addEventListener('keydown', e => {
     function restoreMainGameUI() {
       // Input-area stays visible (home base philosophy) — callers use
       // showInputArea() + setInputAreaMode() to set its content.
-      // sidebar-category-select is NOT shown here — it's only shown by
-      // showRoundTypePicker/showCategorySelection when they're active;
-      // leaving it visible leaks stale pills from the previous round.
       // NOTE: if a module container (scribble) is still visible, we do NOT
       // re-show board-wrapper / content-tv — adding them back into the
       // flex flow would push the module's summary panel down. advanceRound
@@ -8935,11 +8941,9 @@ document.addEventListener('keydown', e => {
       }
       const ia = document.getElementById("input-area");
       if (ia) { ia.style.display = ""; ia.classList.remove("hidden"); }
-      // Keep sidebar-category-select hidden — callers re-show it when needed
-      const scs = document.getElementById("sidebar-category-select");
-      if (scs) scs.style.display = "none";
-      const sqa = document.getElementById("sidebar-question-answer");
-      if (sqa) sqa.style.display = "flex";
+      // Pills area stays hidden — callers re-show it when needed
+      const pills = document.getElementById("category-pills-area");
+      if (pills) pills.style.display = "none";
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -9631,13 +9635,13 @@ document.addEventListener('keydown', e => {
       if (wsWaiting) { wsWaiting.textContent = "Waiting for other drawer..."; wsWaiting.style.display = "none"; }
       document.querySelectorAll(".scribble-solved-overlay").forEach(el => el.remove());
 
-      // Hide main game board + content-tv, but keep input-area visible as home base
+      // Hide main game board + content-tv + pills, but keep input-area visible as home base
       const bw = document.getElementById("board-wrapper");
       if (bw) bw.style.display = "none";
       const ct = document.getElementById("content-tv");
       if (ct) ct.style.display = "none";
-      const scs = document.getElementById("sidebar-category-select");
-      if (scs) scs.style.display = "none";
+      const pills = document.getElementById("category-pills-area");
+      if (pills) pills.style.display = "none";
 
       // Input-area stays as the player's home base — always visible
       showInputArea();
@@ -10557,9 +10561,9 @@ document.addEventListener('keydown', e => {
       if (boardWrapper) boardWrapper.style.display = 'none';
       const contentTv = document.getElementById('content-tv');
       if (contentTv) contentTv.style.display = 'none';
-      // Also hide the sidebar category select area (could be visible from round transition)
-      const sidebarCatSelect = document.getElementById('sidebar-category-select');
-      if (sidebarCatSelect) sidebarCatSelect.style.display = 'none';
+      // Also hide the category pills (could be visible from round transition)
+      const pillsArea = document.getElementById('category-pills-area');
+      if (pillsArea) pillsArea.style.display = 'none';
       // Show the face-off container
       const foc = document.getElementById('faceoff-container');
       if (foc) {
@@ -11253,14 +11257,16 @@ document.addEventListener('keydown', e => {
       }
 
 
-      // Show category-select panel, hide question-answer panel.
+      // Show category pills, hide content-tv.
       // This display toggle is intentionally AFTER all animation setup above.
       // While parent is display:none, CSS animations don't start (no box
       // generated). Flipping to display:flex here causes all cat-row
       // animations to begin with their stagger delays already in place.
       //
-      document.getElementById("sidebar-category-select").style.display = "flex";
-      document.getElementById("sidebar-question-answer").style.display = "none";
+      const pillsAreaEl = document.getElementById("category-pills-area");
+      if (pillsAreaEl) pillsAreaEl.style.display = "";
+      const contentTvEl = document.getElementById("content-tv");
+      if (contentTvEl) contentTvEl.style.display = "none";
       document.getElementById("input-area").classList.add("hidden");
       // Slide the pills area in from the left — content is fully composited
       // off-screen before it becomes visible.
@@ -11502,9 +11508,12 @@ document.addEventListener('keydown', e => {
         }
       }
 
-      // Show question-answer panel, hide category-select panel
-      document.getElementById("sidebar-category-select").style.display = "none";
-      document.getElementById("sidebar-question-answer").style.display = "flex";
+      // Hide the pills area (animation above already slid the selected row out);
+      // content-tv takes over the module canvas slot.
+      const pillsAreaPick = document.getElementById("category-pills-area");
+      if (pillsAreaPick) pillsAreaPick.style.display = "none";
+      const contentTvPick = document.getElementById("content-tv");
+      if (contentTvPick) contentTvPick.style.display = "";
 
       // Swap phase indicator: category-select → gameplay.
       // Container stays put; only text slides out/in.
@@ -12628,6 +12637,9 @@ document.addEventListener('keydown', e => {
     function checkReadyAdvance() {
       // Face-off has its own flow — don't let stale ready state trigger advanceRound
       if (faceoffState.active) return;
+      // Reentry guard: if a prior call is mid-advance (async exit animations),
+      // don't race against it. See _advancingRound declaration for details.
+      if (_advancingRound) return;
       const allUids = [...teamPlayerUids[0], ...teamPlayerUids[1]];
       const allReady = allUids.length > 0 && allUids.every(uid => _readyPlayersMap[uid]);
       const timedOut = _readyCountdownEnd && Date.now() >= _readyCountdownEnd;
@@ -13053,9 +13065,8 @@ document.addEventListener('keydown', e => {
 
       // Category pills + badges — clear both the pills area and any remnants
       const pillsArea = document.getElementById("category-pills-area");
-      if (pillsArea) pillsArea.innerHTML = "";
+      if (pillsArea) { pillsArea.innerHTML = ""; pillsArea.style.display = "none"; }
       document.querySelectorAll(".board-footer > .cat-mult-badge").forEach(el => el.remove());
-      document.querySelectorAll("#sq-zone-content > .cat-row").forEach(el => el.remove());
 
       // Phase indicator — remove glow and phase data
       const pi = document.getElementById("phase-indicator");
@@ -13064,9 +13075,15 @@ document.addEventListener('keydown', e => {
         pi.removeAttribute("data-phase");
       }
 
-      // Sidebar panels
-      document.getElementById("sidebar-category-select").style.display = "none";
-      document.getElementById("sidebar-question-answer").style.display = "none";
+      // Module-canvas children — reset to canonical hidden state
+      const ctReset = document.getElementById("content-tv");
+      if (ctReset) { ctReset.style.display = "none"; ctReset.classList.add("ct-hidden"); ctReset.classList.remove("tv-on", "slide-out-left"); }
+      const bwReset = document.getElementById("board-wrapper");
+      if (bwReset) { bwReset.style.display = ""; bwReset.classList.add("offscreen"); bwReset.classList.remove("slide-in"); }
+      const focReset = document.getElementById("faceoff-container");
+      if (focReset) { focReset.style.display = "none"; focReset.classList.remove("active"); }
+      const scReset = document.getElementById("scribble-container");
+      if (scReset) scReset.style.display = "none";
 
       // Round-type picker — clear any lingering picker panel
       const rtp = document.getElementById("round-type-picker-container");

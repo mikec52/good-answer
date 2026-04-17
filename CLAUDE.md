@@ -65,6 +65,80 @@ The goal is a polished, distributable game app without migrating away from the c
 
 ---
 
+## Pre-Blaze Cleanup Refactor — Strategy
+
+**Status:** Blaze/Cloud Functions migration is on hold. The client-side architecture needs cleanup first. A large share of the "non-host visual bug" class we've been hitting is not actually caused by host-authoritative sync — it's caused by cross-module DOM coupling that migration wouldn't fix. This section is the plan for addressing that before any server work.
+
+Goal: stabilize the client-side architecture so (a) new features don't risk regressions in old features, (b) visual bugs get cheaper to diagnose and fix, and (c) the eventual Blaze migration is a contained change to game logic rather than a refactor-and-migrate bundle. Ordered by dependency — each step assumes the previous is done. Dive into each step via a proper plan-mode session when picking it up.
+
+### 1. Reclassify all UI regions as **evergreen** or **module-scoped**
+
+The root cause of most cross-module visual bugs is that some DOM containers mix elements with different lifetimes. Evergreen elements (persist across all modules and phases) share containers with module-scoped elements (only exist during one module). Mutations to the module-scoped child leave collateral state on the shared parent, which the next module inherits.
+
+**Canonical classification:**
+
+- **Evergreen regions:** `#phase-indicator`, `#input-area`, `#scoreboard`. Always present, never touched by module code. Only orchestrator public APIs (`setPhase`, `setInputAreaMode`, score-update helpers) mutate them.
+- **Module-scoped regions:** everything else in the main gameplay area — category pills, content-tv + question + cat-label, board-wrapper, scribble container, faceoff container. All destined to be swappable children of a single module canvas.
+
+This is the lens driving steps 2–4.
+
+### 2. Sidebar becomes evergreen-only
+
+Currently the sidebar houses both evergreen (`#input-area`) and module-scoped (`#content-tv`, `#sidebar-category-select` → `#category-pills-area`) content. Refactor so the sidebar contains only `#phase-indicator` + `#input-area`. No module code ever reaches into the sidebar; only the orchestrator APIs.
+
+### 3. Introduce a single `#module-canvas` in the main zone
+
+Inside `#zone-board-main`, below the evergreen `#scoreboard`, add one `#module-canvas` slot. Every module owns this slot completely while active:
+
+- Ranked questions render their category pills first (replacing the current sidebar-hosted selection), then their content-tv + question + board-wrapper inside it.
+- Scribble renders its drawers/guessers/summary inside it.
+- Faceoff renders its two-battle layout inside it.
+
+Existing DOM reparents: `#content-tv`, `#category-pills-area` (and its wrapper), `#board-wrapper`, `#scribble-container`, `#faceoff-container` all move from their current homes into `#module-canvas`.
+
+Ranked-question entry becomes a two-step sequence within the canvas: category pills first, then content-tv + board-wrapper slide/fade in once a category is picked.
+
+### 4. Formalize a `boardClean` (or `resetModuleCanvas`) step between modules
+
+With the module canvas in place, teardown collapses to clearing the canvas between modules. Introduce an explicit phase in the orchestration flow:
+
+```
+roundEnd → boardClean → roundStart (or selectRound)
+```
+
+`boardClean` runs after Ready Up resolves, during or just after the existing exit animations — while the visible area is already empty/animating out, so the user never sees the wipe. It resets the module-canvas to its canonical empty state and strips any module-specific classes from shared elements.
+
+Each module's entry function can then assume a clean slate. All current defensive cleanup code at the top of module entry points (`initRoundState`'s cat-label removal, `setupFaceoffUI`'s hides, `enterScribbleRound`'s clears, etc.) goes away.
+
+### 5. Dead-code audit, module by module
+
+With the architecture clarified, pass through each module's entry/exit to remove code that was only there to defend against the old mixed-lifetime containers:
+
+- Scribble's `sq-zone-content` visibility manipulations
+- `showInputArea`'s defensive `sq-zone-content` handling
+- Faceoff's `#board-wrapper` and `#content-tv` hides
+- `setInputAreaMode` gymnastics that exist because sidebar layout was fragile
+
+Net LOC goes down; N×N coupling between modules goes away.
+
+### 6. Animation audit against the new structure
+
+Several entrance/exit animations currently assume specific DOM adjacency or sidebar geometry — content-tv's tv-on, the typewriter, cat-label marquee, sq-zone-input slide-up, board-wrapper slide-in from above. After reparenting, these need a pass to make sure they still feel right in their new container context. Expected to be minor (keyframe origins, clipping parents) but needs once-over.
+
+### Execution order and scope
+
+- **Step 1:** thinking/documentation only, done above.
+- **Steps 2+3:** biggest single lift. One focused session. Touches HTML structure, CSS layout, every module's entry/exit.
+- **Step 4:** medium. Writing the cleanup function is small; the value is deleting the code it replaces.
+- **Step 5:** small-to-medium. Mechanical code removal once 2–4 are stable.
+- **Step 6:** small polish after structure settles.
+
+### Guiding principle — phase-indicator as reference design
+
+`#phase-indicator` is the model for how evergreen regions should be built. Its container is persistent; all possible text spans exist in the DOM simultaneously; a single attribute (`data-phase`) selects which is visible; one function (`setPhase`) mutates that attribute. No accumulation, no defensive resets, no cross-module leakage. After this refactor, every evergreen region should follow that same pattern, and every module-scoped region should live inside `#module-canvas` where it can be freely torn down.
+
+---
+
 ## Feature Roadmap
 
 Planned features grouped by rough workload tier. Each entry has tags for feasibility (✅ clean fit / ⚠️ feasible with friction / ❌ not feasible) and workload (🟢 quick win / 🟡 moderate / 🔴 heavy lift). Update this list as items ship or new features are added.

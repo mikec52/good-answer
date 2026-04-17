@@ -1804,6 +1804,29 @@
       min-height: 480px;
       box-sizing: border-box;
     }
+
+    /* Round-type picker container — lives in #game-area, parallel to
+       #board-wrapper. Placeholder styling for now; will be redesigned into
+       a richer visual panel. Centered horizontally, generous vertical
+       padding, sized to fit its children. */
+    #round-type-picker-container {
+      width: 70%;
+      margin: 40px auto 0 auto;
+      padding: 16px;
+      border-radius: 20px;
+      background: rgba(17, 17, 17, 0.35);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+    #round-type-picker-container .rt-picker-grid {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
     #category-pills-area.pills-slide-in {
       animation: pills-slide-in calc(0.4s / var(--speed)) ease-out both;
     }
@@ -3295,42 +3318,110 @@
       display: none; flex-direction: column; align-items: center;
       width: 100%; height: 100%; padding: 8px;
     }
-    #scribble-word-select { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 80%; max-width: 400px; }
-    .scribble-ws-title { font-family: "Bitcount Single", monospace; font-size: 1.4rem; color: #fba300; }
-    .scribble-ws-timer { font-family: "Bitcount Single", monospace; font-size: 2rem; color: #e0e0e0; }
-    .scribble-ws-timer.urgent { color: #ff4444; }
-    .scribble-ws-choices { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-    .scribble-ws-choice {
-      padding: 10px 14px; border: 2px solid #444; border-radius: 8px; background: #1a1a1a;
-      cursor: pointer; display: flex; justify-content: space-between; align-items: center;
-      transition: border-color 0.15s, background 0.15s;
+    #scribble-word-select { display: flex; flex-direction: column; align-items: center; gap: 18px; width: 100%; max-width: 640px; }
+    #scribble-word-select.ws-fly-in { animation: ws-fly-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    .scribble-ws-title { font-family: "Bitcount Single", monospace; font-size: 1.4rem; color: #fba300; opacity: 0; animation: ws-fade-in 0.45s ease 80ms forwards; }
+    .scribble-ws-timer {
+      font-family: "Bitcount Single", monospace; font-size: 2rem; color: #e0e0e0;
+      opacity: 0; animation: ws-fade-in 0.45s ease 160ms forwards;
+      transition: color 0.25s ease, text-shadow 0.25s ease;
     }
-    .scribble-ws-choice:hover { border-color: #888; background: #252525; }
-    .scribble-ws-choice.easy { border-color: rgba(68,204,68,0.3); }
-    .scribble-ws-choice.medium { border-color: rgba(76,140,255,0.3); }
-    .scribble-ws-choice.hard { border-color: rgba(251,140,0,0.3); }
+    .scribble-ws-timer.urgent { color: #ff4444; }
+    .scribble-ws-timer.both-picked {
+      color: #fba300;
+      text-shadow: 0 0 14px rgba(251,163,0,0.7);
+    }
+    .scribble-ws-choices {
+      display: flex; flex-direction: row; justify-content: center; align-items: stretch;
+      gap: 18px; width: 100%;
+    }
+    .scribble-ws-choice {
+      position: relative;
+      width: 150px; height: 150px;
+      padding: 10px;
+      border: 2px solid #444; border-radius: 12px; background: #1a1a1a;
+      cursor: pointer;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(18px) scale(0.92);
+      animation: ws-card-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.2s;
+    }
+    .scribble-ws-choice:hover { border-color: #888; background: #252525; transform: translateY(-3px); }
+    .scribble-ws-choice.easy { border-color: rgba(68,204,68,0.45); box-shadow: inset 0 0 0 1px rgba(68,204,68,0.15); }
+    .scribble-ws-choice.medium { border-color: rgba(76,140,255,0.45); box-shadow: inset 0 0 0 1px rgba(76,140,255,0.15); }
+    .scribble-ws-choice.hard { border-color: rgba(251,140,0,0.45); box-shadow: inset 0 0 0 1px rgba(251,140,0,0.15); }
     .scribble-ws-choice.picked {
       border-color: #fba300 !important;
       background: #3a2a00 !important;
-      box-shadow: 0 0 18px rgba(251,163,0,0.6);
-      transform: scale(1.03);
+      box-shadow: 0 0 22px rgba(251,163,0,0.6);
+      transform: scale(1.06);
     }
-    .scribble-ws-choice.picked::before {
+    .scribble-ws-choice.picked::after {
       content: "✓";
+      position: absolute; top: 6px; right: 8px;
       color: #fba300;
-      font-size: 1.4rem;
+      font-size: 1.1rem;
       font-weight: 700;
-      margin-right: 10px;
     }
-    .scribble-ws-word { font-family: "Bitcount Single", monospace; font-size: 1.4rem; text-transform: uppercase; }
+    .scribble-ws-difficulty {
+      position: absolute; top: 6px; left: 8px;
+      font-family: "futura-100", sans-serif;
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
+      color: #888;
+    }
+    .scribble-ws-choice.easy .scribble-ws-difficulty { color: #44cc44; }
+    .scribble-ws-choice.medium .scribble-ws-difficulty { color: #4c8cff; }
+    .scribble-ws-choice.hard .scribble-ws-difficulty { color: #fb8c00; }
+    .scribble-ws-word {
+      font-family: "Bitcount Single", monospace;
+      font-size: 1.35rem; line-height: 1.1;
+      text-transform: uppercase;
+      word-break: break-word;
+      padding: 0 4px;
+    }
     .scribble-ws-choice.easy .scribble-ws-word { color: #44cc44; }
     .scribble-ws-choice.medium .scribble-ws-word { color: #4c8cff; }
     .scribble-ws-choice.hard .scribble-ws-word { color: #fb8c00; }
-    .scribble-ws-meta { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #888; text-align: right; }
-    .scribble-ws-pts { font-family: "Bitcount Single", monospace; font-size: 1rem; text-align: right; color: #e0e0e0; }
-    .scribble-ws-waiting { font-family: "Bitcount Single", monospace; font-size: 1rem; color: #666; }
+    .scribble-ws-pts {
+      position: absolute; bottom: 6px; left: 0; right: 0;
+      font-family: "Bitcount Single", monospace;
+      font-size: 0.85rem;
+      color: #bbb;
+    }
+    .scribble-ws-waiting {
+      font-family: "Bitcount Single", monospace; font-size: 1rem; color: #999;
+      min-height: 1.4em;
+      opacity: 0; animation: ws-fade-in 0.4s ease 600ms forwards;
+      transition: color 0.2s ease;
+    }
+
+    @keyframes ws-fly-in {
+      0%   { opacity: 0; transform: translateY(40px) scale(0.96); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes ws-fade-in {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes ws-card-pop-in {
+      0%   { opacity: 0; transform: translateY(22px) scale(0.88); }
+      60%  { opacity: 1; transform: translateY(-4px) scale(1.04); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
 
     #scribble-game { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
+    #scribble-game.sg-fly-in { animation: sg-fly-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    #scribble-game.sg-fly-out { animation: sg-fly-out 0.4s ease-in both; }
+    @keyframes sg-fly-in {
+      0%   { opacity: 0; transform: translateY(28px) scale(0.97); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes sg-fly-out {
+      0%   { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-18px) scale(0.98); }
+    }
     .scribble-timer { font-family: "Bitcount Single", monospace; font-size: 1.6rem; color: #fba300; }
     .scribble-timer.warning { color: #ff4444; animation: pulse 0.5s ease-in-out infinite alternate; }
     .scribble-panel { display: flex; flex-direction: column; align-items: center; gap: 6px; }
@@ -3447,6 +3538,11 @@
     .scribble-solved-overlay span { font-family: "Bitcount Single", monospace; font-size: 2rem; color: #44cc44; }
 
     #scribble-summary { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 80%; max-width: 400px; }
+    #scribble-summary.ss-fly-in { animation: ss-fly-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    @keyframes ss-fly-in {
+      0%   { opacity: 0; transform: translateY(28px) scale(0.96); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
     .scribble-summary-title { font-family: "Bitcount Single", monospace; font-size: 1.6rem; color: #fba300; }
     #scribble-summary-body,
     #scribble-summary-body * { color: #ffffff; }
@@ -3694,6 +3790,24 @@
       align-self: stretch;
     }
     .turn-input-row .action-btn {
+      width: 98%;
+      box-sizing: border-box;
+    }
+
+    /* Action row — mirrors .turn-input-row width so the Ready Up / Next Round
+       button (set via setInputAreaMode('action')) matches the feud flow's
+       standalone button visually. Without an explicit width this collapses
+       to its content inside the align-items:center flex parent, making the
+       button appear narrow and tall. */
+    .turn-action-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      flex-shrink: 0;
+    }
+    .turn-action-row .action-btn {
       width: 98%;
       box-sizing: border-box;
     }
@@ -4731,6 +4845,12 @@
 
           <!-- Board: fm-style grid -->
           <div id="game-area">
+            <!-- Round-type picker — lives here (not in the sidebar) so the
+                 sidebar's input-area home base stays visible during round
+                 selection. Hidden by default; populated + shown by
+                 showRoundTypePicker(). Redesign target: more visual panels
+                 explaining each round type, scoring, etc. -->
+            <div id="round-type-picker-container" style="display:none;"></div>
             <div id="board-wrapper" class="offscreen">
               <div class="board-header">
                 <span></span>
@@ -4994,13 +5114,20 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, linkWithPopup, onAuthStateChanged }
       from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, deleteDoc, deleteField, serverTimestamp, arrayUnion }
+    import { getFirestore, initializeFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, deleteDoc, deleteField, serverTimestamp, arrayUnion }
       from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
     import { firebaseConfig } from "./firebase-config.js";
 
     const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db   = getFirestore(app);
+    // initializeFirestore (vs getFirestore) lets us pass settings. Auto-detect
+    // long-polling makes the SDK fall back from WebChannel (QUIC/HTTP3) to
+    // plain XHR long-polling when it detects the connection can't sustain
+    // WebChannel — resolves ERR_QUIC_PROTOCOL_ERROR / ERR_NETWORK_CHANGED
+    // thrashing observed on certain browser profiles in multi-window testing.
+    const db = initializeFirestore(app, {
+      experimentalAutoDetectLongPolling: true,
+    });
 
     // Expose to the main (non-module) script via globals
     window._fb = {
@@ -6882,6 +7009,19 @@ document.addEventListener('keydown', e => {
       // Update both when map is present and when it's explicitly null/cleared
       if (data.hasOwnProperty && data.hasOwnProperty('scribbleWordPicks')) {
         scribbleState._wordPicks = data.scribbleWordPicks || {};
+        // Host — if both drawers for the current session have locked in
+        // their picks, short-circuit the word-select timer and kick off
+        // drawing early (user-requested: don't make people wait out the
+        // full 10 seconds when nobody else is picking).
+        if (isHost && scribbleState.active && scribbleState.phase === "word-select") {
+          scribbleHostMaybeStartEarly();
+        }
+      }
+      // Receive unique word assignments built by the host at round entry
+      if (data.hasOwnProperty && data.hasOwnProperty('scribbleWordAssignments')) {
+        if (data.scribbleWordAssignments) {
+          scribbleState._wordAssignments = data.scribbleWordAssignments;
+        }
       }
 
       // Apply scribble canvas snapshots (from drawers) for non-drawer clients
@@ -7157,9 +7297,12 @@ document.addEventListener('keydown', e => {
         const changed = JSON.stringify(newMap) !== JSON.stringify(_readyPlayersMap);
         if (changed) {
           _readyPlayersMap = { ...newMap };
-          // Disable the Ready Up button if this client already readied
+          // Disable the Ready Up button if this client already readied.
+          // Target by .ready-up class (both legacy feud endRound and module
+          // setInputAreaMode tag the button with it) — a looser selector
+          // accidentally matches the hidden submit button.
           if (_readyPlayersMap[myUid]) {
-            const readyBtn = document.querySelector('#turn-body .action-btn:last-of-type');
+            const readyBtn = document.querySelector('#turn-body .action-btn.ready-up');
             if (readyBtn) readyBtn.disabled = true;
           }
           updateReadyStatus();
@@ -7260,6 +7403,10 @@ document.addEventListener('keydown', e => {
         case 'round-type-selected':
           // Non-host: host picked a round type, dispatch accordingly
           currentRoundType = data.selectedRoundType;
+          // Picker is leaving — hide the round-type picker panel and drop
+          // picker-mode so the sidebar's category-select panel can take
+          // over for feud modules, or the module's own UI for non-feud.
+          hideRoundTypePicker();
           if (data.selectedRoundType === 'secret-scribble') {
             enterScribbleRound(handleModuleComplete);
           }
@@ -7374,6 +7521,19 @@ document.addEventListener('keydown', e => {
         case 'round-result':
           // Round ended — show results on all clients
           if (data.roundResultMsg) {
+            // Module-complete rounds (scribble, etc.): the host's round-result
+            // snapshot can arrive on non-host BEFORE that client's own
+            // scribbleFinishRound → handleModuleComplete has fired (both are on
+            // ~3500ms timers running concurrently on each client). If it does,
+            // endRound() below would see _lastRoundWasModule=false and write
+            // the legacy feud-style Ready Up button into #turn-body. Shortly
+            // after, the local handleModuleComplete runs and adds its own
+            // canonical action row, producing TWO Ready Up buttons. Setting
+            // the flag here from the synced lastResult makes endRound's guard
+            // fire regardless of which path ran first locally.
+            if (data.lastResult?.outcome === 'module-complete') {
+              window._lastRoundWasModule = true;
+            }
             // Set data-phase synchronously so updateRoleUI (which runs later
             // in the same reconcile) sees round-result and doesn't hide buttons.
             // setPhase() is async (awaits exit animation) so we can't rely on it.
@@ -7552,6 +7712,11 @@ document.addEventListener('keydown', e => {
       fitByCharCount(questionEl, 48, currentQuestion.question, 0.5);
       questionEl.textContent = "";
 
+      // Return the input-area to feud's default ownership so updateTurn /
+      // updateRoleUI can write turn text. The round-type picker had set
+      // data-ia-mode='disabled' to lock its own subtext text.
+      document.getElementById("input-area")?.setAttribute('data-ia-mode', 'guess');
+
       // State updates
       updateBoard(); updateScores(); updateStrikes(); updateStreakDisplay(); updateHistory(); updateTurn();
       document.getElementById("questionActions").style.display = "flex";
@@ -7593,11 +7758,16 @@ document.addEventListener('keydown', e => {
     // Update UI based on whether this client is the active player
     function updateRoleUI(activeUid) {
       if (!isMultiplayer) return;
+      // If the round has ended, never let module-specific role UIs override —
+      // all players need access to Ready Up. Module state may still be
+      // lingering on non-host because host's round-result snapshot can arrive
+      // before the module's own cleanup pass completes locally.
+      const inRoundResultEarly = document.getElementById('phase-indicator')?.dataset.phase === 'round-result';
       // Scribble has its own role logic — drawers can't guess, guessers can.
       // Don't let normal turn logic override it.
-      if (scribbleState.active) { updateScribbleRoleUI(); return; }
+      if (scribbleState.active && !inRoundResultEarly) { updateScribbleRoleUI(); return; }
       // Face-off has its own role UI — don't let normal turn logic override it
-      if (faceoffState.active) { updateFaceoffRoleUI(); return; }
+      if (faceoffState.active && !inRoundResultEarly) { updateFaceoffRoleUI(); return; }
       const isActive = (activeUid === myUid);
       const guessInput = document.getElementById('guess');
       const inputArea = document.getElementById('input-area');
@@ -7633,8 +7803,14 @@ document.addEventListener('keydown', e => {
         row.classList.toggle('spectator-disabled', !isActive);
       });
 
-      // Show waiting message for spectators
-      if (turnSubtext && !isActive) {
+      // Show waiting message for spectators — but only when the input-area
+      // is in guess mode (feud gameplay). When a module or the orchestrator
+      // has set the input-area to 'disabled' or 'action' (e.g. round-type
+      // picker's "Waiting on Player X..." / scribble "Drawing" / Ready Up),
+      // that text owns the subtext and must not be clobbered.
+      const iaModeRoleUI = inputArea?.getAttribute('data-ia-mode');
+      const skipSubtextOverride = iaModeRoleUI === 'disabled' || iaModeRoleUI === 'action';
+      if (turnSubtext && !isActive && !skipSubtextOverride) {
         const activePlayer = findPlayerName(activeUid);
         if (activePlayer) {
           turnSubtext.textContent = `${activePlayer}'s turn`;
@@ -7993,7 +8169,15 @@ document.addEventListener('keydown', e => {
       const turnHeader = document.getElementById('turn-header');
       const turnSubtext = document.getElementById('turn-subtext');
       const turnBody = document.getElementById('turn-body');
+      const inputAreaEl = document.getElementById('input-area');
       if (!turnBody) return;
+
+      // Tag the input-area with its current mode so updateTurn / updateRoleUI
+      // can detect "module-owned" states ('disabled', 'action') and skip
+      // their own subtext/header overrides. Without this, legacy feud turn
+      // logic clobbers picker text on the host the next time updateTurn or
+      // updateRoleUI fires (e.g. from a reconcile echo during an await).
+      if (inputAreaEl) inputAreaEl.setAttribute('data-ia-mode', mode);
 
       // Header + subtext
       if (header !== undefined && turnHeader) turnHeader.innerHTML = header;
@@ -8048,7 +8232,10 @@ document.addEventListener('keydown', e => {
           break;
         case 'action':
           inputRow.style.display = 'none';
-          actionRow.style.display = 'block';
+          // Empty string (not 'block') so the base .turn-action-row CSS
+          // (display: flex; width: 100%) governs layout — block would
+          // drop width:100% enforcement and left-align the button.
+          actionRow.style.display = '';
           // Use the same make3dBtn markup as the feud Ready Up flow for
           // visual consistency + include ready-status for the countdown.
           // The onclick is wired via string reference (readyUp / advanceRound)
@@ -8059,9 +8246,16 @@ document.addEventListener('keydown', e => {
                  onButtonClick === advanceRound ? 'advanceRound()' :
                  null)
               : null;
+            // Tag with the same extraClass the legacy feud endRound uses so
+            // readyUp() / advanceRound() can find THIS button (and not the
+            // hidden submit button inside .turn-input-row). Without this,
+            // the disable-after-click feedback lands on the wrong button.
+            const extraCls = onButtonClick === readyUp ? 'ready-up' :
+                             onButtonClick === advanceRound ? 'next-round' :
+                             'module-action';
             if (onclickStr) {
               actionRow.innerHTML = `
-                ${make3dBtn(buttonText || 'Continue', onclickStr, '', 'module-action')}
+                ${make3dBtn(buttonText || 'Continue', onclickStr, '', extraCls)}
                 <div id="ready-status" style="text-align:center; margin-top:8px; font-family:futura-100,sans-serif; font-size:0.85rem; color:#aaa;"></div>
               `;
             } else {
@@ -8278,6 +8472,14 @@ document.addEventListener('keydown', e => {
       _readyCountdownEnd = null;
       _readyPlayersMap = {};
 
+      // Reset the "last round was a module" flag. handleModuleComplete sets it
+      // so feud's endRound can skip its legacy Ready Up UI. The flag is
+      // normally consumed by endRound itself, but on non-host the reconcile
+      // path can consume it before the local handleModuleComplete has a
+      // chance to re-set it — leaving the flag true into the NEXT round and
+      // wrongly suppressing feud's endRound UI. Clear it here for certainty.
+      window._lastRoundWasModule = false;
+
       // Hide any lingering module containers (scribble summary stays up during
       // ready-up, gets hidden here when the next round kicks off).
       const sc = document.getElementById("scribble-container");
@@ -8346,8 +8548,11 @@ document.addEventListener('keydown', e => {
       }
       if (isMultiplayer && !isHost) {
         // Non-host: show a waiting state until host syncs category picks / face-off state.
-        // Keep input-area visible (home base) with context message.
-        document.getElementById("sidebar-category-select").style.display = "flex";
+        // Sidebar pills area stays hidden; input-area home base shown. The
+        // round-type picker will materialize in #game-board-zone when the
+        // host syncs the round-type-select phase.
+        document.getElementById("sidebar-category-select").style.display = "none";
+        document.getElementById("sidebar-question-answer").style.display = "flex";
         const bw2 = document.getElementById("board-wrapper");
         if (bw2) { bw2.classList.remove("slide-in"); bw2.classList.add("offscreen"); }
         return;
@@ -8368,8 +8573,24 @@ document.addEventListener('keydown', e => {
     // ─────────────────────────────────────────────────────────────────────
 
     function showRoundTypePicker(syncedData) {
+      // Make sure the legacy sidebar pills area is quiet during picker mode.
       const pillsAreaRef = document.getElementById("category-pills-area");
-      if (pillsAreaRef) pillsAreaRef.classList.remove("pills-slide-in");
+      if (pillsAreaRef) {
+        pillsAreaRef.classList.remove("pills-slide-in");
+        pillsAreaRef.innerHTML = "";
+      }
+
+      // Sidebar-category-select hidden (pills relocated to #game-board-zone),
+      // sidebar-question-answer shown so the input-area home base is visible
+      // while picking a round type.
+      document.getElementById("sidebar-category-select").style.display = "none";
+      document.getElementById("sidebar-question-answer").style.display = "flex";
+
+      // Board-wrapper takes layout flow space even when .offscreen transforms
+      // it up; the picker sitting above it would push it into view. Force
+      // display:none during the picker so the picker claims the full zone.
+      const _bwHidePicker = document.getElementById("board-wrapper");
+      if (_bwHidePicker) _bwHidePicker.style.display = "none";
 
       // Determine available modules (check min player counts)
       const teamSizes = isMultiplayer
@@ -8395,9 +8616,12 @@ document.addEventListener('keydown', e => {
         teamColor: teamTurn,
       });
 
-      // Build pills HTML
+      // Build picker HTML — rendered into #round-type-picker-container in
+      // #game-area (NOT the sidebar). Keeps the input-area home base visible
+      // in the sidebar during round selection. This is a placeholder layout;
+      // round-type selection is slated for a richer visual redesign.
       const moduleKeys = syncedData?.roundTypePicks || Object.keys(ROUND_MODULES);
-      let pillsHtml = '<div class="trivia-categories">';
+      let pickerHtml = '<div class="rt-picker-grid">';
       moduleKeys.forEach(key => {
         const mod = ROUND_MODULES[key];
         if (!mod) return;
@@ -8407,25 +8631,21 @@ document.addEventListener('keydown', e => {
         const disabledAttr = disabled ? ' style="pointer-events:none;opacity:0.35;"' : '';
         const tipAttr = disabled ? ` data-tip="rt-disabled"` : ` data-tip="rt-${key}"`;
         const s = `<span>${mod.label}</span>`.repeat(4);
-        pillsHtml += `<div class="cat-row ${cc}${disabledClass}"${disabledAttr}${tipAttr}><button class="cat-select-btn btn-3d ${cc}" onclick="onRoundTypePick('${key}')"${disabled ? ' disabled' : ''}>${s}</button></div>`;
+        pickerHtml += `<div class="cat-row ${cc}${disabledClass}"${disabledAttr}${tipAttr}><button class="cat-select-btn btn-3d ${cc}" onclick="onRoundTypePick('${key}')"${disabled ? ' disabled' : ''}>${s}</button></div>`;
       });
-      pillsHtml += '</div>';
+      pickerHtml += '</div>';
 
-      const pillsArea = document.getElementById("category-pills-area");
-      pillsArea.classList.remove("pills-exit");
-      pillsArea.innerHTML = pillsHtml;
+      const pickerArea = document.getElementById("round-type-picker-container");
+      pickerArea.innerHTML = pickerHtml;
+      pickerArea.style.display = "flex";
       setup3dBtns();
 
       // Stagger slide-ins (same pattern as category pills)
-      const rows = document.querySelectorAll("#category-pills-area .cat-row");
+      const rows = pickerArea.querySelectorAll(".cat-row");
       anim.stagger(rows, { gap: TIMING.catRowStagger });
       rows.forEach((row, i) => {
         anim.timer(row, (i * TIMING.catRowStagger) / gameSpeed, () => playSlit(1, 0.4));
       });
-
-      // Show sidebar
-      document.getElementById("sidebar-category-select").style.display = "flex";
-      document.getElementById("sidebar-question-answer").style.display = "none";
 
       // Multiplayer sync — host broadcasts available types
       if (isMultiplayer && isHost) {
@@ -8444,14 +8664,29 @@ document.addEventListener('keydown', e => {
         });
       }
 
-      // Disable pills for non-active players in multiplayer
+      // Disable picker for non-active players in multiplayer
       if (isMultiplayer && !amIActivePlayer()) {
-        document.querySelectorAll("#category-pills-area .cat-row").forEach(row => {
+        pickerArea.querySelectorAll(".cat-row").forEach(row => {
           const btn = row.querySelector("button");
           if (btn) btn.style.pointerEvents = "none";
           row.classList.add("spectator-disabled");
         });
       }
+    }
+
+    // Hide the round-type picker container. Called on transition out of
+    // the picker (module entry / category-select for feud modules).
+    function hideRoundTypePicker() {
+      const pickerArea = document.getElementById("round-type-picker-container");
+      if (pickerArea) {
+        pickerArea.style.display = "none";
+        pickerArea.innerHTML = "";
+      }
+      // Restore board-wrapper's display (showRoundTypePicker set it to none
+      // so the picker could claim the full zone). It stays offscreen via
+      // the .offscreen class until the active module slides it in.
+      const bwRestore = document.getElementById("board-wrapper");
+      if (bwRestore) bwRestore.style.display = "";
     }
 
     function onRoundTypePick(moduleKey) {
@@ -8460,13 +8695,15 @@ document.addEventListener('keydown', e => {
       } else {
         // Non-host: send pending action to host
         syncState({ pendingAction: { type: 'selectRoundType', moduleKey, uid: myUid } });
-        // Disable pills while waiting
-        document.querySelectorAll("#category-pills-area .cat-row button").forEach(b => b.style.pointerEvents = "none");
+        // Disable picker while waiting
+        document.querySelectorAll("#round-type-picker-container .cat-row button").forEach(b => b.style.pointerEvents = "none");
       }
     }
 
     function hostProcessRoundTypePick(moduleKey) {
       currentRoundType = moduleKey;
+      // Picker selection made — hide the picker panel and leave picker-mode.
+      hideRoundTypePicker();
 
       // Sync selection to all clients
       if (isMultiplayer) {
@@ -8667,26 +8904,35 @@ document.addEventListener('keydown', e => {
       });
 
       if (isMultiplayer && isHost) {
-        syncAfterGuess({ outcome: "module-complete" }, true);
+        syncAfterGuess({ outcome: "module-complete" }, {
+          msg: `<span class="${winnerClass}">${winnerName}</span> won with ${pts} pts!`,
+          winner: scoringTeam,
+          phaseText: `<span class="${winnerClass}">${winnerName}</span> won the round with ${pts} points!`,
+        });
       }
     }
 
     // Restores the main game UI elements that non-feud modules hide on
     // entry. Resets their CSS state so advanceRound() works cleanly.
     function restoreMainGameUI() {
-      // Restore the main board + content-tv to a fresh pre-round state.
       // Input-area stays visible (home base philosophy) — callers use
       // showInputArea() + setInputAreaMode() to set its content.
       // sidebar-category-select is NOT shown here — it's only shown by
       // showRoundTypePicker/showCategorySelection when they're active;
       // leaving it visible leaks stale pills from the previous round.
-      // NOTE: scribble-container is intentionally NOT hidden here — the
-      // module's summary panel stays visible through Ready Up, and gets
-      // hidden by advanceRound when the next round actually starts.
-      const bw = document.getElementById("board-wrapper");
-      if (bw) { bw.style.display = ""; bw.classList.add("offscreen"); }
-      const ct = document.getElementById("content-tv");
-      if (ct) { ct.style.display = ""; ct.classList.add("ct-hidden"); ct.classList.remove("tv-on", "slide-out-left"); }
+      // NOTE: if a module container (scribble) is still visible, we do NOT
+      // re-show board-wrapper / content-tv — adding them back into the
+      // flex flow would push the module's summary panel down. advanceRound
+      // hides the module container first, then calls restoreMainGameUI
+      // again implicitly via its own setup path.
+      const sc = document.getElementById("scribble-container");
+      const moduleVisible = sc && getComputedStyle(sc).display !== "none";
+      if (!moduleVisible) {
+        const bw = document.getElementById("board-wrapper");
+        if (bw) { bw.style.display = ""; bw.classList.add("offscreen"); }
+        const ct = document.getElementById("content-tv");
+        if (ct) { ct.style.display = ""; ct.classList.add("ct-hidden"); ct.classList.remove("tv-on", "slide-out-left"); }
+      }
       const ia = document.getElementById("input-area");
       if (ia) { ia.style.display = ""; ia.classList.remove("hidden"); }
       // Keep sidebar-category-select hidden — callers re-show it when needed
@@ -8707,6 +8953,16 @@ document.addEventListener('keydown', e => {
       drawDuration: 60,
       revealInterval: 4,
       wordSelectTime: 10,
+      // Pause (ms) after both drawers lock in their picks before drawing
+      // starts — gives everyone a beat to see "both ready" before the
+      // countdown overlay runs.
+      bothPickedDelay: 900,
+      // Pause (ms) between drawer's own pick locking in and sync — small
+      // breathing room so the card flash is legible.
+      pickLockInDelay: 150,
+      // Pause (ms) session-end screen holds before next word-select /
+      // summary transition.
+      sessionEndHold: 2200,
       countdownBeats: ["Ready", "Set", "Draw!"],
       difficultyPoints: { easy: 50, medium: 75, hard: 100 },
       // [minSecondsRemaining, multiplier] — 15-second brackets
@@ -8719,7 +8975,14 @@ document.addEventListener('keydown', e => {
       myRole: "drawer", // "drawer" | "guesser" — set per session
       currentSession: 0,
       sessions: [],
+      // Words that are off-limits for the rest of the game — both picked
+      // and served-but-not-picked. Persists across multiple scribble
+      // rounds in a single game so nothing ever repeats.
       usedWords: new Set(),
+      // Pre-allocated unique word sets per-drawer-session. Built by the
+      // host at scribble round entry and synced via scribbleWordAssignments.
+      // Keyed by `${sessionIdx}:${drawerUid}` → {easy, medium, hard}.
+      _wordAssignments: null,
       // Per-session
       sessionTimer: 0,
       sessionInterval: null,
@@ -8750,6 +9013,7 @@ document.addEventListener('keydown', e => {
         currentSession: 0,
         sessions: [],
         usedWords: new Set(),
+        _wordAssignments: null,
         sessionTimer: 0,
         sessionInterval: null,
         revealTimer: null,
@@ -8799,6 +9063,77 @@ document.addEventListener('keydown', e => {
       const pool = SCRIBBLE_WORD_BANK[difficulty].filter(w => !scribbleState.usedWords.has(w));
       if (pool.length === 0) return SCRIBBLE_WORD_BANK[difficulty][Math.floor(Math.random() * SCRIBBLE_WORD_BANK[difficulty].length)];
       return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    // Build a unique word set for every drawer-session in this scribble
+    // round. Each of the (up to) 4 drawer slots gets its own easy/medium/
+    // hard triplet with no overlap across drawers. All served words are
+    // added to scribbleState.usedWords immediately so that even words the
+    // drawer doesn't pick stay off-limits for the rest of the game (can't
+    // resurface fresh in someone else's mind in a later scribble round).
+    // Host-only — result is synced to non-host clients.
+    function scribbleBuildWordAssignments() {
+      const shuffle = (arr) => {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      };
+      const easyPool   = shuffle(SCRIBBLE_WORD_BANK.easy.filter(w => !scribbleState.usedWords.has(w)));
+      const mediumPool = shuffle(SCRIBBLE_WORD_BANK.medium.filter(w => !scribbleState.usedWords.has(w)));
+      const hardPool   = shuffle(SCRIBBLE_WORD_BANK.hard.filter(w => !scribbleState.usedWords.has(w)));
+
+      // Collect every distinct drawer-session slot across both sessions of
+      // this round. Keyed `${sessionIdx}:${drawerUid}`. A 1-player team
+      // ends up with the same UID in both sessions (two separate slots).
+      const slots = [];
+      for (let s = 0; s < 2; s++) {
+        for (let t = 0; t < 2; t++) {
+          const roster = teamPlayerUids[t] || [];
+          if (roster.length === 0) continue;
+          const drawIdx = s % roster.length;
+          const uid = roster[drawIdx];
+          if (uid) slots.push(`${s}:${uid}`);
+        }
+      }
+
+      const assignments = {};
+      let ei = 0, mi = 0, hi = 0;
+      const pickOrFallback = (pool, idx, difficulty) => {
+        // If we somehow run out (e.g. 1v1 with huge used-words pile on a
+        // long session), fall back to any remaining bank word not already
+        // served in this allocation. Final fallback is "just pick one" —
+        // a rare case and way better than crashing.
+        if (pool[idx]) return pool[idx];
+        const fallback = SCRIBBLE_WORD_BANK[difficulty].filter(w => !scribbleState.usedWords.has(w));
+        if (fallback.length) return fallback[Math.floor(Math.random() * fallback.length)];
+        return SCRIBBLE_WORD_BANK[difficulty][Math.floor(Math.random() * SCRIBBLE_WORD_BANK[difficulty].length)];
+      };
+      slots.forEach(key => {
+        const e = pickOrFallback(easyPool, ei++, "easy");
+        const m = pickOrFallback(mediumPool, mi++, "medium");
+        const h = pickOrFallback(hardPool, hi++, "hard");
+        scribbleState.usedWords.add(e);
+        scribbleState.usedWords.add(m);
+        scribbleState.usedWords.add(h);
+        assignments[key] = {
+          easy:   { word: e, difficulty: "easy",   points: 50 },
+          medium: { word: m, difficulty: "medium", points: 75 },
+          hard:   { word: h, difficulty: "hard",   points: 100 },
+        };
+      });
+      return assignments;
+    }
+
+    // Given a session + UID, return the pre-allocated {easy,medium,hard}
+    // triplet for that drawer. null if no assignment exists (shouldn't
+    // happen in a healthy round).
+    function scribbleGetAssignment(sessionIdx, uid) {
+      const map = scribbleState._wordAssignments;
+      if (!map || !uid) return null;
+      return map[`${sessionIdx}:${uid}`] || null;
     }
 
     // ── Scribble tile grid ──
@@ -9273,8 +9608,21 @@ document.addEventListener('keydown', e => {
       scribbleState.active = true;
       scribbleState.currentSession = 0;
       scribbleState.sessions = [];
-      scribbleState.usedWords = new Set();
+      // NOTE: do NOT reset usedWords here — we want served-but-unpicked
+      // words from earlier scribble rounds in this same game to stay
+      // off-limits. usedWords is only reset on full game reset via
+      // resetScribbleState().
       scribbleState.myRole = scribbleDetermineRole(0);
+
+      // Host: build unique per-drawer word assignments for this entire
+      // scribble round and sync so all clients use the same pool.
+      // Non-host: wait for reconcile to deliver scribbleWordAssignments.
+      if (!isMultiplayer || isHost) {
+        scribbleState._wordAssignments = scribbleBuildWordAssignments();
+        if (isMultiplayer && isHost) {
+          syncState({ scribbleWordAssignments: scribbleState._wordAssignments });
+        }
+      }
 
       // Clear stale UI state from any previous scribble round
       const statusEl = document.getElementById("scribble-status");
@@ -9303,7 +9651,21 @@ document.addEventListener('keydown', e => {
 
     // ── Word selection ──
     function scribbleStartWordSelection() {
-      console.log('[scribble] word selection starting for session', scribbleState.currentSession);
+      const thisSession = scribbleState.currentSession;
+      console.log('[scribble] word selection starting for session', thisSession);
+
+      // Re-entry guard. Prevents the "double-start race" where both the
+      // setTimeout from scribbleApplyEndDrawingSession AND the host's
+      // scribble-word-select phase snapshot fire scribbleStartWordSelection
+      // back-to-back for the same session. Symptoms included: word-card
+      // click handlers being wired up against the wrong (stale) `picked`
+      // closure, drawers getting stuck on word choice mid-session, and
+      // the countdown restarting at 10s without visible cause.
+      if (scribbleState._wsActiveSession === thisSession && scribbleState.phase === "word-select") {
+        console.log('[scribble] word selection already running for session', thisSession, '— skipping re-entry');
+        return;
+      }
+      scribbleState._wsActiveSession = thisSession;
 
       // Clear any stale timers / state from previous session
       if (scribbleState._wsCountdown) { clearInterval(scribbleState._wsCountdown); scribbleState._wsCountdown = null; }
@@ -9314,15 +9676,15 @@ document.addEventListener('keydown', e => {
       scribbleState._myWordPick = null;
 
       scribbleState.phase = "word-select";
-      scribbleState.myRole = scribbleDetermineRole(scribbleState.currentSession);
-      console.log('[scribble] my role for session', scribbleState.currentSession, 'is', scribbleState.myRole);
+      scribbleState.myRole = scribbleDetermineRole(thisSession);
+      console.log('[scribble] my role for session', thisSession, 'is', scribbleState.myRole);
 
       // Host syncs phase to Firestore so stale scribble-drawing-start doesn't
       // re-trigger when drawers write their word picks.
       if (isMultiplayer && isHost) {
         syncState({
           phase: 'scribble-word-select',
-          scribbleSession: scribbleState.currentSession,
+          scribbleSession: thisSession,
           scribbleWordPicks: null,
           scribbleCanvases: null,
         });
@@ -9350,6 +9712,14 @@ document.addEventListener('keydown', e => {
       if (sg) sg.style.display = "none";
       if (ss) ss.style.display = "none";
 
+      // Replay the word-select fly-in animation on every call so session 2
+      // doesn't snap into place — it slides up from below like session 1.
+      if (ws) {
+        ws.classList.remove("ws-fly-in");
+        void ws.offsetWidth; // force reflow so keyframes replay
+        ws.classList.add("ws-fly-in");
+      }
+
       // Role-based word select views
       const drawerView = document.getElementById("scribble-ws-drawer-view");
       const guesserView = document.getElementById("scribble-ws-guesser-view");
@@ -9364,31 +9734,37 @@ document.addEventListener('keydown', e => {
       const wsWaiting = document.getElementById("scribble-ws-waiting");
       if (wsWaiting) wsWaiting.style.display = "none";
 
-      // Generate word choices (each drawer gets their own set)
-      const choices = [
-        { word: scribblePickWord("easy"), difficulty: "easy", points: 50 },
-        { word: scribblePickWord("medium"), difficulty: "medium", points: 75 },
-        { word: scribblePickWord("hard"), difficulty: "hard", points: 100 },
-      ];
+      // Look up this drawer's pre-allocated word triplet. The host built
+      // unique sets for every drawer-session at round entry and synced
+      // them, so all clients use the same (guaranteed-distinct) words.
+      const assignment = scribbleGetAssignment(thisSession, myUid);
+      const choices = assignment
+        ? [assignment.easy, assignment.medium, assignment.hard]
+        : [
+            // Fallback for local mode / assignments missing: old behavior.
+            { word: scribblePickWord("easy"), difficulty: "easy", points: 50 },
+            { word: scribblePickWord("medium"), difficulty: "medium", points: 75 },
+            { word: scribblePickWord("hard"), difficulty: "hard", points: 100 },
+          ];
 
       const choicesEl = document.getElementById("scribble-ws-choices");
       if (!choicesEl) return;
       choicesEl.innerHTML = "";
 
       let picked = false;
-      choices.forEach(c => {
+      choices.forEach((c, idx) => {
         const div = document.createElement("div");
         div.className = `scribble-ws-choice ${c.difficulty}`;
+        // Stagger per-card entry so they pop in left→right instead of all
+        // at once. Matches Category pill stagger feel.
+        div.style.animationDelay = `${idx * 110}ms`;
         div.innerHTML = `
+          <div class="scribble-ws-difficulty">${c.difficulty}</div>
           <span class="scribble-ws-word">${c.word.toUpperCase()}</span>
-          <div>
-            <div class="scribble-ws-meta">${c.difficulty}</div>
-            <div class="scribble-ws-pts">${c.points} pts</div>
-          </div>`;
+          <div class="scribble-ws-pts">${c.points} pts</div>`;
         div.addEventListener("click", () => {
           if (picked) return;
           picked = true;
-          scribbleState.usedWords.add(c.word);
           // Dim the unpicked cards, strongly highlight the picked one
           choicesEl.querySelectorAll(".scribble-ws-choice").forEach(d => {
             d.style.pointerEvents = "none";
@@ -9399,17 +9775,24 @@ document.addEventListener('keydown', e => {
           scribbleState._myWordPick = { word: c.word, difficulty: c.difficulty, points: c.points };
           if (wsWaiting) { wsWaiting.textContent = "✓ Pick locked in. Waiting for other drawer..."; wsWaiting.style.display = ""; }
 
-          // Sync pick to Firestore so host can track both drawers
+          // Sync pick to Firestore so host can track both drawers.
+          // Small delay lets the card-flash register before the write +
+          // any resulting "both picked → start drawing" race.
           if (isMultiplayer) {
-            syncState({ [`scribbleWordPicks.${myUid}`]: { word: c.word, difficulty: c.difficulty, points: c.points } });
+            setTimeout(() => {
+              syncState({ [`scribbleWordPicks.${myUid}`]: { word: c.word, difficulty: c.difficulty, points: c.points } });
+            }, SCRIBBLE_CONFIG.pickLockInDelay);
+          } else {
+            // Local mode: host also checks for early start directly.
+            if (!isMultiplayer) scribbleHostMaybeStartEarly();
           }
         });
         choicesEl.appendChild(div);
       });
 
-      // Timer — word select phase runs for the full duration. Drawing starts
-      // when the timer expires (ensuring both drawers start simultaneously)
-      // or when both drawers have picked (host detects via Firestore).
+      // Timer — word select phase runs up to wordSelectTime seconds.
+      // Short-circuits early when both drawers have picked (host detects
+      // via the scribbleWordPicks reconcile path → scribbleHostMaybeStartEarly).
       let timeLeft = SCRIBBLE_CONFIG.wordSelectTime;
       const timerEl = document.getElementById("scribble-ws-timer");
       if (timerEl) { timerEl.textContent = timeLeft; timerEl.classList.remove("urgent"); }
@@ -9423,11 +9806,11 @@ document.addEventListener('keydown', e => {
         if (timeLeft <= 0) {
           clearInterval(scribbleState._wsCountdown);
           scribbleState._wsCountdown = null;
-          // Auto-pick if drawer hasn't chosen
+          // Auto-pick if drawer hasn't chosen — default to medium from
+          // this drawer's assigned set (no random picker, no crossover).
           if (scribbleState.myRole === "drawer" && !picked) {
             picked = true;
-            const pick = choices[Math.floor(Math.random() * 3)];
-            scribbleState.usedWords.add(pick.word);
+            const pick = choices[1]; // medium — safe default
             scribbleState._myWordPick = pick;
             if (isMultiplayer) {
               syncState({ [`scribbleWordPicks.${myUid}`]: pick });
@@ -9439,6 +9822,53 @@ document.addEventListener('keydown', e => {
           }
         }
       }, 1000);
+    }
+
+    // Host-only: check if every drawer for the current session has locked
+    // in their word pick. If so, skip waiting for the 10s timer and kick
+    // off the drawing phase after a short "both ready" pause. Safe to
+    // call repeatedly — bails out if phase isn't word-select.
+    function scribbleHostMaybeStartEarly() {
+      if (!isHost && isMultiplayer) return;
+      if (scribbleState.phase !== "word-select") return;
+      if (scribbleState._wsStartingEarly) return;
+
+      const sessionIdx = scribbleState.currentSession;
+      const picks = scribbleState._wordPicks || {};
+
+      // Collect the drawer UIDs for this session
+      const drawerUids = [];
+      for (let t = 0; t < 2; t++) {
+        const roster = teamPlayerUids[t] || [];
+        if (roster.length === 0) continue;
+        const uid = roster[sessionIdx % roster.length];
+        if (uid) drawerUids.push(uid);
+      }
+      // In local mode (no teamPlayerUids), fall back to "one drawer per team"
+      // already having _myWordPick. This won't fire in practice — local
+      // mode only has a single physical input and uses the timer.
+      if (drawerUids.length === 0) return;
+
+      const allLockedIn = drawerUids.every(uid => !!picks[uid]);
+      if (!allLockedIn) return;
+
+      scribbleState._wsStartingEarly = true;
+      // Stop the local countdown — UI timer stops visibly advancing too.
+      if (scribbleState._wsCountdown) {
+        clearInterval(scribbleState._wsCountdown);
+        scribbleState._wsCountdown = null;
+      }
+      const timerEl = document.getElementById("scribble-ws-timer");
+      if (timerEl) { timerEl.classList.add("both-picked"); }
+      const wsWaiting = document.getElementById("scribble-ws-waiting");
+      if (wsWaiting) { wsWaiting.textContent = "Both drawers ready — starting!"; wsWaiting.style.display = ""; }
+
+      // Brief pause so everyone sees the "both ready" beat before the
+      // drawing phase takes over.
+      setTimeout(() => {
+        scribbleState._wsStartingEarly = false;
+        scribbleHostStartDrawing();
+      }, SCRIBBLE_CONFIG.bothPickedDelay);
     }
 
     // Host collects both drawers' picks and starts the drawing session.
@@ -9455,10 +9885,14 @@ document.addEventListener('keydown', e => {
       const team0DrawerUid = teamPlayerUids[0]?.[sessionIdx % (teamPlayerUids[0]?.length || 1)];
       const team1DrawerUid = teamPlayerUids[1]?.[sessionIdx % (teamPlayerUids[1]?.length || 1)];
 
-      // Fetch each team's pick (or auto-pick if missing)
+      // Fetch each team's pick (or auto-pick from their pre-allocated triplet
+      // if missing). Using the assignment keeps uniqueness across drawers and
+      // prevents the drawer's other two words from bleeding back into the pool.
       function getOrAutoPick(uid) {
         if (uid && picks[uid]) return picks[uid];
-        // Auto-pick random medium word
+        const assignment = scribbleGetAssignment(sessionIdx, uid);
+        if (assignment && assignment.medium) return assignment.medium;
+        // Last-resort fallback (should never hit when assignments exist)
         const w = scribblePickWord("medium");
         scribbleState.usedWords.add(w);
         return { word: w, difficulty: "medium", points: 75 };
@@ -9525,6 +9959,14 @@ document.addEventListener('keydown', e => {
       const sg = document.getElementById("scribble-game");
       if (ws) ws.style.display = "none";
       if (sg) sg.style.display = "flex";
+
+      // Replay the game-panel fly-in animation on every entry so each
+      // drawing session makes a visible entrance instead of snapping in.
+      if (sg) {
+        sg.classList.remove("sg-fly-in");
+        void sg.offsetWidth;
+        sg.classList.add("sg-fly-in");
+      }
 
       // Show role-appropriate view
       const drawerView = document.getElementById("scribble-drawer-view");
@@ -9604,6 +10046,19 @@ document.addEventListener('keydown', e => {
       scribbleState._teammateSolved = false;
       scribbleState._opponentSolved = false;
 
+      // Defensive: clear any lingering intervals from a previous session.
+      // If scribbleApplyEndDrawingSession was somehow skipped (stale state
+      // bug seen in session-2 Player-2 report), leaving an old interval
+      // alive would silently drive sessionTimer from 60 → 0 and fire
+      // scribbleEndDrawingSession again immediately.
+      if (scribbleState.sessionInterval) { clearInterval(scribbleState.sessionInterval); scribbleState.sessionInterval = null; }
+      if (scribbleState.revealTimer) { clearInterval(scribbleState.revealTimer); scribbleState.revealTimer = null; }
+
+      // Reset phase to pre-drawing so the "already in drawing" guard in
+      // scribbleEndDrawingSession / scribbleApplyEndDrawingSession doesn't
+      // accidentally short-circuit a fresh session.
+      scribbleState.phase = "drawing-setup";
+
       // Timer
       scribbleState.sessionTimer = SCRIBBLE_CONFIG.drawDuration;
       scribbleUpdateTimer();
@@ -9626,6 +10081,11 @@ document.addEventListener('keydown', e => {
       const sessionData = { myWord, myDiff, myPts, oppWord, oppDiff, oppPts };
       scribbleState._sessionData = sessionData;
 
+      // Let the game-panel fly-in (0.5s) settle before kicking off the
+      // Ready/Set/Draw! beats — otherwise the countdown overlay overlaps
+      // the entry motion. Short pause tuned by feel.
+      const countdownDelay = 450;
+      setTimeout(() => {
       // Countdown, then enable drawing + start timers
       scribblePlayCountdown(document.querySelector(".scribble-canvas-wrap"), () => {
         scribbleState.phase = "drawing";
@@ -9647,6 +10107,7 @@ document.addEventListener('keydown', e => {
 
         scribbleState.revealTimer = setInterval(scribbleRevealRandomTile, SCRIBBLE_CONFIG.revealInterval * 1000);
       });
+      }, countdownDelay);
     }
 
     function scribbleUpdateTimer() {
@@ -9718,15 +10179,29 @@ document.addEventListener('keydown', e => {
       });
 
       const nextSession = scribbleState.currentSession + 1;
+      const holdMs = SCRIBBLE_CONFIG.sessionEndHold || 2000;
+
+      // Fade the drawing game panel out near the end of the hold so the
+      // transition between sessions (or to summary) has a visible exit
+      // beat rather than a hard cut. Fade runs during the final ~400ms.
+      const sgEl = document.getElementById("scribble-game");
+      const fadeStart = Math.max(holdMs - 400, 0);
+      setTimeout(() => {
+        if (sgEl && sgEl.style.display !== "none") {
+          sgEl.classList.add("sg-fly-out");
+        }
+      }, fadeStart);
+
       setTimeout(() => {
         scribbleState.currentSession = nextSession;
         document.querySelectorAll(".scribble-solved-overlay").forEach(el => el.remove());
+        if (sgEl) sgEl.classList.remove("sg-fly-out");
         if (nextSession < 2) {
           scribbleStartWordSelection();
         } else {
           scribbleShowSummary();
         }
-      }, 2000);
+      }, holdMs);
     }
 
     // ── Scribble summary ──
@@ -9738,6 +10213,12 @@ document.addEventListener('keydown', e => {
       if (ws) ws.style.display = "none";
       if (sg) sg.style.display = "none";
       if (ss) ss.style.display = "flex";
+      // Replay fly-in on summary so it enters with motion
+      if (ss) {
+        ss.classList.remove("ss-fly-in");
+        void ss.offsetWidth;
+        ss.classList.add("ss-fly-in");
+      }
 
       let totalRed = 0, totalBlue = 0;
       const body = document.getElementById("scribble-summary-body");
@@ -10161,11 +10642,22 @@ document.addEventListener('keydown', e => {
       const qbox = document.getElementById('question-box');
       if (qbox) qbox.classList.remove('team-red', 'team-blue');
 
-      // Make sure input area is visible for active players
+      // Make sure input area is visible for active players. Force a
+      // keyframe replay even if .input-enter was already on the element —
+      // on non-host clients this function is reached synchronously from
+      // the reconcile snapshot handler via initRoundState (which removes
+      // input-enter) + setupFaceoffUI (which re-adds it). Because both
+      // happen inside one microtask with no paint between, the browser
+      // sees no net class change and won't rerun the animation. Without
+      // a replay, sq-zone-input stays at translateY(400%) (below the
+      // canvas) through the entire face-off. anim.replay forces a
+      // reflow between remove and add to guarantee the slide-up plays.
       const szi = document.getElementById('sq-zone-input');
       if (szi) {
-        szi.classList.remove('offscreen-below', 'input-exit');
-        if (!szi.classList.contains('input-enter')) szi.classList.add('input-enter');
+        szi.classList.remove('offscreen-below', 'input-exit', 'input-enter');
+        // Force reflow so the next class add is seen as a fresh animation
+        void szi.offsetWidth;
+        szi.classList.add('input-enter');
       }
     }
 
@@ -11051,6 +11543,11 @@ document.addEventListener('keydown', e => {
       fitByCharCount(questionEl, 48, currentQuestion.question, 0.5);
       questionEl.textContent = "";
 
+      // Return the input-area to feud's default ownership so updateTurn can
+      // write "Player X is up" / "Red Team has the board". The round-type
+      // picker had set data-ia-mode='disabled' to lock its own subtext text.
+      document.getElementById("input-area")?.setAttribute('data-ia-mode', 'guess');
+
       updateBoard(); updateScores(); updateStrikes(); updateStreakDisplay(); updateHistory(); updateTurn();
       document.getElementById("questionActions").style.display = "flex";
       document.getElementById("input-area").classList.remove("hidden");
@@ -11563,14 +12060,27 @@ document.addEventListener('keydown', e => {
       // Phase indicator follows team color (smooth CSS transition)
       setPhaseTeamColor(teamTurn);
 
+      // Skip header/subtext overrides when the input-area is in a module-
+      // owned mode ('disabled' = scribble/picker waiting state, 'action' =
+      // Ready Up). The orchestrator / module sets these via setInputAreaMode;
+      // letting feud's turn logic clobber them caused the host to show
+      // "Player X is up" during the round-type picker instead of the
+      // picker's "Waiting on Player X..." message.
+      const iaMode = document.getElementById('input-area')?.getAttribute('data-ia-mode');
+      const skipTurnText = iaMode === 'disabled' || iaMode === 'action';
+
       if (stealPhase) {
         const stealCur = teamPlayers[teamTurn][playerIndex[teamTurn] % teamPlayers[teamTurn].length];
-        if (header)  header.textContent  = `${teamName} can STEAL!`;
-        if (subtext) { subtext.textContent = stealCur ? `${stealCur} is up` : "One guess for the steal..."; fitByCharCount(subtext, 12); }
+        if (!skipTurnText) {
+          if (header)  header.textContent  = `${teamName} can STEAL!`;
+          if (subtext) { subtext.textContent = stealCur ? `${stealCur} is up` : "One guess for the steal..."; fitByCharCount(subtext, 12); }
+        }
       } else {
-        if (header) header.textContent = `${teamName} has the board`;
-        const cur = teamPlayers[teamTurn][playerIndex[teamTurn] % teamPlayers[teamTurn].length];
-        if (subtext) { subtext.textContent = cur ? `${cur} is up` : `${teamName} is up`; fitByCharCount(subtext, 12); }
+        if (!skipTurnText) {
+          if (header) header.textContent = `${teamName} has the board`;
+          const cur = teamPlayers[teamTurn][playerIndex[teamTurn] % teamPlayers[teamTurn].length];
+          if (subtext) { subtext.textContent = cur ? `${cur} is up` : `${teamName} is up`; fitByCharCount(subtext, 12); }
+        }
       }
 
       document.getElementById("red-score-box").classList.toggle("active-team", teamTurn === 0);
@@ -12072,8 +12582,11 @@ document.addEventListener('keydown', e => {
       // Mark self as ready locally
       _readyPlayersMap[myUid] = true;
 
-      // Disable the Ready Up button
-      const readyBtn = document.querySelector('#turn-body .action-btn:last-of-type');
+      // Disable the Ready Up button. The legacy feud endRound path puts the
+      // button as a direct child of #turn-body; the module path (scribble,
+      // etc.) puts it inside .turn-action-row. Both tag the button with
+      // class .ready-up — target that explicitly.
+      const readyBtn = document.querySelector('#turn-body .action-btn.ready-up');
       if (readyBtn) readyBtn.disabled = true;
 
       // Build Firestore update with dot-notation to merge into readyPlayers map
@@ -12395,6 +12908,18 @@ document.addEventListener('keydown', e => {
           faceoffState: null,
           pendingFaceoffActions: null,
           awards: null,
+          // Clear scribble state so session 1 of the new game gets fresh words
+          scribbleWordAssignments: null,
+          scribbleWordPicks: null,
+          scribbleSessionWords: null,
+          scribbleCanvases: null,
+          scribbleScoring: null,
+          scribbleLastSolve: null,
+          scribbleEndReason: null,
+          scribbleEndSessionData: null,
+          scribbleEndTs: null,
+          scribbleSession: null,
+          selectedRoundType: null,
         });
       } else if (!isMultiplayer) {
         startingTeam = Math.floor(Math.random() * 2);
@@ -12542,6 +13067,10 @@ document.addEventListener('keydown', e => {
       // Sidebar panels
       document.getElementById("sidebar-category-select").style.display = "none";
       document.getElementById("sidebar-question-answer").style.display = "none";
+
+      // Round-type picker — clear any lingering picker panel
+      const rtp = document.getElementById("round-type-picker-container");
+      if (rtp) { rtp.style.display = "none"; rtp.innerHTML = ""; }
 
       // Scoreboard — remove animation classes so startGameFromLobby can replay them
       const sb = document.getElementById("scoreboard");
@@ -14114,6 +14643,16 @@ document.addEventListener('keydown', e => {
         pendingFaceoffActions: null,
         scribbleState: null,
         pendingScribbleActions: null,
+        scribbleWordAssignments: null,
+        scribbleWordPicks: null,
+        scribbleSessionWords: null,
+        scribbleCanvases: null,
+        scribbleScoring: null,
+        scribbleLastSolve: null,
+        scribbleEndReason: null,
+        scribbleEndSessionData: null,
+        scribbleEndTs: null,
+        scribbleSession: null,
         selectedRoundType: null,
         awards: null,
         gameEnded: false,

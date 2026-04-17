@@ -7225,10 +7225,11 @@ document.addEventListener('keydown', e => {
           if (data.teamTurn !== undefined) teamTurn = data.teamTurn;
           if (data.startingTeam !== undefined) startingTeam = data.startingTeam;
           if (data.playerIndex) playerIndex = [...data.playerIndex];
-          // Animate exit + show picker (mirror host advanceRound exit)
+          // Animate board-wrapper + content-tv exit only. Input-area stays
+          // visible as the player's home base — showRoundTypePicker will
+          // set its context (waiting message for non-pickers).
           {
             const _contentTv = document.getElementById("content-tv");
-            const _szInput = document.getElementById("sq-zone-input");
             const _bw = document.getElementById("board-wrapper");
             if (_bw && _bw.classList.contains("slide-in")) {
               _bw.classList.remove("slide-in");
@@ -7237,11 +7238,13 @@ document.addEventListener('keydown', e => {
               _bw.style.transform = '';
               _bw.classList.add("offscreen");
             }
+            // Hide scribble container if it's still lingering from a previous round
+            const sc = document.getElementById("scribble-container");
+            if (sc) sc.style.display = "none";
             (async () => {
-              await anim.sequence([
-                async () => { if (_szInput && _szInput.classList.contains("input-enter")) { _szInput.classList.remove("input-enter"); await anim.play(_szInput, "input-exit"); } },
-                async () => { if (_contentTv && !_contentTv.classList.contains("ct-hidden")) { await anim.play(_contentTv, "slide-out-left"); } },
-              ]);
+              if (_contentTv && !_contentTv.classList.contains("ct-hidden")) {
+                await anim.play(_contentTv, "slide-out-left");
+              }
               updateTurn();
               initRoundState();
               document.getElementById("roundCounter").textContent = roundNumber;
@@ -8246,6 +8249,17 @@ document.addEventListener('keydown', e => {
         document.getElementById("roundCounter").textContent = roundNumber;
       }
 
+      // Clear any leftover ready-up state so it can't re-trigger advanceRound
+      // via a stale timeout from the previous round's countdown.
+      if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
+      _readyCountdownEnd = null;
+      _readyPlayersMap = {};
+
+      // Hide any lingering module containers (scribble summary stays up during
+      // ready-up, gets hidden here when the next round kicks off).
+      const sc = document.getElementById("scribble-container");
+      if (sc) sc.style.display = "none";
+
       // Animate sidebar + board elements out before changing colors or resetting state.
       const contentTvExit = document.getElementById("content-tv");
       const szInput = document.getElementById("sq-zone-input");
@@ -8584,6 +8598,11 @@ document.addEventListener('keydown', e => {
     // main teamScores, resets the module, restores normal game UI, and
     // triggers the ready-up / next-round flow.
     function handleModuleComplete({ redScore, blueScore }) {
+      // Mark that a module just completed — used to guard feud-style
+      // endRound() from wiping the input-area turn-body when the
+      // round-result phase syncs from the host.
+      window._lastRoundWasModule = true;
+
       // Only the host folds scores into teamScores and syncs. Non-hosts
       // receive the canonical teamScores via the host's syncAfterGuess
       // below, which triggers reconcileLocalState → updateScores().
@@ -9749,11 +9768,11 @@ document.addEventListener('keydown', e => {
       const totals = scribbleState._roundTotals || { redScore: 0, blueScore: 0 };
       const onComplete = scribbleState._onComplete;
 
-      // Hide scribble container
-      const sc = document.getElementById("scribble-container");
-      if (sc) sc.style.display = "none";
+      // Note: do NOT hide scribble-container here. The summary should stay
+      // visible while players ready up. It's hidden when advanceRound
+      // starts the next round (via restoreMainGameUI + showRoundTypePicker).
 
-      // Clean up any leftover overlays
+      // Clean up any leftover solved overlays from drawing sessions
       document.querySelectorAll(".scribble-solved-overlay").forEach(el => el.remove());
 
       // Call the orchestrator's completion callback
@@ -11945,6 +11964,25 @@ document.addEventListener('keydown', e => {
       if (inputArea2) { inputArea2.classList.remove("team-red","team-blue"); inputArea2.classList.add(endTeamClass); }
       const qbox2 = document.getElementById("question-box");
       if (qbox2) { qbox2.classList.remove("team-red","team-blue"); qbox2.classList.add(endTeamClass); }
+
+      // If a module (scribble, etc.) just completed, skip the feud-style
+      // turn-body innerHTML replacement — handleModuleComplete already
+      // set up the Ready Up button via setInputAreaMode. Feud's endRound
+      // would clobber that with a duplicate/conflicting button.
+      if (window._lastRoundWasModule) {
+        window._lastRoundWasModule = false;
+        // Still set header message so the team-colored "X won with Y pts!" shows
+        header.innerHTML = msg;
+        // Auto-reveal and ready-state reset still needed
+        if (isMultiplayer) {
+          _readyPlayersMap = {};
+          if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
+          _readyCountdownEnd = null;
+          updateReadyStatus();
+        }
+        return;
+      }
+
       header.innerHTML = msg;
       const isLastRound = gameMode === 'rounds' && roundNumber >= maxRounds;
 
@@ -12059,8 +12097,22 @@ document.addEventListener('keydown', e => {
       console.log('[multi] checkReadyAdvance: allReady=' + allReady + ' timedOut=' + timedOut + ' readyMap=' + JSON.stringify(_readyPlayersMap) + ' allUids=' + JSON.stringify(allUids.map(u=>u.substring(0,8))) + ' isDesignated=' + amDesignatedAdvancer());
 
       if (allReady || timedOut) {
+        // Guard: only advance if we're actually waiting for ready-up
+        // (phase=round-result). Otherwise this is a stale trigger from
+        // a previous round's leftover countdown / readyPlayers state.
+        const currentPhase = document.getElementById('phase-indicator')?.dataset.phase;
+        if (currentPhase !== 'round-result') {
+          console.log('[multi] checkReadyAdvance SKIP — not in round-result (phase=' + currentPhase + ')');
+          // Clean up stale countdown state
+          if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
+          _readyCountdownEnd = null;
+          _readyPlayersMap = {};
+          return;
+        }
         console.log('[multi] checkReadyAdvance → ADVANCING (allReady=' + allReady + ' timedOut=' + timedOut + ')');
         if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
+        _readyCountdownEnd = null;
+        _readyPlayersMap = {};
         if (amDesignatedAdvancer()) {
           // advanceRound() detects face-off pending internally and branches.
           advanceRound();

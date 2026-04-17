@@ -8765,9 +8765,10 @@ document.addEventListener('keydown', e => {
         undoStack: [],
         sessionScoring: null,
           };
-      // Hide scribble container if it exists
-      const sc = document.getElementById("scribble-container");
-      if (sc) sc.style.display = "none";
+      // NOTE: do NOT hide scribble-container here. Reset is called by
+      // handleModuleComplete BEFORE Ready Up consensus, but the summary
+      // needs to stay visible through Ready Up. The container is hidden
+      // in advanceRound() when the next round actually starts.
     }
 
     function getScribbleTimeMultiplier(secondsRemaining) {

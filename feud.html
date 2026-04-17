@@ -7225,6 +7225,10 @@ document.addEventListener('keydown', e => {
           if (data.teamTurn !== undefined) teamTurn = data.teamTurn;
           if (data.startingTeam !== undefined) startingTeam = data.startingTeam;
           if (data.playerIndex) playerIndex = [...data.playerIndex];
+          // Clear local ready state — new round starting
+          _readyPlayersMap = {};
+          if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
+          _readyCountdownEnd = null;
           // Animate board-wrapper + content-tv exit only. Input-area stays
           // visible as the player's home base — showRoundTypePicker will
           // set its context (waiting message for non-pickers).
@@ -8044,10 +8048,29 @@ document.addEventListener('keydown', e => {
           break;
         case 'action':
           inputRow.style.display = 'none';
-          actionRow.style.display = '';
-          actionRow.innerHTML = `<button class="btn action-btn" id="input-action-btn">${buttonText || 'Continue'}</button>`;
-          const btn = document.getElementById('input-action-btn');
-          if (btn && onButtonClick) btn.onclick = onButtonClick;
+          actionRow.style.display = 'block';
+          // Use the same make3dBtn markup as the feud Ready Up flow for
+          // visual consistency + include ready-status for the countdown.
+          // The onclick is wired via string reference (readyUp / advanceRound)
+          // since make3dBtn embeds it in an HTML attribute.
+          {
+            const onclickStr = typeof onButtonClick === 'function'
+              ? (onButtonClick === readyUp ? 'readyUp()' :
+                 onButtonClick === advanceRound ? 'advanceRound()' :
+                 null)
+              : null;
+            if (onclickStr) {
+              actionRow.innerHTML = `
+                ${make3dBtn(buttonText || 'Continue', onclickStr, '', 'module-action')}
+                <div id="ready-status" style="text-align:center; margin-top:8px; font-family:futura-100,sans-serif; font-size:0.85rem; color:#aaa;"></div>
+              `;
+            } else {
+              // Fallback for arbitrary callbacks
+              actionRow.innerHTML = `<button class="btn action-btn" id="input-action-btn" style="width:100%;">${buttonText || 'Continue'}</button>`;
+              const btn = document.getElementById('input-action-btn');
+              if (btn && onButtonClick) btn.onclick = onButtonClick;
+            }
+          }
           break;
       }
     }
@@ -8657,6 +8680,9 @@ document.addEventListener('keydown', e => {
       // sidebar-category-select is NOT shown here — it's only shown by
       // showRoundTypePicker/showCategorySelection when they're active;
       // leaving it visible leaks stale pills from the previous round.
+      // NOTE: scribble-container is intentionally NOT hidden here — the
+      // module's summary panel stays visible through Ready Up, and gets
+      // hidden by advanceRound when the next round actually starts.
       const bw = document.getElementById("board-wrapper");
       if (bw) { bw.style.display = ""; bw.classList.add("offscreen"); }
       const ct = document.getElementById("content-tv");
@@ -8668,9 +8694,6 @@ document.addEventListener('keydown', e => {
       if (scs) scs.style.display = "none";
       const sqa = document.getElementById("sidebar-question-answer");
       if (sqa) sqa.style.display = "flex";
-      // Hide scribble container
-      const sc = document.getElementById("scribble-container");
-      if (sc) sc.style.display = "none";
     }
 
     // ─────────────────────────────────────────────────────────────────────

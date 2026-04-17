@@ -11,7 +11,8 @@ Family Feud-inspired game with original features and styling. Working title: **G
 
 ### Branch structure
 - **`main`** — pre-Firebase local-only version, not under active development during multiplayer work
-- **`multi`** — active multiplayer development (Firebase/Firestore integration)
+- **`multi`** — multiplayer foundation (Firebase/Firestore integration). Currently the baseline; `multi-scribble` branches from here.
+- **`multi-scribble`** — **active development branch.** Adds: Secret Scribble module, module orchestration layer (round type picker), input-area "home base" refactor (`setInputAreaMode` API), renaming of feud rounds to "ranked questions" (High Five + Survey). All architectural changes described below are on this branch. Merge back to `multi` when stable.
 - **`coyne-feud-classic`** — the original Coyne Feud family game night tool (formerly `main`). Finished product, not under active development. Do not merge between branches — they are effectively different games.
 
 ### Firebase project
@@ -334,6 +335,220 @@ The tooltip arrow now tracks the true target center instead of always pointing a
 ### Dev Mode Question Pool
 
 `computeDevModeQuestions()` limits the available question pool per category. Increased from 3 to **10** per category to support multiple consecutive games with face-off (each game uses 2 normal questions + 2 face-off Survey questions from the pool). `usedQuestions` persists across play-again to prevent repeats within a session.
+
+---
+
+## Module Orchestration Layer (multi-scribble branch)
+
+Major architectural shift: the game is no longer a fixed sequence of feud rounds. Each round, the active player picks a **round type** (module) from a picker UI, and that module runs independently and returns scores. This replaced the old flow where every round started with category selection.
+
+### Vocabulary
+
+- **Ranked questions** — the umbrella term for feud-style modules (High Five for trivia, Survey for survey questions). Called this because there's a single winner and ranked answer list, distinct from modules like Scribble where both teams can score.
+- **Module** — a self-contained round type with its own entry point, internal turn management, scoring, and UI.
+- **Orchestrator** — the `advanceRound` → `showRoundTypePicker` → module dispatch layer.
+
+### `ROUND_MODULES` registry
+
+Defined near the top of the script block. Each module entry:
+
+```js
+ROUND_MODULES = {
+  'high-five':       { label, colorClass, minPlayersPerTeam, enter(onComplete), reset() },
+  'survey':          { label, colorClass, minPlayersPerTeam, enter(onComplete), reset() },
+  'secret-scribble': { label, colorClass, minPlayersPerTeam: 2, enter(onComplete), reset() },
+};
+```
+
+`minPlayersPerTeam` gates the pill in the picker — Secret Scribble greys out in 1v1 games. Add new modules by extending this registry.
+
+### Round flow (host-authoritative)
+
+1. `advanceRound()` — flips `teamTurn`, increments `roundNumber`, runs exit animations, clears ready state (`_readyPlayersMap`, `_readyCountdownInterval`, `_readyCountdownEnd`), resets input-area to neutral state, hides any lingering scribble container.
+2. **Face-off branch** unchanged — if `faceoffPending`, calls `hostStartFaceoffRound()` directly.
+3. Otherwise calls `showRoundTypePicker()`.
+4. `showRoundTypePicker()` — renders module pills (reusing `#category-pills-area` with the same stagger animations), sets phase indicator "Pick a round type", wires `onRoundTypePick(moduleKey)` onclick. Non-host see disabled/dimmed pills via `amIActivePlayer()` check.
+5. Active player clicks → `onRoundTypePick` (host: direct; non-host: `pendingAction: { type: 'selectRoundType', moduleKey }`).
+6. `hostProcessRoundTypePick(moduleKey)` syncs `phase: 'round-type-selected'` + `selectedRoundType`, then dispatches:
+   - `'high-five'` → `showCategorySelection(null, { excludeSurvey: true })` (existing feud flow, trivia categories only)
+   - `'survey'` → `showCategorySelection(null, { surveyOnly: true })` (skips category UI, auto-picks Survey)
+   - `'secret-scribble'` → `enterScribbleRound(handleModuleComplete)`
+7. Non-feud modules call `onComplete({ redScore, blueScore })` when they finish.
+8. `handleModuleComplete` folds scores into `teamScores[]` (host-only; non-hosts rely on synced values), calls `restoreMainGameUI()`, calls `mod.reset()`, sets phase `round-result`, shows Ready Up via `setInputAreaMode('action')`, host syncs via `syncAfterGuess(..., true)`.
+9. Ready Up consensus → `advanceRound()` → next round.
+
+### Module contract
+
+Every non-feud module must:
+- Store `onComplete` callback on its state object at entry
+- Manage its own internal turn structure (randomized on entry — no reliance on `playerIndex`/`teamTurn`)
+- Clean up its UI when done (hide its container when `advanceRound` fires — the orchestrator does this via `restoreMainGameUI`, but module-specific element cleanup goes in the module's `reset()`)
+- Call `onComplete({ redScore, blueScore })` when finished
+
+### Turn order philosophy
+
+- **Round-type selection turn order** is strict (uses existing `playerIndex` / `teamTurn` rotation).
+- **Within-module turn order** is randomized on module entry (Face-off shuffles drawers, Scribble shuffles session drawers). Modules do not respect or preserve the global `playerIndex` / `teamTurn` / `stealPhase` / `currentStreak` state — those are feud-specific globals.
+
+### New Firestore phases
+
+- `'round-type-select'` — host syncs available module keys, active player UID
+- `'round-type-selected'` — host syncs chosen module key
+- `'scribble-word-select'`, `'scribble-drawing-start'`, `'scribble-session-end'` — scribble internal phases (see Secret Scribble section)
+
+### `pendingAction` types
+
+- Existing: `selectCategory`, `guess`
+- New: `selectRoundType`, `scribbleGuess`
+
+---
+
+## Input-Area Home Base (multi-scribble branch)
+
+The `#input-area` in the sidebar is now the player's persistent "home base" — always visible, content changes per game phase instead of sliding in/out with each transition. Analogous to how `#phase-indicator` stays present and swaps text spans.
+
+### `setInputAreaMode(opts)` API
+
+Single function all modules use to update input-area content. Creates canonical `.turn-input-row` and `.turn-action-row` children on first call, then toggles between them instead of replacing `innerHTML`:
+
+```js
+setInputAreaMode({
+  mode: 'guess' | 'disabled' | 'action',
+  header,           // innerHTML — can include team-colored spans
+  subtext,          // textContent for turn-subtext
+  inputPlaceholder, // placeholder for #guess
+  buttonText,       // action mode — label on the button
+  onButtonClick,    // action mode — callback (readyUp or advanceRound recognized by reference)
+  teamColor,        // 0 = red, 1 = blue — applies team class to #turn-input-box
+});
+```
+
+**Modes:**
+- `'guess'` — input enabled, ready for typing guesses (feud gameplay, scribble guessers)
+- `'disabled'` — input visible but greyed with a contextual placeholder (scribble drawers seeing "Drawing — no guessing", anyone waiting, etc.)
+- `'action'` — input row hidden, action row shown with a `make3dBtn` Ready Up / Next Round button. Includes `#ready-status` div for countdown/count. Recognized callbacks (`readyUp`, `advanceRound`) get converted to string form for `make3dBtn`'s inline `onclick` attribute; other callbacks fall back to a flat button with `.onclick` property.
+
+### `showInputArea()` helper
+
+Guarantees the sidebar input region is visible and slid-in:
+- Shows `#sidebar-question-answer` as flex
+- Hides `#sq-zone-content` via `visibility: hidden` (preserving its flex:1 space so input stays bottom-anchored)
+- Removes `offscreen-below` / `input-exit` classes on `#sq-zone-input`, adds `input-enter`
+- Removes `.hidden` class on `#input-area`
+
+**Critical detail:** don't use `display: none` on `#sq-zone-content` during scribble — its `flex: 1` collapse pushes `#sq-zone-input` to the top of the sidebar, sliding up from the wrong position. `visibility: hidden` preserves the layout.
+
+### Where it's used
+
+- `handleModuleComplete` — sets action mode with Ready Up when a module finishes
+- `advanceRound` — sets neutral disabled mode before the next module takes over
+- `showRoundTypePicker` — sets "PICK A ROUND TYPE" context (active player) or "Waiting on X..." (non-picker)
+- Scribble `scribbleStartWordSelection` — drawer/guesser specific context
+- Scribble `scribbleStartDrawingSession` — "YOUR TURN TO DRAW!" for drawer, "GUESS THE DRAWINGS" for guesser
+- Scribble `scribbleApplyEndDrawingSession` — "Session complete" disabled state
+- Scribble `updateScribbleRoleUI` — replaces the feud-specific role gating with scribble-aware modes
+
+### Feud flow coexistence
+
+The feud `endRound` function still uses direct `turn-body.innerHTML = ...` for its Ready Up. When a non-feud module completes, `handleModuleComplete` sets `window._lastRoundWasModule = true`; feud's `endRound` checks this flag and skips the innerHTML replacement, letting the module's `setInputAreaMode('action')` be the sole Ready Up UI. The flag is cleared after the check. This keeps feud's existing behavior intact while letting modules use the new API.
+
+### Migration note
+
+Feud rounds (High Five, Survey) still use the legacy `turn-body.innerHTML` swap pattern. Future cleanup: migrate them to `setInputAreaMode` for consistency. Both patterns coexist safely because `setInputAreaMode` rebuilds canonical rows if they're missing.
+
+---
+
+## Secret Scribble — Module Overview (multi-scribble branch)
+
+Pictionary-style drawing minigame. Requires 4+ players (2 per team minimum). See `secret-scribble.html` for the standalone prototype that preceded integration.
+
+### Round structure
+
+One scribble round = 2 drawing sessions. Each session has 2 drawers (one per team) drawing simultaneously while the other players guess. Drawer/guesser assignment rotates between sessions (session 0 uses `teamPlayerUids[team][0]`, session 1 uses `teamPlayerUids[team][1]`).
+
+### Phase flow
+
+1. **Word selection** (`scribble-word-select`, 10s) — each drawer picks from 3 options (easy/medium/hard, 50/75/100 points). Guessers see "Drawers are selecting words". Drawers who pick early see "Pick locked in. Waiting for other drawer..." First drawer's early pick doesn't start the session — all clients wait for timer expiry so drawing starts simultaneously. Missing picks auto-fill to medium difficulty.
+2. **Drawing** (`scribble-drawing-start`, 60s) — Ready/Set/Draw countdown overlay, then drawers draw while guessers type guesses into the main input-area. Opponent canvas shows tile grid (4x4, 16 tiles) revealing one tile every 4s. Canvas snapshots sync via JPEG data URLs (`scribbleCanvases.{team}` field) on stroke-end, bucket fill, and clear — not continuously during drawing, so guessers see updates after each stroke completes.
+3. **Session end** (`scribble-session-end`) — host-authoritative. When host's timer expires or all drawings solved, host writes this phase; non-hosts mirror via `handlePhaseTransition` → `scribbleApplyEndDrawingSession`. Shows status message for 2s, then advances (next session or summary).
+4. **Summary** — `scribbleShowSummary` displays per-session scoring events + team totals. After 1.5s, `scribbleFinishRound` auto-fires `handleModuleComplete` — no Continue button; Ready Up appears in the input-area home base. Summary container stays visible through Ready Up; `advanceRound` hides it when the next round starts.
+
+### Scoring
+
+Time-based multipliers (scored at moment of guess):
+- First 15s elapsed (46+ remaining): 3x
+- 16–30s elapsed (31–45 remaining): 2x
+- 31–45s elapsed (16–30 remaining): 1.5x
+- 46–60s elapsed (0–15 remaining): 1x
+
+Bonuses (reset per drawing session):
+- **First correct guess:** +50 to the guesser (one per session)
+- **Steal** (opponent canvas guessed): +50 to the guesser
+- **First drawing guessed:** +50 to the **drawer's team** (even if stolen — rewards drawing prowess)
+- **Word points:** 50 / 75 / 100 by difficulty
+
+Scoring is host-authoritative: non-host guesses route through `pendingAction: { type: 'scribbleGuess' }`. Host's `scribbleEvaluateGuess` uses **absolute team indices** (not viewer-relative), looks up words via `scribbleState._team0Word` / `_team1Word`, computes score, syncs `scribbleScoring` and `scribbleLastSolve` back to all clients. Non-hosts receive via reconcile and call `scribbleApplySolve` to show the overlay + status message locally.
+
+Status messages are perspective-aware (`scribbleApplySolve`):
+- Guesser's team, teammate word: `✓ Correct! WORD — +X pts`
+- Guesser's team, steal: `🎯 Steal! WORD — +X pts`
+- Drawer's team (stolen from): `💔 They stole "WORD"!` (red)
+- Neutral observer: `The other team guessed "WORD"`
+
+### Canvas sync architecture
+
+- Drawer broadcasts via `scribbleBroadcastCanvas()` — `canvas.toDataURL("image/jpeg", 0.5)` written to `scribbleCanvases.${myTeam}` in Firestore on pointerup / bucket fill / clear. ~50–100 writes per drawing session.
+- All clients receive snapshots via reconcile's `scribbleApplyCanvasSnapshot(teamIdx, dataUrl)` — renders onto either `#scribble-teammate-canvas` (my team's drawing) or `#scribble-opp-canvas` (other team's drawing) based on viewer's team.
+- Drawer view (single canvas, `#scribble-draw-canvas`): only drawer can interact, input-area in 'disabled' mode.
+- Guesser view (two canvases side-by-side): teammate canvas clear, opponent canvas covered by tile grid with CSS flip reveal animations.
+
+**Stroke-level continuous sync NOT implemented** — guessers see updates per stroke completion, not live stroke-by-stroke. Good enough for playtesting; upgrade path is either high-frequency Firestore writes (expensive on Spark quota) or Realtime Database / Cloud Functions post-Blaze migration.
+
+### Critical state reset points
+
+Many session 2 bugs came from stale state leaking. Places that must reset:
+- **New scribble round** (`enterScribbleRound`): clears status text, waiting msg, solved overlays, `sessions` array, `usedWords` set
+- **New session within a round** (`scribbleStartWordSelection`): clears `_wsCountdown`, `sessionInterval`, `revealTimer`, `_teammateSolved`, `_opponentSolved`, `_myWordPick`; syncs `phase: 'scribble-word-select'` + `scribbleWordPicks: null` + `scribbleCanvases: null` to clear Firestore
+- **Drawing-start sync** (host in `scribbleHostStartDrawing`): syncs FRESH `scribbleScoring` object (`firstGuessClaimed: false, drawingFirstClaimed: [false, false], events: [], teamScores: [0, 0]`) — otherwise stale session 1 scoring would override the fresh local init during reconcile
+- **Session end** (`scribbleApplyEndDrawingSession`): clears `sessionInterval`, `revealTimer`, reveals all tiles, pushes session results into `sessions` array, schedules next session or summary
+
+### Firestore fields added
+
+- `scribbleWordPicks: { [uid]: { word, difficulty, points } }` — drawers' word picks, cleared at drawing-start
+- `scribbleSessionWords: { team0, team1 }` — synced by host at drawing-start so all clients use same words
+- `scribbleScoring` — synced host-side scoring object
+- `scribbleLastSolve: { solvedTeam, word, guesserUid, total, mult, ts }` — triggers solve animations on clients
+- `scribbleCanvases: { "0": dataUrl, "1": dataUrl }` — compressed canvas snapshots per team
+- `scribbleEndReason`, `scribbleEndSessionData`, `scribbleEndTs` — session-end sync payload
+- `selectedRoundType`, `scribbleSession` — misc phase state
+- All cleared in `lobbyStartGame`'s Firestore reset block (alongside existing `faceoffState`, `pendingFaceoffActions`, etc.)
+
+### Ready countdown leak (CRITICAL historical bug, fixed)
+
+Pre-fix symptom: on round 2 with fewer than maxRounds remaining, game would jump to face-off unexpectedly. Root cause: `_readyCountdownEnd` timestamp wasn't cleared when `advanceRound` ran, so later `checkReadyAdvance` calls (fired from reconcile when readyPlayers changed) still saw `timedOut=true` and called `advanceRound()` **again**, double-incrementing `roundNumber` past `maxRounds`, triggering faceoff.
+
+Fix:
+- `advanceRound` explicitly clears `_readyCountdownInterval`, `_readyCountdownEnd`, `_readyPlayersMap`
+- `checkReadyAdvance` guards: only advances if `#phase-indicator [data-phase]` is `round-result`. Otherwise cleans up state and returns.
+- Non-host's `round-type-select` phase handler also clears these locally (same cleanup as host's advanceRound)
+
+### Known outstanding bugs (as of session end on multi-scribble)
+
+These were in flight at the branch's current head; resume here next session:
+
+1. **Ready Up button occasionally disabled on session 2 drawers (inconsistent).** Users observed this but not deterministically — likely a race between the reconcile's `readyPlayers` handler disabling the button (based on `_readyPlayersMap[myUid]`) and `handleModuleComplete` creating a fresh Ready Up button. Next step: get a timestamped log from the user showing exactly when it reproduces, then add explicit "enable" step after `setInputAreaMode('action')` or stricter guard in the reconcile handler. May also be fixable by clearing `_readyPlayersMap` at the start of `handleModuleComplete` (before showing Ready Up) rather than waiting for round-type-select.
+
+2. **Ranked question (High Five / Survey) turn-order bugs under new orchestration.** Not fully investigated — user reported "bugs within it when it comes to turn order" after the orchestration refactor. The feud flow still uses `turn-body.innerHTML` swaps and its legacy `updateRoleUI` logic; interactions with the new input-area home base may have introduced regressions. Triage with a fresh ranked-question-only test session.
+
+3. **Face-off duplicate-answer wiggle bug (pre-existing, from before scribble work).** Host input area wiggles when a non-host submits a duplicate answer in face-off; some non-host clients see no wiggle when they should. Spawned as a separate task chip during an earlier session. Check `submitFaceoffGuess` duplicate detection logic and reconcile routing of the wiggle effect.
+
+4. **Input-area flash during round-select on some non-host clients.** Mostly addressed by removing the `input-exit` animation from the `round-type-select` phase handler, but user reported one lingering flash on "player 2's screen" in an early test. Recheck after the session 2 reset fixes stabilize.
+
+5. **Stroke-level canvas sync (design choice, not a bug).** Guessers see canvas snapshots at stroke-end, not live. Mentioned for awareness — no current fix needed, revisit post-Blaze migration when continuous sync via Cloud Functions or Realtime Database becomes viable.
+
+### Dev flag: removed
+
+`DEV_SKIP_TO_SCRIBBLE` existed during early integration to jump straight from lobby → scribble for rapid testing. Removed once scribble was reachable through the normal round-type picker. No longer exists in the codebase.
 
 ---
 

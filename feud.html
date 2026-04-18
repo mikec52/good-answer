@@ -111,7 +111,7 @@
 
 
     body {
-      font-family: "embarcadero-mvb-pro-condense", sans-serif;
+      font-family: "futura-100", sans-serif;
       background: #0a0a0a;
       color: black;
       margin: 0;
@@ -1730,6 +1730,12 @@
       --fit-base: 1.5rem;
       font-size: calc(var(--fit-base) * var(--fit-scale, 1));
     }
+    /* Inner wrapper keeps the content as one flex item so nested inline
+       spans (e.g. .team-name) + trailing text flow as natural sentence
+       text instead of becoming separate flex items. */
+    #phase-indicator .ph-span .ph-inner {
+      display: inline;
+    }
     #phase-indicator[data-phase="category-select"] .ph-category-select,
     #phase-indicator[data-phase="gameplay"]        .ph-gameplay,
     #phase-indicator[data-phase="steal-chance"]    .ph-steal-chance,
@@ -1899,8 +1905,100 @@
     .rt-card:hover:not(.rt-disabled) {
       box-shadow: inset 0 2px 0 rgba(255,255,255,0.1), 0 10px 26px rgba(0,0,0,0.45);
     }
-    .rt-card:hover:not(.rt-disabled) .rt-card-body {
-      background: rgba(34, 34, 34, 0.65);
+    /* Hover shine — soft blurred conic glow rising from below, tier-tinted
+       via --rt-gem-color. Swapped in for the old body darkening. */
+    .rt-card-shine {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      overflow: hidden;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      z-index: 2;
+    }
+    .rt-card-shine::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 55%;
+      width: 150%;
+      padding-bottom: 150%;
+      border-radius: 50%;
+      transform: translateX(-50%);
+      filter: blur(35px);
+      opacity: 0.35;
+      background: conic-gradient(
+        from 205deg at 50% 50%,
+        color-mix(in srgb, var(--rt-gem-color, #fff) 0%, transparent) 0deg,
+        var(--rt-gem-color, #fff) 25deg,
+        color-mix(in srgb, var(--rt-gem-color, #fff) 18%, transparent) 295deg,
+        color-mix(in srgb, var(--rt-gem-color, #fff) 0%, transparent) 360deg
+      );
+    }
+    .rt-card:hover:not(.rt-disabled) .rt-card-shine {
+      opacity: 1;
+    }
+
+    /* Occasional glint sweep — dual skewed bands (wide halo + crisp highlight)
+       that translate across the card then park fully offscreen. Tinted per
+       tier via --rt-gem-color. Only active after the gem is revealed. */
+    .rt-card-glint {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 4;
+    }
+    .rt-card-glint::before,
+    .rt-card-glint::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      height: 100%;
+      opacity: 0;
+    }
+    .rt-card.rt-has-gem.rt-gem-revealed .rt-card-glint::before {
+      width: 60px;
+      background: color-mix(in srgb, var(--rt-gem-color, #fff) 55%, #fff);
+      filter: blur(30px);
+      animation: rt-card-glint-halo 6s ease-in-out infinite;
+    }
+    .rt-card.rt-has-gem.rt-gem-revealed .rt-card-glint::after {
+      width: 22px;
+      background: rgba(255, 255, 255, 0.85);
+      filter: blur(5px);
+      animation: rt-card-glint-edge 6s ease-in-out infinite;
+    }
+    /* Stagger across the three cards so flashes don't fire in sync. */
+    .rt-card.rt-has-gem.rt-gem-revealed:nth-child(2) .rt-card-glint::before,
+    .rt-card.rt-has-gem.rt-gem-revealed:nth-child(2) .rt-card-glint::after {
+      animation-delay: 2s;
+    }
+    .rt-card.rt-has-gem.rt-gem-revealed:nth-child(3) .rt-card-glint::before,
+    .rt-card.rt-has-gem.rt-gem-revealed:nth-child(3) .rt-card-glint::after {
+      animation-delay: 4s;
+    }
+    @keyframes rt-card-glint-halo {
+      0% {
+        opacity: 0.55;
+        transform: translateX(-80px) skewX(-15deg);
+      }
+      12%, 100% {
+        opacity: 0.65;
+        transform: translateX(320px) skewX(-15deg);
+      }
+    }
+    @keyframes rt-card-glint-edge {
+      0% {
+        opacity: 0;
+        transform: translateX(-60px) skewX(-15deg);
+      }
+      12%, 100% {
+        opacity: 1;
+        transform: translateX(340px) skewX(-15deg);
+      }
     }
     .rt-card.rt-disabled {
       opacity: 0.4;
@@ -1957,9 +2055,13 @@
       z-index: 3;
     }
 
-    /* Pulsing gem-colored glow — amethyst + topaz only */
-    .rt-card.rt-has-gem.rt-gem-revealed.rt-tier-amethyst,
-    .rt-card.rt-has-gem.rt-gem-revealed.rt-tier-topaz {
+    /* Pulsing gem-colored glow — amethyst + topaz only.
+       Excluded during rt-sliding-out: this rule has higher specificity
+       (4 classes) than .rt-card.rt-sliding-out (2 classes), so without
+       the :not() guard the pulse would override the exit animation and
+       the card would appear to blink out instead of sliding up. */
+    .rt-card.rt-has-gem.rt-gem-revealed.rt-tier-amethyst:not(.rt-sliding-out),
+    .rt-card.rt-has-gem.rt-gem-revealed.rt-tier-topaz:not(.rt-sliding-out) {
       animation: rt-card-glow-pulse 2.4s ease-in-out infinite;
     }
     @keyframes rt-card-glow-pulse {
@@ -3506,6 +3608,143 @@
       transform: translateY(-50%) perspective(500px) rotateY(22.5deg) rotateX(-7.5deg);
     }
 
+    /* ── Face-off splash screen ──
+       Module-canvas takeover that plays once when face-off begins, before the
+       countdown on battle 1 starts. Covers only the main gameplay area so
+       the sidebar and scoreboard remain visible. Three rows crash together
+       in sequence: "FACE" + "OFF" title, then battle 1 player pair, then
+       battle 2 pair. Each half slides in from opposite offscreen edges,
+       meets at center with a collision "shake", and settles. A white flash
+       pulse overlays each collision moment. */
+    #faceoff-splash {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 28px;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, rgba(10,10,10,0.92), rgba(0,0,0,0.98));
+      overflow: hidden;
+    }
+    #faceoff-splash.active { display: flex; }
+    #faceoff-splash.fade-out { animation: faceoff-splash-fade 420ms ease-out forwards; }
+    @keyframes faceoff-splash-fade {
+      0%   { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* White flash layer for collision moments */
+    #faceoff-splash-flash {
+      position: absolute;
+      inset: 0;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+    #faceoff-splash-flash.pulse {
+      animation: faceoff-flash-pulse 260ms ease-out;
+    }
+    @keyframes faceoff-flash-pulse {
+      0%   { opacity: 0; }
+      20%  { opacity: 0.55; }
+      100% { opacity: 0; }
+    }
+
+    /* Row: holds the two halves that will meet */
+    .faceoff-splash-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      position: relative;
+      z-index: 5;
+      will-change: transform;
+    }
+    .faceoff-splash-row.shake { animation: faceoff-splash-shake 380ms ease-out; }
+    @keyframes faceoff-splash-shake {
+      0%   { transform: translateX(0); }
+      20%  { transform: translateX(-14px); }
+      40%  { transform: translateX(10px); }
+      60%  { transform: translateX(-6px); }
+      80%  { transform: translateX(3px); }
+      100% { transform: translateX(0); }
+    }
+
+    /* Title row: giant FACE + OFF */
+    .faceoff-splash-title {
+      font-family: "Bungee", "futura-100", sans-serif;
+      font-size: 5.5rem;
+      letter-spacing: 4px;
+      line-height: 1;
+      text-shadow: 0 0 30px rgba(255,255,255,0.4), 0 6px 0 rgba(0,0,0,0.6);
+      opacity: 0;
+      will-change: transform, opacity;
+    }
+    .faceoff-splash-title.face { color: var(--red-text); }
+    .faceoff-splash-title.off  { color: var(--blue-text); }
+    .faceoff-splash-title.slam-left  { animation: faceoff-slam-from-left  600ms cubic-bezier(0.22, 0.9, 0.3, 1) forwards; }
+    .faceoff-splash-title.slam-right { animation: faceoff-slam-from-right 600ms cubic-bezier(0.22, 0.9, 0.3, 1) forwards; }
+
+    /* VS player row: smaller text than title */
+    .faceoff-splash-vs {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 2.1rem;
+      line-height: 1;
+    }
+    .faceoff-splash-name {
+      opacity: 0;
+      text-shadow: 0 4px 0 rgba(0,0,0,0.6);
+      will-change: transform, opacity;
+      padding: 6px 18px;
+      background: rgba(0,0,0,0.45);
+      border-radius: 10px;
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .faceoff-splash-name.red  { color: var(--red-text);  border: 2px solid var(--red-text); }
+    .faceoff-splash-name.blue { color: var(--blue-text); border: 2px solid var(--blue-text); }
+    .faceoff-splash-name.slam-left  { animation: faceoff-slam-from-left  550ms cubic-bezier(0.22, 0.9, 0.3, 1) forwards; }
+    .faceoff-splash-name.slam-right { animation: faceoff-slam-from-right 550ms cubic-bezier(0.22, 0.9, 0.3, 1) forwards; }
+
+    .faceoff-splash-vs-label {
+      font-family: "Bungee", "futura-100", sans-serif;
+      color: #fff;
+      font-size: 1.6rem;
+      letter-spacing: 3px;
+      opacity: 0;
+      animation: faceoff-splash-vs-pop 300ms ease-out 250ms forwards;
+      text-shadow: 0 0 12px rgba(255,255,255,0.6);
+    }
+    @keyframes faceoff-splash-vs-pop {
+      0%   { opacity: 0; transform: scale(0.4); }
+      60%  { opacity: 1; transform: scale(1.25); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes faceoff-slam-from-left {
+      0%   { opacity: 0; transform: translateX(-1400px) scale(1.1); }
+      70%  { opacity: 1; transform: translateX(18px) scale(1.08); }
+      85%  { transform: translateX(-6px) scale(1.02); }
+      100% { opacity: 1; transform: translateX(0) scale(1); }
+    }
+    @keyframes faceoff-slam-from-right {
+      0%   { opacity: 0; transform: translateX(1400px) scale(1.1); }
+      70%  { opacity: 1; transform: translateX(-18px) scale(1.08); }
+      85%  { transform: translateX(6px) scale(1.02); }
+      100% { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
     /* Face-off Round container — two side-by-side battle boards */
     #faceoff-container {
       display: none;
@@ -3686,8 +3925,8 @@
     }
     .scribble-ws-choice {
       position: relative;
-      width: 150px; height: 150px;
-      padding: 10px;
+      width: 225px; height: 225px;
+      padding: 14px;
       border: 2px solid #444; border-radius: 12px; background: #1a1a1a;
       cursor: pointer;
       display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -3742,7 +3981,7 @@
       color: #bbb;
     }
     .scribble-ws-waiting {
-      font-family: "futura-100", sans-serif; font-weight: 500; letter-spacing: 1px; font-size: 1rem; color: #999;
+      font-family: "futura-100", sans-serif; font-weight: 500; letter-spacing: 1px; font-size: 1rem; color: #fff;
       min-height: 1.4em;
       opacity: 0; animation: ws-fade-in 0.4s ease 600ms forwards;
       transition: color 0.2s ease;
@@ -3804,7 +4043,7 @@
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       min-width: 160px; padding-top: 80px;
     }
-    .scribble-drawer-hint { font-family: "futura-100", sans-serif; font-weight: 500; font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+    .scribble-drawer-hint { font-family: "futura-100", sans-serif; font-weight: 500; font-size: 0.75rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
 
     /* Guesser layout: two canvases side by side */
     .scribble-guesser-layout { display: flex; gap: 16px; justify-content: center; }
@@ -3907,26 +4146,92 @@
     }
     .scribble-solved-overlay span { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; font-size: 2rem; color: #44cc44; }
 
-    #scribble-summary { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 80%; max-width: 400px; }
+    /* Summary panel sits flush against the scoreboard above — negative
+       margin cancels #scribble-container's 8px top padding so there's no
+       gap between the scoreboard's bottom edge and the summary's top. */
+    #scribble-summary {
+      display: flex; flex-direction: column; align-items: center; gap: 0;
+      width: 96%; max-width: 980px; margin-top: -8px;
+    }
+
+    /* Grid-overlay stack: all session blocks occupy the same cell so the
+       container sizes to the tallest, and blocks crossfade via opacity.
+       Background matches title + totals so the whole summary reads as one
+       unified panel. */
+    .scribble-summary-sessions {
+      display: grid; width: 100%;
+      background: #1a1a1a;
+      box-sizing: border-box;
+    }
+    .scribble-session-block {
+      grid-area: 1 / 1;
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 12px;
+      box-sizing: border-box;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+    .scribble-session-block.active { opacity: 1; pointer-events: auto; }
+    .scribble-session-title { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; font-size: 0.9rem; color: #fba300; padding: 0 2px; }
+
+    .scribble-session-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+    .scribble-session-canvases { display: flex; flex-direction: row; gap: 10px; width: 100%; }
+    .scribble-session-canvas-col { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1 1 0; min-width: 0; }
+    .scribble-session-drawer { font-family: "futura-100", sans-serif; font-weight: 300; font-size: 0.7rem; color: #ddd; text-transform: uppercase; letter-spacing: 1px; }
+    .scribble-session-word { font-family: "futura-100", sans-serif; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+    .scribble-session-word.red { color: #ff5555; }
+    .scribble-session-word.blue { color: #4c8cff; }
+    .scribble-session-canvas-img { width: 100%; aspect-ratio: 1 / 1; height: auto; border-radius: 6px; background: #fff; display: block; object-fit: contain; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); margin-top: 2px; }
+    .scribble-session-canvas-empty { width: 100%; aspect-ratio: 1 / 1; border-radius: 6px; background: #fff; display: flex; align-items: center; justify-content: center; font-family: "futura-100", sans-serif; font-weight: 500; font-size: 0.75rem; color: #999; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+    .scribble-session-right { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .scribble-session-actions-title,
+    .scribble-session-wrongs-title {
+      font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+      font-size: 0.7rem; color: #999;
+    }
+    .scribble-session-actions { display: flex; flex-direction: column; gap: 3px; padding: 6px 8px; background: #0f0f0f; border-radius: 6px; max-height: 110px; overflow-y: auto; }
+    .scribble-session-action { font-family: "futura-100", sans-serif; font-weight: 500; letter-spacing: 0.5px; font-size: 0.75rem; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+    .scribble-session-action .ev-label { color: #ddd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .scribble-session-action .ev-pts { font-family: "Bitcount Single", monospace; font-size: 0.9rem; flex: 0 0 auto; }
+    .scribble-session-action .ev-pts.red { color: #ff5555; }
+    .scribble-session-action .ev-pts.blue { color: #4c8cff; }
+
+    .scribble-session-wrongs { display: flex; flex-wrap: wrap; gap: 4px 8px; padding: 6px 8px; background: #0f0f0f; border-radius: 6px; }
+    .scribble-session-wrong { font-family: "futura-100", sans-serif; font-weight: 500; letter-spacing: 0.5px; font-size: 0.72rem; color: #888; font-style: italic; display: inline-flex; align-items: center; gap: 4px; }
+    .scribble-session-wrong .ev-xmark { color: #cc4444; font-family: monospace; font-style: normal; }
+
+    .scribble-session-empty { font-family: "futura-100", sans-serif; font-weight: 500; letter-spacing: 1px; font-size: 0.75rem; color: #666; text-align: center; padding: 4px; }
+    /* Enter: slide down from behind the scoreboard. #module-canvas has
+       overflow: hidden so translateY(-100%) hides the panel fully above
+       the canvas top edge, which sits flush under the scoreboard. */
     #scribble-summary.ss-fly-in { animation: ss-fly-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
     @keyframes ss-fly-in {
-      0%   { opacity: 0; transform: translateY(28px) scale(0.96); }
-      100% { opacity: 1; transform: translateY(0) scale(1); }
+      0%   { transform: translateY(-100%); }
+      100% { transform: translateY(0); }
     }
-    .scribble-summary-title { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; font-size: 1.6rem; color: #fba300; }
-    #scribble-summary-body,
-    #scribble-summary-body * { color: #ffffff; }
-    /* Preserve team-colored scores and muted row headers */
-    #scribble-summary-body .scribble-pts.red { color: #ff5555 !important; }
-    #scribble-summary-body .scribble-pts.blue { color: #4c8cff !important; }
-    #scribble-summary-body .scribble-summary-session h3 { color: #aaaaaa !important; }
-    .scribble-summary-session { padding: 8px 12px; margin-bottom: 6px; background: #1a1a1a; border-radius: 6px; width: 100%; }
-    .scribble-summary-session h3 { font-family: "futura-100", sans-serif; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-    .scribble-summary-row { font-family: "futura-100", sans-serif; font-weight: 500; letter-spacing: 1px; display: flex; justify-content: space-between; padding: 2px 0; font-size: 0.8rem; }
+    /* Exit: reverse — slide back up behind the scoreboard. Awaited in
+       advanceRound before resetModuleCanvas wipes the panel. */
+    #scribble-summary.ss-fly-out { animation: ss-fly-out 0.45s cubic-bezier(0.4, 0, 0.7, 0) both; }
+    @keyframes ss-fly-out {
+      0%   { transform: translateY(0); }
+      100% { transform: translateY(-100%); }
+    }
+    .scribble-summary-title {
+      font-family: "futura-100", sans-serif; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; font-size: 1.6rem;
+      color: #fba300;
+      background: #1a1a1a;
+      width: 100%; box-sizing: border-box;
+      padding: 10px 12px 6px;
+      border-radius: 10px 10px 0 0;
+      text-align: center;
+    }
     .scribble-pts { font-family: "Bitcount Single", monospace; font-size: 0.95rem; }
     .scribble-pts.red { color: #ff5555; }
     .scribble-pts.blue { color: #4c8cff; }
-    .scribble-summary-totals { display: flex; gap: 24px; justify-content: center; padding: 12px; background: #1a1a1a; border-radius: 8px; }
+    .scribble-summary-totals { display: flex; gap: 24px; justify-content: center; padding: 12px; background: #1a1a1a; border-radius: 0 0 10px 10px; width: 100%; box-sizing: border-box; border-top: 1px solid #2a2a2a; }
     .scribble-summary-team { text-align: center; }
     .scribble-team-name { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
     .scribble-team-name.red { color: #ff5555; }
@@ -4057,7 +4362,7 @@
     /* Input — evergreen neutral background; no team color on the container */
     #input-area { width: 100%; border-radius: 10px 10px 0 0; border: 3px solid #333; border-bottom: none; overflow: hidden; box-sizing: border-box; font-family: "futura-100"; text-transform: uppercase; min-height: 300px; max-height: 300px; display: flex; flex-direction: column; background: #222; padding-bottom: 5px; margin-bottom: -2px; }
     #input-area.hidden { display: none; }
-    #player-inventory { height: 45px; border-radius: 50px; margin: 0px 15px 0 15px; background: rgba(0,0,0,0.35); box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: flex-start; font-family: "futura-100"; font-size: 0.8rem; color: #cfcfcf; letter-spacing: 2px; }
+    #player-inventory { flex: 0 0 45px; height: 45px; margin-top: auto; border-radius: 50px; margin-left: 15px; margin-right: 15px; margin-bottom: 0; background: rgba(0,0,0,0.35); box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: flex-start; font-family: "futura-100"; font-size: 0.8rem; color: #cfcfcf; letter-spacing: 2px; }
     input[type="text"] { padding: 8px; font-size: 1rem; }
     /* Guess input: off-white field, readable placeholder, works in all modes */
     #guess { background: #f5f5f5; color: #111; border: 1px solid #bbb; }
@@ -4106,7 +4411,8 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      height: 100%;
+      flex: 1 1 auto;
+      min-height: 0;
     }
 
     /* Turn-message region: fixed-height container for header (primary)
@@ -4137,6 +4443,17 @@
       color: #fff;
       text-align: center;
     }
+    /* Two-line variant — opt-in via setInputAreaMode({ headerWrap: true }).
+       Used for round-end messages that are too long for one line but have
+       room to wrap inside the turn-message box. Lets native text wrap do
+       the work instead of shrinking text to illegibility. */
+    #turn-header.wrap {
+      height: auto;
+      max-height: 4.8rem;
+      line-height: 1.15;
+      white-space: normal;
+      padding: 0 4px;
+    }
     /* Secondary small line (was #turn-header) */
     #turn-subtext {
       margin: 0;
@@ -4150,6 +4467,10 @@
       flex-shrink: 0;
     }
     #turn-subtext:empty { visibility: hidden; }
+    /* Inner wrappers let nested inline spans + trailing text flow as
+       sentence text inside the flex-centered line. See .ph-inner. */
+    #turn-header .th-inner,
+    #turn-subtext .ts-inner { display: inline; }
     /* Team color applies only to .team-name spans, in either line */
     #input-area.team-red  #turn-message .team-name { color: var(--red-text); }
     #input-area.team-blue #turn-message .team-name { color: var(--blue-text); }
@@ -5400,7 +5721,7 @@
               <!-- Round summary -->
               <div id="scribble-summary" style="display:none;">
                 <div class="scribble-summary-title">Round Complete!</div>
-                <div class="scribble-summary-body" id="scribble-summary-body"></div>
+                <div class="scribble-summary-sessions" id="scribble-summary-sessions"></div>
                 <div class="scribble-summary-totals" id="scribble-summary-totals"></div>
               </div>
             </div>
@@ -6712,12 +7033,20 @@
     const MUSIC_TRACKS = {
       maintheme:   { src: "maintheme.mp3",   loop: true, vol: 0.4 },
       roundselect: { src: "roundselect.mp3", loop: true, vol: 0.32 },
-      draw:        { src: "draw.mp3",        loop: true, vol: 0.4 },
+      faceoff:     { src: "faceoff.mp3",     loop: true, vol: 0.4 },
     };
     const PLAYLIST_TRACKS = [
       { src: "bossa.mp3",  vol: 0.4 },
       { src: "ranked.mp3", vol: 0.4 },
     ];
+    // Draw mode picks randomly between tracks each time setMusicMode('draw')
+    // is called — two sessions per round, so avoid repeating the same tune
+    // back-to-back. Last-played tracked so session 2 never repeats session 1.
+    const DRAW_TRACKS = [
+      { src: "draw.mp3",  vol: 0.4 },
+      { src: "draw2.mp3", vol: 0.4 },
+    ];
+    let _lastDrawIdx = -1;
     const CROSSFADE_MS = 3500;
 
     function getMusicGain() {
@@ -6751,8 +7080,21 @@
       });
     }
 
-    function _startCrossfade(fromSlot, toSlot) {
+    function _startCrossfade(fromSlot, toSlot, immediate = false) {
       if (_fadeInterval) clearInterval(_fadeInterval);
+      if (immediate) {
+        // Cut — no crossfade. Hard-switch ratios and apply.
+        if (fromSlot) {
+          fromSlot.audio.pause();
+          fromSlot.audio.currentTime = 0;
+          fromSlot.ratio = 0;
+          fromSlot.mode = null;
+          fromSlot.src = null;
+        }
+        if (toSlot) toSlot.ratio = 1;
+        _applySlotVolumes();
+        return;
+      }
       const steps = 48;
       const stepMs = CROSSFADE_MS / steps;
       let step = 0;
@@ -6806,16 +7148,19 @@
     }
     musicSlots.forEach(s => s.audio.addEventListener('ended', _onPlaylistEnded));
 
-    function setMusicMode(mode) {
-      if (mode === currentMode) return;
+    function setMusicMode(mode, opts) {
+      // 'draw' is allowed to re-enter so session 2 can pick a fresh track;
+      // every other mode is idempotent.
+      if (mode === currentMode && mode !== 'draw') return;
       currentMode = mode;
+      const immediate = !!(opts && opts.immediate);
 
       const fromSlot = musicSlots[activeSlot].mode ? musicSlots[activeSlot] : null;
       const toIdx = fromSlot ? (1 - activeSlot) : activeSlot;
       const toSlot = musicSlots[toIdx];
 
       if (mode === null) {
-        if (fromSlot) _startCrossfade(fromSlot, null);
+        if (fromSlot) _startCrossfade(fromSlot, null, immediate);
         return;
       }
 
@@ -6823,6 +7168,16 @@
       if (mode === 'playlist') {
         const t = _nextPlaylistTrack();
         src = t.src; loop = false; trackVol = t.vol;
+      } else if (mode === 'draw') {
+        // Pick the draw track that wasn't last played (deterministic
+        // alternation on 2-track array, random pick if expanded later).
+        let idx;
+        if (DRAW_TRACKS.length <= 1) idx = 0;
+        else if (_lastDrawIdx < 0) idx = Math.floor(Math.random() * DRAW_TRACKS.length);
+        else idx = (_lastDrawIdx + 1) % DRAW_TRACKS.length;
+        _lastDrawIdx = idx;
+        const t = DRAW_TRACKS[idx];
+        src = t.src; loop = true; trackVol = t.vol;
       } else if (MUSIC_TRACKS[mode]) {
         src = MUSIC_TRACKS[mode].src;
         loop = MUSIC_TRACKS[mode].loop;
@@ -6834,7 +7189,7 @@
       toSlot.mode = mode;
       _loadSlot(toSlot, src, loop, trackVol);
       activeSlot = toIdx;
-      _startCrossfade(fromSlot, toSlot);
+      _startCrossfade(fromSlot, toSlot, immediate);
     }
 
     // Back-compat: legacy call sites still call startBgMusic / stopBgMusic.
@@ -7683,8 +8038,15 @@ document.addEventListener('keydown', e => {
           _scoringInProgress = false;
           resetModuleCanvas();
           initRoundState();
+          setMusicMode('faceoff');
           setupFaceoffUI();
-          startBattle(faceoffState.currentBattle);
+          // Only play the splash on fresh entry to battle 0. If a non-host
+          // joins mid-face-off (currentBattle > 0), skip the splash.
+          if (faceoffState.currentBattle === 0) {
+            playFaceoffSplash().then(() => startBattle(0));
+          } else {
+            startBattle(faceoffState.currentBattle);
+          }
         } else if (faceoffState.active) {
           // Mid-battle update: re-render current battle tiles
           renderFaceoffBoard(0);
@@ -8698,10 +9060,11 @@ document.addEventListener('keydown', e => {
     function setPhaseText(phase, text) {
       const span = document.querySelector(`#phase-indicator .ph-${phase}`);
       if (!span) return;
-      // innerHTML (not textContent) so callers can pass HTML like
-      // <span class="red">Team</span> for inline team-colored names.
-      // fitByCharCount reads the visible text via textContent.
-      span.innerHTML = text;
+      // Wrap in a single inner .ph-inner element so the flex container has
+      // only one child. Otherwise inline spans (e.g. <span class="team-name">)
+      // + trailing text become separate flex items laid out side-by-side,
+      // breaking natural text flow.
+      span.innerHTML = `<span class="ph-inner">${text}</span>`;
       fitByCharCount(span, 40);
     }
 
@@ -8744,6 +9107,7 @@ document.addEventListener('keydown', e => {
         teamColor,
         subtextFitBase,   // e.g. '1rem' for face-off; omit for default (2rem via CSS)
         showHeader,       // true = force turn-header display:block; false = hide; omit = leave as-is
+        headerWrap,       // true = allow header to wrap to two lines (round-end messages)
       } = opts || {};
 
       const turnInputBox = document.getElementById('turn-input-box');
@@ -8769,11 +9133,24 @@ document.addEventListener('keydown', e => {
       if (header !== undefined && turnHeader) {
         if (subtextFitBase) turnHeader.style.setProperty('--fit-base', subtextFitBase);
         else                turnHeader.style.removeProperty('--fit-base');
-        turnHeader.innerHTML = header;
-        fitByCharCount(turnHeader, 12, turnHeader.textContent);
+        // Wrap in single inner span — see setPhaseText for rationale.
+        turnHeader.innerHTML = `<span class="th-inner">${header}</span>`;
+        if (headerWrap) {
+          // Two-line capacity — curve tuned to the ~240px input-area width.
+          // At 2rem bold, ~12 chars fit per line, so any message over ~20
+          // chars needs to shrink to land cleanly on two lines. maxChars=18
+          // + power=0.7 keeps short messages near full size while scaling
+          // 27–46 char round-end messages down to ~15–24px.
+          turnHeader.classList.add('wrap');
+          fitByCharCount(turnHeader, 18, turnHeader.textContent, 0.7);
+        } else {
+          turnHeader.classList.remove('wrap');
+          fitByCharCount(turnHeader, 12, turnHeader.textContent);
+        }
       }
       if (subtext !== undefined && turnSubtext) {
-        turnSubtext.innerHTML = subtext;
+        // Wrap in single inner span — same rationale as turn-header.
+        turnSubtext.innerHTML = `<span class="ts-inner">${subtext}</span>`;
       }
 
       // Team color on the box
@@ -9083,7 +9460,6 @@ document.addEventListener('keydown', e => {
         const el = document.getElementById(id);
         if (el) el.style.display = "none";
       });
-
       // Content-TV
       const ctv = document.getElementById("content-tv");
       if (ctv) {
@@ -9128,6 +9504,12 @@ document.addEventListener('keydown', e => {
       // alone — showInputArea + setInputAreaMode own home-base visibility.
       const szi = document.getElementById("sq-zone-input");
       if (szi) szi.classList.remove("input-exit");
+
+      // Phase-indicator gem is a per-round latch. Clear between rounds so a
+      // stale 2.5x from round N-1 can't linger into round N (happens on
+      // non-host clients because awardRoundScore / handleModuleComplete only
+      // hide it host-side).
+      hidePhaseGem();
     }
 
     // Step 4b: Evergreen reset between games.
@@ -9253,22 +9635,40 @@ document.addEventListener('keydown', e => {
         anim.timer(bw, 350 / gameSpeed, () => playTick(0, { volume: 0.5 }));
       }
 
-      await anim.sequence([
-        // 1. Input area slides down
-        async () => {
-          if (szInput && szInput.classList.contains("input-enter")) {
-            szInput.classList.remove("input-enter");
-            // tap2 near exit (70% of 0.4s = ~280ms)
-            anim.timer(szInput, 280 / gameSpeed, () => playTap(2, 0.375));
-            await anim.play(szInput, "input-exit");
-          }
-        },
-        // 2. Content-tv slides out left (takes cat-label + question-box with it)
-        async () => {
-          if (contentTvExit && !contentTvExit.classList.contains("ct-hidden")) {
-            await anim.play(contentTvExit, "slide-out-left");
-          }
-        },
+      // Scribble summary — if the prior round was scribble, the summary
+      // panel is still visible. Slide it back up behind the scoreboard
+      // in parallel with the other exit animations so the canvas is
+      // visually clear by the time resetModuleCanvas runs.
+      const scribbleSummaryExit = document.getElementById("scribble-summary");
+      const scribbleSummaryExiting =
+        scribbleSummaryExit && scribbleSummaryExit.style.display !== "none";
+      let scribbleSummaryExitPromise = null;
+      if (scribbleSummaryExiting) {
+        scribbleSummaryExit.classList.remove("ss-fly-in");
+        void scribbleSummaryExit.offsetWidth;
+        scribbleSummaryExit.classList.add("ss-fly-out");
+        scribbleSummaryExitPromise = anim.done(scribbleSummaryExit);
+      }
+
+      await Promise.all([
+        anim.sequence([
+          // 1. Input area slides down
+          async () => {
+            if (szInput && szInput.classList.contains("input-enter")) {
+              szInput.classList.remove("input-enter");
+              // tap2 near exit (70% of 0.4s = ~280ms)
+              anim.timer(szInput, 280 / gameSpeed, () => playTap(2, 0.375));
+              await anim.play(szInput, "input-exit");
+            }
+          },
+          // 2. Content-tv slides out left (takes cat-label + question-box with it)
+          async () => {
+            if (contentTvExit && !contentTvExit.classList.contains("ct-hidden")) {
+              await anim.play(contentTvExit, "slide-out-left");
+            }
+          },
+        ]),
+        scribbleSummaryExitPromise,
       ]);
 
       // Exit animations complete — wipe the module canvas to a canonical
@@ -9399,6 +9799,8 @@ document.addEventListener('keydown', e => {
         pickerHtml += `<div class="rt-card ${cc}${disabledClass}${hasGemClass}"${tipAttr}${clickAttr}>` +
                         `<div class="rt-card-title">${mod.label}</div>` +
                         `<div class="rt-card-body"><div class="rt-card-desc">${desc}</div></div>` +
+                        `<div class="rt-card-shine"></div>` +
+                        `<div class="rt-card-glint"></div>` +
                         gemHtml +
                       `</div>`;
       });
@@ -9807,10 +10209,18 @@ document.addEventListener('keydown', e => {
       sessionScoring: null,
     };
 
+    // Interval handle for the per-session summary auto-cycler.
+    let _scribbleCyclerInterval = null;
+
     function resetScribbleState() {
       if (scribbleState.sessionInterval) clearInterval(scribbleState.sessionInterval);
       if (scribbleState.revealTimer) clearInterval(scribbleState.revealTimer);
       if (scribbleState.renderLoopId) cancelAnimationFrame(scribbleState.renderLoopId);
+      // NOTE: do NOT clear _scribbleCyclerInterval here. resetScribbleState
+      // runs during handleModuleComplete (before Ready Up consensus) while
+      // the summary DOM is still visible on screen — killing the interval
+      // now would freeze the cycler on session 1. The interval clears
+      // itself at the top of the next scribbleRenderSessions() call.
       scribbleState = {
         active: false,
         phase: "idle",
@@ -10083,15 +10493,28 @@ document.addEventListener('keydown', e => {
     // guessers (and the opposing team's drawer) can see the drawing.
     // Called on pointerup / bucket fill / clear — not continuously.
     function scribbleBroadcastCanvas() {
-      if (!isMultiplayer || scribbleState.myRole !== "drawer") return;
+      if (scribbleState.myRole !== "drawer") return;
       if (scribbleState.phase !== "drawing") return;
       const c = document.getElementById("scribble-draw-canvas");
       if (!c) return;
       try {
         const dataUrl = c.toDataURL("image/jpeg", 0.5);
-        // Determine my team (0 or 1) for the sync key
-        const myTeam = teamPlayerUids[0]?.includes(myUid) ? 0 : 1;
-        syncState({ [`scribbleCanvases.${myTeam}`]: dataUrl });
+        // Determine my team (0 or 1) — multiplayer uses UIDs, local uses
+        // the drawing session's team slot (already set during role pick).
+        let myTeam = 0;
+        if (isMultiplayer && myUid) {
+          myTeam = teamPlayerUids[0]?.includes(myUid) ? 0 : 1;
+        } else {
+          myTeam = scribbleState._drawerTeam ?? 0;
+        }
+        // Cache locally so the drawer's own team canvas is available for
+        // the round-complete recap (self-echoed Firestore writes don't
+        // re-invoke scribbleApplyCanvasSnapshot on the writer).
+        scribbleState._canvasCache = scribbleState._canvasCache || {};
+        scribbleState._canvasCache[myTeam] = dataUrl;
+        if (isMultiplayer) {
+          syncState({ [`scribbleCanvases.${myTeam}`]: dataUrl });
+        }
       } catch (e) {
         console.warn('[scribble] broadcast failed:', e);
       }
@@ -10101,6 +10524,10 @@ document.addEventListener('keydown', e => {
     // onto the correct target canvas (teammate or opponent view).
     function scribbleApplyCanvasSnapshot(teamIdx, dataUrl) {
       if (!dataUrl) return;
+      // Cache by absolute team idx so the round-complete summary can
+      // retrieve both teams' final drawings after the session ends.
+      scribbleState._canvasCache = scribbleState._canvasCache || {};
+      scribbleState._canvasCache[teamIdx] = dataUrl;
       // Determine which target canvas this snapshot goes to
       // Guesser view has teammate-canvas (my team) and opp-canvas (other team)
       // Drawer view has no separate canvas (they draw on their own)
@@ -10129,6 +10556,7 @@ document.addEventListener('keydown', e => {
         drawingFirstClaimed: [false, false],
         events: [],
         teamScores: [0, 0],
+        wrongGuesses: [],
       };
     }
 
@@ -10153,6 +10581,7 @@ document.addEventListener('keydown', e => {
       ss.events.push({
         type: "guess", team: guesserTeam, canvas: canvasIdx, raw, mult, total,
         breakdown: breakdown.join(" ") + ` x${mult}`, secondsRemaining,
+        ts: Date.now(),
       });
       ss.teamScores[guesserTeam] += total;
 
@@ -10164,6 +10593,7 @@ document.addEventListener('keydown', e => {
           type: "drawer-bonus", team: drawerTeam, canvas: canvasIdx,
           raw: 50, mult, total: drawerBonus,
           breakdown: `50 (first drawing guessed) x${mult}`, secondsRemaining,
+          ts: Date.now(),
         });
         ss.teamScores[drawerTeam] += drawerBonus;
       }
@@ -10207,6 +10637,33 @@ document.addEventListener('keydown', e => {
     }
 
     // Host-side evaluation. Computes score, updates state, syncs to all clients.
+    // Scribble-specific fuzzy match. Intentionally tighter than feud's
+    // answerMatches (1 error per 4 chars). Scribble has a single target
+    // word per canvas, so forgiveness should only cover typos — not
+    // synonyms, shorthand, or near-miss guesses. Rules:
+    //   - Normalize: lowercase, strip leading a/an/the, strip trailing s,
+    //     collapse whitespace.
+    //   - Words <5 chars → exact match only (too few chars to disambiguate
+    //     a typo from a different word).
+    //   - Words 5–8 chars → allow edit distance ≤1.
+    //   - Words 9+ chars → allow edit distance ≤2.
+    function scribbleNormalize(t) {
+      return t.toLowerCase().trim()
+        .replace(/^(a |an |the )/, "")
+        .replace(/s$/, "")
+        .replace(/\s+/g, " ");
+    }
+    function scribbleMatches(guess, target) {
+      const g = scribbleNormalize(guess);
+      const t = scribbleNormalize(target);
+      if (!g || !t) return false;
+      if (g === t) return true;
+      const len = t.length;
+      if (len < 5) return false;
+      const tolerance = len >= 9 ? 2 : 1;
+      return levenshtein(g, t) <= tolerance;
+    }
+
     function scribbleEvaluateGuess(guess, guesserUid) {
       const g = guess.trim().toLowerCase();
       if (!g) return;
@@ -10241,11 +10698,11 @@ document.addEventListener('keydown', e => {
       const myTeamSolved = scribbleState.sessionScoring?.drawingFirstClaimed?.[myTeam];
       const oppTeamSolved = scribbleState.sessionScoring?.drawingFirstClaimed?.[1 - myTeam];
 
-      if (!myTeamSolved && g === myTeamWord.word.toLowerCase()) {
+      if (!myTeamSolved && scribbleMatches(g, myTeamWord.word)) {
         scoredResult = scribbleScoreGuessAbs(guesserTeam, myTeam, scribbleState.sessionTimer, myTeamWord.points);
         solvedTeam = myTeam;
         matched = true;
-      } else if (!oppTeamSolved && g === oppTeamWord.word.toLowerCase()) {
+      } else if (!oppTeamSolved && scribbleMatches(g, oppTeamWord.word)) {
         scoredResult = scribbleScoreGuessAbs(guesserTeam, 1 - myTeam, scribbleState.sessionTimer, oppTeamWord.points);
         solvedTeam = 1 - myTeam;
         matched = true;
@@ -10279,8 +10736,23 @@ document.addEventListener('keydown', e => {
           const gi = document.getElementById("guess");
           if (gi) { gi.classList.add("flash-wrong"); setTimeout(() => gi.classList.remove("flash-wrong"), 400); }
         }
-        // Clear pendingAction
-        if (isMultiplayer) syncState({ pendingAction: null });
+        // Log wrong guess for the round-complete recap. Host-authoritative —
+        // only host writes, non-hosts receive via scribbleScoring sync.
+        if (!scribbleState.sessionScoring.wrongGuesses) {
+          scribbleState.sessionScoring.wrongGuesses = [];
+        }
+        scribbleState.sessionScoring.wrongGuesses.push({
+          team: guesserTeam,
+          guess: guess.trim(),
+          uid: guesserUid,
+          ts: Date.now(),
+        });
+        if (isMultiplayer) {
+          syncState({
+            scribbleScoring: scribbleState.sessionScoring,
+            pendingAction: null,
+          });
+        }
       }
     }
 
@@ -10366,6 +10838,7 @@ document.addEventListener('keydown', e => {
       ss.events.push({
         type: "guess", team: guesserTeam, drawerTeam, raw, mult, total,
         breakdown: breakdown.join(" ") + ` x${mult}`, secondsRemaining,
+        ts: Date.now(),
       });
       ss.teamScores[guesserTeam] += total;
 
@@ -10376,6 +10849,7 @@ document.addEventListener('keydown', e => {
           type: "drawer-bonus", team: drawerTeam, drawerTeam,
           raw: 50, mult, total: drawerBonus,
           breakdown: `50 (first drawing guessed) x${mult}`, secondsRemaining,
+          ts: Date.now(),
         });
         ss.teamScores[drawerTeam] += drawerBonus;
       }
@@ -10774,6 +11248,7 @@ document.addEventListener('keydown', e => {
           drawingFirstClaimed: [false, false],
           events: [],
           teamScores: [0, 0],
+          wrongGuesses: [],
         },
         scribbleLastSolve: null,
       });
@@ -11008,6 +11483,14 @@ document.addEventListener('keydown', e => {
     // when they receive the 'scribble-session-end' phase from the host.
     function scribbleApplyEndDrawingSession(reason, sessionData) {
       if (scribbleState.phase === "session-end" || scribbleState.phase === "summary") return;
+
+      // Force one last canvas broadcast from the drawer before phase flips
+      // so the final stroke(s) get captured in the cache (and synced out to
+      // the other clients) for the post-round recap.
+      if (scribbleState.myRole === "drawer") {
+        try { scribbleBroadcastCanvas(); } catch (e) { /* ignore */ }
+      }
+
       scribbleState.phase = "session-end";
 
       clearInterval(scribbleState.sessionInterval); scribbleState.sessionInterval = null;
@@ -11031,11 +11514,40 @@ document.addEventListener('keydown', e => {
         inputPlaceholder: 'Getting next session ready...',
       });
 
+      // Resolve drawer names for this session so the summary can label
+      // each drawing with its artist. Uses the same pattern as
+      // scribbleHostMaybeStartEarly: drawer = roster[sessionIdx % length].
+      const _sessIdx = scribbleState.currentSession;
+      function drawerNameFor(t) {
+        if (isMultiplayer) {
+          const roster = teamPlayerUids[t] || [];
+          if (!roster.length) return null;
+          const uid = roster[_sessIdx % roster.length];
+          const idx = roster.indexOf(uid);
+          return idx >= 0 ? (teamPlayers[t]?.[idx] || null) : null;
+        } else {
+          const roster = teamPlayers[t] || [];
+          if (!roster.length) return null;
+          return roster[_sessIdx % roster.length] || null;
+        }
+      }
+
       scribbleState.sessions.push({
         ...sessionData,
         scores: { ...scribbleState.sessionScoring.teamScores },
         events: [...scribbleState.sessionScoring.events],
+        wrongGuesses: [...(scribbleState.sessionScoring.wrongGuesses || [])],
+        canvases: { ...(scribbleState._canvasCache || {}) },
+        team0Word: scribbleState._team0Word ? { ...scribbleState._team0Word } : null,
+        team1Word: scribbleState._team1Word ? { ...scribbleState._team1Word } : null,
+        team0DrawerName: drawerNameFor(0),
+        team1DrawerName: drawerNameFor(1),
       });
+
+      // Reset canvas cache for the next session so session 2's canvases
+      // don't leak session 1's drawings. Keep the _team*Word fields — they
+      // get reassigned at drawing-start of the next session.
+      scribbleState._canvasCache = {};
 
       const nextSession = scribbleState.currentSession + 1;
       const holdMs = SCRIBBLE_CONFIG.sessionEndHold || 2000;
@@ -11080,28 +11592,10 @@ document.addEventListener('keydown', e => {
       }
 
       let totalRed = 0, totalBlue = 0;
-      const body = document.getElementById("scribble-summary-body");
-      if (body) {
-        body.innerHTML = "";
-        scribbleState.sessions.forEach((s, idx) => {
-          const div = document.createElement("div");
-          div.className = "scribble-summary-session";
-          let html = `<h3>Drawing Session ${idx + 1}</h3>`;
-          if (s.events.length === 0) {
-            html += `<div class="scribble-summary-row"><span style="color:#666;">No correct guesses</span></div>`;
-          } else {
-            s.events.forEach(ev => {
-              const tc = ev.team === 0 ? "red" : "blue";
-              const label = ev.type === "drawer-bonus" ? "Drawer bonus" : (ev.canvas === 1 ? "Steal guess" : "Guess");
-              html += `<div class="scribble-summary-row"><span>${label}: ${ev.breakdown}</span><span class="scribble-pts ${tc}">+${ev.total}</span></div>`;
-            });
-          }
-          div.innerHTML = html;
-          body.appendChild(div);
-          totalRed += s.scores[0];
-          totalBlue += s.scores[1];
-        });
-      }
+      scribbleState.sessions.forEach(s => {
+        totalRed += s.scores[0];
+        totalBlue += s.scores[1];
+      });
 
       const totals = document.getElementById("scribble-summary-totals");
       if (totals) {
@@ -11119,13 +11613,149 @@ document.addEventListener('keydown', e => {
       // Store totals for the onComplete callback
       scribbleState._roundTotals = { redScore: totalRed, blueScore: totalBlue };
 
-      // Remove any stale continue buttons from a previous round (defensive)
-      ss.querySelectorAll('.scribble-continue-btn').forEach(b => b.remove());
+      // Render per-session recap blocks stacked vertically
+      scribbleRenderSessions();
 
-      // Auto-finish the round after a brief pause so players can read the
-      // summary. Ready Up appears in the main input-area (home base) via
-      // handleModuleComplete, not as a separate button on the summary.
-      setTimeout(() => { scribbleFinishRound(); }, 1500);
+      // Ready Up appears in the main input-area (home base) via
+      // handleModuleComplete. Fire immediately — the summary panel stays
+      // visible while players read it and ready up at their own pace.
+      scribbleFinishRound();
+    }
+
+    // ── Session recap renderer: stacks per-session blocks vertically.
+    // Each block shows both team canvases on the left (with drawer name
+    // above the word label) and a right column with scoring actions plus
+    // a wrong-guesses row beneath them.
+    function scribbleRenderSessions() {
+      const host = document.getElementById("scribble-summary-sessions");
+      if (!host) return;
+      if (_scribbleCyclerInterval) { clearInterval(_scribbleCyclerInterval); _scribbleCyclerInterval = null; }
+      host.innerHTML = "";
+
+      const sessions = scribbleState.sessions || [];
+      if (!sessions.length) { host.style.display = "none"; return; }
+      // Clear inline display so the CSS `display: grid` rule wins — the
+      // grid-overlay stack relies on all blocks sharing grid-area 1/1 and
+      // crossfading via opacity. An inline `display: block` here would
+      // break the stack and make session 2 render below session 1.
+      host.style.display = "";
+
+      const escapeHtml = (s) => (s || "").replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+
+      sessions.forEach((s, idx) => {
+        const block = document.createElement("div");
+        block.className = "scribble-session-block";
+
+        const title = document.createElement("div");
+        title.className = "scribble-session-title";
+        title.textContent = `Drawing Session ${idx + 1}`;
+        block.appendChild(title);
+
+        const row = document.createElement("div");
+        row.className = "scribble-session-row";
+
+        // Left: two canvases with drawer name above word label
+        const canvases = document.createElement("div");
+        canvases.className = "scribble-session-canvases";
+        [0, 1].forEach(team => {
+          const col = document.createElement("div");
+          col.className = "scribble-session-canvas-col";
+
+          const drawerName = team === 0 ? s.team0DrawerName : s.team1DrawerName;
+          if (drawerName) {
+            const drawerEl = document.createElement("div");
+            drawerEl.className = "scribble-session-drawer";
+            drawerEl.textContent = drawerName;
+            col.appendChild(drawerEl);
+          }
+
+          const wordObj = team === 0 ? s.team0Word : s.team1Word;
+          const wordLabel = document.createElement("div");
+          wordLabel.className = "scribble-session-word " + (team === 0 ? "red" : "blue");
+          wordLabel.textContent = (wordObj && wordObj.word) ? wordObj.word : "—";
+          col.appendChild(wordLabel);
+
+          const src = s.canvases && s.canvases[team];
+          if (src) {
+            const img = document.createElement("img");
+            img.className = "scribble-session-canvas-img";
+            img.src = src;
+            img.alt = wordLabel.textContent;
+            col.appendChild(img);
+          } else {
+            const empty = document.createElement("div");
+            empty.className = "scribble-session-canvas-empty";
+            empty.textContent = "No drawing";
+            col.appendChild(empty);
+          }
+          canvases.appendChild(col);
+        });
+        row.appendChild(canvases);
+
+        // Right: scoring actions (top) + wrong guesses row (below)
+        const right = document.createElement("div");
+        right.className = "scribble-session-right";
+
+        const actionsTitle = document.createElement("div");
+        actionsTitle.className = "scribble-session-actions-title";
+        actionsTitle.textContent = "Scoring";
+        right.appendChild(actionsTitle);
+
+        const actions = document.createElement("div");
+        actions.className = "scribble-session-actions";
+        const evs = (s.events || []).slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
+        if (!evs.length) {
+          const empty = document.createElement("div");
+          empty.className = "scribble-session-empty";
+          empty.textContent = "No scores this session";
+          actions.appendChild(empty);
+        } else {
+          evs.forEach(ev => {
+            const tc = ev.team === 0 ? "red" : "blue";
+            const label = ev.type === "drawer-bonus" ? "Drawer bonus" : (ev.canvas === 1 ? "Steal" : "Guess");
+            const rowEl = document.createElement("div");
+            rowEl.className = "scribble-session-action";
+            rowEl.innerHTML = `<span class="ev-label">${label}: ${ev.breakdown}</span><span class="ev-pts ${tc}">+${ev.total}</span>`;
+            actions.appendChild(rowEl);
+          });
+        }
+        right.appendChild(actions);
+
+        const wrongs = s.wrongGuesses || [];
+        if (wrongs.length) {
+          const wrongsTitle = document.createElement("div");
+          wrongsTitle.className = "scribble-session-wrongs-title";
+          wrongsTitle.textContent = "Wrong guesses";
+          right.appendChild(wrongsTitle);
+
+          const wrongsRow = document.createElement("div");
+          wrongsRow.className = "scribble-session-wrongs";
+          wrongs.forEach(wg => {
+            const w = document.createElement("span");
+            w.className = "scribble-session-wrong";
+            w.innerHTML = `"${escapeHtml(wg.guess || "")}" <span class="ev-xmark">✗</span>`;
+            wrongsRow.appendChild(w);
+          });
+          right.appendChild(wrongsRow);
+        }
+
+        row.appendChild(right);
+        block.appendChild(row);
+        host.appendChild(block);
+      });
+
+      // Auto-cycle: show one session at a time, rotate every 5s
+      const blocks = host.querySelectorAll(".scribble-session-block");
+      if (!blocks.length) return;
+      let idx = 0;
+      blocks[0].classList.add("active");
+      if (blocks.length > 1) {
+        _scribbleCyclerInterval = setInterval(() => {
+          blocks[idx].classList.remove("active");
+          idx = (idx + 1) % blocks.length;
+          blocks[idx].classList.add("active");
+        }, 5000);
+      }
     }
 
     function scribbleFinishRound() {
@@ -11163,6 +11793,7 @@ document.addEventListener('keydown', e => {
           scribbleSaveUndo();
           scribbleFloodFill(p.x, p.y, scribbleState.currentColor);
           scribbleBroadcastCanvas();
+          scribbleState.currentTool = "brush";
           return;
         }
         scribbleState.isDrawing = true;
@@ -11338,9 +11969,11 @@ document.addEventListener('keydown', e => {
         });
       }
 
-      // Local: drive the UI directly
+      // Local: drive the UI directly. Play the full-screen splash first,
+      // then kick off battle 1's countdown so nothing ticks under the splash.
+      setMusicMode('faceoff');
       setupFaceoffUI();
-      startBattle(0);
+      playFaceoffSplash().then(() => startBattle(0));
     }
 
     // Serialize faceoffState into a Firestore-safe shape.
@@ -11409,9 +12042,110 @@ document.addEventListener('keydown', e => {
       faceoffState.battleGuesses = mapToArr(synced.battleGuesses, [[], []]);
     }
 
+    // Full-screen splash that plays once at face-off start. Three sequential
+    // slam-together rows: title (FACE + OFF), battle 1 VS, battle 2 VS.
+    // Resolves when fully dismissed so callers can gate the 5s countdown on it.
+    function playFaceoffSplash() {
+      return new Promise((resolve) => {
+        // Mount inside #module-canvas so the splash only covers the main
+        // gameplay area — sidebar (phase indicator + input-area) and the
+        // scoreboard stay visible behind it. Fall back to #game-root if
+        // the canvas isn't mounted for some reason.
+        const root = document.getElementById('module-canvas')
+                  || document.getElementById('game-root');
+        if (!root) { resolve(); return; }
+
+        // Remove any stale splash from a prior render (idempotent).
+        const stale = document.getElementById('faceoff-splash');
+        if (stale) stale.remove();
+
+        const pn = faceoffState.playerNames || [[null, null], [null, null]];
+        // Battle N pairs the two teams' N-th drawer: playerNames[team][battle]
+        const b1Red  = (pn[0] && pn[0][0]) || 'Red';
+        const b1Blue = (pn[1] && pn[1][0]) || 'Blue';
+        const b2Red  = (pn[0] && pn[0][1]) || 'Red';
+        const b2Blue = (pn[1] && pn[1][1]) || 'Blue';
+
+        const splash = document.createElement('div');
+        splash.id = 'faceoff-splash';
+        splash.classList.add('active');
+        splash.innerHTML = `
+          <div id="faceoff-splash-flash"></div>
+          <div class="faceoff-splash-row" id="fo-splash-title-row">
+            <div class="faceoff-splash-title face">FACE</div>
+            <div class="faceoff-splash-title off">OFF</div>
+          </div>
+          <div class="faceoff-splash-row faceoff-splash-vs" id="fo-splash-b1-row">
+            <div class="faceoff-splash-name red">${escapeHtml(b1Red)}</div>
+            <div class="faceoff-splash-vs-label">VS</div>
+            <div class="faceoff-splash-name blue">${escapeHtml(b1Blue)}</div>
+          </div>
+          <div class="faceoff-splash-row faceoff-splash-vs" id="fo-splash-b2-row">
+            <div class="faceoff-splash-name red">${escapeHtml(b2Red)}</div>
+            <div class="faceoff-splash-vs-label">VS</div>
+            <div class="faceoff-splash-name blue">${escapeHtml(b2Blue)}</div>
+          </div>
+        `;
+        root.appendChild(splash);
+
+        const flash = splash.querySelector('#faceoff-splash-flash');
+        const pulseFlash = () => {
+          if (!flash) return;
+          flash.classList.remove('pulse');
+          // Force reflow so the animation replays each time.
+          void flash.offsetWidth;
+          flash.classList.add('pulse');
+        };
+
+        const slamRow = (rowSel, leftSel, rightSel, collisionMs) => {
+          return new Promise((done) => {
+            const row = splash.querySelector(rowSel);
+            const left = splash.querySelector(leftSel);
+            const right = splash.querySelector(rightSel);
+            if (!row || !left || !right) { done(); return; }
+            left.classList.add('slam-left');
+            right.classList.add('slam-right');
+            // Collision ~70% through the 600/550ms slam → flash + shake
+            setTimeout(() => {
+              pulseFlash();
+              row.classList.add('shake');
+            }, collisionMs);
+            // Resolve shortly after shake completes (380ms)
+            setTimeout(done, collisionMs + 480);
+          });
+        };
+
+        // Sequence: title row → battle 1 row → battle 2 row → hold → fade out.
+        (async () => {
+          await anim.wait(180);
+          await slamRow('#fo-splash-title-row', '.face', '.off', 420);
+          await anim.wait(120);
+          await slamRow('#fo-splash-b1-row', '#fo-splash-b1-row .red', '#fo-splash-b1-row .blue', 380);
+          await anim.wait(80);
+          await slamRow('#fo-splash-b2-row', '#fo-splash-b2-row .red', '#fo-splash-b2-row .blue', 380);
+          await anim.wait(600);
+          splash.classList.add('fade-out');
+          await anim.wait(420);
+          splash.remove();
+          resolve();
+        })();
+      });
+    }
+
+    // Minimal HTML escape for splash text (player names).
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
     // DOM prep: show faceoff container, swap round counter label.
     // Canvas is already clean (resetModuleCanvas ran in advanceRound).
     function setupFaceoffUI() {
+      // Face-off has no round multiplier — clear any gem latched during
+      // the prior ranked/scribble round so it doesn't linger on non-host
+      // clients (awardRoundScore only runs host-side).
+      hidePhaseGem();
       // Show the face-off container
       const foc = document.getElementById('faceoff-container');
       if (foc) {
@@ -11722,8 +12456,7 @@ document.addEventListener('keydown', e => {
       setInputAreaMode({
         mode: canInput ? 'guess' : 'disabled',
         header, subtext,
-        subtextFitBase: '1rem',
-        showHeader: true,
+        headerWrap: true,
         inputPlaceholder: placeholder,
       });
       if (canInput) {
@@ -13290,7 +14023,7 @@ document.addEventListener('keydown', e => {
               setPhaseText("round-result", stealPhaseText);
               setPhaseTeamColor(stealingTeam);
               setPhase("round-result");
-              const stealMsg = `🎉 <span class="${stealingTeam===0?"red":"blue"}">${teamNames[stealingTeam]}</span> stole ${final} points!`;
+              const stealMsg = `<span class="${stealingTeam===0?"red":"blue"}">${teamNames[stealingTeam]}</span> stole ${final} points!`;
               syncAfterGuess({ outcome: 'steal_success', tileIdx: idx, points: stealTotal, mult: stealMult }, { msg: stealMsg, winner: stealingTeam, phaseText: stealPhaseText });
               if(!checkForWinner())endRound(stealMsg, stealingTeam);
             });
@@ -13385,7 +14118,7 @@ document.addEventListener('keydown', e => {
         setPhaseText("round-result", revealAllPhaseText);
         setPhaseTeamColor(teamTurn);
         setPhase("round-result");
-        const revealAllMsg = `🎉 <span class="${teamTurn===0?"red":"blue"}">${teamNames[teamTurn]}</span> revealed all answers! They win ${final} points.`;
+        const revealAllMsg = `<span class="${teamTurn===0?"red":"blue"}">${teamNames[teamTurn]}</span> revealed all answers! They win ${final} points.`;
         syncAfterGuess({ outcome: 'correct', tileIdx: foundIdx, points: foundTotal, mult: foundMult }, { msg: revealAllMsg, winner: teamTurn, phaseText: revealAllPhaseText });
         if(!checkForWinner())endRound(revealAllMsg, teamTurn);});}}
 
@@ -13491,6 +14224,7 @@ document.addEventListener('keydown', e => {
         buttonText,
         onButtonClick,
         teamColor: scoringTeam,
+        headerWrap: true,
       });
 
       // Clear the legacy module flag — its responsibility (avoiding double
@@ -14223,7 +14957,9 @@ document.addEventListener('keydown', e => {
       if(await showConfirm(`Apply ${sign}${val} points to ${name}?`, { title: 'Edit Score' })){teamScores[team]+=val;el.value=0;updateScores();checkForWinner();}}
 
     function endGame(msg, winnerOverride = null) {
-      setMusicMode('maintheme');
+      // Cut straight to maintheme — victory is an abrupt moment, a fade
+      // undercuts the impact.
+      setMusicMode('maintheme', { immediate: true });
       const winner = winnerOverride !== null ? winnerOverride : (teamScores[0] >= teamScores[1] ? 0 : 1);
       // Populate sidebar endRound area (retained for returning to the board).
       // Fast Money Round button removed — replaced by the Face-off Round which

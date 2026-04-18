@@ -2016,11 +2016,17 @@
       font-weight: 700;
       font-size: 2.35rem;
       letter-spacing: 1px;
-      color: #fff;
+      /* Title text takes the round's color so each module is instantly
+         identifiable by its headline (high-five blue, survey orange,
+         scribble pink). Background is a dark plate that lets the colored
+         text pop. */
+      color: var(--cat-solid, #fba300);
       text-transform: uppercase;
       line-height: 1.15;
-      background: var(--cat-solid, #fba300);
+      background: rgba(0, 0, 0, 0.35);
+      border-bottom: 2px solid color-mix(in srgb, var(--cat-solid, #fba300) 60%, transparent);
       box-shadow: inset 0 -2px 0 rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.3);
+      text-shadow: 0 0 12px color-mix(in srgb, var(--cat-solid, #fba300) 45%, transparent);
     }
     .rt-card-body {
       flex: 1 1 auto;
@@ -8346,11 +8352,28 @@ document.addEventListener('keydown', e => {
           break;
 
         case 'scribble-session-end':
-          // Host ended the session — mirror locally on non-hosts
-          if (scribbleState.phase === "drawing" || scribbleState.phase === "countdown") {
+          // Host ended the session — mirror locally on non-hosts.
+          // Accept any live-scribble phase, not just drawing/countdown —
+          // if the client missed an intermediate snapshot (e.g. drawing-
+          // start), we still want to bring the UI to session-end's
+          // canonical state rather than stay stuck on the prior screen.
+          // scribbleApplyEndDrawingSession early-returns if already in
+          // session-end/summary, so re-entry is safe.
+          if (
+            scribbleState.active &&
+            scribbleState.phase !== "session-end" &&
+            scribbleState.phase !== "summary"
+          ) {
+            // Defensively ensure sessionScoring exists so the apply
+            // function's score-spread doesn't throw when we arrived here
+            // without seeing drawing-start.
+            if (!scribbleState.sessionScoring) {
+              scribbleState.sessionScoring = scribbleInitSessionScoring();
+            }
             scribbleApplyEndDrawingSession(
               data.scribbleEndReason || "timeup",
-              data.scribbleEndSessionData || scribbleState._sessionData || {}
+              data.scribbleEndSessionData || scribbleState._sessionData || {},
+              data.scribbleEndTs
             );
           }
           break;
@@ -8475,6 +8498,28 @@ document.addEventListener('keydown', e => {
                   onButtonClick: readyUp,
                   teamColor: data.roundWinner ?? 0,
                 });
+              }
+              // Secondary safety net: force the scribble UI into its summary
+              // state (or hide it if we have no summary data). Covers the
+              // case where scribble-session-end was missed locally (phase
+              // guard on the handler skipped apply) — without this, the
+              // drawing UI stays mounted underneath the Ready Up button
+              // until round-type-select finally wipes the canvas, producing
+              // the "hung then jumped" symptom.
+              const scribContainer = document.getElementById('scribble-container');
+              if (scribContainer && scribContainer.style.display !== 'none') {
+                const sg = document.getElementById('scribble-game');
+                const ws = document.getElementById('scribble-word-select');
+                const ss = document.getElementById('scribble-summary');
+                const hasSummary = ss && scribbleState.sessions && scribbleState.sessions.length > 0;
+                if (hasSummary && scribbleState.phase !== 'summary') {
+                  try { scribbleShowSummary(); } catch (e) { /* noop */ }
+                } else if (!hasSummary) {
+                  if (sg) sg.style.display = 'none';
+                  if (ws) ws.style.display = 'none';
+                  if (ss) ss.style.display = 'none';
+                  scribContainer.style.display = 'none';
+                }
               }
             }
           }
@@ -9829,6 +9874,12 @@ document.addEventListener('keydown', e => {
         if (!gem) return;
         const gemOffset = (allCardsLandedMs + i * gemHopMs) / gameSpeed;
         anim.timer(card, gemOffset, () => {
+          // Clear the inline animation-delay left over from the slide-in
+          // stagger. Otherwise the pulse animation (amethyst/topaz, higher
+          // specificity) inherits that delay and starts late — during the
+          // delay the base `transform: translateY(-110%)` shows through and
+          // the card appears to blink out.
+          card.style.animationDelay = "";
           card.classList.add("rt-gem-revealed");
           gem.classList.add("rt-gem-hop");
           const gemTier = gem.className.match(/rt-gem-(emerald|sapphire|amethyst|topaz)/);
@@ -10114,28 +10165,31 @@ document.addEventListener('keydown', e => {
       const winnerName = teamNames[scoringTeam] || (scoringTeam === 0 ? "Red" : "Blue");
       const winnerClass = scoringTeam === 0 ? "red" : "blue";
       const pts = scoringTeam === 0 ? redScore : blueScore;
+      const resultMsg = `<span class="${winnerClass}">${winnerName}</span> won with ${pts} pts!`;
+      const phaseMsg = `<span class="${winnerClass}">${winnerName}</span> won the round with ${pts} points!`;
 
-      // Set phase indicator to round-result
-      setPhaseText("round-result",
-        `<span class="${winnerClass}">${winnerName}</span> won the round with ${pts} points!`);
+      // Set phase indicator to round-result. setPhaseTeamColor is required —
+      // without it the indicator keeps the last module turn's team color
+      // instead of the scoring team's. Non-host reconcile does this; host
+      // must too so both paths converge on the same visual state.
+      setPhaseText("round-result", phaseMsg);
+      setPhaseTeamColor(scoringTeam);
       setPhase("round-result");
 
-      // Use input-area home base to show the Ready Up / Next Round action
+      // Delegate the input-area Ready Up UI to endRound — the single shared
+      // renderer used by the non-host reconcile path. This handles
+      // face-off-pending button text, ready-up vs next-round branching,
+      // team color classes on input-area/question-box, and revealAll
+      // scheduling. Host and non-host now reach identical UI via the same
+      // code path instead of dual-writing with drift.
       showInputArea();
-      setInputAreaMode({
-        mode: 'action',
-        header: `<span class="${winnerClass}">${winnerName}</span> won with ${pts} pts!`,
-        subtext: isMultiplayer ? 'Ready up to continue' : 'Click to continue',
-        buttonText: isMultiplayer ? 'Ready Up' : 'Next Round',
-        onButtonClick: isMultiplayer ? readyUp : advanceRound,
-        teamColor: scoringTeam,
-      });
+      endRound(resultMsg, scoringTeam);
 
       if (isMultiplayer && isHost) {
         syncAfterGuess({ outcome: "module-complete" }, {
-          msg: `<span class="${winnerClass}">${winnerName}</span> won with ${pts} pts!`,
+          msg: resultMsg,
           winner: scoringTeam,
-          phaseText: `<span class="${winnerClass}">${winnerName}</span> won the round with ${pts} points!`,
+          phaseText: phaseMsg,
         });
       }
     }
@@ -11466,22 +11520,31 @@ document.addEventListener('keydown', e => {
         return;
       }
 
-      scribbleApplyEndDrawingSession(reason, sessionData);
+      const endTs = Date.now();
+      scribbleApplyEndDrawingSession(reason, sessionData, endTs);
 
-      // Host syncs the session end so non-hosts finalize in sync
+      // Host syncs the session end so non-hosts finalize in sync. The same
+      // endTs is used for both local apply and sync so non-hosts can shrink
+      // their hold by the Firestore round-trip and land on the summary at
+      // the same wall-clock moment as the host.
       if (isMultiplayer && isHost) {
         syncState({
           phase: 'scribble-session-end',
           scribbleEndReason: reason,
           scribbleEndSessionData: sessionData,
-          scribbleEndTs: Date.now(),
+          scribbleEndTs: endTs,
         });
       }
     }
 
     // Apply session-end locally — used by host directly and by non-hosts
     // when they receive the 'scribble-session-end' phase from the host.
-    function scribbleApplyEndDrawingSession(reason, sessionData) {
+    // anchorTs (optional) is the host's Date.now() at the moment session-end
+    // was triggered. When present, the subsequent hold timeouts are shortened
+    // by (Date.now() - anchorTs) so every client lands on the summary at the
+    // same wall-clock moment rather than each starting a fresh 2s hold after
+    // their own handler fires (non-host was ~200–500ms behind host).
+    function scribbleApplyEndDrawingSession(reason, sessionData, anchorTs) {
       if (scribbleState.phase === "session-end" || scribbleState.phase === "summary") return;
 
       // Force one last canvas broadcast from the drawer before phase flips
@@ -11550,7 +11613,13 @@ document.addEventListener('keydown', e => {
       scribbleState._canvasCache = {};
 
       const nextSession = scribbleState.currentSession + 1;
-      const holdMs = SCRIBBLE_CONFIG.sessionEndHold || 2000;
+      const baseHold = SCRIBBLE_CONFIG.sessionEndHold || 2000;
+      // Shrink the hold by however much wall-clock time has already elapsed
+      // since the host stamped `scribbleEndTs`. Host path passes its own
+      // Date.now() so elapsed ≈ 0; non-host's elapsed is the Firestore
+      // round-trip. Floors at 200ms so we still show the status message.
+      const elapsed = anchorTs ? Math.max(0, Date.now() - anchorTs) : 0;
+      const holdMs = Math.max(200, baseHold - elapsed);
 
       // Fade the drawing game panel out near the end of the hold so the
       // transition between sessions (or to summary) has a visible exit

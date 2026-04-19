@@ -10843,7 +10843,7 @@ document.addEventListener('keydown', e => {
         if (isMyTeamGuessed) {
           // My team guessed something
           if (isSteal) {
-            msg = `🎯 Steal! ${word.toUpperCase()} — ${pts}`;
+            msg = `Steal! ${word.toUpperCase()} — ${pts}`;
           } else {
             msg = `✓ Correct! ${word.toUpperCase()} — ${pts}`;
           }
@@ -14117,7 +14117,7 @@ document.addEventListener('keydown', e => {
               setPhaseText("round-result", keepPhaseText);
               setPhaseTeamColor(keepTeam);
               setPhase("round-result");
-              const keepMsg = `✅ <span class="${keepTeam===0?"red":"blue"}">${teamNames[keepTeam]}</span> keeps ${final} points!`;
+              const keepMsg = `<span class="${keepTeam===0?"red":"blue"}">${teamNames[keepTeam]}</span> keeps ${final} points!`;
               syncAfterGuess({ outcome: 'steal_fail' }, { msg: keepMsg, winner: keepTeam, phaseText: keepPhaseText });
               if(!checkForWinner())endRound(keepMsg, keepTeam);
             });

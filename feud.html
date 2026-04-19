@@ -406,9 +406,6 @@
       position: relative;
       z-index: 3;
     }
-    .crt-start-screen #dev-mode-btn {
-      z-index: 3;
-    }
     /* Noise layer — same SVG turbulence + tv-static animation as cat-label */
     .crt-start-screen::before {
       content: "";
@@ -492,24 +489,20 @@
       animation: logo-tv-off 0.5s ease-in forwards;
       transition: none !important;
     }
-    #dev-mode-btn {
+    /* Version tag — subtle build marker pinned top-left of canvas. The
+       literal version string is the single source of truth; a deploy
+       script or GitHub Action sed-replaces this line on each publish. */
+    #version-tag {
       position: absolute;
-      top: 12px;
-      left: 12px;
-      z-index: 1;
-      padding: 6px 14px;
+      top: 8px;
+      left: 10px;
+      z-index: 30;
       font-family: 'Bitcount Mono Single', monospace;
-      font-size: 1rem;
-      color: rgba(255,255,255,0.5);
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s;
-    }
-    #dev-mode-btn:hover {
-      background: rgba(255,255,255,0.18);
-      color: rgba(255,255,255,0.85);
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 0.05em;
+      pointer-events: none;
+      user-select: none;
     }
 
     /* ── Mode select screen ─────────────────────────────────────── */
@@ -521,7 +514,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 40px;
+      gap: 5px;
+      margin-top: 60px;
     }
     #mode-select h1 {
       font-family: "futura-100", sans-serif;
@@ -530,6 +524,7 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.7);
       letter-spacing: 0.06em;
+      margin-bottom: 0;
     }
     .mode-buttons {
       display: flex;
@@ -1789,6 +1784,19 @@
       from { transform: translateX(0); }
       to   { transform: translateX(-150%); }
     }
+    /* TV-off — reverse of tv-on, collapses to a line then a dot then fades */
+    @keyframes tv-off {
+      0%   { transform: scale(1, 1);       opacity: 1; filter: brightness(1) saturate(1); }
+      25%  { transform: scale(1, 1);       opacity: 1; filter: brightness(1.8) saturate(0.7); }
+      45%  { transform: scale(1, 0.02);    opacity: 1; filter: brightness(2.5) saturate(0.3); }
+      55%  { transform: scale(1, 0.02);    opacity: 1; filter: brightness(3) saturate(0); }
+      75%  { transform: scale(0.02, 0.02); opacity: 1; filter: brightness(5) saturate(0); }
+      85%  { transform: scale(0.02, 0.02); opacity: 1; filter: brightness(5) saturate(0); }
+      100% { transform: scale(0, 0);       opacity: 0; filter: brightness(0); }
+    }
+    #content-tv.tv-off {
+      animation: tv-off calc(0.7s / var(--speed)) ease-in forwards;
+    }
 
     /* Right column (75%) */
     #zone-board-main {
@@ -1810,7 +1818,15 @@
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      overflow: hidden;
+      /* Vertical clipping is load-bearing: scribble-summary uses
+         translateY(-100%) to hide above module-canvas (see ss-fly-in),
+         and face-off splash sizes to these bounds. But horizontal
+         overflow must be free so the category-multiplier board-badge
+         can hang ~10px past the right edge without being clipped.
+         `clip` + `visible` coexist on opposite axes (unlike `hidden`,
+         which silently promotes the other axis to `auto`). */
+      overflow-x: visible;
+      overflow-y: clip;
       min-width: 0;
       box-sizing: border-box;
       position: relative;
@@ -1897,6 +1913,10 @@
     }
     .rt-card.rt-sliding-out {
       animation: rt-card-slide-up calc(0.4s / var(--speed)) cubic-bezier(0.64, 0, 0.78, 0) both;
+      /* Kill the box-shadow transition on exit — the pulse-glow shrinking
+         back to baseline over 200ms while the card is sliding up reads as
+         a "blink" on amethyst/topaz cards (only tiers with pulse glow). */
+      transition: transform 0.25s ease;
     }
     @keyframes rt-card-slide-up {
       from { transform: translateY(0); }
@@ -2102,6 +2122,14 @@
       width: 40px;
       height: 40px;
       z-index: 20;
+      cursor: default;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    #phase-indicator .rt-gem.ph-gem * {
+      cursor: default;
+      user-select: none;
+      -webkit-user-select: none;
     }
     #phase-indicator .rt-gem.ph-gem .rt-gem-value {
       font-size: 1.2rem;
@@ -3285,7 +3313,7 @@
       flex: 1 1 auto;
       max-width: 600px;
       min-width: 0;
-      margin: 0;
+      margin: -2px 0 0 0;
       box-sizing: border-box;
       transition: transform calc(0.5s / var(--speed)) ease;
     }
@@ -3626,7 +3654,6 @@
       flex-direction: column;
       gap: 28px;
       pointer-events: none;
-      background: radial-gradient(ellipse at center, rgba(10,10,10,0.92), rgba(0,0,0,0.98));
       overflow: hidden;
     }
     #faceoff-splash.active { display: flex; }
@@ -3676,7 +3703,8 @@
 
     /* Title row: giant FACE + OFF */
     .faceoff-splash-title {
-      font-family: "Bungee", "futura-100", sans-serif;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
       font-size: 5.5rem;
       letter-spacing: 4px;
       line-height: 1;
@@ -3718,7 +3746,8 @@
     .faceoff-splash-name.slam-right { animation: faceoff-slam-from-right 550ms cubic-bezier(0.22, 0.9, 0.3, 1) forwards; }
 
     .faceoff-splash-vs-label {
-      font-family: "Bungee", "futura-100", sans-serif;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
       color: #fff;
       font-size: 1.6rem;
       letter-spacing: 3px;
@@ -3743,6 +3772,86 @@
       70%  { opacity: 1; transform: translateX(-18px) scale(1.08); }
       85%  { transform: translateX(6px) scale(1.02); }
       100% { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    /* ── Module intro splash ──
+       Generic placeholder intro for each round module (High Five, Survey,
+       Secret Scribble). Mounts into #module-canvas on top of the normal
+       game background (no opaque backdrop like face-off). Big bold title
+       slams in, subtitle fades in, an accent bar wipes across, then the
+       whole thing fades out before the module's real entry animations run.
+       Per-module accent lives on --mi-accent. */
+    #module-intro {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 18px;
+      pointer-events: none;
+      overflow: hidden;
+      --mi-accent: #fba300;
+    }
+    #module-intro.active { display: flex; }
+    #module-intro.fade-out { animation: module-intro-fade 360ms ease-out forwards; }
+    @keyframes module-intro-fade {
+      0%   { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .module-intro-title {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 5.4rem;
+      letter-spacing: 5px;
+      line-height: 1;
+      text-align: center;
+      color: var(--mi-accent);
+      text-shadow:
+        0 0 24px color-mix(in srgb, var(--mi-accent) 55%, transparent),
+        0 6px 0 rgba(0,0,0,0.55),
+        0 0 2px rgba(0,0,0,0.9);
+      opacity: 0;
+      white-space: nowrap;
+      animation: module-intro-title-slam 620ms cubic-bezier(0.22, 0.9, 0.3, 1) forwards;
+    }
+    @keyframes module-intro-title-slam {
+      0%   { opacity: 0; transform: translateY(-180px) scale(1.25); }
+      60%  { opacity: 1; transform: translateY(12px) scale(1.08); }
+      80%  { transform: translateY(-4px) scale(1.0); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .module-intro-bar {
+      width: 0;
+      height: 6px;
+      background: var(--mi-accent);
+      border-radius: 3px;
+      box-shadow: 0 0 18px color-mix(in srgb, var(--mi-accent) 70%, transparent);
+      animation: module-intro-bar-wipe 520ms cubic-bezier(0.22, 0.9, 0.3, 1) 380ms forwards;
+    }
+    @keyframes module-intro-bar-wipe {
+      0%   { width: 0; }
+      100% { width: 320px; }
+    }
+
+    .module-intro-subtitle {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.5rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #fff;
+      text-shadow: 0 2px 0 rgba(0,0,0,0.55);
+      opacity: 0;
+      transform: translateY(12px);
+      animation: module-intro-subtitle-in 380ms ease-out 640ms forwards;
+    }
+    @keyframes module-intro-subtitle-in {
+      0%   { opacity: 0; transform: translateY(12px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
     /* Face-off Round container — two side-by-side battle boards */
@@ -3904,7 +4013,7 @@
     /* ── Secret Scribble styles ── */
     #scribble-container {
       display: none; flex-direction: column; align-items: center;
-      width: 100%; height: 100%; padding: 8px;
+      width: 100%; height: 100%; padding: 0 8px 8px 8px;
     }
     #scribble-word-select { display: flex; flex-direction: column; align-items: center; gap: 18px; width: 100%; max-width: 640px; }
     #scribble-word-select.ws-fly-in { animation: ws-fly-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
@@ -4048,7 +4157,7 @@
     /* Guesser layout: two canvases side by side */
     .scribble-guesser-layout { display: flex; gap: 16px; justify-content: center; }
 
-    #scribble-draw-canvas { border-radius: 6px; box-shadow: inset 0 0 12px rgba(0,0,0,0.4); display: block; cursor: crosshair; }
+    #scribble-draw-canvas { border-radius: 6px; box-shadow: inset 0 0 12px rgba(0,0,0,0.4); display: block; cursor: crosshair; /* dynamic cursor applied via updateScribbleCursor */ }
     #scribble-draw-canvas.disabled { cursor: not-allowed !important; opacity: 0.7; }
     #scribble-teammate-canvas { border-radius: 6px; box-shadow: inset 0 0 12px rgba(0,0,0,0.4); display: block; cursor: default; background: #ffffff; }
     #scribble-opp-canvas { border-radius: 6px; display: block; cursor: default; box-shadow: none; }
@@ -4151,7 +4260,7 @@
        gap between the scoreboard's bottom edge and the summary's top. */
     #scribble-summary {
       display: flex; flex-direction: column; align-items: center; gap: 0;
-      width: 96%; max-width: 980px; margin-top: -8px;
+      width: 96%; max-width: 980px; margin-top: -2px;
     }
 
     /* Grid-overlay stack: all session blocks occupy the same cell so the
@@ -4170,7 +4279,7 @@
       box-sizing: border-box;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.9s ease-in-out;
     }
     .scribble-session-block.active { opacity: 1; pointer-events: auto; }
     .scribble-session-title { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; font-size: 0.9rem; color: #fba300; padding: 0 2px; }
@@ -4225,7 +4334,7 @@
       background: #1a1a1a;
       width: 100%; box-sizing: border-box;
       padding: 10px 12px 6px;
-      border-radius: 10px 10px 0 0;
+      border-radius: 0;
       text-align: center;
     }
     .scribble-pts { font-family: "Bitcount Single", monospace; font-size: 0.95rem; }
@@ -5288,9 +5397,11 @@
     <path class="bg-in-bottom"   d="M102,67.1c-9.6-6.1-22-3.1-29.5,2-15.4,10.7-19.6,37.5-7.6,47.8s35.9,3.9,44.5-12.5C115.5,92.6,113.9,74.6,102,67.1Z"/>
   </svg>
 
+  <!-- Version tag — see #version-tag CSS for sed-replace contract -->
+  <div id="version-tag">v0.11</div>
+
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
-    <button id="dev-mode-btn" onclick="event.stopPropagation(); activateDevMode();">Dev Mode</button>
     <div id="start-content">
       <div id="start-logo"><span id="logo-good">GOOD</span><br><span id="logo-answer">ANSWER</span></div>
       <h1>Click anywhere to start</h1>
@@ -7031,20 +7142,20 @@
     // hotter than the rest. All tracks reduced 50% from raw; roundselect
     // reduced 60% because the looped melody sits louder than the others.
     const MUSIC_TRACKS = {
-      maintheme:   { src: "maintheme.mp3",   loop: true, vol: 0.4 },
-      roundselect: { src: "roundselect.mp3", loop: true, vol: 0.32 },
-      faceoff:     { src: "faceoff.mp3",     loop: true, vol: 0.4 },
+      maintheme:   { src: "maintheme.mp3",   loop: true, vol: 0.3 },
+      roundselect: { src: "roundselect.mp3", loop: true, vol: 0.22 },
+      faceoff:     { src: "faceoff.mp3",     loop: true, vol: 0.3 },
     };
     const PLAYLIST_TRACKS = [
-      { src: "bossa.mp3",  vol: 0.4 },
-      { src: "ranked.mp3", vol: 0.4 },
+      { src: "bossa.mp3",  vol: 0.3 },
+      { src: "ranked.mp3", vol: 0.3 },
     ];
     // Draw mode picks randomly between tracks each time setMusicMode('draw')
     // is called — two sessions per round, so avoid repeating the same tune
     // back-to-back. Last-played tracked so session 2 never repeats session 1.
     const DRAW_TRACKS = [
-      { src: "draw.mp3",  vol: 0.4 },
-      { src: "draw2.mp3", vol: 0.4 },
+      { src: "draw.mp3",  vol: 0.3 },
+      { src: "draw2.mp3", vol: 0.3 },
     ];
     let _lastDrawIdx = -1;
     const CROSSFADE_MS = 3500;
@@ -7693,6 +7804,13 @@ document.addEventListener('keydown', e => {
     let devMode = false;
     let devModeAllowedQuestions = null;
 
+    // ── TEST MODE ──────────────────────────────────────────────────────
+    // Flip to `false` for full question pool (real playtests with others).
+    // Flip to `true` for a trimmed pool (10 questions per category) during
+    // solo dev work so you cycle through the same familiar content.
+    // The user will say "remove testmode" / "go back to testmode" to toggle.
+    const TEST_MODE = true;
+
     let roundNumber = 0;
     let gameEnded = false;
     let matchLog = [];  // persists across rounds, cleared on resetGame()
@@ -8031,22 +8149,53 @@ document.addEventListener('keydown', e => {
         const wasActive = faceoffState.active;
         hydrateFaceoffState(data.faceoffState);
         if (faceoffState.active && !wasActive) {
-          // Entering face-off on non-host: snap-transition (no exit animations).
-          // The host already did exit animations via advanceRound(). Non-host
-          // just needs to swap the UI state. Attempting async exit animations
-          // was causing the setup to hang when animations didn't complete.
+          // Entering face-off on non-host: mirror the exit choreography
+          // (content-tv tv-off, board-wrapper offscreen, scribble-summary
+          // fly-out) so the transition feels continuous. NO extra wait —
+          // host's advanceRound already paid a 2s buffer BEFORE writing the
+          // faceoff snapshot, so non-host is already ~2s behind wall-clock
+          // when this fires. Battle timer uses host-written `battleExpiry`
+          // (wall-clock), so any additional wait here just eats live seconds.
           _scoringInProgress = false;
-          resetModuleCanvas();
-          initRoundState();
-          setMusicMode('faceoff');
-          setupFaceoffUI();
-          // Only play the splash on fresh entry to battle 0. If a non-host
-          // joins mid-face-off (currentBattle > 0), skip the splash.
-          if (faceoffState.currentBattle === 0) {
-            playFaceoffSplash().then(() => startBattle(0));
-          } else {
-            startBattle(faceoffState.currentBattle);
+          const _foEntryBattle = faceoffState.currentBattle;
+          const _contentTv = document.getElementById("content-tv");
+          const _bw = document.getElementById("board-wrapper");
+          const _ss = document.getElementById("scribble-summary");
+          if (_bw && _bw.classList.contains("slide-in")) {
+            _bw.classList.remove("slide-in");
+            _bw.style.transform = 'translateY(0)';
+            void _bw.offsetWidth;
+            _bw.style.transform = '';
+            _bw.classList.add("offscreen");
+            anim.timer(_bw, 350 / gameSpeed, () => playTick(0, { volume: 0.5 }));
           }
+          const _ssExiting = _ss && _ss.style.display !== "none";
+          if (_ssExiting) {
+            _ss.classList.remove("ss-fly-in");
+            void _ss.offsetWidth;
+            _ss.classList.add("ss-fly-out");
+          }
+          (async () => {
+            await Promise.all([
+              (async () => {
+                if (_contentTv && !_contentTv.classList.contains("ct-hidden")) {
+                  await anim.play(_contentTv, "tv-off");
+                }
+              })(),
+              _ssExiting ? anim.done(_ss) : Promise.resolve(),
+            ]);
+            resetModuleCanvas();
+            initRoundState();
+            setMusicMode('faceoff');
+            setupFaceoffUI();
+            // Only play the splash on fresh entry to battle 0. If a non-host
+            // joins mid-face-off (currentBattle > 0), skip the splash.
+            if (_foEntryBattle === 0) {
+              playFaceoffSplash().then(() => startBattle(0));
+            } else {
+              startBattle(_foEntryBattle);
+            }
+          })();
         } else if (faceoffState.active) {
           // Mid-battle update: re-render current battle tiles
           renderFaceoffBoard(0);
@@ -8287,8 +8436,11 @@ document.addEventListener('keydown', e => {
             }
             (async () => {
               if (_contentTv && !_contentTv.classList.contains("ct-hidden")) {
-                await anim.play(_contentTv, "slide-out-left");
+                await anim.play(_contentTv, "tv-off");
               }
+              // 2s buffer so non-host isn't racing the round-type picker.
+              // Skip on round 1 — nothing is exiting at game start.
+              if (roundNumber > 1) await anim.wait(2000 / gameSpeed);
               resetModuleCanvas();
               updateTurn();
               initRoundState();
@@ -8305,10 +8457,24 @@ document.addEventListener('keydown', e => {
           // Picker is leaving — hide the round-type picker panel and drop
           // picker-mode so the sidebar's category-select panel can take
           // over for feud modules, or the module's own UI for non-feud.
-          hideRoundTypePicker();
+          const _rtsHidePromise = hideRoundTypePicker();
           if (currentRoundMultiplier > 1) showPhaseGem(currentRoundMultiplier);
+          // Wait for the picker cards to finish sliding up + a breathing beat
+          // before the module intro splash slams in. Stored on
+          // window._moduleIntroPromise so downstream handlers (non-host
+          // category-select, scribble entry) can await full completion.
+          const _rtsIntroPromise = (async () => {
+            await _rtsHidePromise;
+            await anim.wait(260);
+            await playModuleIntro(data.selectedRoundType);
+          })();
+          window._moduleIntroPromise = _rtsIntroPromise;
           if (data.selectedRoundType === 'secret-scribble') {
-            enterScribbleRound(handleModuleComplete);
+            // Defer scribble entry until after the splash finishes.
+            (async () => {
+              await _rtsIntroPromise;
+              enterScribbleRound(handleModuleComplete);
+            })();
           } else {
             setMusicMode('playlist');
           }
@@ -8392,8 +8558,12 @@ document.addEventListener('keydown', e => {
             }
             (async () => {
               if (_contentTv && !_contentTv.classList.contains("ct-hidden")) {
-                await anim.play(_contentTv, "slide-out-left");
+                await anim.play(_contentTv, "tv-off");
               }
+              // Wait for the module intro splash (kicked off in
+              // 'round-type-selected') to finish before starting the category
+              // pills entry animation.
+              await (window._moduleIntroPromise || Promise.resolve());
               resetModuleCanvas();
               updateTurn();
               initRoundState();
@@ -8459,14 +8629,13 @@ document.addEventListener('keydown', e => {
               playSound(sfxRoundEnd);
               document.getElementById('game-root').style.setProperty('--bg-blob-base', '#111');
             }
-            // Ensure input area is visible (spectator may have it hidden)
+            // Ensure input area is visible (spectator may have it hidden).
+            // Input-area is now a persistent home base — don't re-trigger the
+            // slide-up animation here, just make sure it's not in an exit state.
             const ia = document.getElementById("input-area");
             if (ia) ia.classList.remove("hidden");
             const szi = document.getElementById("sq-zone-input");
-            if (szi) {
-              szi.classList.remove("offscreen-below");
-              if (!szi.classList.contains("input-enter")) szi.classList.add("input-enter");
-            }
+            if (szi) szi.classList.remove("offscreen-below", "input-exit");
             document.getElementById("turn-input-box").style.display = "";
             endRound(data.roundResultMsg, data.roundWinner);
 
@@ -8705,10 +8874,8 @@ document.addEventListener('keydown', e => {
         () => typewriter(questionEl, currentQuestion.question),
         async () => {
           if (!sziEl) return;
-          sziEl.classList.remove("offscreen-below");
-          sziEl.classList.add("input-enter");
-          await anim.done(sziEl);
-          // Focus guess input after slide-in completes (safe now — not offscreen)
+          // Input-area is persistent — don't re-slide. Just clear any exit state.
+          sziEl.classList.remove("offscreen-below", "input-exit");
           const guessEl = document.getElementById("guess");
           if (guessEl && !guessEl.disabled) guessEl.focus();
         },
@@ -8802,7 +8969,7 @@ document.addEventListener('keydown', e => {
       try {
         const res = await fetch("master_question_bank.json");
         questions = await res.json();
-        if (devMode) computeDevModeQuestions();
+        if (devMode || TEST_MODE) computeDevModeQuestions();
       } catch (e) {
         console.error("Failed to load question bank", e);
         document.getElementById("question").textContent = "⚠️ Error loading questions.";
@@ -9264,10 +9431,13 @@ document.addEventListener('keydown', e => {
                              onButtonClick === advanceRound ? 'next-round' :
                              'module-action';
             if (onclickStr) {
-              actionRow.innerHTML = `
-                ${make3dBtn(buttonText || 'Continue', onclickStr, '', extraCls)}
-                <div id="ready-status" style="text-align:center; margin-top:8px; font-family:futura-100,sans-serif; font-size:0.85rem; color:#aaa;"></div>
-              `;
+              // Ready-up countdown label (e.g. "2/4 — 8s") renders INSIDE
+              // the button once the current player clicks — see
+              // updateReadyStatus. No separate status div.
+              // extraCls passed as BOTH class and data-tip so the ready-up
+              // selector works AND the tooltip lookup still hits (e.g.
+              // `next-round` in tooltips.csv).
+              actionRow.innerHTML = make3dBtn(buttonText || 'Continue', onclickStr, extraCls, extraCls);
             } else {
               // Fallback for arbitrary callbacks
               actionRow.innerHTML = `<button class="btn action-btn" id="input-action-btn" style="width:100%;">${buttonText || 'Continue'}</button>`;
@@ -9279,14 +9449,18 @@ document.addEventListener('keydown', e => {
       }
     }
 
-    // Ensures the input-area itself is visible (no offscreen/input-enter management).
-    // Called by modules that want to guarantee the home base is shown.
-    // With the evergreen-sidebar refactor, the sidebar itself is always visible;
-    // this helper only needs to make sure sq-zone-input has slid into view.
+    // Ensures the input-area home base is visible. Only triggers the
+    // slide-in animation if the sq-zone-input is currently off-canvas
+    // (offscreen-below) or in an exit state — otherwise leaves classes
+    // alone so we don't re-animate on every round boundary.
     function showInputArea() {
       const sqi = document.getElementById('sq-zone-input');
       const ia = document.getElementById('input-area');
-      if (sqi) { sqi.classList.remove('offscreen-below', 'input-exit'); sqi.classList.add('input-enter'); }
+      if (sqi) {
+        const wasOffscreen = sqi.classList.contains('offscreen-below') || sqi.classList.contains('input-exit');
+        sqi.classList.remove('offscreen-below', 'input-exit');
+        if (wasOffscreen) sqi.classList.add('input-enter');
+      }
       if (ia) ia.classList.remove('hidden');
     }
     function setPhaseTeamColor(teamIdx) {
@@ -9429,13 +9603,14 @@ document.addEventListener('keydown', e => {
       if (catMultEl) catMultEl.style.display = "none";
 
       // Canvas state (content-tv, cat-label, board-footer badges) is reset
-      // by resetModuleCanvas in advanceRound. initRoundState can also fire
-      // from the getNewQuestion path though, so keep the sq-zone-input
-      // reset (it's module-input feud entry expects to animate from below).
+      // by resetModuleCanvas in advanceRound. The sq-zone-input is an
+      // evergreen home base — only clear exit/offscreen state (not
+      // input-enter), so once it's slid in on game start it stays put and
+      // the next showInputArea call is a no-op instead of re-triggering
+      // the slide-in animation on every round.
       const szi = document.getElementById("sq-zone-input");
       if (szi) {
-        szi.classList.remove("input-enter", "input-exit");
-        szi.classList.add("offscreen-below");
+        szi.classList.remove("input-exit", "offscreen-below");
       }
       const qEl = document.getElementById("question");
       if (qEl) { qEl.classList.remove("typing", "typed"); }
@@ -9505,7 +9680,7 @@ document.addEventListener('keydown', e => {
         ctv.style.display = "none";
         ctv.style.opacity = "";
         ctv.style.transform = "";
-        ctv.classList.remove("tv-on", "slide-out-left");
+        ctv.classList.remove("tv-on", "slide-out-left", "tv-off");
         ctv.classList.add("ct-hidden");
       }
 
@@ -9529,6 +9704,10 @@ document.addEventListener('keydown', e => {
 
       // Scribble solved overlays (belt-and-braces — container already hidden)
       document.querySelectorAll(".scribble-solved-overlay").forEach(el => el.remove());
+
+      // Module intro splash (if lingering from an aborted transition)
+      const _mi = document.getElementById("module-intro");
+      if (_mi) _mi.remove();
 
       // 3. Evergreen animation-class hygiene — strip stale classes only
 
@@ -9690,25 +9869,21 @@ document.addEventListener('keydown', e => {
       }
 
       await Promise.all([
-        anim.sequence([
-          // 1. Input area slides down
-          async () => {
-            if (szInput && szInput.classList.contains("input-enter")) {
-              szInput.classList.remove("input-enter");
-              // tap2 near exit (70% of 0.4s = ~280ms)
-              anim.timer(szInput, 280 / gameSpeed, () => playTap(2, 0.375));
-              await anim.play(szInput, "input-exit");
-            }
-          },
-          // 2. Content-tv slides out left (takes cat-label + question-box with it)
-          async () => {
-            if (contentTvExit && !contentTvExit.classList.contains("ct-hidden")) {
-              await anim.play(contentTvExit, "slide-out-left");
-            }
-          },
-        ]),
+        // Content-tv tv-off (collapses in place, replaces old slide-out-left).
+        // Input-area stays put — it's the persistent home base.
+        (async () => {
+          if (contentTvExit && !contentTvExit.classList.contains("ct-hidden")) {
+            await anim.play(contentTvExit, "tv-off");
+          }
+        })(),
         scribbleSummaryExitPromise,
       ]);
+
+      // 2-second breathing buffer before the next phase kicks off. Gives
+      // non-host clients time to catch up on animations before the round-
+      // type picker (or face-off) slams in. Skip on the opening round —
+      // nothing is exiting so the buffer just stalls the game-start motion.
+      if (roundNumber > 1) await anim.wait(2000 / gameSpeed);
 
       // Exit animations complete — wipe the module canvas to a canonical
       // empty baseline before the next module sets up. Replaces the per-
@@ -9861,12 +10036,16 @@ document.addEventListener('keydown', e => {
 
       // Gems reveal after all cards have landed, left-to-right sequentially so
       // each gem's hop finishes before the next begins — more of a "moment".
+      // Count only gem-bearing cards so empty slots don't introduce dead time
+      // (e.g. single gem on the rightmost card shouldn't wait for two no-ops).
       const gemHopMs = 650; // matches rt-gem-hop duration
       const allCardsLandedMs = (cards.length - 1) * cardStagger + cardSlideMs + 120;
-      cards.forEach((card, i) => {
+      let gemSlot = 0;
+      cards.forEach((card) => {
         const gem = card.querySelector(".rt-gem");
         if (!gem) return;
-        const gemOffset = (allCardsLandedMs + i * gemHopMs) / gameSpeed;
+        const gemOffset = (allCardsLandedMs + gemSlot * gemHopMs) / gameSpeed;
+        gemSlot++;
         anim.timer(card, gemOffset, () => {
           // Clear the inline animation-delay left over from the slide-in
           // stagger. Otherwise the pulse animation (amethyst/topaz, higher
@@ -9916,12 +10095,12 @@ document.addEventListener('keydown', e => {
     // empty baseline from resetModuleCanvas.
     function hideRoundTypePicker() {
       const pickerArea = document.getElementById("round-type-picker-container");
-      if (!pickerArea) return;
+      if (!pickerArea) return Promise.resolve();
       const cards = pickerArea.querySelectorAll(".rt-card");
       if (!cards.length) {
         pickerArea.style.display = "none";
         pickerArea.innerHTML = "";
-        return;
+        return Promise.resolve();
       }
       const exitStagger = 70; // ms between successive card exits
       const exitMs = 400;     // must match rt-card-slide-up duration
@@ -9935,10 +10114,13 @@ document.addEventListener('keydown', e => {
         card.classList.add("rt-sliding-out");
       });
       const totalMs = ((cards.length - 1) * exitStagger + exitMs + 40) / gameSpeed;
-      setTimeout(() => {
-        pickerArea.style.display = "none";
-        pickerArea.innerHTML = "";
-      }, totalMs);
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          pickerArea.style.display = "none";
+          pickerArea.innerHTML = "";
+          resolve();
+        }, totalMs);
+      });
     }
 
     function onRoundTypePick(moduleKey) {
@@ -9957,7 +10139,7 @@ document.addEventListener('keydown', e => {
       // Latch the pre-rolled round multiplier onto the round.
       currentRoundMultiplier = _roundTypePickMultipliers[moduleKey] || 1;
       // Picker selection made — hide the picker panel and leave picker-mode.
-      hideRoundTypePicker();
+      const hidePromise = hideRoundTypePicker();
 
       // Sync selection to all clients
       if (isMultiplayer) {
@@ -9972,16 +10154,23 @@ document.addEventListener('keydown', e => {
       // Latch the gem onto phase-indicator; cleared at round end.
       if (currentRoundMultiplier > 1) showPhaseGem(currentRoundMultiplier);
 
-      // Dispatch to appropriate module
-      if (moduleKey === 'high-five') {
-        setMusicMode('playlist');
-        hostProcessRoundTypePick_highFive();
-      } else if (moduleKey === 'survey') {
-        setMusicMode('playlist');
-        hostProcessRoundTypePick_survey();
-      } else if (moduleKey === 'secret-scribble') {
-        enterScribbleRound(handleModuleComplete);
-      }
+      // Play the module intro splash, then dispatch to the appropriate module.
+      // Wait for the picker cards to finish sliding up + a breathing beat so
+      // the canvas sits empty for a moment before the intro slams in.
+      (async () => {
+        await hidePromise;
+        await anim.wait(260);
+        await playModuleIntro(moduleKey);
+        if (moduleKey === 'high-five') {
+          setMusicMode('playlist');
+          hostProcessRoundTypePick_highFive();
+        } else if (moduleKey === 'survey') {
+          setMusicMode('playlist');
+          hostProcessRoundTypePick_survey();
+        } else if (moduleKey === 'secret-scribble') {
+          enterScribbleRound(handleModuleComplete);
+        }
+      })();
     }
 
     function hostProcessRoundTypePick_highFive() {
@@ -10096,14 +10285,16 @@ document.addEventListener('keydown', e => {
         description: 'Pick a trivia category and rank the top five answers.',
         colorClass: 'cat-science',
         minPlayersPerTeam: 1,
+        intro: { title: 'HIGH FIVE', subtitle: 'Rank the top five', accent: '#fdd835' },
         enter(onComplete) { hostProcessRoundTypePick_highFive(); },
         reset() { initRoundState(); },
       },
       'survey': {
-        label: 'Survey',
+        label: 'Poll Position',
         description: 'Guess how the crowd answered an open-ended question.',
         colorClass: 'cat-survey',
         minPlayersPerTeam: 1,
+        intro: { title: 'POLL\nPOSITION', subtitle: 'What did the crowd say?', accent: '#fb8c00' },
         enter(onComplete) { hostProcessRoundTypePick_survey(); },
         reset() { initRoundState(); },
       },
@@ -10112,6 +10303,7 @@ document.addEventListener('keydown', e => {
         description: 'Draw your secret word while the other team tries to steal it.',
         colorClass: 'cat-popculture',
         minPlayersPerTeam: 2,
+        intro: { title: 'SECRET\nSCRIBBLE', subtitle: 'Draw, guess, steal', accent: '#d803ff' },
         enter(onComplete) { enterScribbleRound(onComplete); },
         reset() { resetScribbleState(); },
       },
@@ -10779,10 +10971,16 @@ document.addEventListener('keydown', e => {
           setTimeout(() => scribbleEndDrawingSession("all-solved", scribbleState._sessionData), 500);
         }
       } else {
-        // Wrong guess — flash on guesser's screen (only if they're the host/local)
+        // Wrong guess — shake on guesser's screen (only if they're the host/local).
+        // No SFX on wrong scribble guesses — just the visual wiggle.
         if (!isMultiplayer || guesserUid === myUid) {
           const gi = document.getElementById("guess");
-          if (gi) { gi.classList.add("flash-wrong"); setTimeout(() => gi.classList.remove("flash-wrong"), 400); }
+          if (gi) {
+            gi.classList.remove('input-shake');
+            void gi.offsetWidth;
+            gi.classList.add('input-shake');
+            setTimeout(() => gi.classList.remove('input-shake'), 320);
+          }
         }
         // Log wrong guess for the round-complete recap. Host-authoritative —
         // only host writes, non-hosts receive via scribbleScoring sync.
@@ -10808,6 +11006,7 @@ document.addEventListener('keydown', e => {
     // Status message is perspective-aware: what happened from MY client's view.
     function scribbleApplySolve(solvedTeam, result, guesserUid) {
       const statusEl = document.getElementById("scribble-status");
+      playSound(sfxCorrect);
       const myTeam = (isMultiplayer && myUid && teamPlayerUids[1]?.includes(myUid)) ? 1 : 0;
       const drawerTeam = solvedTeam;
       const guesserTeam = teamPlayerUids[0]?.includes(guesserUid) ? 0 :
@@ -11814,9 +12013,12 @@ document.addEventListener('keydown', e => {
       blocks[0].classList.add("active");
       if (blocks.length > 1) {
         _scribbleCyclerInterval = setInterval(() => {
-          blocks[idx].classList.remove("active");
+          const prev = idx;
           idx = (idx + 1) % blocks.length;
           blocks[idx].classList.add("active");
+          // Stagger removal so both blocks overlap mid-fade — prevents the
+          // brief moment where neither is fully visible.
+          setTimeout(() => { blocks[prev].classList.remove("active"); }, 150);
         }, 5000);
       }
     }
@@ -11843,10 +12045,34 @@ document.addEventListener('keydown', e => {
       }
     }
 
+    // Build an SVG data-URL cursor showing the current brush as a dot.
+    // Size reflects scribbleState.currentSize; fill reflects color/tool
+    // (eraser = white with outline, bucket = crosshair, brush = color).
+    function updateScribbleCursor() {
+      const c = document.getElementById("scribble-draw-canvas");
+      if (!c) return;
+      const tool = scribbleState.currentTool;
+      const size = Math.max(4, scribbleState.currentSize || 8);
+      const color = scribbleState.currentColor || "#111";
+      if (tool === "bucket") { c.style.cursor = "crosshair"; return; }
+      const half = size / 2;
+      const pad = 2;
+      const dim = size + pad * 2;
+      const cx = dim / 2;
+      const fill = tool === "eraser" ? "#ffffff" : color;
+      const svg =
+        `<svg xmlns='http://www.w3.org/2000/svg' width='${dim}' height='${dim}' viewBox='0 0 ${dim} ${dim}'>` +
+          `<circle cx='${cx}' cy='${cx}' r='${half}' fill='${fill}' stroke='black' stroke-width='1'/>` +
+        `</svg>`;
+      const url = `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}") ${cx} ${cx}, crosshair`;
+      c.style.cursor = url;
+    }
+
     // ── Scribble drawing event wiring (deferred until DOM is ready) ──
     function scribbleWireDrawingEvents() {
       const c = document.getElementById("scribble-draw-canvas");
       if (!c) return;
+      updateScribbleCursor();
 
       c.addEventListener("pointerdown", (e) => {
         if (!scribbleState.drawingEnabled) return;
@@ -11857,6 +12083,7 @@ document.addEventListener('keydown', e => {
           scribbleFloodFill(p.x, p.y, scribbleState.currentColor);
           scribbleBroadcastCanvas();
           scribbleState.currentTool = "brush";
+          updateScribbleCursor();
           return;
         }
         scribbleState.isDrawing = true;
@@ -11902,6 +12129,7 @@ document.addEventListener('keydown', e => {
           b.classList.add("active");
           scribbleState.currentColor = b.dataset.color;
           if (scribbleState.currentTool === "eraser") { scribbleState.currentTool = "brush"; scribbleState.currentSize = 8; }
+          updateScribbleCursor();
         });
       });
 
@@ -11912,6 +12140,7 @@ document.addEventListener('keydown', e => {
           b.classList.add("active");
           scribbleState.currentSize = parseInt(b.dataset.size);
           scribbleState.currentTool = "brush";
+          updateScribbleCursor();
         });
       });
 
@@ -11922,11 +12151,12 @@ document.addEventListener('keydown', e => {
         eraserBtn.classList.add("active");
         scribbleState.currentTool = "eraser";
         scribbleState.currentSize = 16;
+        updateScribbleCursor();
       });
 
       // Bucket
       const bucketBtn = document.getElementById("scribble-bucket-btn");
-      if (bucketBtn) bucketBtn.addEventListener("click", () => { scribbleState.currentTool = "bucket"; });
+      if (bucketBtn) bucketBtn.addEventListener("click", () => { scribbleState.currentTool = "bucket"; updateScribbleCursor(); });
 
       // Clear
       const clearBtn = document.getElementById("scribble-clear-btn");
@@ -12105,6 +12335,51 @@ document.addEventListener('keydown', e => {
       faceoffState.battleGuesses = mapToArr(synced.battleGuesses, [[], []]);
     }
 
+    // Per-module intro splash. Plays between round-type pick and the module's
+    // real entry. Mounts inside #module-canvas so sidebar + scoreboard stay
+    // visible; no opaque backdrop — sits on top of the normal game background.
+    // Stores the in-flight promise on window._moduleIntroPromise so downstream
+    // handlers (non-host category-select, etc.) can await completion before
+    // kicking off their own animations.
+    function playModuleIntro(moduleKey) {
+      const mod = ROUND_MODULES[moduleKey];
+      const cfg = mod && mod.intro;
+      if (!cfg) return Promise.resolve();
+      const p = new Promise((resolve) => {
+        const root = document.getElementById('module-canvas')
+                  || document.getElementById('game-root');
+        if (!root) { resolve(); return; }
+        // Remove any stale splash (idempotent).
+        const stale = document.getElementById('module-intro');
+        if (stale) stale.remove();
+
+        const splash = document.createElement('div');
+        splash.id = 'module-intro';
+        splash.classList.add('active');
+        splash.style.setProperty('--mi-accent', cfg.accent || '#fba300');
+        splash.innerHTML = `
+          <div class="module-intro-title">${escapeHtml(cfg.title || '').replace(/\n/g, '<br>')}</div>
+          <div class="module-intro-bar"></div>
+          <div class="module-intro-subtitle">${escapeHtml(cfg.subtitle || '')}</div>
+        `;
+        root.appendChild(splash);
+
+        (async () => {
+          // Title slam 620ms + bar wipe (380ms delay + 520ms) + subtitle
+          // (640ms delay + 380ms) ≈ 1020ms for subtitle to finish.
+          // Wait for subtitle, hold on the finished composition, then fade.
+          await anim.wait(1120);
+          await anim.wait(950);
+          splash.classList.add('fade-out');
+          await anim.wait(420);
+          splash.remove();
+          resolve();
+        })();
+      });
+      window._moduleIntroPromise = p;
+      return p;
+    }
+
     // Full-screen splash that plays once at face-off start. Three sequential
     // slam-together rows: title (FACE + OFF), battle 1 VS, battle 2 VS.
     // Resolves when fully dismissed so callers can gate the 5s countdown on it.
@@ -12186,7 +12461,8 @@ document.addEventListener('keydown', e => {
           await slamRow('#fo-splash-b1-row', '#fo-splash-b1-row .red', '#fo-splash-b1-row .blue', 380);
           await anim.wait(80);
           await slamRow('#fo-splash-b2-row', '#fo-splash-b2-row .red', '#fo-splash-b2-row .blue', 380);
-          await anim.wait(600);
+          // Hold the matchups on screen long enough to read.
+          await anim.wait(2600);
           splash.classList.add('fade-out');
           await anim.wait(420);
           splash.remove();
@@ -12295,23 +12571,10 @@ document.addEventListener('keydown', e => {
       const qbox = document.getElementById('question-box');
       if (qbox) qbox.classList.remove('team-red', 'team-blue');
 
-      // Make sure input area is visible for active players. Force a
-      // keyframe replay even if .input-enter was already on the element —
-      // on non-host clients this function is reached synchronously from
-      // the reconcile snapshot handler via initRoundState (which removes
-      // input-enter) + setupFaceoffUI (which re-adds it). Because both
-      // happen inside one microtask with no paint between, the browser
-      // sees no net class change and won't rerun the animation. Without
-      // a replay, sq-zone-input stays at translateY(400%) (below the
-      // canvas) through the entire face-off. anim.replay forces a
-      // reflow between remove and add to guarantee the slide-up plays.
+      // Input-area is the persistent home base — just ensure it's not in
+      // an exit/offscreen state. No slide-in animation on face-off entry.
       const szi = document.getElementById('sq-zone-input');
-      if (szi) {
-        szi.classList.remove('offscreen-below', 'input-exit', 'input-enter');
-        // Force reflow so the next class add is seen as a fresh animation
-        void szi.offsetWidth;
-        szi.classList.add('input-enter');
-      }
+      if (szi) szi.classList.remove('offscreen-below', 'input-exit', 'input-enter');
     }
 
     // Render one battle's board from faceoffState into its DOM container.
@@ -13267,14 +13530,10 @@ document.addEventListener('keydown', e => {
         },
         // 2. question text typewriters in
         () => typewriter(questionEntryEl, currentQuestion.question),
-        // 3. input area slides up from below the canvas
+        // 3. Input-area is persistent — clear any exit state, no slide.
         async () => {
           if (!sziEl) return;
-          sziEl.classList.remove("offscreen-below");
-          sziEl.classList.add("input-enter");
-          // tap2 near landing (70% of 0.5s = ~350ms)
-          anim.timer(sziEl, 350 / gameSpeed, () => playTap(2, 0.375));
-          await anim.done(sziEl);
+          sziEl.classList.remove("offscreen-below", "input-exit");
         },
         () => { document.getElementById("guess")?.focus(); },
       ]);
@@ -13686,6 +13945,7 @@ document.addEventListener('keydown', e => {
       const el = document.createElement("div");
       el.className = `rt-gem ph-gem rt-gem-${gem.tier} rt-tier-${gem.tier}`;
       el.id = "ph-gem";
+      el.setAttribute("data-tip", `gem-${gem.tier}`);
       el.innerHTML =
         `<img src="${gem.img}" alt="${gem.label}" />` +
         `<div class="rt-gem-sparkles">` +
@@ -14354,19 +14614,22 @@ document.addEventListener('keydown', e => {
     }
 
     function updateReadyStatus() {
-      const el = document.getElementById('ready-status');
-      if (!el) return;
+      // Countdown status now lives INSIDE the ready-up button, replacing
+      // its "Ready Up" label once the current player has readied. Players
+      // who haven't readied yet keep the clickable "Ready Up" label so
+      // they know what to do.
+      const readyBtn = document.querySelector('#turn-body .action-btn.ready-up');
+      if (!readyBtn || !readyBtn.disabled) return;
+
       const allUids = [...teamPlayerUids[0], ...teamPlayerUids[1]];
       const readyCount = allUids.filter(uid => _readyPlayersMap[uid]).length;
       const total = allUids.length;
 
-      if (readyCount === 0) {
-        el.textContent = '';
-      } else if (_readyCountdownEnd) {
+      if (_readyCountdownEnd) {
         const remaining = Math.max(0, Math.ceil((_readyCountdownEnd - Date.now()) / 1000));
-        el.textContent = `${readyCount}/${total} ready — ${remaining}s`;
+        readyBtn.textContent = `${readyCount}/${total} — ${remaining}s`;
       } else {
-        el.textContent = `${readyCount}/${total} ready`;
+        readyBtn.textContent = `${readyCount}/${total} ready`;
       }
     }
 
@@ -14590,7 +14853,7 @@ document.addEventListener('keydown', e => {
         },
         async () => {
           if (contentTvExit && !contentTvExit.classList.contains("ct-hidden")) {
-            await anim.play(contentTvExit, "slide-out-left");
+            await anim.play(contentTvExit, "tv-off");
           }
         },
       ]);
@@ -14873,7 +15136,7 @@ document.addEventListener('keydown', e => {
         },
         async () => {
           if (contentTvExit && !contentTvExit.classList.contains("ct-hidden")) {
-            await anim.play(contentTvExit, "slide-out-left");
+            await anim.play(contentTvExit, "tv-off");
           }
         },
       ]);
@@ -15910,8 +16173,8 @@ document.addEventListener('keydown', e => {
       isHost = true;
       myName = name;
 
-      // Limit question pool during testing (same as dev mode — 3 per category)
-      if (questions.length > 0) computeDevModeQuestions();
+      // Limit question pool during testing (gated by TEST_MODE constant).
+      if (TEST_MODE && questions.length > 0) computeDevModeQuestions();
 
       // Write game document to Firestore
       gameRef = window._fb.doc('games', gameCode);
@@ -16750,6 +17013,21 @@ document.addEventListener('keydown', e => {
     // ── Font-ready gate — prevent FOUT ───────────────────────
     document.fonts.ready.then(() => {
       document.getElementById('game-root').style.opacity = '1';
+    });
+
+    // ── Gem PNG preload ───────────────────────────────────────
+    // The round-type picker's per-tier PNGs are used both as <img> sources
+    // and as mask-image on the gem-glint ::after. If the PNG isn't cached
+    // when rt-gem-hop fires on the first round of the game, the mask is
+    // empty — the ::after's bright linear-gradient + mix-blend-mode: screen
+    // paints across the full gem wrapper and lights up the card behind,
+    // reading as a card-wide "blink." Subsequent rounds are fine because
+    // the asset is cached. Decode on page load so the first gem reveal
+    // has the same path as every subsequent one.
+    ['emerald.png', 'sapphire.png', 'amethyst.png', 'topaz.png'].forEach(src => {
+      const img = new Image();
+      img.src = src;
+      if (img.decode) img.decode().catch(() => {});
     });
   </script>
 </body>

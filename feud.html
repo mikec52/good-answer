@@ -8613,101 +8613,20 @@ document.addEventListener('keydown', e => {
           setPhase("steal-chance", { knock: true });
           break;
         case 'round-result':
-          // Round ended — show results on all clients
+          // Round ended — render via the canonical renderer, which both
+          // host and non-host call with the same Firestore-shaped data.
           if (data.roundResultMsg) {
             // Module-complete rounds (scribble, etc.): the host's round-result
             // snapshot can arrive on non-host BEFORE that client's own
-            // scribbleFinishRound → handleModuleComplete has fired (both are on
-            // ~3500ms timers running concurrently on each client). If it does,
-            // endRound() below would see _lastRoundWasModule=false and write
-            // the legacy feud-style Ready Up button into #turn-body. Shortly
-            // after, the local handleModuleComplete runs and adds its own
-            // canonical action row, producing TWO Ready Up buttons. Setting
-            // the flag here from the synced lastResult makes endRound's guard
-            // fire regardless of which path ran first locally.
+            // module completion has fired locally. Without this flag set,
+            // endRound's legacy module guard wouldn't fire, allowing two
+            // canonical action rows to be written. Set the flag from the
+            // synced lastResult so endRound's guard fires regardless of
+            // which path ran first locally.
             if (data.lastResult?.outcome === 'module-complete') {
               window._lastRoundWasModule = true;
             }
-            // Set data-phase synchronously so updateRoleUI (which runs later
-            // in the same reconcile) sees round-result and doesn't hide buttons.
-            // setPhase() is async (awaits exit animation) so we can't rely on it.
-            document.getElementById('phase-indicator').dataset.phase = 'round-result';
-            const scoringTeam = data.roundWinner ?? 0;
-            if (data.roundPhaseText) setPhaseText("round-result", data.roundPhaseText);
-            setPhaseTeamColor(scoringTeam);
-            setPhase("round-result");
-            // setPhase early-returns (data-phase already set above), so apply
-            // round-result effects directly: glow, SFX, and blob color reset
-            const pi = document.getElementById('phase-indicator');
-            if (pi && !pi.classList.contains('round-glow')) {
-              pi.classList.add('round-glow');
-              playSound(sfxRoundEnd);
-              document.getElementById('game-root').style.setProperty('--bg-blob-base', '#111');
-            }
-            // Ensure input area is visible (spectator may have it hidden).
-            // Input-area is now a persistent home base — don't re-trigger the
-            // slide-up animation here, just make sure it's not in an exit state.
-            const ia = document.getElementById("input-area");
-            if (ia) ia.classList.remove("hidden");
-            const szi = document.getElementById("sq-zone-input");
-            if (szi) szi.classList.remove("offscreen-below", "input-exit");
-            document.getElementById("turn-input-box").style.display = "";
-            endRound(data.roundResultMsg, data.roundWinner);
-
-            // Module-complete safety net: if the local module's completion path
-            // never ran (e.g. client missed scribble-drawing-start or
-            // scribble-session-end due to transient Firestore errors), then
-            // handleModuleComplete's setInputAreaMode('action') — which is the
-            // source of the Ready Up button — never fired. Players get stuck
-            // on the module's mid-flow input-area text with no way to advance.
-            // Force-apply the action-mode Ready Up here using the synced
-            // round-result message. Idempotent: setInputAreaMode toggles
-            // canonical rows, so this is safe even when the module's path
-            // already ran locally.
-            if (data.lastResult?.outcome === 'module-complete') {
-              const ia2 = document.getElementById('input-area');
-              if (ia2 && ia2.getAttribute('data-ia-mode') !== 'action') {
-                showInputArea();
-                setInputAreaMode({
-                  mode: 'action',
-                  header: data.roundResultMsg,
-                  subtext: 'Ready up to continue',
-                  buttonText: 'Ready Up',
-                  onButtonClick: readyUp,
-                  teamColor: data.roundWinner ?? 0,
-                });
-              }
-              // Secondary safety net: force the scribble UI into its summary
-              // state (or hide it if we have no summary data). Covers the
-              // case where scribble-session-end was missed locally (phase
-              // guard on the handler skipped apply) — without this, the
-              // drawing UI stays mounted underneath the Ready Up button
-              // until round-type-select finally wipes the canvas, producing
-              // the "hung then jumped" symptom.
-              const scribContainer = document.getElementById('scribble-container');
-              if (scribContainer && scribContainer.style.display !== 'none') {
-                const sg = document.getElementById('scribble-game');
-                const ws = document.getElementById('scribble-word-select');
-                const ss = document.getElementById('scribble-summary');
-                // Check DOM directly, not scribbleState: resetScribbleState()
-                // wipes sessions / phase right after scribbleShowSummary
-                // paints, so this handler (firing ~300ms after round-result
-                // arrives) would otherwise see empty state and incorrectly
-                // hide the visible summary.
-                const summaryVisible = ss && getComputedStyle(ss).display !== 'none';
-                const hasSummary = ss && scribbleState.sessions && scribbleState.sessions.length > 0;
-                if (summaryVisible) {
-                  // Summary already on screen — no-op.
-                } else if (hasSummary && scribbleState.phase !== 'summary') {
-                  try { scribbleShowSummary(); } catch (e) { /* noop */ }
-                } else if (!hasSummary) {
-                  if (sg) sg.style.display = 'none';
-                  if (ws) ws.style.display = 'none';
-                  if (ss) ss.style.display = 'none';
-                  scribContainer.style.display = 'none';
-                }
-              }
-            }
+            renderRoundResult(data);
           }
           break;
         case 'faceoff':
@@ -10377,22 +10296,17 @@ document.addEventListener('keydown', e => {
       const resultMsg = `<span class="${winnerClass}">${winnerName}</span> won with ${pts} pts!`;
       const phaseMsg = `<span class="${winnerClass}">${winnerName}</span> won the round with ${pts} points!`;
 
-      // Set phase indicator to round-result. setPhaseTeamColor is required —
-      // without it the indicator keeps the last module turn's team color
-      // instead of the scoring team's. Non-host reconcile does this; host
-      // must too so both paths converge on the same visual state.
-      setPhaseText("round-result", phaseMsg);
-      setPhaseTeamColor(scoringTeam);
-      setPhase("round-result");
-
-      // Delegate the input-area Ready Up UI to endRound — the single shared
-      // renderer used by the non-host reconcile path. This handles
-      // face-off-pending button text, ready-up vs next-round branching,
-      // team color classes on input-area/question-box, and revealAll
-      // scheduling. Host and non-host now reach identical UI via the same
-      // code path instead of dual-writing with drift.
+      // Render via the canonical round-result renderer. Host builds the
+      // same Firestore-shaped payload it's about to sync, then both paths
+      // (host now, non-host on snapshot) flow through renderRoundResult.
       showInputArea();
-      endRound(resultMsg, scoringTeam);
+      const renderData = {
+        roundResultMsg: resultMsg,
+        roundPhaseText: phaseMsg,
+        roundWinner: scoringTeam,
+        lastResult: { outcome: 'module-complete' },
+      };
+      renderRoundResult(renderData);
 
       if (isMultiplayer && isHost) {
         syncAfterGuess({ outcome: "module-complete" }, {
@@ -14373,14 +14287,16 @@ document.addEventListener('keydown', e => {
             await flipTile(idx,'correct',stealTotal,stealMult);
             awardRoundScore(stealingTeam, (final) => {
               deactivateSpeedBoost();
-              // Phase indicator: steal-chance → round-result
               const stealPhaseText = `${teamNames[stealingTeam]} stole ${final} points!`;
-              setPhaseText("round-result", stealPhaseText);
-              setPhaseTeamColor(stealingTeam);
-              setPhase("round-result");
               const stealMsg = `<span class="${stealingTeam===0?"red":"blue"}">${teamNames[stealingTeam]}</span> stole ${final} points!`;
-              syncAfterGuess({ outcome: 'steal_success', tileIdx: idx, points: stealTotal, mult: stealMult }, { msg: stealMsg, winner: stealingTeam, phaseText: stealPhaseText });
-              if(!checkForWinner())endRound(stealMsg, stealingTeam);
+              const result = { outcome: 'steal_success', tileIdx: idx, points: stealTotal, mult: stealMult };
+              syncAfterGuess(result, { msg: stealMsg, winner: stealingTeam, phaseText: stealPhaseText });
+              if (!checkForWinner()) renderRoundResult({
+                roundResultMsg: stealMsg,
+                roundPhaseText: stealPhaseText,
+                roundWinner: stealingTeam,
+                lastResult: result,
+              });
             });
           } else {
             playSound(sfxNegativeBeep);
@@ -14402,16 +14318,17 @@ document.addEventListener('keydown', e => {
             updateHistory();
             awardRoundScore(1-stealingTeam, (final) => {
               deactivateSpeedBoost();
-              // Phase indicator: steal-chance → round-result, revert to
-              // scoring team's color (the team that kept the points)
               const keepTeam = 1 - stealingTeam;
               const keepPhaseText = `${teamNames[keepTeam]} wins the round and keeps ${final} points!`;
-              setPhaseText("round-result", keepPhaseText);
-              setPhaseTeamColor(keepTeam);
-              setPhase("round-result");
               const keepMsg = `<span class="${keepTeam===0?"red":"blue"}">${teamNames[keepTeam]}</span> keeps ${final} points!`;
-              syncAfterGuess({ outcome: 'steal_fail' }, { msg: keepMsg, winner: keepTeam, phaseText: keepPhaseText });
-              if(!checkForWinner())endRound(keepMsg, keepTeam);
+              const result = { outcome: 'steal_fail' };
+              syncAfterGuess(result, { msg: keepMsg, winner: keepTeam, phaseText: keepPhaseText });
+              if (!checkForWinner()) renderRoundResult({
+                roundResultMsg: keepMsg,
+                roundPhaseText: keepPhaseText,
+                roundWinner: keepTeam,
+                lastResult: result,
+              });
             });
           }
         }
@@ -14468,14 +14385,17 @@ document.addEventListener('keydown', e => {
       if(!found && strikes < 3) { syncAfterGuess({ outcome: 'wrong' }); }
       if(revealed.every(r=>r)&&!stealPhase){awardRoundScore(teamTurn, (final) => {
         deactivateSpeedBoost();
-        // Phase indicator: gameplay → round-result
         const revealAllPhaseText = `${teamNames[teamTurn]} won the round with ${final} points!`;
-        setPhaseText("round-result", revealAllPhaseText);
-        setPhaseTeamColor(teamTurn);
-        setPhase("round-result");
         const revealAllMsg = `<span class="${teamTurn===0?"red":"blue"}">${teamNames[teamTurn]}</span> revealed all answers! They win ${final} points.`;
-        syncAfterGuess({ outcome: 'correct', tileIdx: foundIdx, points: foundTotal, mult: foundMult }, { msg: revealAllMsg, winner: teamTurn, phaseText: revealAllPhaseText });
-        if(!checkForWinner())endRound(revealAllMsg, teamTurn);});}}
+        const result = { outcome: 'correct', tileIdx: foundIdx, points: foundTotal, mult: foundMult };
+        syncAfterGuess(result, { msg: revealAllMsg, winner: teamTurn, phaseText: revealAllPhaseText });
+        if (!checkForWinner()) renderRoundResult({
+          roundResultMsg: revealAllMsg,
+          roundPhaseText: revealAllPhaseText,
+          roundWinner: teamTurn,
+          lastResult: result,
+        });
+      });}}
 
     // Sync current game state to Firestore after a guess is processed.
     // Called at the end of submitGuess() after all local state + animations.
@@ -14543,6 +14463,78 @@ document.addEventListener('keydown', e => {
         msg = `Tied on points! <span class="${cls}">${teamNames[winnerIdx]}</span> wins by taking the final round!`;
       }
       endGame(msg, winnerIdx);
+    }
+
+    // Canonical renderer for the round-result phase. Both host (after
+    // building a Firestore-shaped payload locally) and non-host (from the
+    // synced snapshot) call this with identical-shaped `data`. Eliminates
+    // the dual-writer drift class — anything that needs to render at
+    // round-result must read only from `data`, never from globals.
+    //
+    // data fields:
+    //   roundResultMsg  — innerHTML for input-area header (team-colored)
+    //   roundPhaseText  — innerHTML for phase-indicator span
+    //   roundWinner     — 0 (red) or 1 (blue)
+    //   lastResult      — { outcome: 'correct'|'steal_success'|'steal_fail'|'module-complete', ... }
+    function renderRoundResult(data) {
+      if (!data || !data.roundResultMsg) return;
+
+      // Synchronous data-phase set so updateRoleUI (which may run later in
+      // the same reconcile pass on non-host) sees round-result and doesn't
+      // re-disable buttons. Harmless on host.
+      const piEl = document.getElementById('phase-indicator');
+      if (piEl) piEl.dataset.phase = 'round-result';
+
+      const scoringTeam = data.roundWinner ?? 0;
+      if (data.roundPhaseText) setPhaseText("round-result", data.roundPhaseText);
+      setPhaseTeamColor(scoringTeam);
+      setPhase("round-result");
+
+      // setPhase early-returns when data-phase was already set above; apply
+      // round-result effects (glow, SFX, blob reset) directly. Idempotent
+      // via the round-glow class check.
+      if (piEl && !piEl.classList.contains('round-glow')) {
+        piEl.classList.add('round-glow');
+        playSound(sfxRoundEnd);
+        document.getElementById('game-root').style.setProperty('--bg-blob-base', '#111');
+      }
+
+      // Make sure the input-area home base isn't in an exit state (covers
+      // spectator paths where it may have lingering offscreen classes).
+      const ia = document.getElementById("input-area");
+      if (ia) ia.classList.remove("hidden");
+      const szi = document.getElementById("sq-zone-input");
+      if (szi) szi.classList.remove("offscreen-below", "input-exit");
+      const tib = document.getElementById("turn-input-box");
+      if (tib) tib.style.display = "";
+
+      endRound(data.roundResultMsg, scoringTeam);
+
+      // Module-complete safety net: if the local module's completion path
+      // never ran (e.g. non-host missed scribble-session-end due to a
+      // transient Firestore error), endRound's setInputAreaMode already
+      // applied the canonical Ready Up — but the underlying scribble UI
+      // may still be mounted. Sweep it.
+      if (data.lastResult?.outcome === 'module-complete') {
+        const scribContainer = document.getElementById('scribble-container');
+        if (scribContainer && scribContainer.style.display !== 'none') {
+          const sg = document.getElementById('scribble-game');
+          const ws = document.getElementById('scribble-word-select');
+          const ss = document.getElementById('scribble-summary');
+          const summaryVisible = ss && getComputedStyle(ss).display !== 'none';
+          const hasSummary = ss && scribbleState.sessions && scribbleState.sessions.length > 0;
+          if (summaryVisible) {
+            // already visible — no-op
+          } else if (hasSummary && scribbleState.phase !== 'summary') {
+            try { scribbleShowSummary(); } catch (e) { /* noop */ }
+          } else if (!hasSummary) {
+            if (sg) sg.style.display = 'none';
+            if (ws) ws.style.display = 'none';
+            if (ss) ss.style.display = 'none';
+            scribContainer.style.display = 'none';
+          }
+        }
+      }
     }
 
     function endRound(msg, scoringTeam) {

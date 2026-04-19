@@ -46,6 +46,8 @@ award-hoi-polloi,evergreen,Person of the people,Scored the most points in Pop Cu
 award-sergeis-fez,evergreen,Legally we can't say that rhymes with something,Scored the most points in Survey categorieslobby-host,evergreen,Running the show,The host manages game settings and can reassign captains in the lobby
 lobby-captain,evergreen,Team leader,Captains decide how to use team prizes. The captain or host can reassign this role before the game starts
 lobby-make-captain,help,Pass the torch,Make this player your team's captain
+lobby-edit-team-name,help,Captain's call,Click to rename your team
+lobby-edit-team-name-denied,help,,Must be captain to edit team name
 scoreboard-captain,evergreen,Team captain,Makes decisions about team prizes. Locked at game start; auto-passes if the captain disconnects
 scoreboard-host,evergreen,Game host,Created this session and manages settings
 gem-emerald,evergreen,A modest shine,Round total will be multiplied by 1.5x

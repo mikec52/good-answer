@@ -338,7 +338,7 @@ Between rounds, all players see a "Ready Up" button. First click starts a 10-sec
 
 ### Version tag + "Ship it" convention
 
-- **`#version-tag` element** in `#game-root` (top-left of canvas, subtle `rgba(255,255,255,0.35)` Bitcount Mono Single text, `pointer-events: none`). Currently `v0.10`. Single source of truth for the version string — a deploy script or GitHub Action can sed-replace this line.
+- **`#version-tag` element** in `#game-root` (top-left of canvas, subtle `rgba(255,255,255,0.35)` Bitcount Mono Single text, `pointer-events: none`). Currently `v0.13`. Single source of truth for the version string — a deploy script or GitHub Action can sed-replace this line.
 - **Auto-increment scheme:** hundredths bump (v0.10 → v0.11) on each push to `main`. Manual tenths bump (v0.11 → v0.20) for major feature milestones, decided case-by-case.
 - **"Ship it" trigger phrase:** user says "Ship it" to mean bump hundredths + commit + push to `main` (which auto-deploys to GitHub Pages). Variations: "Ship it at v0.20" for a manual tenths bump; "Commit but don't ship" to commit without pushing.
 - **Dev mode button removed from start screen** but underlying `activateDevMode()` / `_dismissStartScreen()` JS retained so it can be re-enabled quickly if needed. The button was irrelevant during most recent development.
@@ -498,6 +498,8 @@ A fixed additional round that runs at the end of every game before the victory d
 **Round counter**: `setupFaceoffUI()` swaps `#round-label` text from "Round" to "FACEOFF" and hides `#round-info`. Both are restored in `resetGame` and `resetGameUI`.
 
 **DOM**: `#faceoff-container` is a flex row with two `#faceoff-battle-{0,1}` children, each containing `.faceoff-question`, `.faceoff-timer`, `.faceoff-board`, `.faceoff-battle-total`. Hidden by default (`display: none`), shown via `setupFaceoffUI()` which also hides `#board-wrapper` and `#content-tv`.
+
+**Styling**: face-off boards reuse ranked board DOM classes (`.answer`, `.tile-cover`, `.tile-inner`, `.tile-front`, `.tile-back`, `.tile-num`, `.tile-text`, `.tile-pts`) inside `.faceoff-board`. Team color applied via scoped `.faceoff-board .tile-back.faceoff-{red,blue,missed}` overrides. Cover-slide reveal, tile marquee, and hover lift inherit automatically. `renderFaceoffBoard(battleIdx)` builds tile DOM once per question and does incremental reveals from `faceoffState.revealed`/`revealedData`.
 
 **Input routing**: `submitGuess()` has an early branch — if `faceoffState.active`, routes to `submitFaceoffGuess()` which forks by client:
 - Local / host: calls `evaluateFaceoffGuess(guess, myUid)` directly

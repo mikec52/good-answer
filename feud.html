@@ -494,8 +494,8 @@
        script or GitHub Action sed-replaces this line on each publish. */
     #version-tag {
       position: absolute;
-      top: 8px;
-      left: 10px;
+      bottom: 6px;
+      right: 10px;
       z-index: 30;
       font-family: 'Bitcount Mono Single', monospace;
       font-size: 0.75rem;
@@ -541,8 +541,9 @@
       cursor: pointer;
       text-align: center;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 16px;
+      gap: 8px;
       transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
     }
     .mode-btn:hover {
@@ -561,7 +562,6 @@
       text-transform: uppercase;
       color: #fff;
       letter-spacing: 0.05em;
-      margin-bottom: 8px;
     }
     .mode-btn-desc {
       font-family: "futura-100", sans-serif;
@@ -675,26 +675,8 @@
       color: rgba(255,255,255,0.4);
       margin-bottom: 24px;
     }
-    .lobby-back-row {
-      width: 90%;
-      max-width: 800px;
-      text-align: left;
-      margin-bottom: 8px;
-    }
     .lobby-back-btn {
-      background: none;
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 8px;
-      color: rgba(255,255,255,0.6);
-      font-family: "futura-100", sans-serif;
-      font-size: 0.9rem;
-      padding: 6px 16px;
-      cursor: pointer;
-      transition: border-color 0.2s, color 0.2s;
-    }
-    .lobby-back-btn:hover {
-      border-color: rgba(255,255,255,0.5);
-      color: #fff;
+      margin-top: 12px;
     }
     .lobby-code-row {
       display: flex;
@@ -750,6 +732,59 @@
     }
     .team-red .lobby-team-header { color: var(--red-text); }
     .team-blue .lobby-team-header { color: var(--blue-text); }
+    .lobby-team-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .lobby-team-header .lobby-team-name-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+    .lobby-team-header.editable .lobby-team-name-text {
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .lobby-team-header.editable .lobby-team-name-text:hover { opacity: 0.75; }
+    .lobby-team-edit-icon {
+      font-size: 0.85em;
+      line-height: 1;
+      opacity: 0.5;
+      flex-shrink: 0;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .lobby-team-edit-icon.editable {
+      cursor: pointer;
+    }
+    .lobby-team-edit-icon.editable:hover {
+      opacity: 1;
+      transform: rotate(-10deg);
+    }
+    .lobby-team-edit-icon.denied {
+      cursor: not-allowed;
+      opacity: 0.25;
+    }
+    .lobby-team-name-input {
+      font-family: inherit;
+      font-weight: inherit;
+      font-size: inherit;
+      text-transform: inherit;
+      letter-spacing: inherit;
+      color: inherit;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 4px;
+      text-align: center;
+      width: 100%;
+      padding: 2px 4px;
+      outline: none;
+    }
+    .lobby-team-name-input:focus {
+      border-color: #fba300;
+    }
     .lobby-player-list {
       list-style: none;
       padding: 0;
@@ -835,8 +870,8 @@
     .lobby-join-team-btn {
       display: block;
       width: 100%;
-      margin-top: 0;
-      margin-bottom: 10px;
+      margin-top: auto;
+      margin-bottom: 0;
       flex-shrink: 0;
       padding: 8px;
       background: rgba(255,255,255,0.08);
@@ -847,10 +882,18 @@
       font-size: 0.9rem;
       text-transform: uppercase;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.2s, filter 0.2s;
     }
-    .lobby-join-team-btn:hover {
-      background: rgba(255,255,255,0.18);
+    .lobby-join-team-btn:hover { filter: brightness(1.2); }
+    .lobby-join-team-btn.red-join {
+      background: var(--red-bg);
+      border-color: var(--red-text);
+      color: #fff;
+    }
+    .lobby-join-team-btn.blue-join {
+      background: var(--blue-bg);
+      border-color: var(--blue-text);
+      color: #fff;
     }
     .lobby-settings {
       display: flex;
@@ -1493,13 +1536,15 @@
       gap: 0;
     }
     /* Sidebar zone (25%) — evergreen only: phase-indicator + input-area.
-       overflow:hidden clips sq-zone-input's off-canvas slide (translateY 400%). */
+       clip-path clips vertically (top for phase-indicator offscreen, bottom for
+       sq-zone-input's translateY 400% slide) while leaving horizontal overflow
+       visible so phase-indicator's round-glow can bleed past the left edge. */
     #sidebar-zone {
       flex: 0 0 25%;
       min-width: 0;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      clip-path: polygon(-100vw 0, calc(100% + 100vw) 0, calc(100% + 100vw) 100%, -100vw 100%);
       padding: 0 8px 0 0;
     }
     /* Bottom-anchor the input home base inside the sidebar.
@@ -2149,8 +2194,8 @@
       left: 50%;
       top: calc(2.35rem * 1.15 * 2 + 28px);
       transform: translate(-50%, -50%) scale(0);
-      width: 80px;
-      height: 80px;
+      width: 50px;
+      height: 50px;
       pointer-events: auto;
       z-index: 4;
       transition: transform 0.3s ease;
@@ -2194,8 +2239,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: "Bungee", sans-serif;
-      font-size: 2.2rem;
+      font-family: "video-cond", sans-serif;
+      font-weight: 700;
+      font-size: 2rem;
       letter-spacing: 1px;
       padding-top: 3px;
       -webkit-text-stroke: 2px #fff;
@@ -3870,11 +3916,14 @@
       min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      background: rgba(17,17,17,0.5);
+      gap: 6px;
+      background: rgba(34, 34, 34, 0.9);
       border-radius: 10px;
-      padding: 10px;
+      padding: 12px;
       box-sizing: border-box;
+      font-family: 'Bitcount Single';
+      font-weight: 300;
+      text-transform: uppercase;
       transition: opacity 0.3s ease;
       overflow: hidden; /* clip the cover plate slide-down within the side boundary */
     }
@@ -3948,17 +3997,25 @@
     }
     .faceoff-question {
       font-family: "futura-100", sans-serif;
-      font-size: 0.85rem;
+      font-size: 0.95rem;
       color: #fff;
       text-align: center;
       min-height: 36px;
-      line-height: 1.2;
+      line-height: 1.25;
+      padding: 6px 8px;
+      background: #111;
+      border-radius: 4px;
+      text-transform: none;
+      letter-spacing: 0.02em;
     }
     .faceoff-timer {
       font-family: "Bitcount Single", monospace;
       font-size: 1.4rem;
       color: #fba300;
       text-align: center;
+      padding: 2px;
+      background: #111;
+      border-radius: 4px;
     }
     .faceoff-timer.warning { color: #ff5555; animation: faceoff-timer-pulse 0.5s ease-in-out infinite alternate; }
     @keyframes faceoff-timer-pulse {
@@ -3969,43 +4026,76 @@
       flex: 1 1 auto;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
       min-height: 0;
     }
-    .faceoff-tile {
-      background: #111;
-      border-radius: 4px;
-      padding: 6px 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-family: "futura-100", sans-serif;
-      font-size: 0.85rem;
-      color: #888;
-      min-height: 24px;
+    /* Face-off tiles — mirror ranked board (.answer / .tile-cover / .tile-inner) */
+    .faceoff-board .answer {
+      height: 36px;
+      font-size: 1.3rem;
     }
-    .faceoff-tile.revealed-red {
+    .faceoff-board .tile-front,
+    .faceoff-board .tile-back {
+      grid-template-columns: 2rem 1fr 3rem;
+    }
+    .faceoff-board .tile-num {
+      font-size: 1.3rem;
+    }
+    .faceoff-board .tile-text {
+      font-size: 1.1rem;
+      padding: 0 8px;
+    }
+    .faceoff-board .tile-pts {
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+    /* Team-colored reveals — override the ranked .correct/.missed styles */
+    .faceoff-board .tile-back.faceoff-red { color: #fff; }
+    .faceoff-board .tile-back.faceoff-red .tile-num {
       background: var(--red-bg, #990b0b);
       color: #fff;
     }
-    .faceoff-tile.revealed-blue {
+    .faceoff-board .tile-back.faceoff-red .tile-text,
+    .faceoff-board .tile-back.faceoff-red .tile-pts {
+      background: var(--red-bg, #990b0b);
+      color: #fff;
+    }
+    .faceoff-board .tile-back.faceoff-blue { color: #fff; }
+    .faceoff-board .tile-back.faceoff-blue .tile-num {
       background: var(--blue-bg, #053977);
       color: #fff;
     }
-    .faceoff-tile.revealed-missed {
+    .faceoff-board .tile-back.faceoff-blue .tile-text,
+    .faceoff-board .tile-back.faceoff-blue .tile-pts {
+      background: var(--blue-bg, #053977);
+      color: #fff;
+    }
+    .faceoff-board .tile-back.faceoff-missed { color: #888; }
+    .faceoff-board .tile-back.faceoff-missed .tile-num {
       background: #444;
       color: #999;
     }
-    .faceoff-tile-text { flex: 1; text-align: left; }
-    .faceoff-tile-pts { font-weight: 700; margin-left: 8px; }
-    .faceoff-tile-player { font-size: 0.65rem; opacity: 0.85; margin-left: 8px; }
+    .faceoff-board .tile-back.faceoff-missed .tile-text,
+    .faceoff-board .tile-back.faceoff-missed .tile-pts {
+      background: #2a2a2a;
+      color: #888;
+    }
+    .faceoff-tile-player {
+      font-size: 0.75em;
+      opacity: 0.8;
+      margin-left: 8px;
+      font-weight: 400;
+    }
     .faceoff-battle-total {
-      font-family: "futura-100", sans-serif;
-      font-size: 0.95rem;
+      font-family: "Bitcount Single", monospace;
+      font-size: 1.1rem;
       color: #fff;
       text-align: center;
-      padding-top: 4px;
-      border-top: 1px solid rgba(255,255,255,0.1);
+      padding: 6px;
+      background: #111;
+      border-radius: 4px;
+      margin-top: 2px;
+      letter-spacing: 0.04em;
     }
     .faceoff-battle-total-red { color: var(--red-text, #ff5555); font-weight: 700; }
     .faceoff-battle-total-blue { color: var(--blue-text, #4c8cff); font-weight: 700; }
@@ -4203,21 +4293,47 @@
     .scribble-edge-text-btn:hover { border-color: #888; }
     .scribble-edge-text-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
-    .scribble-brush-bar { display: flex; gap: 3px; align-items: center; }
-    .scribble-brush-label { font-family: "futura-100", sans-serif; font-weight: 500; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-right: 3px; }
+    .scribble-brush-bar { display: flex; gap: 4px; align-items: center; }
+    .scribble-brush-label { font-family: "futura-100", sans-serif; font-weight: 500; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; color: #fff; margin-right: 3px; }
     .scribble-size-btn {
-      width: 30px; height: 30px; border: 2px solid #444; border-radius: 5px; background: #2a2a2a;
+      width: 38px; height: 38px; aspect-ratio: 1 / 1; flex-shrink: 0;
+      border: 2px solid #444; border-radius: 5px; background: #2a2a2a;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       transition: border-color 0.12s, background 0.12s;
     }
     .scribble-size-btn:hover { border-color: #888; }
     .scribble-size-btn.active { border-color: #fba300; background: #3a2a00; }
-    .scribble-size-dot { border-radius: 50%; background: #e0e0e0; }
+    .scribble-size-dot { border-radius: 50%; background: #e0e0e0; flex-shrink: 0; }
     .scribble-eraser-dot {
-      width: 16px; height: 16px; border-radius: 50%; background: #f49898;
+      width: 22px; height: 22px; border-radius: 50%; background: #f49898; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
     }
-    .scribble-eraser-dot::after { content: "\2715"; font-size: 0.5rem; font-weight: 700; color: #ff4444; }
+    .scribble-eraser-dot::after { content: "\2715"; font-size: 0.7rem; font-weight: 700; color: #ff4444; }
+
+    /* Radial brush/eraser menu — right-click on draw canvas */
+    .scribble-radial-menu {
+      position: absolute; width: 0; height: 0; z-index: 1000;
+      pointer-events: none; display: none;
+    }
+    .scribble-radial-menu.active { display: block; }
+    .srm-item {
+      position: absolute; pointer-events: auto;
+      width: 44px; height: 44px; aspect-ratio: 1 / 1; flex-shrink: 0;
+      border: 2px solid #444; border-radius: 50%; background: #2a2a2a;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transform: translate(-50%, -50%);
+      transition: border-color 0.12s, background 0.12s, transform 0.12s;
+      animation: srm-pop 0.15s ease-out both;
+    }
+    .srm-item:hover { border-color: #fba300; background: #3a2a00; transform: translate(-50%, -50%) scale(1.08); }
+    @keyframes srm-pop {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+      to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+    .srm-item[data-action="size-3"]   { top: -54px; left: 0; }
+    .srm-item[data-action="size-8"]   { top: 0; left: 54px; }
+    .srm-item[data-action="size-16"]  { top: 54px; left: 0; }
+    .srm-item[data-action="eraser"]   { top: 0; left: -54px; }
 
     .scribble-drawer-word { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 2px; font-size: 1.8rem; padding: 10px 18px; border-radius: 8px; background: #1a1a1a; text-align: center; text-transform: uppercase; }
     .scribble-drawer-word.easy { color: #44cc44; border: 1px solid rgba(68,204,68,0.3); }
@@ -4250,10 +4366,16 @@
     @keyframes scribble-countdown-pop { 0% { transform: scale(2); opacity: 0; } 30% { transform: scale(1); opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
 
     .scribble-solved-overlay {
-      position: absolute; inset: 0; background: rgba(68,204,68,0.15); border: 2px solid #44cc44;
-      border-radius: 6px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 60;
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: rgba(68, 204, 68, 0.8); border: 2px solid rgba(42, 138, 42, 0.9);
+      border-radius: 999px; padding: 10px 24px;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      pointer-events: none; z-index: 60;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      max-width: 88%;
     }
-    .scribble-solved-overlay span { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; font-size: 2rem; color: #44cc44; }
+    .scribble-solved-overlay .sso-title { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; font-size: 1.5rem; color: #fff; line-height: 1; }
+    .scribble-solved-overlay .sso-detail { font-family: "futura-100", sans-serif; font-weight: 500; letter-spacing: 1px; font-size: 0.8rem; color: #fff; text-align: center; line-height: 1.2; }
 
     /* Summary panel sits flush against the scoreboard above — negative
        margin cancels #scribble-container's 8px top padding so there's no
@@ -4340,7 +4462,7 @@
     .scribble-pts { font-family: "Bitcount Single", monospace; font-size: 0.95rem; }
     .scribble-pts.red { color: #ff5555; }
     .scribble-pts.blue { color: #4c8cff; }
-    .scribble-summary-totals { display: flex; gap: 24px; justify-content: center; padding: 12px; width: 100%; box-sizing: border-box; border-top: 1px solid #2a2a2a; }
+    .scribble-summary-totals { display: flex; gap: 24px; justify-content: center; padding: 12px; width: 100%; box-sizing: border-box; border-top: 1px solid #2a2a2a; background: rgba(26, 26, 26, 0.7); }
     .scribble-summary-team { text-align: center; }
     .scribble-team-name { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
     .scribble-team-name.red { color: #ff5555; }
@@ -5350,7 +5472,7 @@
 
   <div id="dev-panel">
     <div id="dev-panel-header">
-      <span>🛠 Dev Panel <span style="color:#444;font-size:0.72rem">Shift+D</span></span>
+      <span>🛠 Dev Panel <span style="color:#444;font-size:0.72rem">Ctrl+D</span></span>
       <button id="dev-close" onclick="toggleDevPanel()" title="Close">✕</button>
     </div>
     <div class="dev-section-label">Animations</div>
@@ -5385,10 +5507,10 @@
         @keyframes bg-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         /* SMPTE-inspired fixed blob colors: left pair = green/yellow, right pair = magenta/cyan */
         /* To revert to single-color blobs, replace fixed fills with: fill: var(--bg-blob-base); */
-        .bg-out-top    { animation: bg-rotate 29s linear infinite; transform-origin: 13px 25px; fill: #00c000; opacity: 0.5; }
-        .bg-in-top     { animation: bg-rotate 14s linear infinite; transform-origin: 13px 25px; fill: #fdd835; opacity: 0.9; }
-        .bg-out-bottom { animation: bg-rotate 36s linear infinite; transform-origin: 84px 93px; fill: #c000c0; opacity: 0.30; }
-        .bg-in-bottom  { animation: bg-rotate 21s linear infinite; transform-origin: 84px 93px; fill: #00c0c0; opacity: 0.70; }
+        .bg-out-top    { animation: bg-rotate 58s linear infinite; transform-origin: 13px 25px; fill: #00c000; opacity: 0.5; }
+        .bg-in-top     { animation: bg-rotate 28s linear infinite; transform-origin: 13px 25px; fill: #fdd835; opacity: 0.9; }
+        .bg-out-bottom { animation: bg-rotate 72s linear infinite; transform-origin: 84px 93px; fill: #c000c0; opacity: 0.30; }
+        .bg-in-bottom  { animation: bg-rotate 42s linear infinite; transform-origin: 84px 93px; fill: #00c0c0; opacity: 0.70; }
       </style>
     </defs>
     <path class="bg-out-top"    d="M37-5C25.1-14.7,5.7-19.1-9.2-10-28.5,1.8-32.7,31.1-19.8,49c15.5,21.5,52.6,22,67.2,2.3C59.4,35,53.7,8.5,37-5Z"/>
@@ -5398,7 +5520,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.12</div>
+  <div id="version-tag">v0.13</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -5415,12 +5537,10 @@
     <h1>Choose Game Mode</h1>
     <div class="mode-buttons">
       <div class="mode-btn" onclick="selectLocalMode()">
-        <span class="mode-btn-icon">&#127968;</span>
         <div class="mode-btn-title">Local Game</div>
         <div class="mode-btn-desc">Same room, one screen</div>
       </div>
       <div class="mode-btn" onclick="selectOnlineMode()">
-        <span class="mode-btn-icon">&#127760;</span>
         <div class="mode-btn-title">Online Game</div>
         <div class="mode-btn-desc">Friends join from their devices</div>
       </div>
@@ -5780,6 +5900,12 @@
                   <div class="scribble-panel" id="scribble-draw-panel">
                     <div class="scribble-canvas-wrap">
                       <canvas id="scribble-draw-canvas" width="380" height="380"></canvas>
+                      <div class="scribble-radial-menu" id="scribble-radial-menu">
+                        <button class="srm-item" data-action="size-3" title="Small Brush"><span class="scribble-size-dot" style="width:6px;height:6px;"></span></button>
+                        <button class="srm-item" data-action="size-8" title="Medium Brush"><span class="scribble-size-dot" style="width:14px;height:14px;"></span></button>
+                        <button class="srm-item" data-action="size-16" title="Large Brush"><span class="scribble-size-dot" style="width:24px;height:24px;"></span></button>
+                        <button class="srm-item" data-action="eraser" title="Eraser"><span class="scribble-eraser-dot"></span></button>
+                      </div>
                       <div class="scribble-edge-tools">
                         <button class="scribble-color-btn active" data-color="#111111" style="background:#111111;"></button>
                         <button class="scribble-color-btn" data-color="#ffffff" style="background:#ffffff;"></button>
@@ -5790,7 +5916,7 @@
                         <button class="scribble-color-btn" data-color="#0000c0" style="background:#0000c0;"></button>
                         <button class="scribble-color-btn" data-color="#c000c0" style="background:#c000c0;"></button>
                         <span class="scribble-edge-divider"></span>
-                        <button class="scribble-tool-sm" id="scribble-bucket-btn" title="Paint Bucket">&#9783;</button>
+                        <button class="scribble-tool-sm" id="scribble-bucket-btn" title="Paint Bucket"><img src="paint-01.png" alt="Paint Bucket" style="width:18px;height:18px;display:block;pointer-events:none;"></button>
                         <span class="scribble-edge-divider"></span>
                         <button class="scribble-edge-text-btn" id="scribble-clear-btn">CLEAR</button>
                         <button class="scribble-edge-text-btn" id="scribble-undo-btn" disabled>UNDO</button>
@@ -5799,8 +5925,8 @@
                     <div class="scribble-brush-bar">
                       <span class="scribble-brush-label">Brush</span>
                       <button class="scribble-size-btn" data-size="3"><span class="scribble-size-dot" style="width:6px;height:6px;"></span></button>
-                      <button class="scribble-size-btn active" data-size="8"><span class="scribble-size-dot" style="width:12px;height:12px;"></span></button>
-                      <button class="scribble-size-btn" data-size="16"><span class="scribble-size-dot" style="width:20px;height:20px;"></span></button>
+                      <button class="scribble-size-btn active" data-size="8"><span class="scribble-size-dot" style="width:14px;height:14px;"></span></button>
+                      <button class="scribble-size-btn" data-size="16"><span class="scribble-size-dot" style="width:24px;height:24px;"></span></button>
                       <button class="scribble-size-btn" id="scribble-eraser-btn"><span class="scribble-eraser-dot"></span></button>
                     </div>
                   </div>
@@ -7144,7 +7270,7 @@
     const MUSIC_TRACKS = {
       maintheme:   { src: "maintheme.mp3",   loop: true, vol: 0.3 },
       roundselect: { src: "roundselect.mp3", loop: true, vol: 0.22 },
-      faceoff:     { src: "faceoff.mp3",     loop: true, vol: 0.3 },
+      faceoff:     { src: "faceoff.wav",     loop: true, vol: 0.3 },
     };
     const PLAYLIST_TRACKS = [
       { src: "bossa.mp3",  vol: 0.3 },
@@ -7392,12 +7518,17 @@
       if (_cfm._resolve) { _cfm._resolve(result); _cfm._resolve = null; }
     }
 
-    // Escape closes the topmost open layer
+    // Escape: close topmost open layer, or open Settings if nothing is open
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape') return;
       _ensureLayers();
-      if (_cfm.backdrop.classList.contains('active')) closeConfirm(false);
-      else if (_dlg.backdrop.classList.contains('active')) closeDialog();
+      if (_cfm.backdrop.classList.contains('active')) { closeConfirm(false); return; }
+      if (_dlg.backdrop.classList.contains('active')) { closeDialog(); return; }
+      // Avoid hijacking Escape from active text inputs (e.g. team-name edit, name entry)
+      const tgt = e.target;
+      if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.isContentEditable)) return;
+      e.preventDefault();
+      openSettingsDialog();
     });
 
     // ── Tooltip system (CSV-driven) ──────────────────────────
@@ -7606,7 +7737,10 @@
     }
 
 document.addEventListener('keydown', e => {
-      if (e.shiftKey && e.key === 'D') toggleDevPanel();
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D')) {
+        e.preventDefault();
+        toggleDevPanel();
+      }
     });
 
     /* ── Spacebar speed boost ─────────────────────────────────────
@@ -8145,13 +8279,14 @@ document.addEventListener('keydown', e => {
       // Host calls renderVictory directly inside endGame after computing
       // awards. Non-host waits for the synced { gameEnded:true, awards }
       // snapshot so the dialog opens with awards already populated.
-      if (isMultiplayer && !isHost && data.gameEnded && !gameEnded && data.awards && data.awards.length > 0) {
+      if (isMultiplayer && !isHost && data.gameEnded && !gameEnded && Array.isArray(data.awards)) {
         const _winner = data.teamScores
           ? (data.teamScores[0] >= data.teamScores[1] ? 0 : 1)
           : (teamScores[0] >= teamScores[1] ? 0 : 1);
-        const _msg = _winner === 0
+        const _fallback = _winner === 0
           ? `<span class="red">${teamNames[0]}</span> wins with ${(data.teamScores || teamScores)[0]} points!`
           : `<span class="blue">${teamNames[1]}</span> wins with ${(data.teamScores || teamScores)[1]} points!`;
+        const _msg = data.gameEndMsg || _fallback;
         renderVictory({
           teamScores: data.teamScores ? [...data.teamScores] : [...teamScores],
           awards: [...data.awards],
@@ -10265,7 +10400,7 @@ document.addEventListener('keydown', e => {
         description: 'Pick a trivia category and rank the top five answers.',
         colorClass: 'cat-science',
         minPlayersPerTeam: 1,
-        intro: { title: 'HIGH FIVE', subtitle: 'Rank the top five', accent: '#fdd835' },
+        intro: { title: 'HIGH FIVE', subtitle: 'Rank the top five', accent: '#0000c0' },
         enter(onComplete) { hostProcessRoundTypePick_highFive(); },
         reset() { initRoundState(); },
       },
@@ -10274,7 +10409,7 @@ document.addEventListener('keydown', e => {
         description: 'Guess how the crowd answered an open-ended question.',
         colorClass: 'cat-survey',
         minPlayersPerTeam: 1,
-        intro: { title: 'POLL\nPOSITION', subtitle: 'What did the crowd say?', accent: '#fb8c00' },
+        intro: { title: 'POLL\nPOSITION', subtitle: 'What did the crowd say?', accent: '#00c0c0' },
         enter(onComplete) { hostProcessRoundTypePick_survey(); },
         reset() { initRoundState(); },
       },
@@ -10283,7 +10418,7 @@ document.addEventListener('keydown', e => {
         description: 'Draw your secret word while the other team tries to steal it.',
         colorClass: 'cat-popculture',
         minPlayersPerTeam: 2,
-        intro: { title: 'SECRET\nSCRIBBLE', subtitle: 'Draw, guess, steal', accent: '#d803ff' },
+        intro: { title: 'SECRET\nSCRIBBLE', subtitle: 'Draw, guess, steal', accent: '#c000c0' },
         enter(onComplete) { enterScribbleRound(onComplete); },
         reset() { resetScribbleState({ keepUsedWords: true }); },
       },
@@ -10981,7 +11116,6 @@ document.addEventListener('keydown', e => {
     // Apply a solve locally — shows overlay, updates status, reveals tiles.
     // Status message is perspective-aware: what happened from MY client's view.
     function scribbleApplySolve(solvedTeam, result, guesserUid) {
-      const statusEl = document.getElementById("scribble-status");
       playSound(sfxCorrect);
       const myTeam = (isMultiplayer && myUid && teamPlayerUids[1]?.includes(myUid)) ? 1 : 0;
       const drawerTeam = solvedTeam;
@@ -10995,47 +11129,30 @@ document.addEventListener('keydown', e => {
       const t0 = scribbleState._team0Word, t1 = scribbleState._team1Word;
       const word = solvedTeam === 0 ? t0?.word : t1?.word;
 
-      // Show solved overlay — location depends on role
-      if (isDrawer) {
-        // Drawer only sees their own canvas. Show overlay if it was their drawing.
-        if (isMyTeamDrawing) {
-          scribbleShowSolved("scribble-draw-panel");
-        }
-      } else {
-        // Guesser sees both canvases. Show overlay on whichever was solved.
-        scribbleShowSolved(isMyTeamDrawing ? "scribble-teammate-panel" : "scribble-opp-panel");
-        // Reveal opponent canvas tiles if that's what was solved (they can see it now)
-        if (!isMyTeamDrawing) {
-          scribbleRevealAllTiles();
+      // Build perspective-aware detail message
+      let detailMsg = "";
+      if (word) {
+        const pts = `+${result.total} pts (${result.mult}x)`;
+        const W = word.toUpperCase();
+        if (isMyTeamGuessed) {
+          detailMsg = isSteal ? `Stolen! ${W} — ${pts}` : `${W} — ${pts}`;
+        } else if (isMyTeamDrawing) {
+          detailMsg = `They stole "${W}"!`;
+        } else {
+          detailMsg = `"${W}"`;
         }
       }
 
-      // Perspective-aware status message
-      if (statusEl && word) {
-        let msg = "";
-        let cls = "correct";
-        const pts = `+${result.total} pts (${result.mult}x)`;
-        if (isMyTeamGuessed) {
-          // My team guessed something
-          if (isSteal) {
-            msg = `Steal! ${word.toUpperCase()} — ${pts}`;
-          } else {
-            msg = `✓ Correct! ${word.toUpperCase()} — ${pts}`;
-          }
-        } else {
-          // Other team guessed
-          if (isMyTeamDrawing) {
-            // The opponent stole our drawing's word
-            msg = `💔 They stole "${word.toUpperCase()}"!`;
-            cls = "timeup"; // red-colored style
-          } else {
-            // Other team guessed their own teammate's word
-            msg = `The other team guessed "${word.toUpperCase()}"`;
-            cls = "correct";
-          }
+      // Show solved overlay pill — location depends on role
+      if (isDrawer) {
+        if (isMyTeamDrawing) {
+          scribbleShowSolved("scribble-draw-panel", detailMsg);
         }
-        statusEl.textContent = msg;
-        statusEl.className = `scribble-status ${cls}`;
+      } else {
+        scribbleShowSolved(isMyTeamDrawing ? "scribble-teammate-panel" : "scribble-opp-panel", detailMsg);
+        if (!isMyTeamDrawing) {
+          scribbleRevealAllTiles();
+        }
       }
     }
 
@@ -11102,14 +11219,15 @@ document.addEventListener('keydown', e => {
     }
 
     // ── Scribble show solved overlay ──
-    function scribbleShowSolved(panelId) {
+    function scribbleShowSolved(panelId, detailMsg) {
       const panel = document.getElementById(panelId);
       if (!panel) return;
       const wrap = panel.querySelector(".scribble-canvas-wrap, .scribble-opponent-wrap");
       if (!wrap) return;
       const overlay = document.createElement("div");
       overlay.className = "scribble-solved-overlay";
-      overlay.innerHTML = `<span>SOLVED!</span>`;
+      const detail = detailMsg ? `<span class="sso-detail">${detailMsg}</span>` : "";
+      overlay.innerHTML = `<span class="sso-title">SOLVED!</span>${detail}`;
       wrap.appendChild(overlay);
     }
 
@@ -11734,9 +11852,13 @@ document.addEventListener('keydown', e => {
 
       scribbleRevealAllTiles();
 
-      const statusEl = document.getElementById("scribble-status");
-      if (reason === "timeup" && statusEl) { statusEl.textContent = "Time's up!"; statusEl.className = "scribble-status timeup"; }
-      else if (reason === "all-solved" && statusEl) { statusEl.textContent = "Both drawings solved!"; statusEl.className = "scribble-status correct"; }
+      if (reason === "timeup") {
+        const timerEl = document.getElementById("scribble-timer");
+        if (timerEl) {
+          timerEl.textContent = "TIME'S UP!";
+          timerEl.classList.add("warning");
+        }
+      }
 
       // Transition input-area to session-end state
       setInputAreaMode({
@@ -12032,22 +12154,86 @@ document.addEventListener('keydown', e => {
     // Build an SVG data-URL cursor showing the current brush as a dot.
     // Size reflects scribbleState.currentSize; fill reflects color/tool
     // (eraser = white with outline, bucket = crosshair, brush = color).
+    let _paintBucketCursorUrl = null;
+    function buildPaintBucketCursor() {
+      return new Promise((resolve) => {
+        if (_paintBucketCursorUrl) return resolve(_paintBucketCursorUrl);
+        const img = new Image();
+        img.onload = () => {
+          const size = 64;
+          const cvs = document.createElement("canvas");
+          cvs.width = size; cvs.height = size;
+          const ctx = cvs.getContext("2d");
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          // Black circle (centered in lower-right area to leave room for arrow)
+          const cx = 38, cy = 38, r = 24;
+          ctx.fillStyle = "#000";
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.fill();
+          // Paint brush centered in circle
+          const brushSize = 36;
+          ctx.drawImage(img, cx - brushSize / 2, cy - brushSize / 2, brushSize, brushSize);
+          // Classic arrow pointer in upper-left, tip at (2,2)
+          ctx.fillStyle = "#000";
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 1.5;
+          ctx.lineJoin = "round";
+          ctx.beginPath();
+          ctx.moveTo(2, 2);      // tip (hotspot)
+          ctx.lineTo(22, 10);    // right edge
+          ctx.lineTo(12, 12);    // inner notch
+          ctx.lineTo(10, 22);    // down
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          _paintBucketCursorUrl = cvs.toDataURL();
+          resolve(_paintBucketCursorUrl);
+        };
+        img.onerror = () => resolve(null);
+        img.src = "paint-01.png";
+      });
+    }
+
     function updateScribbleCursor() {
       const c = document.getElementById("scribble-draw-canvas");
       if (!c) return;
       const tool = scribbleState.currentTool;
       const size = Math.max(4, scribbleState.currentSize || 8);
       const color = scribbleState.currentColor || "#111";
-      if (tool === "bucket") { c.style.cursor = "crosshair"; return; }
+      if (tool === "bucket") {
+        buildPaintBucketCursor().then(url => {
+          if (url && scribbleState.currentTool === "bucket") {
+            c.style.cursor = `url("${url}") 2 2, crosshair`;
+          } else {
+            c.style.cursor = "crosshair";
+          }
+        });
+        return;
+      }
       const half = size / 2;
       const pad = 2;
       const dim = size + pad * 2;
       const cx = dim / 2;
-      const fill = tool === "eraser" ? "#ffffff" : color;
-      const svg =
-        `<svg xmlns='http://www.w3.org/2000/svg' width='${dim}' height='${dim}' viewBox='0 0 ${dim} ${dim}'>` +
-          `<circle cx='${cx}' cy='${cx}' r='${half}' fill='${fill}' stroke='black' stroke-width='1'/>` +
-        `</svg>`;
+      let svg;
+      if (tool === "eraser") {
+        // Match toolbar icon: pink circle with red X
+        svg =
+          `<svg xmlns='http://www.w3.org/2000/svg' width='${dim}' height='${dim}' viewBox='0 0 ${dim} ${dim}'>` +
+            `<circle cx='${cx}' cy='${cx}' r='${half}' fill='#f49898'/>` +
+            `<text x='${cx}' y='${cx}' text-anchor='middle' dominant-baseline='central' font-family='sans-serif' font-size='${size * 0.55}' font-weight='700' fill='#ff4444'>\u2715</text>` +
+          `</svg>`;
+      } else {
+        // Inverted 1px stroke for visibility against matching backdrops
+        const norm = (color || "").toLowerCase().replace(/\s+/g, "");
+        const isWhite = norm === "#fff" || norm === "#ffffff" || norm === "white";
+        const stroke = isWhite ? "#000" : "#fff";
+        svg =
+          `<svg xmlns='http://www.w3.org/2000/svg' width='${dim}' height='${dim}' viewBox='0 0 ${dim} ${dim}'>` +
+            `<circle cx='${cx}' cy='${cx}' r='${half - 0.5}' fill='${color}' stroke='${stroke}' stroke-width='1'/>` +
+          `</svg>`;
+      }
       const url = `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}") ${cx} ${cx}, crosshair`;
       c.style.cursor = url;
     }
@@ -12059,6 +12245,7 @@ document.addEventListener('keydown', e => {
       updateScribbleCursor();
 
       c.addEventListener("pointerdown", (e) => {
+        if (e.button === 2) return; // right-click reserved for radial menu
         if (!scribbleState.drawingEnabled) return;
         const p = scribbleGetCanvasPos(e);
         const ctx = c.getContext("2d");
@@ -12104,7 +12291,51 @@ document.addEventListener('keydown', e => {
         }
       });
 
-      c.addEventListener("contextmenu", (e) => { e.preventDefault(); });
+      // Radial brush-select menu on right-click
+      const radial = document.getElementById("scribble-radial-menu");
+      c.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        if (!scribbleState.drawingEnabled || !radial) return;
+        const wrap = c.parentElement; // .scribble-canvas-wrap
+        const rect = wrap.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        // Clamp so items stay inside the wrap
+        const pad = 60;
+        const cx = Math.max(pad, Math.min(rect.width - pad, x));
+        const cy = Math.max(pad, Math.min(rect.height - pad, y));
+        radial.style.left = cx + "px";
+        radial.style.top = cy + "px";
+        radial.classList.add("active");
+      });
+      const hideRadial = () => { if (radial) radial.classList.remove("active"); };
+      document.addEventListener("pointerdown", (e) => {
+        if (!radial || !radial.classList.contains("active")) return;
+        if (!radial.contains(e.target)) hideRadial();
+      });
+      if (radial) {
+        radial.querySelectorAll(".srm-item").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const a = btn.dataset.action;
+            document.querySelectorAll(".scribble-size-btn").forEach(x => x.classList.remove("active"));
+            if (a === "eraser") {
+              const er = document.getElementById("scribble-eraser-btn");
+              if (er) er.classList.add("active");
+              scribbleState.currentTool = "eraser";
+              scribbleState.currentSize = 16;
+            } else {
+              const size = parseInt(a.replace("size-", ""));
+              const target = document.querySelector(`.scribble-size-btn[data-size="${size}"]`);
+              if (target) target.classList.add("active");
+              scribbleState.currentSize = size;
+              scribbleState.currentTool = "brush";
+            }
+            updateScribbleCursor();
+            hideRadial();
+          });
+        });
+      }
 
       // Color buttons
       document.querySelectorAll(".scribble-color-btn").forEach(b => {
@@ -12562,27 +12793,76 @@ document.addEventListener('keydown', e => {
     }
 
     // Render one battle's board from faceoffState into its DOM container.
+    // Uses ranked-board DOM structure so slide-right reveals fire on transition.
     function renderFaceoffBoard(battleIdx) {
       const container = document.querySelector(`#faceoff-battle-${battleIdx} .faceoff-board`);
       if (!container) return;
       const q = faceoffState.questions[battleIdx];
-      if (!q) { container.innerHTML = ''; return; }
-      container.innerHTML = '';
-      for (let i = 0; i < q.answers.length; i++) {
-        const ans = q.answers[i];
+      if (!q) { container.innerHTML = ''; container.dataset.questionText = ''; return; }
+      const answerCount = q.answers.length;
+      const currentQuestion = q.question || '';
+
+      // Rebuild if answer count or question changed (new battle)
+      const existingTiles = container.querySelectorAll('.answer');
+      if (existingTiles.length !== answerCount || container.dataset.questionText !== currentQuestion) {
+        container.innerHTML = '';
+        container.dataset.questionText = currentQuestion;
+        for (let i = 0; i < answerCount; i++) {
+          const row = document.createElement('div');
+          row.className = 'answer faceoff-answer';
+          row.dataset.tileIdx = i;
+          row.innerHTML =
+            `<div class="tile-cover">` +
+              `<div class="tile-cover-circle">` +
+                `<span class="tile-num">${i + 1}</span>` +
+              `</div>` +
+            `</div>` +
+            `<div class="tile-inner">` +
+              `<div class="tile-front">` +
+                `<div class="tile-num">${i + 1}</div>` +
+                `<div class="tile-text">&nbsp;</div>` +
+                `<div class="tile-pts"></div>` +
+              `</div>` +
+              `<div class="tile-back"></div>` +
+            `</div>`;
+          container.appendChild(row);
+        }
+      }
+
+      // Apply reveal state to each tile
+      const rows = container.querySelectorAll('.answer');
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
         const revealed = faceoffState.revealed[battleIdx][i];
         const data = faceoffState.revealedData[battleIdx][i];
-        const tile = document.createElement('div');
-        tile.className = 'faceoff-tile';
-        tile.dataset.tileIdx = i;
+        const cover = row.querySelector('.tile-cover');
+        const inner = row.querySelector('.tile-inner');
+        const back = row.querySelector('.tile-back');
         if (revealed && data) {
-          tile.classList.add(data.team === 0 ? 'revealed-red' : data.team === 1 ? 'revealed-blue' : 'revealed-missed');
-          const display = ans.display || ans.text;
-          tile.innerHTML = `<span class="faceoff-tile-text">${display}</span>${data.player ? `<span class="faceoff-tile-player">${data.player}</span>` : ''}<span class="faceoff-tile-pts">${data.points || 0}</span>`;
+          const teamClass = data.team === 0 ? 'faceoff-red'
+                          : data.team === 1 ? 'faceoff-blue'
+                          : 'faceoff-missed';
+          back.className = `tile-back ${teamClass}`;
+          const ans = q.answers[i];
+          const display = ans && (ans.display || ans.text) ? (ans.display || ans.text) : '—';
+          const playerHtml = data.player ? `<span class="faceoff-tile-player">${data.player}</span>` : '';
+          back.innerHTML =
+            `<div class="tile-num">${i + 1}</div>` +
+            `<div class="tile-text">${display}${playerHtml}</div>` +
+            `<div class="tile-pts">${data.points || 0}</div>`;
+          if (!cover.classList.contains('revealed')) {
+            cover.classList.add('revealed');
+            inner.classList.add('revealed');
+          }
         } else {
-          tile.innerHTML = `<span class="faceoff-tile-text">—</span><span class="faceoff-tile-pts">${i + 1}</span>`;
+          // Ensure unrevealed state (e.g. on battle reset / new question)
+          if (cover.classList.contains('revealed')) {
+            cover.classList.remove('revealed');
+            inner.classList.remove('revealed');
+            back.className = 'tile-back';
+            back.innerHTML = '';
+          }
         }
-        container.appendChild(tile);
       }
       // Update the question text
       const qEl = document.querySelector(`#faceoff-battle-${battleIdx} .faceoff-question`);
@@ -13892,19 +14172,19 @@ document.addEventListener('keydown', e => {
     // Weights: 3x=5%, 2.5x=10%, 2x=20%, 1.5x=40%, else 1x (25%).
     // devMode: higher density for testing.
     function rollRoundMultiplier() {
-      if (devMode) {
+      if (devMode || TEST_MODE) {
         const r = Math.random();
-        if (r < 0.2) return 3;
-        if (r < 0.4) return 2.5;
-        if (r < 0.6) return 2;
-        if (r < 0.85) return 1.5;
+        if (r < 0.05) return 3;
+        if (r < 0.15) return 2.5;
+        if (r < 0.35) return 2;
+        if (r < 0.75) return 1.5;
         return 1;
       }
       const roll = Math.random();
-      if (roll < 0.05) return 3;
-      if (roll < 0.15) return 2.5;
-      if (roll < 0.35) return 2;
-      if (roll < 0.75) return 1.5;
+      if (roll < 0.03) return 3;
+      if (roll < 0.09) return 2.5;
+      if (roll < 0.18) return 2;
+      if (roll < 0.40) return 1.5;
       return 1;
     }
 
@@ -14695,9 +14975,9 @@ document.addEventListener('keydown', e => {
 
       if (_readyCountdownEnd) {
         const remaining = Math.max(0, Math.ceil((_readyCountdownEnd - Date.now()) / 1000));
-        readyBtn.textContent = `${readyCount}/${total} — ${remaining}s`;
+        readyBtn.textContent = `Ready (${remaining}s)`;
       } else {
-        readyBtn.textContent = `${readyCount}/${total} ready`;
+        readyBtn.textContent = `Ready`;
       }
     }
 
@@ -15381,7 +15661,7 @@ document.addEventListener('keydown', e => {
       if (!isMultiplayer || isHost) {
         awards = computeAwards();
         if (isMultiplayer && isHost) {
-          syncState({ gameEnded: true, awards: awards });
+          syncState({ gameEnded: true, awards: awards, gameEndMsg: msg });
         }
       }
       renderVictory({
@@ -15649,7 +15929,7 @@ document.addEventListener('keydown', e => {
       fmBody.removeAttribute('style');
       fmBody.innerHTML = `
           <div id="fm-current-question">${questionText}</div>
-          <input type="text" id="fm-guess" placeholder="Your answer..." onkeydown="if(event.key==='Enter')fmSubmitGuess();else if(event.key==='Escape'){event.preventDefault();fmPassQuestion();}">
+          <input type="text" id="fm-guess" placeholder="Your answer..." onkeydown="if(event.key==='Enter')fmSubmitGuess();else if(event.key==='\\'){event.preventDefault();fmPassQuestion();}">
           <div style="display:flex;gap:8px;justify-content:center;">
             <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
               <button id="fm-submit-btn" class="btn" onclick="fmSubmitGuess()">Submit</button>
@@ -15657,7 +15937,7 @@ document.addEventListener('keydown', e => {
             </div>
             <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
               <button id="fm-pass-btn" class="btn" onclick="fmPassQuestion()">Pass</button>
-              <img src="escape_white.png" style="height:16px;opacity:1;" alt="Escape to pass">
+              <span style="font-family:'futura-100',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.6);" title="Press \\ to pass">\</span>
             </div>
           </div>
           <div id="fm-strike-flash"></div>`;
@@ -16191,12 +16471,10 @@ document.addEventListener('keydown', e => {
       setTimeout(() => {
         btns.innerHTML = `
           <div class="mode-btn" onclick="showCreateGame()">
-            <span class="mode-btn-icon">&#x2795;</span>
             <div class="mode-btn-title">Create Game</div>
             <div class="mode-btn-desc">Host a new session</div>
           </div>
           <div class="mode-btn" onclick="showJoinForm()">
-            <span class="mode-btn-icon">&#x1F517;</span>
             <div class="mode-btn-title">Join Game</div>
             <div class="mode-btn-desc">Enter a game code</div>
           </div>
@@ -16229,7 +16507,6 @@ document.addEventListener('keydown', e => {
             <h2>Enter Your Name</h2>
             <input type="text" id="create-name-input" placeholder="Your name" maxlength="18">
             <div class="join-form-actions">
-              <button class="cancel-btn" onclick="backToOnlineMode()">Back</button>
               <button class="join-btn" onclick="submitCreateGame()">Create</button>
             </div>
           </div>
@@ -16294,7 +16571,6 @@ document.addEventListener('keydown', e => {
             <input type="text" id="join-name-input" placeholder="Your name" maxlength="18">
             <div class="join-error" id="join-error"></div>
             <div class="join-form-actions">
-              <button class="cancel-btn" onclick="backToOnlineMode()">Back</button>
               <button class="join-btn" onclick="submitJoinGame()">Join</button>
             </div>
           </div>
@@ -16318,12 +16594,10 @@ document.addEventListener('keydown', e => {
         modeSelect.querySelector('h1').textContent = 'Online Game';
         btns.innerHTML = `
           <div class="mode-btn" onclick="showCreateGame()">
-            <span class="mode-btn-icon">&#x2795;</span>
             <div class="mode-btn-title">Create Game</div>
             <div class="mode-btn-desc">Host a new session</div>
           </div>
           <div class="mode-btn" onclick="showJoinForm()">
-            <span class="mode-btn-icon">&#x1F517;</span>
             <div class="mode-btn-title">Join Game</div>
             <div class="mode-btn-desc">Enter a game code</div>
           </div>
@@ -16344,12 +16618,10 @@ document.addEventListener('keydown', e => {
         modeSelect.querySelector('h1').textContent = 'Choose Game Mode';
         btns.innerHTML = `
           <div class="mode-btn" onclick="selectLocalMode()">
-            <span class="mode-btn-icon">&#127968;</span>
             <div class="mode-btn-title">Local Game</div>
             <div class="mode-btn-desc">Same room, one screen</div>
           </div>
           <div class="mode-btn" onclick="selectOnlineMode()">
-            <span class="mode-btn-icon">&#127760;</span>
             <div class="mode-btn-title">Online Game</div>
             <div class="mode-btn-desc">Friends join from their devices</div>
           </div>
@@ -16452,9 +16724,6 @@ document.addEventListener('keydown', e => {
       // Initial render — subsequent updates come from onSnapshot → renderLobbyFromData
       const lobby = document.getElementById('lobby');
       lobby.innerHTML = `
-        <div class="lobby-back-row">
-          <button class="lobby-back-btn" onclick="leaveLobby()">&#8592; Back</button>
-        </div>
         <h1>Game Lobby</h1>
         <div class="lobby-code-row">
           <div class="lobby-code-display" onclick="copyGameCode()" title="Click to copy">${gameCode}</div>
@@ -16463,25 +16732,26 @@ document.addEventListener('keydown', e => {
         <div class="lobby-code-hint" id="lobby-code-hint">Share this code with your friends</div>
         <div class="lobby-teams" id="lobby-teams">
           <div class="lobby-team team-red">
-            <div class="lobby-team-header">Red Team</div>
-            <button class="lobby-join-team-btn red-join" onclick="joinTeam(0)">Join Red</button>
+            <div class="lobby-team-header" id="lobby-team-header-0" data-team="0"><span class="lobby-team-name-text">Red Team</span><span class="lobby-team-edit-icon" id="lobby-team-edit-0">&#9998;</span></div>
             <ul class="lobby-player-list" id="lobby-red-players"></ul>
+            <button class="lobby-join-team-btn red-join" onclick="joinTeam(0)">Join Red</button>
           </div>
           <div class="lobby-team team-unassigned">
             <div class="lobby-team-header">Unassigned</div>
-            <button class="lobby-join-team-btn unassigned-join" onclick="joinTeam(null)">Undecided</button>
             <ul class="lobby-player-list" id="lobby-unassigned-players"></ul>
+            <button class="lobby-join-team-btn unassigned-join" onclick="joinTeam(null)">Undecided</button>
           </div>
           <div class="lobby-team team-blue">
-            <div class="lobby-team-header">Blue Team</div>
-            <button class="lobby-join-team-btn blue-join" onclick="joinTeam(1)">Join Blue</button>
+            <div class="lobby-team-header" id="lobby-team-header-1" data-team="1"><span class="lobby-team-name-text">Blue Team</span><span class="lobby-team-edit-icon" id="lobby-team-edit-1">&#9998;</span></div>
             <ul class="lobby-player-list" id="lobby-blue-players"></ul>
+            <button class="lobby-join-team-btn blue-join" onclick="joinTeam(1)">Join Blue</button>
           </div>
         </div>
         <div class="lobby-settings" id="lobby-settings"></div>
         ${isHost
           ? '<button class="lobby-start-btn" id="lobby-start-btn" onclick="lobbyStartGame()" disabled>Waiting for players...</button>'
           : '<div class="lobby-waiting">Waiting for host to start the game...</div>'}
+        <button class="mode-back-btn lobby-back-btn" onclick="leaveLobby()">&#9664; Back</button>
       `;
     }
 
@@ -16503,6 +16773,35 @@ document.addEventListener('keydown', e => {
       const myTeam = players[myUid]?.team;
       const amCaptainOfMyTeam = (myTeam === 0 || myTeam === 1) && players[myUid]?.isCaptain;
       const canReassignCaptain = amCaptainOfMyTeam || isHost;
+
+      // Sync team name headers from Firestore, and wire captain-only edit click.
+      // Skip header sync while an inline edit input is active so typing isn't clobbered by snapshots.
+      const syncedNames = [
+        data.teamNames?.[0] || 'Red Team',
+        data.teamNames?.[1] || 'Blue Team',
+      ];
+      for (let t = 0; t < 2; t++) {
+        const h = document.getElementById(`lobby-team-header-${t}`);
+        if (!h) continue;
+        const nameSpan = h.querySelector('.lobby-team-name-text');
+        const iconSpan = h.querySelector('.lobby-team-edit-icon');
+        if (nameSpan && !h.querySelector('input')) nameSpan.textContent = syncedNames[t];
+        const amCapOfThis = players[myUid]?.team === t && players[myUid]?.isCaptain;
+        if (iconSpan) {
+          iconSpan.classList.toggle('editable', amCapOfThis);
+          iconSpan.classList.toggle('denied', !amCapOfThis);
+          iconSpan.setAttribute('data-tip', amCapOfThis ? 'lobby-edit-team-name' : 'lobby-edit-team-name-denied');
+          iconSpan.setAttribute('data-tip-placement', 'below');
+          iconSpan.onclick = amCapOfThis ? () => beginEditTeamName(t) : null;
+        }
+        if (amCapOfThis) {
+          h.classList.add('editable');
+          if (nameSpan) nameSpan.onclick = () => beginEditTeamName(t);
+        } else {
+          h.classList.remove('editable');
+          if (nameSpan) nameSpan.onclick = null;
+        }
+      }
       for (const [uid, p] of sortedEntries) {
         const li = document.createElement('li');
         if (uid === myUid) li.classList.add('is-me');
@@ -16629,6 +16928,51 @@ document.addEventListener('keydown', e => {
       }
 
       await window._fb.updateDoc(gameRef, updates);
+    }
+
+    function beginEditTeamName(team) {
+      if (!gameRef || !myUid) return;
+      const h = document.getElementById(`lobby-team-header-${team}`);
+      if (!h || h.querySelector('input')) return;
+      const nameSpan = h.querySelector('.lobby-team-name-text');
+      if (!nameSpan) return;
+      const current = nameSpan.textContent;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'lobby-team-name-input';
+      input.maxLength = 18;
+      input.value = current;
+      h.replaceChild(input, nameSpan);
+      input.focus();
+      input.select();
+
+      let committed = false;
+      const finish = async (commit) => {
+        if (committed) return;
+        committed = true;
+        const next = input.value.trim();
+        if (commit && next && next !== current) {
+          try {
+            const snap = await window._fb.getDoc(gameRef);
+            const existing = snap.data()?.teamNames || ['Red Team', 'Blue Team'];
+            const updated = [existing[0] || 'Red Team', existing[1] || 'Blue Team'];
+            updated[team] = next;
+            await window._fb.updateDoc(gameRef, { teamNames: updated });
+          } catch (e) {
+            console.warn('teamName update failed', e);
+          }
+        }
+        // Restore the name span (snapshot sync will overwrite textContent with the synced value shortly).
+        if (h.contains(input)) {
+          nameSpan.textContent = commit ? (next || current) : current;
+          h.replaceChild(nameSpan, input);
+        }
+      };
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+        else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+      });
+      input.addEventListener('blur', () => finish(true));
     }
 
     async function reassignCaptain(newCaptainUid) {

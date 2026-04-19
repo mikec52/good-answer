@@ -8512,6 +8512,7 @@ document.addEventListener('keydown', e => {
           break;
 
         case 'scribble-session-end':
+          console.log('[reconcile] scribble-session-end case', { active: scribbleState.active, phase: scribbleState.phase, currentSession: scribbleState.currentSession, endTs: data.scribbleEndTs });
           // Host ended the session — mirror locally on non-hosts.
           // Accept any live-scribble phase, not just drawing/countdown —
           // if the client missed an intermediate snapshot (e.g. drawing-
@@ -8674,8 +8675,16 @@ document.addEventListener('keydown', e => {
                 const sg = document.getElementById('scribble-game');
                 const ws = document.getElementById('scribble-word-select');
                 const ss = document.getElementById('scribble-summary');
+                // Check DOM directly, not scribbleState: resetScribbleState()
+                // wipes sessions / phase right after scribbleShowSummary
+                // paints, so this handler (firing ~300ms after round-result
+                // arrives) would otherwise see empty state and incorrectly
+                // hide the visible summary.
+                const summaryVisible = ss && getComputedStyle(ss).display !== 'none';
                 const hasSummary = ss && scribbleState.sessions && scribbleState.sessions.length > 0;
-                if (hasSummary && scribbleState.phase !== 'summary') {
+                if (summaryVisible) {
+                  // Summary already on screen — no-op.
+                } else if (hasSummary && scribbleState.phase !== 'summary') {
                   try { scribbleShowSummary(); } catch (e) { /* noop */ }
                 } else if (!hasSummary) {
                   if (sg) sg.style.display = 'none';
@@ -11839,6 +11848,11 @@ document.addEventListener('keydown', e => {
 
     // ── Scribble summary ──
     function scribbleShowSummary() {
+      console.log('[scribble] showSummary entry', { phase: scribbleState.phase, sessionsLen: scribbleState.sessions?.length });
+      // Idempotency guard: prevents the safety-net-in-round-result +
+      // local-setTimeout race from double-painting (2nd call would hit
+      // wiped sessions via resetScribbleState).
+      if (scribbleState.phase === "summary") return;
       scribbleState.phase = "summary";
       const ws = document.getElementById("scribble-word-select");
       const sg = document.getElementById("scribble-game");

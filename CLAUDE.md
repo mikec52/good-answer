@@ -766,6 +766,85 @@ These were in flight at the branch's current head; resume here next session:
 
 ---
 
+## Common Thread — Integration Plan (not yet implemented)
+
+Prototype exists at [common-thread.html](common-thread.html). Standalone file, fully playable locally via the perspective toggle (red clue giver / blue clue giver / guesser). Game logic, scoring, streak/multiplier, and card flip animation are all working. Next session: port into `feud.html` as a ROUND_MODULES entry, matching the scribble integration pattern.
+
+### Premise
+
+Codenames-inspired. 4×4 grid of word cards. Each board randomly assigns:
+- 6 red-team cards (+base points on reveal)
+- 6 blue-team cards (+base points on reveal)
+- 2 penalty cards worth −100
+- 2 penalty cards worth −200
+
+One player per team is the **clue giver**; all others are **guessers**. Clue giver sees each card's value (light-tinted team backgrounds on their view; gray bg + visible value for penalties). Guessers see cream fronts only.
+
+Clue giver submits a one-word clue + quantity. Guessers pick cards up to that quantity. Picking your own team's card scores points and keeps the turn; picking the opponent's card awards them the points and ends the turn; picking a penalty subtracts and ends the turn.
+
+### Decisions locked in this session
+
+| Decision | Choice |
+|---|---|
+| **Round end condition** | First team to have all 6 of their cards revealed wins the round (regardless of who revealed them). No timer in v1 — revisit after playtesting. |
+| **Clue input location** | Input-area home base — requires a new `'compose-clue'` mode with a text field on top and a number stepper (◀ 2 ▶) below, same width. |
+| **Streak/mult display** | Single module scoreboard inside the module canvas showing both teams' streak, multiplier, and current round score. Not an extension of the main scoreboard. |
+| **Clue giver rotation** | One clue giver per team, randomized once at module entry, stays for the whole Common Thread round. |
+| **Word bank source** | Pull 16 random words from `SCRIBBLE_WORD_BANK` (flatten across easy/medium/hard). Dedicated bank is a follow-up. |
+| **Clue validation** | Strict: reject the submitted clue if it is a substring or superstring of any board word (case-insensitive, normalized). Catches plurals and compound words algorithmically. Semantic variants (e.g. "MACINTOSH" for APPLE) are not caught — out of scope. |
+
+### Scoring (ported from prototype)
+
+- On clue submit, **base points = quantity × 100**.
+- Own-team card correct: `earned = round(base × multiplier[team])`, then `streak++`, `multiplier = 1 + streak × 0.2`. Mirrors the ranked-question formula.
+- Opposing-team card: flat `base` points to opponents (no multiplier — they didn't earn it via clue). Guessing team's streak/mult reset.
+- Penalty: flat card value (−100 or −200) subtracted from guessing team. Streak/mult reset.
+- Revealed card back displays `+200` at mult 1.0 or `+200 x 1.2` when mult > 1.
+
+### Implementation order
+
+1. **Module scaffolding.** Add `ROUND_MODULES['common-thread']` entry with `label: 'Common Thread'`, `minPlayersPerTeam: 2`, `enter(onComplete)`, `reset()`. Pick a `colorClass` for the round-type picker card. Add `#common-thread-container` inside `#module-canvas` (hidden by default, revealed in `enter`).
+2. **Local single-machine path first.** Port the prototype's card build, DOM, CSS (light-tint fronts, flip-on-reveal, penalty gray, back values), and scoring logic into `feud.html`. Verify end-to-end locally before multiplayer.
+3. **Module scoreboard.** New DOM node inside `#common-thread-container` (or flanking it in the canvas). Shows: Red streak / Red mult / Red round score | Blue streak / Blue mult / Blue round score. Plain for now — polish later.
+4. **Word source.** On module entry, pick 16 random words from `SCRIBBLE_WORD_BANK` (flatten all difficulty tiers into one pool). Uppercase them for display.
+5. **Compose-clue input mode.** Extend `setInputAreaMode` with a new `'compose-clue'` mode: `#turn-input-row` renders a text input (top), then a number stepper (bottom) with `◀` / `▶` arrows flanking a value, both same width. Submit button pinned bottom-right or as a third row. Clue giver sees this mode; everyone else sees `'disabled'` with a "Waiting for [name]..." status. After submit, everyone switches to a `'guess'` mode showing the clue prominently (word + count) — guessers' submit does nothing (their input is the card click), clue giver sees disabled.
+6. **Clue validation.** `isClueValid(clue, boardWords)` — normalize (lowercase, strip non-alphanumerics), then reject if `clue` contains or is contained by any `boardWord`. Apply at submit; show inline rejection feedback in the input row.
+7. **Host-authoritative scoring.** Non-host guessers write `pendingAction: { type: 'commonThreadGuess', cardIdx, uid }`. Non-host clue giver writes `pendingAction: { type: 'commonThreadClue', word, count, uid }`. Host processes, computes scoring, writes `commonThreadState` snapshot. Mirror scribble's pendingAction pattern.
+8. **Role assignment.** Host picks one random UID per team from `teamPlayerUids[team]` as clue giver at module entry, syncs `commonThreadState.clueGiverUids: [red, blue]`. Helpers: `amIClueGiver()`, `amIGuesser()`.
+9. **Card reveal sync.** Host writes `cards[i].revealed = true` + `revealedInfo`. Non-host reconcile triggers the local Y-axis flip animation by toggling the `.flipped` class on the existing card element (prototype pattern — don't rebuild the DOM or the transition is lost).
+10. **Round end + completion.** After each reveal, check: does either team have all 6 of their cards revealed? If yes, that team wins. Call `onComplete({ redScore, blueScore })` with the module's per-team scoring totals (not the global `teamScores`). `handleModuleComplete` folds these into `teamScores` per the standard orchestrator contract.
+11. **Firestore cleanup.** Add `commonThreadState`, `pendingAction` types, and any related fields to the `lobbyStartGame` reset block so stale state doesn't bleed into new games (same pattern as `faceoffState`, `scribbleState`, etc.).
+
+### Firestore schema (draft)
+
+```js
+commonThreadState: {
+  phase: 'clue' | 'guess',
+  cards: [{ word, type, points, team, revealed, revealedInfo }],  // 16 entries
+  scores: [redRoundScore, blueRoundScore],   // module-local, folded on complete
+  streaks: [0, 0],
+  multipliers: [1.0, 1.0],
+  currentTeam: 0 | 1,
+  activeClue: { word, count, team } | null,
+  picksRemaining: 0,
+  basePoints: 100,
+  clueGiverUids: [redUid, blueUid],
+}
+```
+
+Plus `pendingAction` types: `commonThreadClue` (word, count), `commonThreadGuess` (cardIdx).
+
+### Open follow-ups (defer past v1)
+
+- **Timer.** Clue composition timer? Guess timer per pick? Decide after first playtest.
+- **Victory awards.** New compute functions for "best clue giver" (most correct per clue), "best guesser" (most cards flipped for own team), etc. Match log entries need new outcome types.
+- **Round-type picker card art.** Pick a gem tier + color treatment. Visual polish pass.
+- **Dedicated word bank.** Curated pool of clueable words (scribble words include some abstracts like "DANCE" that may be awkward for Codenames-style play).
+- **Clue validation nuance.** Semantic variants (plurals caught, synonyms not). If judge-override is needed, add a "trust the clue giver" toggle for the host.
+- **Step 7 (phase reconcile robustness)** from the Pre-Blaze Cleanup Refactor applies to Common Thread handlers too — idempotent phase transitions, no assumptions about prior local state.
+
+---
+
 ## Question Bank — JSON Schema
 
 Each question object has this shape:

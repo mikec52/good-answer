@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Common Thread — Prototype</title>
+<style>
+  :root {
+    --red-bg:   #990b0b;
+    --red-text: #ff5555;
+    --blue-bg:  #053977;
+    --blue-text: #4c8cff;
+    --card-face: #e8dcc0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: #0a0a0a;
+    color: #f0f0f0;
+    font-family: system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    gap: 16px;
+  }
+  h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* --- Top bar: scores + turn --- */
+  #top-bar {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-size: 1rem;
+  }
+  .score-box {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    min-width: 120px;
+    text-align: center;
+  }
+  .score-box.red  { background: var(--red-bg);  }
+  .score-box.blue { background: var(--blue-bg); }
+  #turn-indicator {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #222;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+  }
+
+  /* --- Perspective toggle (dev) --- */
+  #perspective-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 0.85rem;
+    color: #888;
+  }
+  #perspective-bar button {
+    background: #222;
+    color: #ddd;
+    border: 1px solid #444;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  #perspective-bar button.active {
+    background: #fba300;
+    color: #111;
+    border-color: #fba300;
+  }
+
+  /* --- Game layout: stats panels flanking board --- */
+  #game-layout {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+  }
+  .team-stats {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    padding: 12px 14px;
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    min-width: 90px;
+    text-align: center;
+  }
+  .team-stats .stat-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #888;
+  }
+  .team-stats .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  .team-stats.red  .stat-value { color: var(--red-text); }
+  .team-stats.blue .stat-value { color: var(--blue-text); }
+
+  /* --- Board --- */
+  #board {
+    display: grid;
+    grid-template-columns: repeat(4, 140px);
+    grid-template-rows: repeat(4, 100px);
+    gap: 12px;
+    perspective: 1200px;
+  }
+  .card {
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    user-select: none;
+  }
+  .card.flipped {
+    transform: rotateY(180deg);
+  }
+  .card.locked {
+    cursor: not-allowed;
+  }
+  .card-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    backface-visibility: hidden;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.4);
+  }
+  .card-face .word {
+    font-size: 1rem;
+  }
+  .card-face .value {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .card-front {
+    background: var(--card-face);
+    color: #111;
+  }
+  .card-front .value { opacity: 0; }  /* Hidden by default (guesser view) */
+  .card-back {
+    transform: rotateY(180deg);
+  }
+  .card-back.team-red  { background: var(--red-bg);  color: #fff; }
+  .card-back.team-blue { background: var(--blue-bg); color: #fff; }
+  .card-back.penalty   { background: #000;           color: var(--red-text); }
+
+  /* Clue giver view — team cards filled with a light tint of their team color.
+     On selection, the flip reveals the solid dark team color on the back. */
+  .card.reveal-values .card-front.team-red  { background: #f5c6c6; }
+  .card.reveal-values .card-front.team-blue { background: #c6d7f0; }
+  /* Penalty gets a distinctive gray bg + white text instead of an outline */
+  .card.reveal-values .card-front.penalty {
+    background: #555;
+    color: #fff;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.4);
+  }
+  .card.reveal-values .card-front.penalty .value { opacity: 1; color: #fff; }
+  /* Positive team cards: value stays hidden on clue-giver front (reserved for future dynamic display) */
+
+  /* --- Action panel (bottom) --- */
+  #action-panel {
+    min-height: 120px;
+    width: 620px;
+    max-width: 100%;
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .panel-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #888;
+  }
+  .clue-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .clue-input-row input[type="text"] {
+    flex: 1;
+    padding: 10px 12px;
+    background: #0a0a0a;
+    color: #f0f0f0;
+    border: 1px solid #333;
+    border-radius: 6px;
+    font-size: 1rem;
+  }
+  .clue-input-row input[type="number"] {
+    width: 70px;
+    padding: 10px 8px;
+    background: #0a0a0a;
+    color: #f0f0f0;
+    border: 1px solid #333;
+    border-radius: 6px;
+    font-size: 1rem;
+    text-align: center;
+  }
+  .clue-input-row button,
+  #action-panel .action-btn {
+    padding: 10px 18px;
+    background: #fba300;
+    color: #111;
+    border: none;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  .clue-input-row button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .active-clue {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-align: center;
+    padding: 10px 0;
+  }
+  .active-clue .word  { color: #fba300; text-transform: uppercase; }
+  .active-clue .count { color: #fff; }
+  .picks-remaining {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #aaa;
+  }
+  #log {
+    width: 620px;
+    max-width: 100%;
+    max-height: 140px;
+    overflow-y: auto;
+    background: #0a0a0a;
+    border: 1px solid #222;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    color: #aaa;
+    line-height: 1.5;
+  }
+  .log-entry.red  { color: #ff7b7b; }
+  .log-entry.blue { color: #7ba9ff; }
+</style>
+</head>
+<body>
+  <h1>Common Thread</h1>
+
+  <div id="top-bar">
+    <div class="score-box red">RED: <span id="score-red">0</span></div>
+    <div id="turn-indicator">—</div>
+    <div class="score-box blue">BLUE: <span id="score-blue">0</span></div>
+  </div>
+
+  <div id="perspective-bar">
+    <span>View as:</span>
+    <button data-view="red-clue">Red Clue Giver</button>
+    <button data-view="blue-clue">Blue Clue Giver</button>
+    <button data-view="guesser" class="active">Guesser</button>
+    <button id="reset-btn" style="margin-left: 16px; background: #333; color: #aaa; border-color: #444;">Reset Board</button>
+  </div>
+
+  <div id="game-layout">
+    <div class="team-stats red">
+      <div>
+        <div class="stat-label">Red Streak</div>
+        <div class="stat-value" id="streak-red">0</div>
+      </div>
+      <div>
+        <div class="stat-label">Red Mult</div>
+        <div class="stat-value" id="mult-red">1.0x</div>
+      </div>
+    </div>
+    <div id="board"></div>
+    <div class="team-stats blue">
+      <div>
+        <div class="stat-label">Blue Streak</div>
+        <div class="stat-value" id="streak-blue">0</div>
+      </div>
+      <div>
+        <div class="stat-label">Blue Mult</div>
+        <div class="stat-value" id="mult-blue">1.0x</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="action-panel"></div>
+
+  <div id="log"></div>
+
+<script>
+  // ---------- Config ----------
+  const PLACEHOLDER_WORDS = [
+    "APPLE", "RIVER", "CROWN", "MOON",
+    "TIGER", "PIANO", "CLOUD", "NOVEL",
+    "STONE", "EMBER", "BRIDGE", "FROST",
+    "ORBIT", "CANDLE", "MIRROR", "THORN",
+  ];
+
+  // Value distribution for the 16 cards
+  const VALUE_TEMPLATE = [
+    ...Array(6).fill({ type: "team-red",  points:  100, team: 0 }),
+    ...Array(6).fill({ type: "team-blue", points:  100, team: 1 }),
+    ...Array(2).fill({ type: "penalty",   points: -100 }),
+    ...Array(2).fill({ type: "penalty",   points: -200 }),
+  ];
+
+  // ---------- State ----------
+  const state = {
+    cards: [],              // { word, type, points, team, revealed, revealedInfo }
+    scores: [0, 0],         // [red, blue]
+    streaks: [0, 0],        // [red, blue] — resets on strike
+    multipliers: [1.0, 1.0],// 1 + streak * 0.2
+    currentTeam: 0,
+    phase: "clue",          // "clue" | "guess"
+    activeClue: null,       // { word, count, team }
+    picksRemaining: 0,
+    basePoints: 100,        // quantity × 100, set on clue submit
+    view: "guesser",
+  };
+
+  // ---------- Setup ----------
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function buildCards() {
+    const values = shuffle(VALUE_TEMPLATE);
+    state.cards = PLACEHOLDER_WORDS.map((word, i) => ({
+      word,
+      ...values[i],
+      revealed: false,
+    }));
+  }
+
+  // ---------- Rendering ----------
+  const boardEl = document.getElementById("board");
+  const panelEl = document.getElementById("action-panel");
+  const turnEl  = document.getElementById("turn-indicator");
+  const logEl   = document.getElementById("log");
+
+  function teamName(t) { return t === 0 ? "Red" : "Blue"; }
+  function teamClass(t) { return t === 0 ? "red" : "blue"; }
+  function teamAccent(t) { return t === 0 ? "var(--red-text)" : "var(--blue-text)"; }
+
+  function formatRevealedValue(card) {
+    const info = card.revealedInfo;
+    if (!info) {
+      // Pre-reveal fallback (shouldn't normally be visible to the player).
+      return card.type === "penalty" ? String(card.points) : "";
+    }
+    const sign = info.base >= 0 ? "+" : "";
+    const baseStr = sign + info.base;
+    if (info.mult && info.mult > 1) {
+      return `${baseStr} x ${info.mult.toFixed(1)}`;
+    }
+    return baseStr;
+  }
+
+  function buildCard(card, i) {
+    const el = document.createElement("div");
+    el.className = "card";
+    el.dataset.index = i;
+
+    const frontValue = card.type === "penalty" ? ((card.points > 0 ? "+" : "") + card.points) : "";
+    const front = document.createElement("div");
+    front.className = "card-face card-front " + card.type;
+    front.innerHTML = `<div class="word">${card.word}</div><div class="value">${frontValue}</div>`;
+
+    const back = document.createElement("div");
+    back.className = "card-face card-back " + card.type;
+    back.innerHTML = `<div class="word">${card.word}</div><div class="value"></div>`;
+
+    el.appendChild(front);
+    el.appendChild(back);
+    el.addEventListener("click", () => onCardClick(i));
+    return el;
+  }
+
+  function renderBoard() {
+    const revealAll = state.view === "red-clue" || state.view === "blue-clue";
+
+    // Initial build (or after reset) — cards don't exist yet.
+    if (boardEl.children.length !== state.cards.length) {
+      boardEl.innerHTML = "";
+      state.cards.forEach((card, i) => boardEl.appendChild(buildCard(card, i)));
+    }
+
+    // Reconcile existing card elements with current state. This preserves the
+    // .flipped class transition — we toggle it rather than rebuilding.
+    state.cards.forEach((card, i) => {
+      const el = boardEl.children[i];
+      el.classList.toggle("flipped", card.revealed);
+      el.classList.toggle("reveal-values", revealAll);
+      const locked = card.revealed || state.phase !== "guess" || state.view !== "guesser";
+      el.classList.toggle("locked", locked);
+
+      // Update the back's value (computed at reveal time).
+      const backValueEl = el.querySelector(".card-back .value");
+      backValueEl.textContent = formatRevealedValue(card);
+      backValueEl.style.color = card.revealedInfo?.valueColor || "";
+    });
+  }
+
+  function renderTurn() {
+    const phaseLabel = state.phase === "clue" ? "giving clue" : "guessing";
+    turnEl.textContent = `${teamName(state.currentTeam)} — ${phaseLabel}`;
+    turnEl.style.color = state.currentTeam === 0 ? "var(--red-text)" : "var(--blue-text)";
+  }
+
+  function renderScores() {
+    document.getElementById("score-red").textContent  = state.scores[0];
+    document.getElementById("score-blue").textContent = state.scores[1];
+    document.getElementById("streak-red").textContent  = state.streaks[0];
+    document.getElementById("streak-blue").textContent = state.streaks[1];
+    document.getElementById("mult-red").textContent  = state.multipliers[0].toFixed(1) + "x";
+    document.getElementById("mult-blue").textContent = state.multipliers[1].toFixed(1) + "x";
+  }
+
+  function renderPanel() {
+    panelEl.innerHTML = "";
+    const isClueGiverView = state.view === (state.currentTeam === 0 ? "red-clue" : "blue-clue");
+
+    if (state.phase === "clue") {
+      if (isClueGiverView) {
+        // Show clue input
+        const label = document.createElement("div");
+        label.className = "panel-label";
+        label.textContent = `${teamName(state.currentTeam)} clue giver — submit a clue`;
+        panelEl.appendChild(label);
+
+        const row = document.createElement("div");
+        row.className = "clue-input-row";
+        row.innerHTML = `
+          <input type="text" id="clue-word" placeholder="One-word clue" autocomplete="off" />
+          <input type="number" id="clue-count" min="1" max="8" value="1" />
+          <button id="clue-submit">Submit</button>
+        `;
+        panelEl.appendChild(row);
+
+        const submitBtn = row.querySelector("#clue-submit");
+        const wordInput = row.querySelector("#clue-word");
+        const countInput = row.querySelector("#clue-count");
+        submitBtn.addEventListener("click", () => {
+          const word  = wordInput.value.trim();
+          const count = parseInt(countInput.value, 10);
+          if (!word || !count || count < 1) return;
+          // Validate: clue can't be one of the board words
+          if (PLACEHOLDER_WORDS.includes(word.toUpperCase())) {
+            wordInput.style.borderColor = "var(--red-text)";
+            wordInput.value = "";
+            wordInput.placeholder = "Clue can't be a board word";
+            return;
+          }
+          submitClue(word, count);
+        });
+        wordInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") submitBtn.click();
+        });
+        setTimeout(() => wordInput.focus(), 0);
+      } else {
+        const label = document.createElement("div");
+        label.className = "panel-label";
+        label.textContent = `Waiting for ${teamName(state.currentTeam)} clue giver...`;
+        panelEl.appendChild(label);
+      }
+    } else if (state.phase === "guess") {
+      const label = document.createElement("div");
+      label.className = "panel-label";
+      label.textContent = `${teamName(state.currentTeam)} clue`;
+      panelEl.appendChild(label);
+
+      const clue = document.createElement("div");
+      clue.className = "active-clue";
+      clue.innerHTML = `<span class="word">${state.activeClue.word}</span> &nbsp;·&nbsp; <span class="count">${state.activeClue.count}</span>`;
+      panelEl.appendChild(clue);
+
+      const remaining = document.createElement("div");
+      remaining.className = "picks-remaining";
+      remaining.textContent = `Picks remaining: ${state.picksRemaining}`;
+      panelEl.appendChild(remaining);
+
+      if (state.view === "guesser") {
+        const endTurnBtn = document.createElement("button");
+        endTurnBtn.className = "action-btn";
+        endTurnBtn.style.alignSelf = "center";
+        endTurnBtn.textContent = "End Turn Early";
+        endTurnBtn.addEventListener("click", endTurnEarly);
+        panelEl.appendChild(endTurnBtn);
+      }
+    }
+  }
+
+  function log(msg, team) {
+    const entry = document.createElement("div");
+    entry.className = "log-entry" + (team != null ? " " + teamClass(team) : "");
+    entry.textContent = msg;
+    logEl.prepend(entry);
+  }
+
+  function render() {
+    renderBoard();
+    renderTurn();
+    renderScores();
+    renderPanel();
+  }
+
+  // ---------- Actions ----------
+  function submitClue(word, count) {
+    state.activeClue = { word, count, team: state.currentTeam };
+    state.picksRemaining = count;
+    state.basePoints = count * 100;
+    state.phase = "guess";
+    log(`${teamName(state.currentTeam)} clue: "${word}" for ${count} (${state.basePoints} pts each)`, state.currentTeam);
+    render();
+  }
+
+  function resetStreak(team) {
+    state.streaks[team] = 0;
+    state.multipliers[team] = 1.0;
+  }
+
+  function onCardClick(idx) {
+    if (state.phase !== "guess") return;
+    if (state.view !== "guesser") return;
+    const card = state.cards[idx];
+    if (card.revealed) return;
+
+    card.revealed = true;
+    const guessingTeam = state.currentTeam;
+
+    if (card.type === "penalty") {
+      // Flat penalty value; applied to guessing team. Value shown in their color.
+      state.scores[guessingTeam] += card.points;
+      card.revealedInfo = {
+        base: card.points,
+        mult: 1,
+        actual: card.points,
+        valueColor: teamAccent(guessingTeam),
+      };
+      resetStreak(guessingTeam);
+      log(`${teamName(guessingTeam)} picked "${card.word}" — ${card.points} (penalty). Turn ends.`, guessingTeam);
+      endTurn();
+    } else if (card.team === guessingTeam) {
+      // Own team card: apply current multiplier, then advance streak/mult.
+      const mult = state.multipliers[guessingTeam];
+      const base = state.basePoints;
+      const earned = Math.round(base * mult);
+      state.scores[guessingTeam] += earned;
+      card.revealedInfo = { base, mult, actual: earned };
+      state.streaks[guessingTeam] += 1;
+      state.multipliers[guessingTeam] = 1 + state.streaks[guessingTeam] * 0.2;
+      state.picksRemaining -= 1;
+      const multStr = mult > 1 ? ` x ${mult.toFixed(1)}` : "";
+      log(`${teamName(guessingTeam)} picked "${card.word}" — +${base}${multStr} = +${earned}`, guessingTeam);
+      if (state.picksRemaining <= 0) {
+        log(`${teamName(guessingTeam)} hit the quantity. Turn ends.`, guessingTeam);
+        endTurn();
+      } else {
+        render();
+      }
+    } else {
+      // Opposing team card: flat basePoints to opposing team (no multiplier — they didn't earn it).
+      const gift = state.basePoints;
+      state.scores[card.team] += gift;
+      card.revealedInfo = { base: gift, mult: 1, actual: gift };
+      resetStreak(guessingTeam);
+      log(`${teamName(guessingTeam)} picked "${card.word}" — belongs to ${teamName(card.team)} (+${gift} to ${teamName(card.team)}). Turn ends.`, card.team);
+      endTurn();
+    }
+  }
+
+  function endTurnEarly() {
+    log(`${teamName(state.currentTeam)} ended turn early.`, state.currentTeam);
+    endTurn();
+  }
+
+  function endTurn() {
+    state.currentTeam = 1 - state.currentTeam;
+    state.phase = "clue";
+    state.activeClue = null;
+    state.picksRemaining = 0;
+    render();
+  }
+
+  // ---------- Perspective toggle ----------
+  document.querySelectorAll("#perspective-bar button[data-view]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#perspective-bar button[data-view]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.view = btn.dataset.view;
+      render();
+    });
+  });
+
+  document.getElementById("reset-btn").addEventListener("click", () => {
+    buildCards();
+    boardEl.innerHTML = "";  // Force full rebuild (new words on cards)
+    state.scores = [0, 0];
+    state.streaks = [0, 0];
+    state.multipliers = [1.0, 1.0];
+    state.currentTeam = Math.random() < 0.5 ? 0 : 1;
+    state.phase = "clue";
+    state.activeClue = null;
+    state.picksRemaining = 0;
+    state.basePoints = 100;
+    logEl.innerHTML = "";
+    log(`New board. ${teamName(state.currentTeam)} goes first.`);
+    render();
+  });
+
+  // ---------- Init ----------
+  buildCards();
+  state.currentTeam = Math.random() < 0.5 ? 0 : 1;
+  log(`New board. ${teamName(state.currentTeam)} goes first.`);
+  render();
+</script>
+</body>
+</html>

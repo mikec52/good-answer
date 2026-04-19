@@ -8135,9 +8135,29 @@ document.addEventListener('keydown', e => {
       // ── Host-computed awards ──
       if (data.awards && data.awards.length > 0) {
         _syncedAwards = [...data.awards];
-        // If victory dialog is already showing, render awards into it
-        // (non-host reaches endGame before this sync arrives)
+        // If victory dialog is already showing, just refresh awards.
+        // Otherwise the gameEnded block below will fire renderVictory once
+        // both gameEnded and awards are present in the snapshot.
         if (gameEnded) renderVictoryAwards(_syncedAwards);
+      }
+
+      // ── Game-end (non-host) ──
+      // Host calls renderVictory directly inside endGame after computing
+      // awards. Non-host waits for the synced { gameEnded:true, awards }
+      // snapshot so the dialog opens with awards already populated.
+      if (isMultiplayer && !isHost && data.gameEnded && !gameEnded && data.awards && data.awards.length > 0) {
+        const _winner = data.teamScores
+          ? (data.teamScores[0] >= data.teamScores[1] ? 0 : 1)
+          : (teamScores[0] >= teamScores[1] ? 0 : 1);
+        const _msg = _winner === 0
+          ? `<span class="red">${teamNames[0]}</span> wins with ${(data.teamScores || teamScores)[0]} points!`
+          : `<span class="blue">${teamNames[1]}</span> wins with ${(data.teamScores || teamScores)[1]} points!`;
+        renderVictory({
+          teamScores: data.teamScores ? [...data.teamScores] : [...teamScores],
+          awards: [...data.awards],
+          winnerOverride: _winner,
+          msg: _msg,
+        });
       }
 
       // ── Face-off state sync ──
@@ -8210,13 +8230,13 @@ document.addEventListener('keydown', e => {
           }
         } else if (!faceoffState.active && faceoffState.completed && wasActive) {
           // Face-off just ended. Host already folded into teamScores and synced.
-          // Non-host: update scores from sync, then trigger victory flow.
+          // Non-host: update scores from sync; victory render is now triggered
+          // by the data.gameEnded handler below once data.awards arrives, so
+          // the dialog opens with awards already populated (no empty-then-fill
+          // drift).
           if (faceoffState.timerInterval) { clearInterval(faceoffState.timerInterval); faceoffState.timerInterval = null; }
           if (data.teamScores) teamScores = [...data.teamScores];
           updateScores();
-          if (!gameEnded) {
-            endGameByRounds();
-          }
         }
       }
 
@@ -14517,6 +14537,12 @@ document.addEventListener('keydown', e => {
         document.getElementById('game-root').style.setProperty('--bg-blob-base', '#111');
       }
 
+      // Round-type multiplier gem: hide at round-end on every client. Host
+      // also hides it inside awardRoundScore after the count-up animation, but
+      // that path doesn't run on non-host (or on failed-steal where the
+      // multiplier never applies to a score). This is the canonical hide.
+      hidePhaseGem();
+
       // Make sure the input-area home base isn't in an exit state (covers
       // spectator paths where it may have lingering offscreen classes).
       const ia = document.getElementById("input-area");
@@ -15324,19 +15350,32 @@ document.addEventListener('keydown', e => {
       const name=teamNames[team];const sign=val>0?'+':'';
       if(await showConfirm(`Apply ${sign}${val} points to ${name}?`, { title: 'Edit Score' })){teamScores[team]+=val;el.value=0;updateScores();checkForWinner();}}
 
-    function endGame(msg, winnerOverride = null) {
-      // Cut straight to maintheme — victory is an abrupt moment, a fade
-      // undercuts the impact.
+    // Canonical renderer for the victory phase. Both host (after computing
+    // awards locally) and non-host (from the synced snapshot) call this with
+    // identical-shaped `data`. Eliminates the awards-populate-after-dialog
+    // drift that used to make non-host clients see an empty awards list for
+    // a snapshot RTT before it filled in.
+    //
+    // data fields:
+    //   teamScores      — final scores; winner is derived from these
+    //   awards          — array of { id, name, player, team }
+    //   winnerOverride  — optional explicit winner (tiebreaker case)
+    //   msg             — innerHTML for the sidebar endRound area
+    function renderVictory(data) {
       setMusicMode('maintheme', { immediate: true });
-      const winner = winnerOverride !== null ? winnerOverride : (teamScores[0] >= teamScores[1] ? 0 : 1);
-      // Populate sidebar endRound area (retained for returning to the board).
-      // Fast Money Round button removed — replaced by the Face-off Round which
-      // runs automatically before endGame fires. Fast Money code is still on
-      // disk (orphaned) and can be resurrected later if desired.
-      document.getElementById("endRound").innerHTML = msg;
-      document.getElementById("turn-input-box").style.display="none";
+      const winner = (data.winnerOverride !== undefined && data.winnerOverride !== null)
+        ? data.winnerOverride
+        : ((data.teamScores?.[0] ?? 0) >= (data.teamScores?.[1] ?? 0) ? 0 : 1);
+      if (data.msg !== undefined) {
+        document.getElementById("endRound").innerHTML = data.msg;
+      }
+      document.getElementById("turn-input-box").style.display = "none";
       gameEnded = true;
+      playVictoryAnimation(winner, data.awards || []);
+    }
 
+    function endGame(msg, winnerOverride = null) {
+      const winner = winnerOverride !== null ? winnerOverride : (teamScores[0] >= teamScores[1] ? 0 : 1);
       // Host/local computes awards; non-host receives them via Firestore sync
       let awards = [];
       if (!isMultiplayer || isHost) {
@@ -15345,11 +15384,12 @@ document.addEventListener('keydown', e => {
           syncState({ gameEnded: true, awards: awards });
         }
       }
-      // Non-host: awards arrive via a later snapshot — reconcileLocalState
-      // will call renderVictoryAwards() when data.awards is received
-
-      // Launch victory overlay (dialog + particles)
-      playVictoryAnimation(winner, awards);
+      renderVictory({
+        teamScores: [...teamScores],
+        awards,
+        winnerOverride: winner,
+        msg,
+      });
     }
 
     async function resetGameConfirm() {

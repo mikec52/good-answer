@@ -8464,25 +8464,9 @@ document.addEventListener('keydown', e => {
           }
           break;
 
-        case 'round-type-selected':
-          // Non-host: host picked a round type, dispatch accordingly
-          currentRoundType = data.selectedRoundType;
-          currentRoundMultiplier = data.selectedRoundMultiplier || 1;
-          // Picker is leaving — hide the round-type picker panel and drop
-          // picker-mode so the sidebar's category-select panel can take
-          // over for feud modules, or the module's own UI for non-feud.
-          const _rtsHidePromise = hideRoundTypePicker();
-          if (currentRoundMultiplier > 1) showPhaseGem(currentRoundMultiplier);
-          // Wait for the picker cards to finish sliding up + a breathing beat
-          // before the module intro splash slams in. Stored on
-          // window._moduleIntroPromise so downstream handlers (non-host
-          // category-select, scribble entry) can await full completion.
-          const _rtsIntroPromise = (async () => {
-            await _rtsHidePromise;
-            await anim.wait(260);
-            await playModuleIntro(data.selectedRoundType);
-          })();
-          window._moduleIntroPromise = _rtsIntroPromise;
+        case 'round-type-selected': {
+          // Non-host: render via the canonical renderer, then dispatch.
+          const _rtsIntroPromise = renderRoundTypeSelected(data);
           if (data.selectedRoundType === 'secret-scribble') {
             // Defer scribble entry until after the splash finishes.
             (async () => {
@@ -8496,6 +8480,7 @@ document.addEventListener('keydown', e => {
           // 'category-select' or 'gameplay' phase transition that the
           // existing handlers process — no extra action needed here.
           break;
+        }
 
         case 'scribble-word-select':
           // Non-host: host started a new scribble session (usually session 2)
@@ -8582,6 +8567,16 @@ document.addEventListener('keydown', e => {
               resetModuleCanvas();
               updateTurn();
               initRoundState();
+              // resetModuleCanvas wipes the phase-indicator gem, which on host is
+              // safe (host's resetModuleCanvas runs in advanceRound BEFORE
+              // renderRoundTypeSelected shows the gem). On non-host the order is
+              // inverted — the gem was shown when round-type-selected arrived,
+              // and would now disappear. Re-apply from synced data.
+              const _selMult = data.selectedRoundMultiplier || 1;
+              if (_selMult > 1) {
+                currentRoundMultiplier = _selMult;
+                showPhaseGem(_selMult);
+              }
               document.getElementById("roundCounter").textContent = roundNumber;
               showCategorySelection(data.categoryPicks);
             })();
@@ -10076,33 +10071,56 @@ document.addEventListener('keydown', e => {
       }
     }
 
-    function hostProcessRoundTypePick(moduleKey) {
-      currentRoundType = moduleKey;
-      // Latch the pre-rolled round multiplier onto the round.
-      currentRoundMultiplier = _roundTypePickMultipliers[moduleKey] || 1;
-      // Picker selection made — hide the picker panel and leave picker-mode.
-      const hidePromise = hideRoundTypePicker();
+    // Canonical renderer for the round-type-selected phase. Hides the
+    // picker, latches the gem onto the phase indicator, and plays the
+    // module intro splash. Returns a Promise that resolves once the
+    // intro has played — callers chain dispatch on top.
+    //
+    // data fields:
+    //   selectedRoundType        — module key ('high-five'|'survey'|'secret-scribble')
+    //   selectedRoundMultiplier  — round multiplier (1 if none)
+    function renderRoundTypeSelected(data) {
+      if (!data || !data.selectedRoundType) return Promise.resolve();
+      currentRoundType = data.selectedRoundType;
+      currentRoundMultiplier = data.selectedRoundMultiplier || 1;
 
-      // Sync selection to all clients
+      const hidePromise = hideRoundTypePicker();
+      if (currentRoundMultiplier > 1) showPhaseGem(currentRoundMultiplier);
+
+      // Wait for the picker cards to finish sliding up + a breathing beat
+      // before the module intro splash slams in.
+      const introPromise = (async () => {
+        await hidePromise;
+        await anim.wait(260);
+        await playModuleIntro(data.selectedRoundType);
+      })();
+      window._moduleIntroPromise = introPromise;
+      return introPromise;
+    }
+
+    function hostProcessRoundTypePick(moduleKey) {
+      const renderData = {
+        selectedRoundType: moduleKey,
+        selectedRoundMultiplier: _roundTypePickMultipliers[moduleKey] || 1,
+      };
+
+      // Sync selection to all clients first so non-hosts begin their own
+      // renderRoundTypeSelected on the same shape of data.
       if (isMultiplayer) {
         syncState({
-          selectedRoundType: moduleKey,
-          selectedRoundMultiplier: currentRoundMultiplier,
+          selectedRoundType: renderData.selectedRoundType,
+          selectedRoundMultiplier: renderData.selectedRoundMultiplier,
           phase: 'round-type-selected',
           pendingAction: null,
         });
       }
 
-      // Latch the gem onto phase-indicator; cleared at round end.
-      if (currentRoundMultiplier > 1) showPhaseGem(currentRoundMultiplier);
+      const introPromise = renderRoundTypeSelected(renderData);
 
-      // Play the module intro splash, then dispatch to the appropriate module.
-      // Wait for the picker cards to finish sliding up + a breathing beat so
-      // the canvas sits empty for a moment before the intro slams in.
+      // Host-only dispatch — non-host follows via subsequent
+      // category-select / gameplay / scribble-* phase snapshots.
       (async () => {
-        await hidePromise;
-        await anim.wait(260);
-        await playModuleIntro(moduleKey);
+        await introPromise;
         if (moduleKey === 'high-five') {
           setMusicMode('playlist');
           hostProcessRoundTypePick_highFive();

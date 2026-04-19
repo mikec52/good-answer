@@ -4261,15 +4261,17 @@
     #scribble-summary {
       display: flex; flex-direction: column; align-items: center; gap: 0;
       width: 96%; max-width: 980px; margin-top: -2px;
+      background: rgba(26, 26, 26, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 0 0 10px 10px;
+      overflow: hidden;
     }
 
     /* Grid-overlay stack: all session blocks occupy the same cell so the
-       container sizes to the tallest, and blocks crossfade via opacity.
-       Background matches title + totals so the whole summary reads as one
-       unified panel. */
+       container sizes to the tallest, and blocks crossfade via opacity. */
     .scribble-summary-sessions {
       display: grid; width: 100%;
-      background: #1a1a1a;
       box-sizing: border-box;
     }
     .scribble-session-block {
@@ -4331,16 +4333,14 @@
       font-family: "futura-100", sans-serif; font-weight: 700;
       letter-spacing: 2px; text-transform: uppercase; font-size: 1.6rem;
       color: #fba300;
-      background: #1a1a1a;
       width: 100%; box-sizing: border-box;
       padding: 10px 12px 6px;
-      border-radius: 0;
       text-align: center;
     }
     .scribble-pts { font-family: "Bitcount Single", monospace; font-size: 0.95rem; }
     .scribble-pts.red { color: #ff5555; }
     .scribble-pts.blue { color: #4c8cff; }
-    .scribble-summary-totals { display: flex; gap: 24px; justify-content: center; padding: 12px; background: #1a1a1a; border-radius: 0 0 10px 10px; width: 100%; box-sizing: border-box; border-top: 1px solid #2a2a2a; }
+    .scribble-summary-totals { display: flex; gap: 24px; justify-content: center; padding: 12px; width: 100%; box-sizing: border-box; border-top: 1px solid #2a2a2a; }
     .scribble-summary-team { text-align: center; }
     .scribble-team-name { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
     .scribble-team-name.red { color: #ff5555; }
@@ -8421,9 +8421,11 @@ document.addEventListener('keydown', e => {
           _readyPlayersMap = {};
           if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
           _readyCountdownEnd = null;
-          // Animate board-wrapper + content-tv exit only. Input-area stays
-          // visible as the player's home base — showRoundTypePicker will
-          // set its context (waiting message for non-pickers).
+          // Animate board-wrapper + content-tv + scribble-summary exit.
+          // Input-area stays visible as the player's home base —
+          // showRoundTypePicker will set its context (waiting message for
+          // non-pickers). Mirrors advanceRound's exit choreography so non-host
+          // sees the same slide-up rather than a snap-to-hidden blink.
           {
             const _contentTv = document.getElementById("content-tv");
             const _bw = document.getElementById("board-wrapper");
@@ -8434,10 +8436,22 @@ document.addEventListener('keydown', e => {
               _bw.style.transform = '';
               _bw.classList.add("offscreen");
             }
+            const _ss = document.getElementById("scribble-summary");
+            const _ssExiting = _ss && _ss.style.display !== "none";
+            if (_ssExiting) {
+              _ss.classList.remove("ss-fly-in");
+              void _ss.offsetWidth;
+              _ss.classList.add("ss-fly-out");
+            }
             (async () => {
-              if (_contentTv && !_contentTv.classList.contains("ct-hidden")) {
-                await anim.play(_contentTv, "tv-off");
-              }
+              await Promise.all([
+                (async () => {
+                  if (_contentTv && !_contentTv.classList.contains("ct-hidden")) {
+                    await anim.play(_contentTv, "tv-off");
+                  }
+                })(),
+                _ssExiting ? anim.done(_ss) : Promise.resolve(),
+              ]);
               // 2s buffer so non-host isn't racing the round-type picker.
               // Skip on round 1 — nothing is exiting at game start.
               if (roundNumber > 1) await anim.wait(2000 / gameSpeed);
@@ -10314,7 +10328,7 @@ document.addEventListener('keydown', e => {
         minPlayersPerTeam: 2,
         intro: { title: 'SECRET\nSCRIBBLE', subtitle: 'Draw, guess, steal', accent: '#d803ff' },
         enter(onComplete) { enterScribbleRound(onComplete); },
-        reset() { resetScribbleState(); },
+        reset() { resetScribbleState({ keepUsedWords: true }); },
       },
     };
 
@@ -10461,7 +10475,7 @@ document.addEventListener('keydown', e => {
     // Interval handle for the per-session summary auto-cycler.
     let _scribbleCyclerInterval = null;
 
-    function resetScribbleState() {
+    function resetScribbleState({ keepUsedWords = false } = {}) {
       if (scribbleState.sessionInterval) clearInterval(scribbleState.sessionInterval);
       if (scribbleState.revealTimer) clearInterval(scribbleState.revealTimer);
       if (scribbleState.renderLoopId) cancelAnimationFrame(scribbleState.renderLoopId);
@@ -10470,13 +10484,14 @@ document.addEventListener('keydown', e => {
       // the summary DOM is still visible on screen — killing the interval
       // now would freeze the cycler on session 1. The interval clears
       // itself at the top of the next scribbleRenderSessions() call.
+      const preservedUsedWords = keepUsedWords ? scribbleState.usedWords : new Set();
       scribbleState = {
         active: false,
         phase: "idle",
         myRole: "drawer",
         currentSession: 0,
         sessions: [],
-        usedWords: new Set(),
+        usedWords: preservedUsedWords,
         _wordAssignments: null,
         sessionTimer: 0,
         sessionInterval: null,
@@ -11860,9 +11875,12 @@ document.addEventListener('keydown', e => {
       if (ws) ws.style.display = "none";
       if (sg) sg.style.display = "none";
       if (ss) ss.style.display = "flex";
-      // Replay fly-in on summary so it enters with motion
+      // Replay fly-in on summary so it enters with motion. Strip a stale
+      // ss-fly-out from the previous round's exit — its CSS rule is declared
+      // later than ss-fly-in's so leaving both classes pins the panel
+      // off-canvas at translateY(-100%) and the summary never appears.
       if (ss) {
-        ss.classList.remove("ss-fly-in");
+        ss.classList.remove("ss-fly-in", "ss-fly-out");
         void ss.offsetWidth;
         ss.classList.add("ss-fly-in");
       }

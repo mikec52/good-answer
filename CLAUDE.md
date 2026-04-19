@@ -10,10 +10,12 @@ Family Feud-inspired game with original features and styling. Working title: **G
 - Sound files alongside feud.html: `ding.mp3` (correct answer reveal), `newstrike.wav` (incorrect answer), `goodanswer.mp3` (top answer reveal, 300ms delayed, baseVolume 0.35), `negativebeep.wav` (failed steal attempt), `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX + board-wrapper slide), `phonetype.wav` (typewriter keystroke SFX + tile-cover hover), `balbg.mp3` (background music, looping), `roundend.wav` (round winner determined), `decreaseblip.mp3` (streak/mult decrease), `neutralbeep.wav` (duplicate answer rejection), `chime.wav` (badge bounce SFX), `zoop.wav` (speed stepper SFX), `slit.wav` (fly-in/out whoosh — cat-row entry/exit, dialog open/close), `tap1.wav` (button click — setup nav, menu, confirm), `tap2.wav` (element landing — input area fly in/out), `tvon.wav` (CRT power-on), `powerdown.wav` (CRT power-off)
 
 ### Branch structure
-- **`main`** — pre-Firebase local-only version, not under active development during multiplayer work
-- **`multi`** — multiplayer foundation (Firebase/Firestore integration). Currently the baseline; `multi-scribble` branches from here.
-- **`multi-scribble`** — **active development branch.** Adds: Secret Scribble module, module orchestration layer (round type picker), input-area "home base" refactor (`setInputAreaMode` API), renaming of feud rounds to "ranked questions" (High Five + Survey). All architectural changes described below are on this branch. Merge back to `multi` when stable.
-- **`coyne-feud-classic`** — the original Coyne Feud family game night tool (formerly `main`). Finished product, not under active development. Do not merge between branches — they are effectively different games.
+- **`main`** — **active development branch.** Source of truth for the current state of the game. Includes: Firebase/Firestore multiplayer foundation, Secret Scribble module, module orchestration layer (round type picker), input-area "home base" refactor (`setInputAreaMode` API), and the renaming of feud rounds to "ranked questions" (High Five + Survey). Previously named `multi-scribble`; renamed to `main` on 2026-04-19 when branch structure was cleaned up.
+- **`offline`** — pre-Firebase local-only snapshot. Kept as a rollback reference; not under active development. Was the original `main` before the 2026-04-19 rename.
+- **`multi`** — multiplayer foundation snapshot (Firebase/Firestore integration, pre-scribble). Kept as a rollback reference; not under active development.
+- **`coyne-feud-classic`** — the original Coyne Feud family game night tool. Finished product, not under active development. Do not merge between branches — it's effectively a different game.
+
+Because the game is still in rapid structural flux, the snapshot branches (`offline`, `multi`) are not intended to be merged into `main`. They exist as "how we got here" reference points. Future module branches will likely use the pattern `main-<modulename>` (e.g. `main-commonthread`) — short-lived branches that either merge back into `main` or supersede it entirely depending on how drastic the in-progress changes are.
 
 ### Firebase project
 - Project: `good-answer-game` (Firestore in `us-east1`, test-mode rules expire 2026-05-13)
@@ -22,8 +24,8 @@ Family Feud-inspired game with original features and styling. Working title: **G
 
 ### Hosting & Deployment
 - **GitHub Pages** serves the game at **https://mikec52.github.io/good-answer/feud.html**
-- Source repo: `mikec52/good-answer` (public). Pages is configured to serve from **`multi-scribble`** (active dev branch) — see "Branch structure" above for why. `main` and `multi` are held as rollback snapshots.
-- **Deploy workflow**: `git push origin multi-scribble` = live in ~60 seconds. No build step, no config files. To change which branch Pages serves from: `gh api --method PUT repos/mikec52/good-answer/pages -f "source[branch]=<branch>" -f "source[path]=/"`.
+- Source repo: `mikec52/good-answer` (public). Pages is configured to serve from **`main`** (active dev branch). `offline` and `multi` are held as rollback snapshots.
+- **Deploy workflow**: `git push origin main` = live in ~60 seconds. No build step, no config files. To change which branch Pages serves from: `gh api --method PUT repos/mikec52/good-answer/pages -f "source[branch]=<branch>" -f "source[path]=/"`.
 - GitHub CLI (`gh`) is installed and authenticated for Mike's account (`mikec52`). Git credentials are wired through `gh auth setup-git`.
 - This is a temporary static hosting solution for playtesting. When Phase 2A (Firebase shared state) arrives, the hosting may migrate to Netlify/Vercel/Cloudflare Pages for serverless function support — or Firebase Hosting itself. The migration is trivial since all these platforms point at the same GitHub repo.
 
@@ -51,7 +53,7 @@ The goal is a polished, distributable game app without migrating away from the c
 
 1. **HTML/JS game (current)** — continue developing `feud.html` as a single-file vanilla build. Same-room play (one device, one host, players submit guesses at the keyboard) is largely functional. Balatro-inspired contained viewport, zone-based layout, animation-rich transitions (see "Viewport Redesign" section below). This phase is "done" when the game is feature-complete and visually polished for single-session use.
 
-2. **Server layer — Remote Play (ACTIVE)** — add a real-time backend so multiple devices share game state. Implementation: Firebase/Firestore with client-authoritative architecture. **Phase 2A (shared state) and Phase 2B (authenticated players) are being built together on the `multi` branch.** See "Multiplayer Implementation" section below for current status and architecture details.
+2. **Server layer — Remote Play (ACTIVE)** — add a real-time backend so multiple devices share game state. Implementation: Firebase/Firestore with client-authoritative architecture. **Phase 2A (shared state) and Phase 2B (authenticated players) are live on `main`.** See "Multiplayer Implementation" section below for current status and architecture details.
 
 3. **Electron / Capacitor shell (stretch goal)** — wrap the finished game in a native app shell for distribution. Platform priority: Mac → iOS → Windows → Android → Steam. Note: Electron covers Mac/Windows/Linux (desktop only); iOS and Android require Capacitor instead. Game code inside is unchanged either way.
 
@@ -237,9 +239,9 @@ Planned features grouped by rough workload tier. Each entry has tags for feasibi
 
 ---
 
-## Multiplayer Implementation (multi branch)
+## Multiplayer Implementation
 
-Active development on the `multi` branch. Firebase/Firestore powers real-time state sync. The full implementation plan is at `.claude/plans/buzzing-toasting-feather.md`.
+Firebase/Firestore powers real-time state sync. The full implementation plan is at `.claude/plans/buzzing-toasting-feather.md`.
 
 ### Architecture — Host-Authoritative
 
@@ -337,8 +339,8 @@ Between rounds, all players see a "Ready Up" button. First click starts a 10-sec
 ### Version tag + "Ship it" convention
 
 - **`#version-tag` element** in `#game-root` (top-left of canvas, subtle `rgba(255,255,255,0.35)` Bitcount Mono Single text, `pointer-events: none`). Currently `v0.10`. Single source of truth for the version string — a deploy script or GitHub Action can sed-replace this line.
-- **Auto-increment scheme:** hundredths bump (v0.10 → v0.11) on each push to `multi-scribble`. Manual tenths bump (v0.11 → v0.20) for major feature milestones, decided case-by-case.
-- **"Ship it" trigger phrase:** user says "Ship it" to mean bump hundredths + commit + push to `multi-scribble` (which auto-deploys to GitHub Pages). Variations: "Ship it at v0.20" for a manual tenths bump; "Commit but don't ship" to commit without pushing.
+- **Auto-increment scheme:** hundredths bump (v0.10 → v0.11) on each push to `main`. Manual tenths bump (v0.11 → v0.20) for major feature milestones, decided case-by-case.
+- **"Ship it" trigger phrase:** user says "Ship it" to mean bump hundredths + commit + push to `main` (which auto-deploys to GitHub Pages). Variations: "Ship it at v0.20" for a manual tenths bump; "Commit but don't ship" to commit without pushing.
 - **Dev mode button removed from start screen** but underlying `activateDevMode()` / `_dismissStartScreen()` JS retained so it can be re-enabled quickly if needed. The button was irrelevant during most recent development.
 
 ### Host/non-host UI drift at round-result (spawned as separate task)
@@ -542,7 +544,7 @@ The tooltip arrow now tracks the true target center instead of always pointing a
 
 ---
 
-## Module Orchestration Layer (multi-scribble branch)
+## Module Orchestration Layer
 
 Major architectural shift: the game is no longer a fixed sequence of feud rounds. Each round, the active player picks a **round type** (module) from a picker UI, and that module runs independently and returns scores. This replaced the old flow where every round started with category selection.
 
@@ -607,7 +609,7 @@ Every non-feud module must:
 
 ---
 
-## Input-Area Home Base (multi-scribble branch)
+## Input-Area Home Base
 
 The `#input-area` in the sidebar is now the player's persistent "home base" — always visible, content changes per game phase instead of sliding in/out with each transition. Analogous to how `#phase-indicator` stays present and swaps text spans.
 
@@ -662,7 +664,7 @@ Feud rounds (High Five, Survey) still use the legacy `turn-body.innerHTML` swap 
 
 ---
 
-## Secret Scribble — Module Overview (multi-scribble branch)
+## Secret Scribble — Module Overview
 
 Pictionary-style drawing minigame. Requires 4+ players (2 per team minimum). See `secret-scribble.html` for the standalone prototype that preceded integration.
 

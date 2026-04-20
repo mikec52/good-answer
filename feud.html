@@ -1546,12 +1546,66 @@
       flex-direction: column;
       clip-path: polygon(-100vw 0, calc(100% + 100vw) 0, calc(100% + 100vw) 100%, -100vw 100%);
       padding: 0 8px 0 0;
+      position: relative;
+      z-index: 10;
     }
     /* Bottom-anchor the input home base inside the sidebar.
        margin-top: auto pushes sq-zone-input to the bottom of
        the sidebar's flex column; the gap between phase-indicator
        and input-area grows/shrinks with canvas height. */
-    #sq-zone-input   { flex-shrink: 0; margin-top: auto; }
+    #sq-zone-input   { flex-shrink: 0; margin-top: auto; position: relative; z-index: 50; }
+    #ct-stepper-external {
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      transform: translate(-6px, -50%);
+      background: #222;
+      border: none;
+      border-radius: 0 10px 10px 0;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      font-family: "futura-100";
+      z-index: 1;
+      box-shadow:
+        6px 0 10px -3px rgba(0, 0, 0, 0.5),
+        0 6px 10px -3px rgba(0, 0, 0, 0.5);
+    }
+    #ct-stepper-external.ct-step-enter {
+      animation: ct-step-slide-in calc(0.35s / var(--speed)) cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
+    }
+    #ct-stepper-external.ct-step-exit {
+      animation: ct-step-slide-out calc(0.25s / var(--speed)) ease-in forwards;
+    }
+    @keyframes ct-step-slide-in {
+      from { transform: translate(-100%, -50%); opacity: 0; }
+      to   { transform: translate(-6px, -50%); opacity: 1; }
+    }
+    @keyframes ct-step-slide-out {
+      from { transform: translate(-6px, -50%); opacity: 1; }
+      to   { transform: translate(-100%, -50%); opacity: 0; }
+    }
+    #ct-stepper-external .ct-ext-arrow {
+      background: none;
+      border: none;
+      color: #fba300;
+      font-size: 1.3rem;
+      cursor: pointer;
+      padding: 2px 6px;
+      line-height: 1;
+      font-family: inherit;
+    }
+    #ct-stepper-external .ct-ext-arrow:disabled { color: #555; cursor: not-allowed; }
+    #ct-stepper-external .ct-ext-value {
+      font-family: 'Bitcount Single';
+      font-size: 1.6rem;
+      color: #fff;
+      min-width: 1.5em;
+      text-align: center;
+      padding-left: 0.1em;
+    }
 
     /* Ranked-question row — content-tv (300px) left of board-wrapper */
     #ranked-row {
@@ -4381,13 +4435,11 @@
        margin cancels #scribble-container's 8px top padding so there's no
        gap between the scoreboard's bottom edge and the summary's top. */
     #scribble-summary {
-      display: flex; flex-direction: column; align-items: center; gap: 0;
-      width: 96%; max-width: 980px; margin-top: -2px;
-      background: rgba(26, 26, 26, 0.75);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      align-items: center; gap: 0;
+      width: 96%; max-width: 980px;
       border-radius: 0 0 10px 10px;
       overflow: hidden;
+      padding: 0;
     }
 
     /* Grid-overlay stack: all session blocks occupy the same cell so the
@@ -4451,23 +4503,723 @@
       0%   { transform: translateY(0); }
       100% { transform: translateY(-100%); }
     }
-    .scribble-summary-title {
-      font-family: "futura-100", sans-serif; font-weight: 700;
-      letter-spacing: 2px; text-transform: uppercase; font-size: 1.6rem;
-      color: #fba300;
-      width: 100%; box-sizing: border-box;
-      padding: 10px 12px 6px;
-      text-align: center;
-    }
     .scribble-pts { font-family: "Bitcount Single", monospace; font-size: 0.95rem; }
     .scribble-pts.red { color: #ff5555; }
     .scribble-pts.blue { color: #4c8cff; }
-    .scribble-summary-totals { display: flex; gap: 24px; justify-content: center; padding: 12px; width: 100%; box-sizing: border-box; border-top: 1px solid #2a2a2a; background: rgba(26, 26, 26, 0.7); }
-    .scribble-summary-team { text-align: center; }
-    .scribble-team-name { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
-    .scribble-team-name.red { color: #ff5555; }
-    .scribble-team-name.blue { color: #4c8cff; }
-    .scribble-team-score { font-family: "Bitcount Single", monospace; font-size: 2rem; color: #fba300; }
+
+    /* ─────────────────────────────────────────────────────────────────
+       Common Thread — 4×4 word grid module
+       ───────────────────────────────────────────────────────────────── */
+    #common-thread-container {
+      background: rgba(34, 34, 34, 0.9);
+      font-family: 'Bitcount Single';
+      font-weight: 300;
+      padding: 16px;
+      border-radius: 0 0 10px 10px;
+      text-transform: uppercase;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 0 0 auto;
+      max-width: 640px;
+      width: 100%;
+      min-width: 0;
+      margin: -2px auto 0 auto;
+      box-sizing: border-box;
+      transition: transform calc(0.5s / var(--speed)) ease;
+      --ct-card-face: #e8dcc0;
+    }
+    #common-thread-container.offscreen {
+      transform: translateY(-120%);
+    }
+    #common-thread-container.slide-in {
+      animation: board-slide-in-top calc(0.5s / var(--speed)) ease forwards;
+    }
+
+    /* Active clue banner — visible during guess phase */
+    .ct-clue-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 8px 14px;
+      background: #111;
+      border-radius: 6px;
+      font-family: 'Bitcount Single';
+      letter-spacing: 1px;
+      min-height: 50px;
+      max-height: 50px;
+      box-sizing: border-box;
+    }
+    .ct-clue-waiting {
+      display: inline-flex;
+      align-items: baseline;
+      font-size: 1rem;
+      color: #888;
+      letter-spacing: 2px;
+    }
+    .ct-clue-dots {
+      display: inline-block;
+      width: 3em;
+      text-align: left;
+      color: #fba300;
+      letter-spacing: 2px;
+      white-space: pre;
+    }
+    .ct-clue-label {
+      font-size: 0.75rem;
+      color: #888;
+      letter-spacing: 2px;
+    }
+    .ct-clue-word {
+      font-size: 1.6rem;
+      color: #fba300;
+      padding-left: 0.1em; /* Bitcount centering nudge */
+    }
+    .ct-clue-sep { color: #555; font-size: 1.2rem; }
+    .ct-clue-count {
+      font-size: 1.6rem;
+      color: #fff;
+      padding-left: 0.1em;
+    }
+    .ct-clue-remaining {
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-left: 12px;
+      letter-spacing: 1px;
+    }
+
+    /* 4×4 grid */
+    .ct-board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 80px);
+      gap: 8px;
+      perspective: 1200px;
+    }
+    .ct-card {
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      user-select: none;
+    }
+    .ct-card.flipped { transform: rotateY(180deg); }
+    .ct-card.locked  { cursor: not-allowed; }
+    .ct-card-face {
+      position: absolute;
+      inset: 0;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      backface-visibility: hidden;
+      box-shadow: 0 2px 0 rgba(0,0,0,0.4);
+      padding: 4px;
+      box-sizing: border-box;
+    }
+    .ct-card-face .ct-word {
+      font-size: 1rem;
+      line-height: 1.1;
+      letter-spacing: 1px;
+      padding-left: 0.1em;
+      font-family: 'futura-100', sans-serif;
+      font-weight: 500;
+    }
+    .ct-card-face .ct-value {
+      position: absolute;
+      bottom: 5px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      padding-left: 0.1em;
+    }
+    /* Guesser front — cream, value hidden */
+    .ct-card-front {
+      background: var(--ct-card-face);
+      color: #111;
+    }
+    .ct-card-front .ct-value { opacity: 0; }
+    /* Clue-giver view — tint fronts by team, reveal penalty values */
+    .ct-card.reveal-values .ct-card-front.team-red  { background: #f5c6c6; }
+    .ct-card.reveal-values .ct-card-front.team-blue { background: #c6d7f0; }
+    .ct-card.reveal-values .ct-card-front.penalty {
+      background: #555;
+      color: #fff;
+    }
+    .ct-card.reveal-values .ct-card-front.penalty .ct-value {
+      opacity: 1;
+      color: #fff;
+    }
+    /* Back faces — revealed state */
+    .ct-card-back {
+      transform: rotateY(180deg);
+      color: #fff;
+    }
+    .ct-card-back.team-red  { background: var(--red-bg); }
+    .ct-card-back.team-blue { background: var(--blue-bg); }
+    .ct-card-back.penalty   { background: #000; color: var(--red-text); }
+    .ct-card-back .ct-value { opacity: 1; }
+    .ct-card-back .ct-value.ct-value-pop {
+      animation: ct-value-pop 0.5s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes ct-value-pop {
+      0%   { transform: scale(0.2); opacity: 0; }
+      55%  { transform: scale(1.35); opacity: 1; }
+      75%  { transform: scale(0.95); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Footer stats — two team panels side-by-side */
+    .ct-footer {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .ct-team-stats {
+      background: #111;
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: grid;
+      grid-template-columns: auto 1fr 1fr 1fr;
+      align-items: center;
+      gap: 10px;
+    }
+    .ct-team-label {
+      font-size: 0.95rem;
+      letter-spacing: 2px;
+      padding-left: 0.1em;
+    }
+    .ct-team-stats.ct-red  .ct-team-label { color: var(--red-text); }
+    .ct-team-stats.ct-blue .ct-team-label { color: var(--blue-text); }
+
+    /* ============================================================
+       Shared round-summary framework — used by Common Thread today;
+       Secret Scribble, High Five, Price Points will adopt the same
+       class names. The outer panel + title + two content slots
+       (board-recap, scoring-recap) + totals row are universal;
+       each module fills the slots with its own ct- / ss- / etc.
+       inner content classes.
+       ============================================================ */
+    .round-summary {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: rgba(26, 26, 26, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 10px;
+      padding: 14px 14px 12px;
+      margin-top: -5px;
+      /* No internal fly-in animation — the host container slides down
+         around the summary as one unit (see ctShowSummary and friends). */
+    }
+    .round-summary-title {
+      font-family: 'futura-100', sans-serif;
+      font-weight: 500;
+      font-size: 1.2rem;
+      letter-spacing: 3px;
+      color: #fba300;
+      text-align: center;
+    }
+    /* Module-specific visual recap of the board state at round end
+       (CT: 4×4 card grid; SS: canvases; H5/PP: downsized board-wrapper). */
+    .round-summary-board-recap {
+      display: flex;
+      justify-content: center;
+      margin: 10px auto;
+    }
+    /* Module-specific scoring detail slot (CT: clue marquee; SS: per-team
+       scores once moved from canvases; H5/PP: guess history). Sensible
+       defaults — modules override via their own class alongside. */
+    .round-summary-scoring-recap {
+      position: relative;
+      background: #111;
+      border-radius: 6px;
+      padding: 6px 10px;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    .round-summary-totals {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding-top: 6px;
+    }
+    .round-summary-team { text-align: center; position: relative; }
+    .round-summary-team-name {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 3px;
+    }
+    .round-summary-team-name.round-summary-team-red  { color: var(--red-text); }
+    .round-summary-team-name.round-summary-team-blue { color: var(--blue-text); }
+    .round-summary-team-score {
+      font-family: "Bitcount Single", monospace;
+      font-size: 1.8rem;
+      color: #fba300;
+      transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .round-summary-team-score.round-summary-score-pulse {
+      color: #fff3b0;
+      text-shadow: 0 0 14px rgba(255, 210, 90, 0.85), 0 0 32px rgba(255, 170, 30, 0.55);
+      transform: scale(1.12);
+    }
+    /* Gem that slams down below a team score during the round-multiplier
+       count-up, pulses while the count runs, then fades. */
+    .round-summary-mult-gem {
+      position: absolute;
+      left: 50%;
+      top: 100%;
+      transform: translate(-50%, -40px) scale(0);
+      width: 40px;
+      height: 40px;
+      pointer-events: none;
+      z-index: 5;
+      opacity: 0;
+    }
+    .round-summary-mult-gem.fading {
+      animation: rs-gem-fade 0.5s ease forwards;
+    }
+    /* Value label picks up the tier color from --rt-gem-color (set via the
+       .rt-tier-{name} class). We intentionally skip the .rt-gem-{tier}
+       class here so the ::after glint sweep and sparkle layers don't kick
+       in — they flicker on first load in this context. */
+    .round-summary-mult-gem .rt-gem-value {
+      color: var(--rt-gem-color, #fff);
+    }
+    .round-summary-mult-gem::before,
+    .round-summary-mult-gem::after,
+    .round-summary-mult-gem .rt-gem-sparkles {
+      display: none !important;
+    }
+    @keyframes rs-gem-slam {
+      0%   { transform: translate(-50%, -60px) scale(0);    opacity: 0; }
+      55%  { transform: translate(-50%, 8px)   scale(1.15); opacity: 1; }
+      70%  { transform: translate(-50%, 0)     scale(0.95); opacity: 1; }
+      85%  { transform: translate(-50%, 4px)   scale(1.04); opacity: 1; }
+      100% { transform: translate(-50%, 4px)   scale(1);    opacity: 1; }
+    }
+    /* Per-tier pulse animations. Explicit rgba values avoid browser
+       flakiness when interpolating filter chains through CSS custom
+       properties / color-mix. */
+    .round-summary-mult-gem.rt-tier-emerald.slam {
+      animation:
+        rs-gem-slam 0.45s cubic-bezier(.34,1.56,.64,1) both,
+        rs-gem-pulse-emerald 0.9s ease-in-out 0.45s infinite;
+    }
+    .round-summary-mult-gem.rt-tier-sapphire.slam {
+      animation:
+        rs-gem-slam 0.45s cubic-bezier(.34,1.56,.64,1) both,
+        rs-gem-pulse-sapphire 0.9s ease-in-out 0.45s infinite;
+    }
+    .round-summary-mult-gem.rt-tier-amethyst.slam {
+      animation:
+        rs-gem-slam 0.45s cubic-bezier(.34,1.56,.64,1) both,
+        rs-gem-pulse-amethyst 0.9s ease-in-out 0.45s infinite;
+    }
+    .round-summary-mult-gem.rt-tier-topaz.slam {
+      animation:
+        rs-gem-slam 0.45s cubic-bezier(.34,1.56,.64,1) both,
+        rs-gem-pulse-topaz 0.9s ease-in-out 0.45s infinite;
+    }
+    @keyframes rs-gem-pulse-emerald {
+      0%, 100% { filter: drop-shadow(0 0 4px rgba(0, 169, 13, 0.6)); }
+      50%      { filter: drop-shadow(0 0 16px rgba(0, 169, 13, 1))
+                         drop-shadow(0 0 26px rgba(0, 169, 13, 0.8)); }
+    }
+    @keyframes rs-gem-pulse-sapphire {
+      0%, 100% { filter: drop-shadow(0 0 4px rgba(76, 140, 255, 0.6)); }
+      50%      { filter: drop-shadow(0 0 16px rgba(76, 140, 255, 1))
+                         drop-shadow(0 0 26px rgba(76, 140, 255, 0.8)); }
+    }
+    @keyframes rs-gem-pulse-amethyst {
+      0%, 100% { filter: drop-shadow(0 0 4px rgba(216, 3, 255, 0.6)); }
+      50%      { filter: drop-shadow(0 0 16px rgba(216, 3, 255, 1))
+                         drop-shadow(0 0 26px rgba(216, 3, 255, 0.8)); }
+    }
+    @keyframes rs-gem-pulse-topaz {
+      0%, 100% { filter: drop-shadow(0 0 4px rgba(254, 88, 21, 0.6)); }
+      50%      { filter: drop-shadow(0 0 16px rgba(254, 88, 21, 1))
+                         drop-shadow(0 0 26px rgba(254, 88, 21, 0.8)); }
+    }
+    @keyframes rs-gem-fade {
+      from { opacity: 1; transform: translate(-50%, 4px) scale(1); }
+      to   { opacity: 0; transform: translate(-50%, -12px) scale(0.6); }
+    }
+
+    /* ---------- Common Thread module-specific summary styling ---------- */
+    /* CT's board-recap slot hosts a downsized 4×4 card grid. */
+    .ct-board.ct-board-recap {
+      grid-template-rows: repeat(4, 40px);
+      gap: 4px;
+      width: 320px;
+      perspective: none;
+    }
+    .ct-board.ct-board-recap .ct-card { cursor: default; }
+    /* Revealed cards flip to back; unrevealed cards stay on front with
+       clue-giver tint so the player sees what was left on the board. */
+    .ct-board.ct-board-recap .ct-card.ct-sum-revealed { transform: rotateY(180deg); }
+    .ct-board.ct-board-recap .ct-card-face { box-shadow: 0 1px 0 rgba(0,0,0,0.4); padding: 2px 3px; }
+    /* Stack word upward on overflow so the value at the bottom is never
+       obscured. column-reverse + justify-content: flex-start pins the word
+       to the bottom of its flex box; wrapped lines grow upward. */
+    .ct-board.ct-board-recap .ct-card-face {
+      display: flex;
+      flex-direction: column-reverse;
+      justify-content: flex-start;
+      align-items: center;
+    }
+    .ct-board.ct-board-recap .ct-card-face .ct-word {
+      font-size: 0.45rem;
+      letter-spacing: 0.5px;
+      line-height: 1.05;
+      word-break: break-word;
+      max-width: 100%;
+      padding-bottom: 15px; /* clearance for the value pinned to bottom */
+    }
+    .ct-board.ct-board-recap .ct-card-face .ct-value { font-size: 0.45rem; bottom: 2px; }
+    /* CT's scoring-recap content: horizontally scrolling clue history. */
+    .ct-clue-box {
+      height: 140px;
+    }
+    .ct-clue-box::before,
+    .ct-clue-box::after {
+      content: "";
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 18px;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .ct-clue-box::before { left: 0;  background: linear-gradient(90deg, #111, transparent); }
+    .ct-clue-box::after  { right: 0; background: linear-gradient(90deg, transparent, #111); }
+    .ct-clue-track {
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      gap: 0;
+      will-change: transform;
+      height: 100%;
+    }
+    .ct-clue-track.scrolling {
+      animation: ct-clue-scroll linear infinite;
+    }
+    @keyframes ct-clue-scroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(var(--ct-scroll-distance, -50%)); }
+    }
+    .ct-clue-entry {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+      font-family: 'futura-100';
+      font-size: 0.85rem;
+      color: #ddd;
+      padding: 0 12px;
+      border-right: 1px solid rgba(255,255,255,0.15);
+      flex: 0 0 auto;
+      white-space: nowrap;
+    }
+    .ct-clue-entry:last-child { border-right: none; }
+    .ct-clue-head {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .ct-clue-head .ct-team-tag { font-weight: 700; }
+    .ct-clue-head .ct-team-tag.red  { color: var(--red-text); }
+    .ct-clue-head .ct-team-tag.blue { color: var(--blue-text); }
+    .ct-clue-head .ct-word-main { color: #fff; font-weight: 700; }
+    .ct-clue-head .ct-count-main { color: #888; }
+    .ct-clue-outcomes {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 2px;
+      font-size: 0.75rem;
+      color: #bbb;
+      text-transform: none;
+      max-height: 120px;
+    }
+    .ct-clue-outcome { display: inline-flex; align-items: baseline; gap: 3px; }
+    .ct-clue-outcome .ct-oc-pts.pos { color: #4caf50; }
+    .ct-clue-outcome .ct-oc-pts.neg { color: var(--red-text); }
+
+    /* ─────────────────────────────────────────────────────────────────
+       High Five / Survey (ranked-question) round summary.
+       Appears after the feud round ends. Reuses the shared
+       .round-summary-* framework; adds H5-specific inner styling for
+       the downsized board recap and the vertical guess history.
+       ───────────────────────────────────────────────────────────────── */
+    #h5-summary-container {
+      background: rgba(34, 34, 34, 0.9);
+      font-family: 'Bitcount Single';
+      font-weight: 300;
+      padding: 16px;
+      border-radius: 0 0 10px 10px;
+      text-transform: uppercase;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 0 0 auto;
+      max-width: 640px;
+      width: 100%;
+      min-width: 0;
+      margin: -2px auto 0 auto;
+      box-sizing: border-box;
+      transition: transform calc(0.5s / var(--speed)) ease;
+    }
+    #h5-summary-container.offscreen { transform: translateY(-120%); }
+    #h5-summary-container.slide-in {
+      animation: board-slide-in-top calc(0.5s / var(--speed)) ease forwards;
+    }
+
+    /* Two-column recap row: question (left) + downsized board (right). */
+    .h5-recap-row {
+      display: flex;
+      align-items: stretch;
+      gap: 12px;
+      width: 100%;
+    }
+    .h5-question-slot {
+      flex: 0 0 32%;
+      min-width: 0;
+      color: #fff;
+      font-family: 'futura-100';
+      font-weight: 500;
+      text-transform: uppercase;
+      font-style: italic;
+      font-size: 0.9rem;
+      line-height: 1.25;
+      padding: 8px 4px 0 4px;
+      display: flex;
+      align-items: center;
+    }
+    .h5-recap-col {
+      flex: 1 1 auto;
+      min-width: 0;
+      background: #111;
+      border-radius: 6px;
+      max-height: 205px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Board recap — downsized clone of #board-wrapper showing all tiles
+       revealed, in original answer order. Read-only visual. Everything
+       inside renders at 1rem to match the summary's compact scale. */
+    .h5-board-recap {
+      transform: scale(0.88);
+      transform-origin: top center;
+      width: 100%;
+      pointer-events: none;
+      margin-top: 10px;
+      /* Flex column so the answers region can flex to fill remaining
+         space after the pinned board-header, and so its own overflow
+         clipping works under min-height:0. */
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      flex: 1 1 auto;
+    }
+    /* Answers container inside the cloned board — the div that used to
+       be #board. Tagged in JS (the clone strips ids). Overflow is
+       clipped here so .board-header stays pinned above a scrolling
+       answers region. */
+    .h5-recap-answers {
+      overflow: hidden;
+      min-height: 0;
+      flex: 1 1 auto;
+    }
+    /* Track holding the .answer rows. When it overflows the answers
+       container, the .marquee class arms a boomerang animation —
+       scrolls down to the bottom, then reverses smoothly, looping.
+       `alternate` direction + ease-in-out achieves the no-reset feel. */
+    .h5-recap-answers-track.marquee {
+      animation: h5-board-marquee-scroll var(--h5-board-duration, 10s)
+                 ease-in-out infinite alternate;
+    }
+    @keyframes h5-board-marquee-scroll {
+      from { transform: translateY(0); }
+      to   { transform: translateY(var(--h5-board-distance, 0)); }
+    }
+    .h5-board-recap,
+    .h5-board-recap .tile-num,
+    .h5-board-recap .tile-text,
+    .h5-board-recap .tile-pts,
+    .h5-board-recap .tile-mult,
+    .h5-board-recap .tile-total {
+      font-size: 1rem;
+    }
+    .h5-board-recap #board-wrapper,
+    .h5-board-recap .board-wrapper {
+      margin: 0;
+    }
+    /* Shrink answer rows — at 1rem text the 40px default is wasteful.
+       Keep the row gap and tile padding untouched. */
+    .h5-board-recap .answer { height: 30px; margin: 5px 0;}
+    .h5-board-recap .board-footer,
+    .h5-board-recap .board-stats { display: none; }
+    .h5-board-recap .cat-mult-indicator { display: none !important; }
+
+    /* Guess history — vertical list of this round's guesses.
+       Excludes duplicate-rejected attempts (never pushed to
+       guessHistory). Outer = clip container with a fixed max-height;
+       inner .h5-guess-history-track is the scroll track that either
+       sits static or animates via the marquee pattern (same shape as
+       players-list-track). JS in showH5Summary measures the track and
+       toggles the .marquee class when content exceeds the clip. */
+    .h5-guess-history {
+      max-height: 150px;
+      overflow: hidden;
+      padding: 4px 2px;
+      font-family: 'futura-100';
+      font-weight: 500;
+      text-transform: none;
+      font-size: 0.7rem;
+    }
+    .h5-guess-history-track {
+      display: grid;
+      grid-template-columns: minmax(70px, max-content) 1fr minmax(40px, max-content);
+      row-gap: 4px;
+      column-gap: 8px;
+    }
+    .h5-guess-history-track.marquee {
+      animation: h5-guess-marquee-scroll var(--h5-guess-duration, 10s) linear infinite;
+    }
+    @keyframes h5-guess-marquee-scroll {
+      from { transform: translateY(0); }
+      to   { transform: translateY(var(--h5-guess-distance, -50%)); }
+    }
+    .h5-guess-entry {
+      display: contents;
+    }
+    .h5-guess-entry > span {
+      padding: 3px 6px;
+      background: rgba(255,255,255,0.03);
+      align-self: baseline;
+    }
+    .h5-guess-entry .h5-guess-player { font-weight: 700; border-radius: 4px 0 0 4px; }
+    .h5-guess-entry .h5-guess-result { border-radius: 0 4px 4px 0; }
+    .h5-guess-entry.h5-team-red  .h5-guess-player { color: var(--red-text); }
+    .h5-guess-entry.h5-team-blue .h5-guess-player { color: var(--blue-text); }
+    .h5-guess-entry .h5-guess-text { color: #ddd; flex: 1; font-style: italic; }
+    .h5-guess-entry .h5-guess-result { font-weight: 700; }
+    .h5-guess-entry .h5-guess-result.ok  { color: #4caf50; }
+    .h5-guess-entry .h5-guess-result.bad { color: var(--red-text); }
+    .h5-guess-history-empty {
+      color: #777;
+      text-align: center;
+      font-family: 'futura-100';
+      font-style: italic;
+      padding: 20px 0;
+    }
+
+    /* ----------------------------------------------------------------
+       Generic round-complete-card — reusable across modules.
+       A centered "card" that flies in, holds, flies out. Meant to be
+       styled further per use case (module-specific classes).
+       ---------------------------------------------------------------- */
+    .round-complete-card {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) translateY(120%);
+      opacity: 0;
+      min-width: 380px;
+      padding: 28px 36px;
+      background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      box-shadow: 0 18px 46px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      text-align: center;
+      z-index: 40;
+      pointer-events: none;
+    }
+    .round-complete-card .rcc-title {
+      font-family: "dazzle-unicase", serif;
+      font-size: 2.4rem;
+      letter-spacing: 2px;
+      color: #fba300;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .round-complete-card .rcc-subtitle {
+      font-family: "futura-100";
+      font-size: 1rem;
+      letter-spacing: 1.5px;
+      color: #ddd;
+      text-transform: uppercase;
+    }
+    .round-complete-card .rcc-subtitle .rcc-team { font-weight: 600; }
+    .round-complete-card.rcc-entering {
+      animation: rcc-fly-in 0.45s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    .round-complete-card.rcc-exiting {
+      animation: rcc-fly-out 0.4s ease-in both;
+    }
+    @keyframes rcc-fly-in {
+      0%   { transform: translate(-50%, -50%) translateY(120%); opacity: 0; }
+      100% { transform: translate(-50%, -50%) translateY(0);    opacity: 1; }
+    }
+    @keyframes rcc-fly-out {
+      0%   { transform: translate(-50%, -50%) translateY(0);     opacity: 1; }
+      100% { transform: translate(-50%, -50%) translateY(-120%); opacity: 0; }
+    }
+    .ct-stat { text-align: center; }
+    .ct-stat-label {
+      font-family: "futura-100";
+      font-size: 0.55rem;
+      color: #888;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .ct-stat-value {
+      font-size: 1.1rem;
+      color: #fff;
+      padding-left: 0.1em;
+      position: relative;
+    }
+
+    /* Compose-clue input-area stepper row */
+    .ct-stepper-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 4px 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .ct-step-arrow {
+      background: none;
+      border: none;
+      color: #fba300;
+      font-size: 1.4rem;
+      cursor: pointer;
+      padding: 4px 10px;
+      font-family: inherit;
+    }
+    .ct-step-arrow:disabled { color: #555; cursor: not-allowed; }
+    .ct-step-value {
+      min-width: 40px;
+      text-align: center;
+      font-family: 'Bitcount Single';
+      font-size: 1.8rem;
+      color: #fff;
+      padding-left: 0.1em;
+    }
 
     /* Board stats — streak, mult, category mult */
     .board-stats {
@@ -4591,7 +5343,7 @@
     }
 
     /* Input — evergreen neutral background; no team color on the container */
-    #input-area { width: 100%; border-radius: 10px 10px 0 0; border: 3px solid #333; border-bottom: none; overflow: hidden; box-sizing: border-box; font-family: "futura-100"; text-transform: uppercase; min-height: 300px; max-height: 300px; display: flex; flex-direction: column; background: #222; padding-bottom: 5px; margin-bottom: -2px; }
+    #input-area { width: 100%; border-radius: 10px 10px 0 0; border: 3px solid #333; border-bottom: none; overflow: hidden; box-sizing: border-box; font-family: "futura-100"; text-transform: uppercase; min-height: 300px; max-height: 300px; display: flex; flex-direction: column; background: #222; padding-bottom: 5px; margin-bottom: -2px; position: relative; z-index: 2; }
     #input-area.hidden { display: none; }
     #player-inventory { flex: 0 0 45px; height: 45px; margin-top: auto; border-radius: 50px; margin-left: 15px; margin-right: 15px; margin-bottom: 0; background: rgba(0,0,0,0.35); box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: flex-start; font-family: "futura-100"; font-size: 0.8rem; color: #cfcfcf; letter-spacing: 2px; }
     input[type="text"] { padding: 8px; font-size: 1rem; }
@@ -5520,7 +6272,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.13</div>
+  <div id="version-tag">v0.14</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -5735,6 +6487,11 @@
             <div id="endRound"></div>
             <div id="player-inventory" data-tip="player-inventory">PRIZES</div>
           </div>
+          <div id="ct-stepper-external" style="display:none;">
+            <button type="button" class="ct-ext-arrow" onclick="ctStepCount(1)">▲</button>
+            <div class="ct-ext-value" id="ct-ext-value">1</div>
+            <button type="button" class="ct-ext-arrow" onclick="ctStepCount(-1)">▼</button>
+          </div>
         </div>
 
       </div><!-- end #sidebar-zone -->
@@ -5835,6 +6592,34 @@
               <!-- speed boost indicator moved to #game-root level -->
             </div>
           </div><!-- end #ranked-row -->
+
+            <!-- High Five / Survey round summary. Hidden until the ranked-question round ends.
+                 Slides down from behind the scoreboard like #common-thread-container. -->
+            <div id="h5-summary-container" class="offscreen round-summary" style="display:none;">
+              <div class="round-summary-title">ROUND SUMMARY</div>
+              <div class="round-summary-board-recap">
+                <div class="h5-recap-row">
+                  <div class="h5-question-slot" id="h5-summary-question"></div>
+                  <div class="h5-recap-col">
+                    <div class="h5-board-recap" id="h5-summary-board"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="round-summary-scoring-recap">
+                <div class="h5-guess-history" id="h5-summary-guesses"></div>
+              </div>
+              <div class="round-summary-totals">
+                <div class="round-summary-team">
+                  <div class="round-summary-team-name round-summary-team-red" id="h5-summary-red-name">Red</div>
+                  <div class="round-summary-team-score" id="h5-summary-red-score">0</div>
+                </div>
+                <div class="round-summary-team">
+                  <div class="round-summary-team-name round-summary-team-blue" id="h5-summary-blue-name">Blue</div>
+                  <div class="round-summary-team-score" id="h5-summary-blue-score">0</div>
+                </div>
+              </div>
+            </div>
+
             <!-- Face-off Round container: two side-by-side battle boards. Hidden until face-off triggers. -->
             <div id="faceoff-container" style="display:none;">
               <div id="faceoff-battle-0" class="faceoff-side">
@@ -5956,10 +6741,66 @@
                 <div class="scribble-status" id="scribble-status"></div>
               </div>
               <!-- Round summary -->
-              <div id="scribble-summary" style="display:none;">
-                <div class="scribble-summary-title">Round Complete!</div>
+              <div id="scribble-summary" class="round-summary" style="display:none;">
+                <div class="round-summary-title">ROUND SUMMARY</div>
                 <div class="scribble-summary-sessions" id="scribble-summary-sessions"></div>
-                <div class="scribble-summary-totals" id="scribble-summary-totals"></div>
+                <div class="round-summary-totals" id="scribble-summary-totals">
+                  <div class="round-summary-team">
+                    <div class="round-summary-team-name round-summary-team-red" id="scribble-summary-red-name">Red Team</div>
+                    <div class="round-summary-team-score" id="scribble-summary-red-score">0</div>
+                  </div>
+                  <div class="round-summary-team">
+                    <div class="round-summary-team-name round-summary-team-blue" id="scribble-summary-blue-name">Blue Team</div>
+                    <div class="round-summary-team-score" id="scribble-summary-blue-score">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Common Thread container: Codenames-inspired 4x4 word grid.
+                 Hidden until common-thread round triggers. Slides down from
+                 behind the scoreboard like #board-wrapper. -->
+            <div id="common-thread-container" class="offscreen" style="display:none;">
+              <div class="ct-clue-banner" id="ct-clue-banner">
+                <span class="ct-clue-label">Clue</span>
+                <span class="ct-clue-word" id="ct-clue-word-display">—</span>
+                <span class="ct-clue-sep">·</span>
+                <span class="ct-clue-count" id="ct-clue-count-display">0</span>
+                <span class="ct-clue-remaining" id="ct-clue-remaining"></span>
+              </div>
+              <div class="ct-board" id="ct-board"></div>
+              <div class="ct-footer">
+                <div class="ct-team-stats ct-red">
+                  <div class="ct-team-label">Red</div>
+                  <div class="ct-stat"><div class="ct-stat-label">Streak</div><div class="ct-stat-value" id="ct-streak-red">0</div></div>
+                  <div class="ct-stat"><div class="ct-stat-label">Mult</div><div class="ct-stat-value" id="ct-mult-red">1.0x</div></div>
+                  <div class="ct-stat"><div class="ct-stat-label">Round</div><div class="ct-stat-value" id="ct-score-red">0</div></div>
+                </div>
+                <div class="ct-team-stats ct-blue">
+                  <div class="ct-team-label">Blue</div>
+                  <div class="ct-stat"><div class="ct-stat-label">Streak</div><div class="ct-stat-value" id="ct-streak-blue">0</div></div>
+                  <div class="ct-stat"><div class="ct-stat-label">Mult</div><div class="ct-stat-value" id="ct-mult-blue">1.0x</div></div>
+                  <div class="ct-stat"><div class="ct-stat-label">Round</div><div class="ct-stat-value" id="ct-score-blue">0</div></div>
+                </div>
+              </div>
+              <div id="ct-summary" class="round-summary" style="display:none;">
+                <div class="round-summary-title">ROUND SUMMARY</div>
+                <div class="round-summary-board-recap">
+                  <div class="ct-board ct-board-recap" id="ct-summary-board"></div>
+                </div>
+                <div class="round-summary-scoring-recap ct-clue-box" id="ct-summary-clues">
+                  <div class="ct-clue-track" id="ct-summary-clues-track"></div>
+                </div>
+                <div class="round-summary-totals">
+                  <div class="round-summary-team">
+                    <div class="round-summary-team-name round-summary-team-red" id="ct-summary-red-name">Red</div>
+                    <div class="round-summary-team-score" id="ct-summary-red-score">0</div>
+                  </div>
+                  <div class="round-summary-team">
+                    <div class="round-summary-team-name round-summary-team-blue" id="ct-summary-blue-name">Blue</div>
+                    <div class="round-summary-team-score" id="ct-summary-blue-score">0</div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -6523,6 +7364,30 @@
 
     initSlitSfx("slit.wav");
 
+    // ── Newclue SFX — Common Thread clue submit ───────────────
+    let newclueBuffer = null;
+    async function initNewclueSfx(url) {
+      try {
+        if (!tickAudioCtx) tickAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const response = await fetch(url);
+        const arrayBuf = await response.arrayBuffer();
+        newclueBuffer = await tickAudioCtx.decodeAudioData(arrayBuf);
+      } catch (e) {
+        console.warn("Newclue SFX failed to load:", e);
+      }
+    }
+    function playNewclue(volume = 0.5) {
+      if (!newclueBuffer || !tickAudioCtx || !soundEnabled) return;
+      const source = tickAudioCtx.createBufferSource();
+      source.buffer = newclueBuffer;
+      const gainNode = tickAudioCtx.createGain();
+      gainNode.gain.value = volume * (soundEnabled ? volumeMaster : 0) * volumeSfx;
+      source.connect(gainNode);
+      gainNode.connect(tickAudioCtx.destination);
+      source.start(0);
+    }
+    initNewclueSfx("newclue.wav");
+
     // ── Tap SFX — landing/impact sounds for fly-in/out elements ──
     let tap1Buffer = null;
     let tap2Buffer = null;
@@ -6602,6 +7467,27 @@
 
     initTvSfx("tvon.wav", "on");
     initTvSfx("powerdown.wav", "off");
+
+    // ── Round-bell SFX (plays when round-complete card displays) ──
+    let roundbellBuffer = null;
+    (async () => {
+      try {
+        if (!tickAudioCtx) tickAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const response = await fetch("roundbell.wav");
+        const arrayBuf = await response.arrayBuffer();
+        roundbellBuffer = await tickAudioCtx.decodeAudioData(arrayBuf);
+      } catch (e) { console.warn("roundbell SFX failed to load:", e); }
+    })();
+    function playRoundBell(volume = 0.7) {
+      if (!roundbellBuffer || !tickAudioCtx || !soundEnabled) return;
+      const source = tickAudioCtx.createBufferSource();
+      source.buffer = roundbellBuffer;
+      const gainNode = tickAudioCtx.createGain();
+      gainNode.gain.value = volume * (soundEnabled ? volumeMaster : 0) * volumeSfx;
+      source.connect(gainNode);
+      gainNode.connect(tickAudioCtx.destination);
+      source.start();
+    }
 
     /**
      * Emit sparkle particles from a badge's edge outward.
@@ -7269,19 +8155,20 @@
     // reduced 60% because the looped melody sits louder than the others.
     const MUSIC_TRACKS = {
       maintheme:   { src: "maintheme.mp3",   loop: true, vol: 0.3 },
-      roundselect: { src: "roundselect.mp3", loop: true, vol: 0.22 },
+      roundselect: { src: "roundpicker.mp3", loop: true, vol: 0.3 },
       faceoff:     { src: "faceoff.wav",     loop: true, vol: 0.3 },
+      spy:         { src: "spy.mp3",         loop: true, vol: 0.3 },
     };
     const PLAYLIST_TRACKS = [
       { src: "bossa.mp3",  vol: 0.3 },
       { src: "ranked.mp3", vol: 0.3 },
+      { src: "lofi1.wav",  vol: 0.3 },
+      { src: "lofi2.wav",  vol: 0.3 },
     ];
-    // Draw mode picks randomly between tracks each time setMusicMode('draw')
-    // is called — two sessions per round, so avoid repeating the same tune
-    // back-to-back. Last-played tracked so session 2 never repeats session 1.
+    // Scribble uses a single fixed track now (scribble.mp3). The draw-mode
+    // branch in setMusicMode keeps its name but points at this one entry.
     const DRAW_TRACKS = [
-      { src: "draw.mp3",  vol: 0.3 },
-      { src: "draw2.mp3", vol: 0.3 },
+      { src: "scribble.mp3", vol: 0.3 },
     ];
     let _lastDrawIdx = -1;
     const CROSSFADE_MS = 3500;
@@ -7934,6 +8821,9 @@ document.addEventListener('keydown', e => {
     // categoryMultiplier. Stacks multiplicatively with categoryMultiplier.
     let currentRoundMultiplier = 1;
     let _roundTypePickMultipliers = {}; // ephemeral: moduleKey → multiplier, used during picker display
+    let _prevRoundTypePicks = [];       // moduleKeys shown in the previous round's picker (host/local only).
+                                        // Any eligible module NOT in this list is guaranteed in the next picker,
+                                        // preventing a module from being unlucky-excluded multiple rounds in a row.
 
     let devMode = false;
     let devModeAllowedQuestions = null;
@@ -8082,6 +8972,23 @@ document.addEventListener('keydown', e => {
             hostProcessGuess(action.guess, action.uid);
           } else if (action.type === 'scribbleGuess') {
             scribbleEvaluateGuess(action.guess, action.uid);
+          } else if (action.type === 'ctClue') {
+            // Validate sender is the clue giver for the current team.
+            if (commonThreadState.active
+                && commonThreadState.phase === 'clue'
+                && commonThreadState.clueGiverUids[commonThreadState.currentTeam] === action.uid) {
+              ctSubmitClue(action.word, action.count);
+            }
+          } else if (action.type === 'ctGuess') {
+            // Validate sender is on the current team and NOT the clue giver.
+            const t = commonThreadState.currentTeam;
+            const roster = teamPlayerUids[t] || [];
+            if (commonThreadState.active
+                && commonThreadState.phase === 'guess'
+                && roster.includes(action.uid)
+                && commonThreadState.clueGiverUids[t] !== action.uid) {
+              ctOnCardClick(action.idx, { trusted: true });
+            }
           }
           _prevSnapshot = data;
           return; // Host's state write will trigger a new snapshot for reconciliation
@@ -8177,6 +9084,22 @@ document.addEventListener('keydown', e => {
       // Receive scribble scoring updates from host
       if (scribbleState.active && data.scribbleScoring) {
         scribbleState.sessionScoring = data.scribbleScoring;
+      }
+
+      // Receive common-thread state from host (non-host applies + re-renders).
+      // Only apply when the module is live — stale snapshots after round-end
+      // would re-trigger ctUpdateInputArea and clobber headers/input-row for
+      // subsequent rounds.
+      if (!isHost && data.commonThreadState) {
+        const ctp = data.commonThreadState.phase;
+        // Skip only 'idle' (stale default). Allow 'round-end' through so
+        // non-host triggers ctShowSummary; ctApplySyncedState routes
+        // round-end to the summary path instead of ctUpdateInputArea,
+        // which prevents the input-header clobber that originally
+        // motivated blocking this phase.
+        if (ctp && ctp !== 'idle') {
+          ctApplySyncedState(data.commonThreadState);
+        }
       }
 
       // Apply new solve event (received from host after a correct guess)
@@ -8330,6 +9253,21 @@ document.addEventListener('keydown', e => {
             void _ss.offsetWidth;
             _ss.classList.add("ss-fly-out");
           }
+          const _ctc = document.getElementById("common-thread-container");
+          const _ctcExiting = _ctc &&
+            _ctc.style.display !== "none" &&
+            !_ctc.classList.contains("offscreen");
+          let _ctcPromise = null;
+          if (_ctcExiting) {
+            _ctc.classList.remove("slide-in");
+            _ctc.style.transform = "translateY(0)";
+            void _ctc.offsetWidth;
+            _ctc.style.transform = "";
+            _ctc.classList.add("offscreen");
+            _ctcPromise = new Promise(r =>
+              setTimeout(r, 520 / (gameSpeed || 1))
+            );
+          }
           (async () => {
             await Promise.all([
               (async () => {
@@ -8338,6 +9276,7 @@ document.addEventListener('keydown', e => {
                 }
               })(),
               _ssExiting ? anim.done(_ss) : Promise.resolve(),
+              _ctcPromise,
             ]);
             resetModuleCanvas();
             initRoundState();
@@ -8598,6 +9537,24 @@ document.addEventListener('keydown', e => {
               void _ss.offsetWidth;
               _ss.classList.add("ss-fly-out");
             }
+            // Common Thread container slide-up if CT was the prior round.
+            const _ctc = document.getElementById("common-thread-container");
+            const _ctcExiting = _ctc &&
+              _ctc.style.display !== "none" &&
+              !_ctc.classList.contains("offscreen");
+            let _ctcPromise = null;
+            if (_ctcExiting) {
+              _ctc.classList.remove("slide-in");
+              _ctc.style.transform = "translateY(0)";
+              void _ctc.offsetWidth;
+              _ctc.style.transform = "";
+              _ctc.classList.add("offscreen");
+              _ctcPromise = new Promise(r =>
+                setTimeout(r, 520 / (gameSpeed || 1))
+              );
+            }
+            // H5/Survey summary slide-up if the prior round was a ranked question.
+            const _h5Promise = hideH5Summary();
             (async () => {
               await Promise.all([
                 (async () => {
@@ -8606,6 +9563,8 @@ document.addEventListener('keydown', e => {
                   }
                 })(),
                 _ssExiting ? anim.done(_ss) : Promise.resolve(),
+                _ctcPromise,
+                _h5Promise,
               ]);
               // 2s buffer so non-host isn't racing the round-type picker.
               // Skip on round 1 — nothing is exiting at game start.
@@ -8627,6 +9586,11 @@ document.addEventListener('keydown', e => {
             (async () => {
               await _rtsIntroPromise;
               enterScribbleRound(handleModuleComplete);
+            })();
+          } else if (data.selectedRoundType === 'common-thread') {
+            (async () => {
+              await _rtsIntroPromise;
+              enterCommonThreadRound(handleModuleComplete);
             })();
           } else {
             setMusicMode('playlist');
@@ -8776,6 +9740,12 @@ document.addEventListener('keydown', e => {
             if (data.lastResult?.outcome === 'module-complete') {
               window._lastRoundWasModule = true;
             }
+            // Pick up the host's deferred H5 scoring snapshot so our local
+            // summary countup matches (raw → cat-mult → round-mult, gem slam).
+            // Fold is applied locally after the animation completes.
+            if (data.h5Scoring && !_h5Scoring) {
+              _h5Scoring = { ...data.h5Scoring };
+            }
             renderRoundResult(data);
           }
           break;
@@ -8807,6 +9777,11 @@ document.addEventListener('keydown', e => {
           _readyPlayersMap = {};
           if (_readyCountdownInterval) { clearInterval(_readyCountdownInterval); _readyCountdownInterval = null; }
           _readyCountdownEnd = null;
+          // Tear down module state so the next game's module rounds start
+          // from defaults rather than inheriting stale cards / active=true
+          // from the prior game.
+          resetCommonThreadState();
+          resetScribbleState();
           // Tear down face-off DOM if it was showing
           resetFaceoffState();
           {
@@ -8998,7 +9973,7 @@ document.addEventListener('keydown', e => {
       // Same principle as the subtext skip below — data-ia-mode is the
       // single source of truth for module-owned states.
       const iaMode = inputArea?.getAttribute('data-ia-mode');
-      const moduleOwnsInput = iaMode === 'disabled' || iaMode === 'action';
+      const moduleOwnsInput = iaMode === 'disabled' || iaMode === 'action' || iaMode === 'compose-clue';
 
       if (guessInput && !moduleOwnsInput) {
         // Don't re-enable input if a scoring animation is in progress —
@@ -9036,7 +10011,7 @@ document.addEventListener('keydown', e => {
       // picker's "Waiting on Player X..." / scribble "Drawing" / Ready Up),
       // that text owns the subtext and must not be clobbered.
       const iaModeRoleUI = inputArea?.getAttribute('data-ia-mode');
-      const skipSubtextOverride = iaModeRoleUI === 'disabled' || iaModeRoleUI === 'action';
+      const skipSubtextOverride = iaModeRoleUI === 'disabled' || iaModeRoleUI === 'action' || iaModeRoleUI === 'compose-clue';
       if (!isActive && !skipSubtextOverride) {
         const activePlayer = findPlayerName(activeUid);
         if (activePlayer) {
@@ -9478,28 +10453,115 @@ document.addEventListener('keydown', e => {
       const guessInput = document.getElementById('guess');
       const submitBtn = inputRow.querySelector('button.action-btn');
 
+      // If the input-row was previously overridden (e.g. compose-clue rebuilt
+      // it with column layout + custom markup), restore canonical form before
+      // applying guess/disabled modes.
+      const restoreCanonicalInputRow = () => {
+        if (!inputRow.querySelector('#guess')) {
+          inputRow.innerHTML = `<input type="text" id="guess" placeholder="${inputPlaceholder}" onkeydown="if(event.key==='Enter'&&!_scoringInProgress)submitGuess()" data-tip="guess-input" /><button class="btn action-btn" onclick="submitGuess()" data-tip="submit-guess">Submit</button>`;
+        }
+        inputRow.style.flexDirection = '';
+        inputRow.style.gap = '';
+      };
+
+      // Default: hide the Common Thread external quantity stepper via a
+      // slide-out animation. The compose-clue case re-shows it.
+      {
+        const extStep = document.getElementById('ct-stepper-external');
+        if (extStep && mode !== 'compose-clue' && extStep.style.display !== 'none') {
+          extStep.classList.remove('ct-step-enter');
+          extStep.classList.add('ct-step-exit');
+          const el = extStep;
+          setTimeout(() => {
+            // Only hide if still in exit state — a new compose-clue entry
+            // during the animation window should cancel the hide.
+            if (el.classList.contains('ct-step-exit')) {
+              el.style.display = 'none';
+              el.classList.remove('ct-step-exit');
+            }
+          }, 260);
+        }
+      }
+
       switch (mode) {
         case 'guess':
+          restoreCanonicalInputRow();
           inputRow.style.display = '';
           actionRow.style.display = 'none';
-          if (guessInput) {
-            guessInput.disabled = false;
-            guessInput.value = '';
-            guessInput.placeholder = inputPlaceholder;
+          {
+            const gi = document.getElementById('guess');
+            const sb = inputRow.querySelector('button.action-btn');
+            if (gi) { gi.disabled = false; gi.value = ''; gi.placeholder = inputPlaceholder; }
+            if (sb) { sb.disabled = false; sb.style.display = ''; }
           }
-          if (submitBtn) { submitBtn.disabled = false; submitBtn.style.display = ''; }
           break;
         case 'disabled':
+          restoreCanonicalInputRow();
           inputRow.style.display = '';
           actionRow.style.display = 'none';
-          if (guessInput) {
-            guessInput.disabled = true;
-            guessInput.value = '';
-            guessInput.placeholder = inputPlaceholder;
+          {
+            const gi = document.getElementById('guess');
+            const sb = inputRow.querySelector('button.action-btn');
+            if (gi) { gi.disabled = true; gi.value = ''; gi.placeholder = inputPlaceholder; }
+            if (sb) { sb.disabled = true; }
           }
-          if (submitBtn) { submitBtn.disabled = true; }
           break;
+        case 'compose-clue': {
+          // Common Thread clue-giver composition form: word input on top,
+          // submit button bottom. Count stepper lives OUTSIDE #input-area
+          // (see #ct-stepper-external) so it doesn't steal vertical space.
+          inputRow.style.display = '';
+          actionRow.style.display = 'none';
+          // Reset compose count to 1 for each fresh clue phase.
+          // activeClue is null during clue-composition; once submitted it's set
+          // and the UI moves out of compose-clue mode, so this only fires at
+          // the start of a new clue phase — not on every re-render.
+          if (commonThreadState && !commonThreadState.activeClue) {
+            commonThreadState.composeCount = 1;
+          }
+          const count = commonThreadState?.composeCount || 1;
+          if (!inputRow.querySelector('#ct-clue-word')) {
+            inputRow.innerHTML = `
+              <input type="text" id="ct-clue-word" placeholder="One-word clue" autocomplete="off"
+                     onkeydown="if(event.key==='Enter')ctSubmitClueFromInput()" style="width:100%;" />
+              <button class="btn action-btn" onclick="ctSubmitClueFromInput()" style="width:100%;">Submit Clue</button>
+            `;
+            inputRow.style.flexDirection = 'column';
+            inputRow.style.gap = '6px';
+            setTimeout(() => {
+              const w = document.getElementById('ct-clue-word');
+              if (w) w.focus();
+            }, 0);
+          }
+          // Clamp count to remaining cards for the current team so clue
+          // giver can't promise more than exists on the board.
+          const maxForTeam = Math.max(1, ctRemainingForTeam(commonThreadState.currentTeam));
+          if (commonThreadState.composeCount > maxForTeam) commonThreadState.composeCount = maxForTeam;
+          const clampedCount = commonThreadState.composeCount || 1;
+          const extStep = document.getElementById('ct-stepper-external');
+          if (extStep) {
+            const wasHidden = extStep.style.display === 'none' || !extStep.style.display;
+            extStep.classList.remove('ct-step-exit');
+            extStep.style.display = 'flex';
+            if (wasHidden) {
+              extStep.classList.remove('ct-step-enter');
+              // force reflow so animation replays
+              void extStep.offsetWidth;
+              extStep.classList.add('ct-step-enter');
+            }
+            const arrows = extStep.querySelectorAll('.ct-ext-arrow');
+            if (arrows[0]) arrows[0].disabled = clampedCount >= maxForTeam;
+            if (arrows[1]) arrows[1].disabled = clampedCount <= 1;
+          }
+          const extVal = document.getElementById('ct-ext-value');
+          if (extVal) extVal.textContent = clampedCount;
+          break;
+        }
         case 'action':
+          // Restore canonical input-row layout if a compose-clue round
+          // previously overrode it.
+          inputRow.style.flexDirection = '';
+          inputRow.style.gap = '';
           inputRow.style.display = 'none';
           // Empty string (not 'block') so the base .turn-action-row CSS
           // (display: flex; width: 100%) governs layout — block would
@@ -9623,6 +10685,8 @@ document.addEventListener('keydown', e => {
       roundNumber = 0; playerIndex = [0, 0];
       startingTeam = Math.floor(Math.random() * 2);
       resetFaceoffState();
+      resetCommonThreadState();
+      _prevRoundTypePicks = [];
 
       teamNames[0] = document.getElementById("redTeamName").value.trim() || "Red Team";
       teamNames[1] = document.getElementById("blueTeamName").value.trim() || "Blue Team";
@@ -9741,6 +10805,11 @@ document.addEventListener('keydown', e => {
         picker.innerHTML = "";
       }
 
+      // Ranked-row: restore flex display (h5RunRoundEndSequence sets display:none
+      // to collapse it out of flow so the H5 summary sits flush under the scoreboard).
+      const rankedRow = document.getElementById("ranked-row");
+      if (rankedRow) rankedRow.style.display = "";
+
       // Board-wrapper: hidden in flex flow (display:none), off-canvas via class
       const bw = document.getElementById("board-wrapper");
       if (bw) {
@@ -9762,6 +10831,31 @@ document.addEventListener('keydown', e => {
       // internal state machine for inter-module cleanliness.
       const scribble = document.getElementById("scribble-container");
       if (scribble) scribble.style.display = "none";
+
+      // Common Thread container
+      const ctEl = document.getElementById("common-thread-container");
+      if (ctEl) {
+        ctEl.style.display = "none";
+        ctEl.classList.remove("slide-in");
+        ctEl.classList.add("offscreen");
+        const board = document.getElementById("ct-board");
+        if (board) board.innerHTML = "";
+        const banner = document.getElementById("ct-clue-banner");
+        if (banner) banner.style.display = "none";
+      }
+
+      // H5 / Survey round summary
+      const h5sum = document.getElementById("h5-summary-container");
+      if (h5sum) {
+        h5sum.style.display = "none";
+        h5sum.classList.remove("slide-in");
+        h5sum.classList.add("offscreen");
+        const recap = document.getElementById("h5-summary-board");
+        if (recap) recap.innerHTML = "";
+        const hist = document.getElementById("h5-summary-guesses");
+        if (hist) hist.innerHTML = "";
+      }
+      _h5SummaryActive = false;
       ["scribble-word-select", "scribble-game", "scribble-summary"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = "none";
@@ -9960,6 +11054,35 @@ document.addEventListener('keydown', e => {
         scribbleSummaryExitPromise = anim.done(scribbleSummaryExit);
       }
 
+      // Common Thread container — if the prior round was CT, the container
+      // is still visible (holding the summary panel). Slide it up off-screen
+      // in parallel with the other exit animations.
+      const ctContainerExit = document.getElementById("common-thread-container");
+      const ctContainerExiting =
+        ctContainerExit &&
+        ctContainerExit.style.display !== "none" &&
+        !ctContainerExit.classList.contains("offscreen");
+      let ctContainerExitPromise = null;
+      if (ctContainerExiting) {
+        ctContainerExit.classList.remove("slide-in");
+        // Pin an explicit start state so the transition has a defined
+        // "from" value (removing .slide-in drops forwards-fill, base rule
+        // has no transform → computed `none`, which doesn't transition
+        // cleanly to the .offscreen translate in all browsers).
+        ctContainerExit.style.transform = "translateY(0)";
+        void ctContainerExit.offsetWidth;
+        ctContainerExit.style.transform = "";
+        ctContainerExit.classList.add("offscreen");
+        ctContainerExitPromise = new Promise(r =>
+          setTimeout(r, 520 / (gameSpeed || 1))
+        );
+      }
+
+      // H5/Survey summary — if the prior round was a ranked question, the
+      // summary panel is still visible. Slide it up in parallel with the
+      // other exit animations.
+      const h5SummaryExitPromise = hideH5Summary();
+
       await Promise.all([
         // Content-tv tv-off (collapses in place, replaces old slide-out-left).
         // Input-area stays put — it's the persistent home base.
@@ -9969,6 +11092,8 @@ document.addEventListener('keydown', e => {
           }
         })(),
         scribbleSummaryExitPromise,
+        ctContainerExitPromise,
+        h5SummaryExitPromise,
       ]);
 
       // 2-second breathing buffer before the next phase kicks off. Gives
@@ -10063,7 +11188,47 @@ document.addEventListener('keydown', e => {
       // #module-canvas (NOT the sidebar). Keeps the input-area home base visible
       // in the sidebar during round selection. This is a placeholder layout;
       // round-type selection is slated for a richer visual redesign.
-      const moduleKeys = syncedData?.roundTypePicks || Object.keys(ROUND_MODULES);
+      // Pick 3 modules for the picker. Host/local samples from ROUND_MODULES;
+      // non-host reads the host's selection from syncedData.
+      // Guarantee rule: any eligible module NOT shown in the previous round is
+      // included this round — prevents a module from being unlucky-excluded
+      // for multiple rounds in a row.
+      const PICKER_SIZE = 3;
+      let moduleKeys;
+      if (syncedData?.roundTypePicks) {
+        moduleKeys = syncedData.roundTypePicks;
+      } else {
+        const allKeys = Object.keys(ROUND_MODULES);
+        const eligible = allKeys.filter(k => minTeamSize >= (ROUND_MODULES[k].minPlayersPerTeam || 1));
+        if (eligible.length <= PICKER_SIZE) {
+          moduleKeys = eligible.slice();
+        } else {
+          const guaranteed = eligible.filter(k => !_prevRoundTypePicks.includes(k));
+          const pool = eligible.filter(k => _prevRoundTypePicks.includes(k));
+          // Shuffle pool, fill remaining slots
+          for (let i = pool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pool[i], pool[j]] = [pool[j], pool[i]];
+          }
+          const needed = Math.max(0, PICKER_SIZE - guaranteed.length);
+          moduleKeys = guaranteed.concat(pool.slice(0, needed));
+          // If guaranteed exceeds PICKER_SIZE (e.g. 2+ modules skipped last
+          // round — can happen if eligibility changed), trim randomly.
+          if (moduleKeys.length > PICKER_SIZE) {
+            for (let i = moduleKeys.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [moduleKeys[i], moduleKeys[j]] = [moduleKeys[j], moduleKeys[i]];
+            }
+            moduleKeys = moduleKeys.slice(0, PICKER_SIZE);
+          }
+          // Final shuffle so guaranteed modules aren't always leftmost
+          for (let i = moduleKeys.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [moduleKeys[i], moduleKeys[j]] = [moduleKeys[j], moduleKeys[i]];
+          }
+        }
+        _prevRoundTypePicks = moduleKeys.slice();
+      }
 
       // Round-multiplier rolls per card. Host/local rolls fresh. Non-host
       // reads from synced data. Latched on pick via hostProcessRoundTypePick.
@@ -10284,6 +11449,11 @@ document.addEventListener('keydown', e => {
           hostProcessRoundTypePick_survey();
         } else if (moduleKey === 'secret-scribble') {
           enterScribbleRound(handleModuleComplete);
+        } else if (moduleKey === 'common-thread') {
+          // Don't bounce through 'playlist' — enterCommonThreadRound sets
+          // 'spy' directly, matching the scribble pattern. The intermediate
+          // playlist call caused a 1.5–2s flash of default bg music.
+          enterCommonThreadRound(handleModuleComplete);
         }
       })();
     }
@@ -10422,25 +11592,38 @@ document.addEventListener('keydown', e => {
         enter(onComplete) { enterScribbleRound(onComplete); },
         reset() { resetScribbleState({ keepUsedWords: true }); },
       },
+      'common-thread': {
+        label: 'Common Thread',
+        description: 'Give a one-word clue. Your team picks cards that match.',
+        colorClass: 'cat-geography',
+        minPlayersPerTeam: 2,
+        intro: { title: 'COMMON\nTHREAD', subtitle: 'Clue, guess, avoid', accent: '#00c000' },
+        enter(onComplete) { enterCommonThreadRound(onComplete); },
+        reset() { resetCommonThreadState(); },
+      },
     };
 
     // Called by non-feud modules when they finish. Folds scores into the
     // main teamScores, resets the module, restores normal game UI, and
     // triggers the ready-up / next-round flow.
-    function handleModuleComplete({ redScore, blueScore }) {
+    function handleModuleComplete({ redScore, blueScore, multiplierApplied }) {
       // Mark that a module just completed — used to guard feud-style
       // endRound() from wiping the input-area turn-body when the
       // round-result phase syncs from the host.
       window._lastRoundWasModule = true;
       setMusicMode('playlist');
 
-      // Round multiplier applies to BOTH teams' totals in scribble since
-      // it's not winner-take-all. Category multiplier doesn't apply here
-      // (scribble doesn't have a category). Applied before folding into
-      // teamScores so the synced value is the final post-multiplier total.
+      // Round multiplier applies to BOTH teams' totals in modules since
+      // they're not winner-take-all. Category multiplier doesn't apply
+      // here. Applied before folding into teamScores so the synced value
+      // is the final post-multiplier total. Modules that animate the
+      // multiplier themselves (Common Thread) pass multiplierApplied:true
+      // so we don't double-apply.
       const rm = currentRoundMultiplier || 1;
-      redScore = Math.round(redScore * rm);
-      blueScore = Math.round(blueScore * rm);
+      if (!multiplierApplied) {
+        redScore = Math.round(redScore * rm);
+        blueScore = Math.round(blueScore * rm);
+      }
       if (rm > 1) hidePhaseGem();
 
       // Only the host folds scores into teamScores and syncs. Non-hosts
@@ -10458,16 +11641,25 @@ document.addEventListener('keydown', e => {
 
       restoreMainGameUI();
 
+      const completedRoundType = currentRoundType;
       const mod = ROUND_MODULES[currentRoundType];
       if (mod && mod.reset) mod.reset();
       currentRoundType = null;
+
+      // Host nulls the module's Firestore field so stale snapshots don't
+      // re-drive non-host UI in subsequent rounds.
+      if (isMultiplayer && isHost) {
+        if (completedRoundType === 'common-thread') {
+          syncState({ commonThreadState: null });
+        }
+      }
 
       // Build end-of-round message
       const winnerName = teamNames[scoringTeam] || (scoringTeam === 0 ? "Red" : "Blue");
       const winnerClass = scoringTeam === 0 ? "red" : "blue";
       const pts = scoringTeam === 0 ? redScore : blueScore;
-      const resultMsg = `<span class="${winnerClass}">${winnerName}</span> won with ${pts} pts!`;
-      const phaseMsg = `<span class="${winnerClass}">${winnerName}</span> won the round with ${pts} points!`;
+      const resultMsg = `<span class="${winnerClass}">${winnerName}</span> won ${pts} points!`;
+      const phaseMsg = `<span class="${winnerClass}">${winnerName}</span> won ${pts} points!`;
 
       // Render via the canonical round-result renderer. Host builds the
       // same Firestore-shaped payload it's about to sync, then both paths
@@ -10599,6 +11791,1381 @@ document.addEventListener('keydown', e => {
       // handleModuleComplete BEFORE Ready Up consensus, but the summary
       // needs to stay visible through Ready Up. The container is hidden
       // in advanceRound() when the next round actually starts.
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Common Thread — state + module
+    // ─────────────────────────────────────────────────────────────────────
+
+    const CT_VALUE_TEMPLATE = [
+      ...Array(6).fill({ type: "team-red",  points:  100, team: 0 }),
+      ...Array(6).fill({ type: "team-blue", points:  100, team: 1 }),
+      ...Array(2).fill({ type: "penalty",   points: -100 }),
+      ...Array(2).fill({ type: "penalty",   points: -200 }),
+    ];
+
+    let commonThreadState = {
+      active: false,
+      phase: "idle",            // idle | clue | guess | round-end
+      cards: [],                // { word, type, points, team, revealed, revealedInfo }
+      scores: [0, 0],
+      streaks: [0, 0],
+      multipliers: [1.0, 1.0],
+      currentTeam: 0,
+      clueGiverUids: [null, null],  // UID per team — locked at module entry
+      activeClue: null,         // { word, count, team }
+      picksRemaining: 0,
+      basePoints: 100,
+      clueHistory: [],          // { team, word, count, outcomes:[...] } — for recap
+      composeCount: 1,
+      onComplete: null,
+    };
+
+    function resetCommonThreadState() {
+      ctResetStatsTracking();
+      // NOTE: do NOT hide the summary here. handleModuleComplete calls
+      // mod.reset() → this function at the 6.5s hold; tearing down the
+      // summary before Ready Up cuts the panel short. Summary persists
+      // until the next CT round entry (explicit ctHideSummary) or the
+      // module-canvas teardown in resetModuleCanvas.
+      commonThreadState = {
+        active: false,
+        phase: "idle",
+        cards: [],
+        scores: [0, 0],
+        streaks: [0, 0],
+        multipliers: [1.0, 1.0],
+        currentTeam: 0,
+        clueGiverUids: [null, null],
+        activeClue: null,
+        picksRemaining: 0,
+        basePoints: 100,
+        clueHistory: [],
+        composeCount: 1,
+        onComplete: null,
+      };
+    }
+
+    function amICtClueGiver() {
+      if (!isMultiplayer) return true; // local hot-seat — single device
+      const t = commonThreadState.currentTeam;
+      return myUid && commonThreadState.clueGiverUids[t] === myUid;
+    }
+
+    function amICtOnCurrentTeam() {
+      if (!isMultiplayer) return true;
+      const t = commonThreadState.currentTeam;
+      return myUid && teamPlayerUids[t]?.includes(myUid);
+    }
+
+    function amICtCardPicker() {
+      // During guess phase, anyone on the current team EXCEPT the clue giver
+      // can click cards (Codenames-style). In local mode, same device does
+      // everything.
+      if (!isMultiplayer) return true;
+      return amICtOnCurrentTeam() && !amICtClueGiver();
+    }
+
+    // Am I a clue giver for EITHER team (role-based view: clue givers always
+    // see color-coded card backs, guessers never do).
+    function amICtAnyClueGiver() {
+      if (!isMultiplayer) return true; // local hot-seat shows everything
+      if (!myUid) return false;
+      return commonThreadState.clueGiverUids[0] === myUid
+          || commonThreadState.clueGiverUids[1] === myUid;
+    }
+
+    // Which team index am I on? Returns -1 if unknown (spectator / local mode).
+    function myCtTeamIdx() {
+      if (!isMultiplayer) return commonThreadState.currentTeam;
+      if (!myUid) return -1;
+      if (teamPlayerUids[0]?.includes(myUid)) return 0;
+      if (teamPlayerUids[1]?.includes(myUid)) return 1;
+      return -1;
+    }
+
+    // Host-only: serialize and sync common-thread state to Firestore so all
+    // clients see the same cards / scores / phase. Call after every state
+    // mutation on the host side.
+    function ctSyncState() {
+      if (!isMultiplayer || !isHost) return;
+      const s = commonThreadState;
+      const payload = {
+        phase: s.phase,
+        cards: s.cards,
+        scores: s.scores,
+        streaks: s.streaks,
+        multipliers: s.multipliers,
+        currentTeam: s.currentTeam,
+        clueGiverUids: s.clueGiverUids,
+        activeClue: s.activeClue,
+        picksRemaining: s.picksRemaining,
+        basePoints: s.basePoints,
+        clueHistory: s.clueHistory,
+      };
+      syncState({ commonThreadState: payload });
+    }
+
+    // Called from reconcileLocalState when commonThreadState changes in a
+    // snapshot. Merges synced fields into local state and re-renders.
+    function ctApplySyncedState(payload) {
+      if (!payload) return;
+      const s = commonThreadState;
+
+      // Snapshot previous state for sound-triggering diffs.
+      const prevActiveClueKey = s.activeClue ? `${s.activeClue.team}|${s.activeClue.word}|${s.activeClue.count}` : "";
+      const prevRevealed = (s.cards || []).map(c => !!c.revealed);
+
+      s.phase = payload.phase ?? s.phase;
+      s.cards = payload.cards ?? s.cards;
+      s.scores = payload.scores ?? s.scores;
+      s.streaks = payload.streaks ?? s.streaks;
+      s.multipliers = payload.multipliers ?? s.multipliers;
+      s.currentTeam = payload.currentTeam ?? s.currentTeam;
+      s.clueGiverUids = payload.clueGiverUids ?? s.clueGiverUids;
+      s.activeClue = payload.activeClue ?? null;
+      s.picksRemaining = payload.picksRemaining ?? 0;
+      s.basePoints = payload.basePoints ?? 100;
+      s.clueHistory = payload.clueHistory ?? [];
+      s.active = s.phase !== "idle" && s.phase !== "round-end";
+
+      // New clue activated → play clue SFX.
+      const nextActiveClueKey = s.activeClue ? `${s.activeClue.team}|${s.activeClue.word}|${s.activeClue.count}` : "";
+      if (nextActiveClueKey && nextActiveClueKey !== prevActiveClueKey) {
+        playNewclue();
+      }
+
+      // Newly revealed cards → slit + delayed correct/wrong. Infer
+      // correct-vs-wrong via the clueHistory entry that captured the pick.
+      // Guesser team = clueHistory entry's team (clue giver's team = their
+      // own guessing team in Codenames-style play).
+      let anyNewReveal = false;
+      (s.cards || []).forEach((card, i) => {
+        const wasRevealed = prevRevealed[i];
+        if (!wasRevealed && card.revealed) {
+          anyNewReveal = true;
+          let correct = false;
+          if (card.type !== "penalty") {
+            // Find outcome referencing this card's word (latest match).
+            outer: for (let h = s.clueHistory.length - 1; h >= 0; h--) {
+              const entry = s.clueHistory[h];
+              const ocs = entry.outcomes || [];
+              for (let o = ocs.length - 1; o >= 0; o--) {
+                if (ocs[o].word === card.word) {
+                  correct = ocs[o].kind === "own";
+                  break outer;
+                }
+              }
+            }
+          }
+          playSlit(1, 0.5);
+          setTimeout(() => playSound(correct ? sfxCorrect : sfxWrong), 800);
+        }
+      });
+
+      const renderOpts = anyNewReveal ? { delayStats: 1400 } : undefined;
+      if (s.phase === "round-end") {
+        ctRender(renderOpts);
+        ctShowSummary();
+      } else {
+        ctRender(renderOpts);
+        ctUpdateInputArea();
+      }
+    }
+
+    function ctPickWords() {
+      // Flatten all scribble word tiers into one pool; pick 16 unique uppercase.
+      const pool = [
+        ...(SCRIBBLE_WORD_BANK.easy || []),
+        ...(SCRIBBLE_WORD_BANK.medium || []),
+        ...(SCRIBBLE_WORD_BANK.hard || []),
+      ].map(w => String(w).toUpperCase());
+      const unique = Array.from(new Set(pool));
+      // Fisher-Yates
+      for (let i = unique.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [unique[i], unique[j]] = [unique[j], unique[i]];
+      }
+      return unique.slice(0, 16);
+    }
+
+    function ctBuildCards() {
+      const words = ctPickWords();
+      const values = CT_VALUE_TEMPLATE.slice();
+      for (let i = values.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [values[i], values[j]] = [values[j], values[i]];
+      }
+      commonThreadState.cards = words.map((word, i) => ({
+        word,
+        type: values[i].type,
+        points: values[i].points,
+        team: values[i].team,
+        revealed: false,
+        revealedInfo: null,
+      }));
+    }
+
+    function ctTeamAccent(t) { return t === 0 ? "var(--red-text)" : "var(--blue-text)"; }
+    function ctTeamName(t) { return teamNames?.[t] || (t === 0 ? "Red" : "Blue"); }
+    function ctClueGiverName(t) {
+      const uid = commonThreadState.clueGiverUids?.[t];
+      if (!uid) return ctTeamName(t);
+      if (!isMultiplayer) return ctTeamName(t);
+      const roster = teamPlayerUids?.[t] || [];
+      const idx = roster.indexOf(uid);
+      if (idx >= 0 && teamPlayers?.[t]?.[idx]) return teamPlayers[t][idx];
+      return ctTeamName(t);
+    }
+
+    function ctFormatRevealedValue(card) {
+      const info = card.revealedInfo;
+      if (!info) return card.type === "penalty" ? String(card.points) : "";
+      const sign = info.base >= 0 ? "+" : "";
+      const baseStr = sign + info.base;
+      if (info.mult && info.mult > 1) return `${baseStr} x ${info.mult.toFixed(1)}`;
+      return baseStr;
+    }
+
+    function ctBuildCardEl(card, i) {
+      const el = document.createElement("div");
+      el.className = "ct-card";
+      el.dataset.index = i;
+      const frontValue = card.type === "penalty" ? ((card.points > 0 ? "+" : "") + card.points) : "";
+      const typeClass = card.type;
+      el.innerHTML = `
+        <div class="ct-card-face ct-card-front ${typeClass}"><div class="ct-word">${card.word}</div><div class="ct-value">${frontValue}</div></div>
+        <div class="ct-card-face ct-card-back ${typeClass}"><div class="ct-word">${card.word}</div><div class="ct-value"></div></div>
+      `;
+      el.addEventListener("click", () => ctOnCardClick(i));
+      return el;
+    }
+
+    function ctRenderBoard() {
+      const boardEl = document.getElementById("ct-board");
+      if (!boardEl) return;
+      const cards = commonThreadState.cards;
+      // Role-based view: clue givers (on either team) always see color-coded
+      // card backs; guessers never do. Local hot-seat returns true from
+      // amICtAnyClueGiver() so same device sees everything.
+      const revealAll = amICtAnyClueGiver();
+      if (boardEl.children.length !== cards.length) {
+        boardEl.innerHTML = "";
+        cards.forEach((card, i) => boardEl.appendChild(ctBuildCardEl(card, i)));
+      }
+      cards.forEach((card, i) => {
+        const el = boardEl.children[i];
+        if (!el) return;
+        const wasFlipped = el.classList.contains("flipped");
+        el.classList.toggle("flipped", card.revealed);
+        el.classList.toggle("reveal-values", revealAll && !card.revealed);
+        const locked = card.revealed || commonThreadState.phase !== "guess";
+        el.classList.toggle("locked", locked);
+        const backValEl = el.querySelector(".ct-card-back .ct-value");
+        if (backValEl) {
+          backValEl.textContent = ctFormatRevealedValue(card);
+          backValEl.style.color = card.revealedInfo?.valueColor || "";
+          // Pop the value once the 600ms flip completes.
+          if (card.revealed && !wasFlipped) {
+            backValEl.classList.remove("ct-value-pop");
+            setTimeout(() => {
+              void backValEl.offsetWidth;
+              backValEl.classList.add("ct-value-pop");
+            }, 600);
+          }
+        }
+      });
+    }
+
+    let _ctPrevStats = null;
+    function ctResetStatsTracking() {
+      _ctPrevStats = { streaks: [0, 0], multipliers: [1, 1], scores: [0, 0] };
+    }
+    function ctRenderStats() {
+      const s = commonThreadState;
+      if (!_ctPrevStats) ctResetStatsTracking();
+      const prev = _ctPrevStats;
+      for (let t = 0; t < 2; t++) {
+        const suffix = t === 0 ? "red" : "blue";
+        const streakEl = document.getElementById(`ct-streak-${suffix}`);
+        const multEl   = document.getElementById(`ct-mult-${suffix}`);
+        const scoreEl  = document.getElementById(`ct-score-${suffix}`);
+
+        const nextStreak = s.streaks[t];
+        const nextMult   = s.multipliers[t];
+        const nextScore  = s.scores[t];
+
+        // Always write the current value to the DOM so a fresh round that
+        // happens to have the same initial values as the prev snapshot (all
+        // zeros, mult 1.0) doesn't leave stale textContent from a prior CT
+        // round. Animation + chevron remain gated on actual change.
+        if (streakEl) {
+          if (nextStreak !== prev.streaks[t]) {
+            animateCountUp(streakEl, prev.streaks[t], nextStreak, { tick: true });
+            flashChevron(streakEl, nextStreak > prev.streaks[t] ? "up" : "down");
+          } else {
+            streakEl.textContent = String(nextStreak);
+          }
+        }
+        if (multEl) {
+          if (Math.abs(nextMult - prev.multipliers[t]) > 0.0001) {
+            animateCountUp(multEl, prev.multipliers[t], nextMult, { suffix: "x", decimals: 1, tick: true });
+            flashChevron(multEl, nextMult > prev.multipliers[t] ? "up" : "down");
+          } else {
+            multEl.textContent = `${nextMult.toFixed(1)}x`;
+          }
+        }
+        if (scoreEl) {
+          if (nextScore !== prev.scores[t]) {
+            animateCountUp(scoreEl, prev.scores[t], nextScore, { tick: true });
+          } else {
+            scoreEl.textContent = String(nextScore);
+          }
+        }
+      }
+      prev.streaks     = [s.streaks[0], s.streaks[1]];
+      prev.multipliers = [s.multipliers[0], s.multipliers[1]];
+      prev.scores      = [s.scores[0], s.scores[1]];
+    }
+
+    function ctRenderClueBanner() {
+      const banner = document.getElementById("ct-clue-banner");
+      if (!banner) return;
+      const s = commonThreadState;
+      // Only show the clue banner during active play (clue compose or guess).
+      // At round-end (or any other phase) use visibility:hidden so the layout
+      // space is preserved — otherwise the board visibly jumps up on the
+      // frame the banner vanishes (most obvious on non-host summary paths).
+      if (s.phase !== "guess" && s.phase !== "clue") {
+        stopCtWaitingDots();
+        banner.innerHTML = '';
+        banner.style.display = 'flex';
+        banner.style.visibility = 'hidden';
+        return;
+      }
+      banner.style.display = "flex";
+      banner.style.visibility = "visible";
+      if (s.phase === "guess" && s.activeClue) {
+        stopCtWaitingDots();
+        const teamColor = s.activeClue.team === 0 ? "var(--red-text)" : "var(--blue-text)";
+        banner.innerHTML = `
+          <span class="ct-clue-label">Clue</span>
+          <span class="ct-clue-word" id="ct-clue-word-display" style="color:${teamColor}">${s.activeClue.word}</span>
+          <span class="ct-clue-sep">·</span>
+          <span class="ct-clue-count" id="ct-clue-count-display">${s.activeClue.count}</span>
+          <span class="ct-clue-remaining" id="ct-clue-remaining">· ${s.picksRemaining} left</span>
+        `;
+      } else if (s.phase === "clue") {
+        const nm = ctClueGiverName(s.currentTeam).toUpperCase();
+        banner.innerHTML = `
+          <span class="ct-clue-waiting">WAITING FOR ${nm}'S CLUE<span class="ct-clue-dots" id="ct-clue-dots"></span></span>
+        `;
+        startCtWaitingDots();
+      } else {
+        stopCtWaitingDots();
+        banner.innerHTML = '';
+      }
+    }
+
+    let _ctDotsInterval = null;
+    function startCtWaitingDots() {
+      stopCtWaitingDots();
+      let n = 0;
+      _ctDotsInterval = setInterval(() => {
+        const el = document.getElementById('ct-clue-dots');
+        if (!el) { stopCtWaitingDots(); return; }
+        n = (n + 1) % 4;
+        el.textContent = '.'.repeat(n);
+      }, 400);
+    }
+    function stopCtWaitingDots() {
+      if (_ctDotsInterval) { clearInterval(_ctDotsInterval); _ctDotsInterval = null; }
+    }
+
+    let _ctStatsTimer = null;
+    function ctRender(opts) {
+      ctRenderBoard();
+      if (opts && opts.delayStats) {
+        if (_ctStatsTimer) clearTimeout(_ctStatsTimer);
+        _ctStatsTimer = setTimeout(() => {
+          _ctStatsTimer = null;
+          ctRenderStats();
+        }, opts.delayStats);
+      } else {
+        if (_ctStatsTimer) { clearTimeout(_ctStatsTimer); _ctStatsTimer = null; }
+        ctRenderStats();
+      }
+      ctRenderClueBanner();
+    }
+
+    function ctUpdateInputArea() {
+      const s = commonThreadState;
+      const currentTeam = s.currentTeam;
+      const currentTeamName = ctTeamName(currentTeam);
+
+      // Identify my role and team.
+      const myTeam = myCtTeamIdx();
+      const iAmAnyClueGiver = amICtAnyClueGiver();
+      const iAmCurrentClueGiver = amICtClueGiver();
+      const iAmOnCurrentTeam = amICtOnCurrentTeam();
+      const iAmCardPicker = amICtCardPicker();
+
+      // Header: "[my team] CLUE GIVER" or "[my team] GUESSER".
+      // Fall back to the current team if we can't place the viewer (spectator /
+      // pre-role state).
+      const headerTeamIdx = myTeam >= 0 ? myTeam : currentTeam;
+      const headerTeamName = ctTeamName(headerTeamIdx);
+      const headerTeamClr = headerTeamIdx === 0 ? 'red' : 'blue';
+      const roleLabel = iAmAnyClueGiver ? 'CLUE GIVER' : 'GUESSER';
+      const roleTip = iAmAnyClueGiver ? 'ct-role-clue-giver' : 'ct-role-guesser';
+      const header = `<span data-tip="${roleTip}"><span class="${headerTeamClr}">${headerTeamName}</span> ${roleLabel}</span>`;
+
+      // Subtext: active prompt for the actor, "Your team is picking" when my
+      // team is active but I'm not, "Waiting for [team]" for the other team,
+      // or the pre-planning nudge for the opposing clue giver.
+      let subtext;
+      if (s.phase === "clue") {
+        if (iAmCurrentClueGiver) {
+          subtext = "Compose your clue";
+        } else if (iAmOnCurrentTeam) {
+          // Teammate of the active clue giver — personalize with player name.
+          subtext = `Waiting for ${ctClueGiverName(currentTeam)}'s clue...`;
+        } else if (iAmAnyClueGiver) {
+          // Opposing team's clue giver.
+          subtext = "Think up your next clue while you wait!";
+        } else {
+          subtext = `Waiting for ${currentTeamName}`;
+        }
+      } else { // "guess"
+        if (iAmCardPicker) {
+          subtext = `Make your picks · ${s.picksRemaining} left`;
+        } else if (iAmOnCurrentTeam) {
+          // Clue giver on the active team watching their team pick.
+          subtext = "Your team is picking";
+        } else if (iAmAnyClueGiver) {
+          subtext = "Think up your next clue while you wait!";
+        } else {
+          subtext = `Waiting for ${currentTeamName}`;
+        }
+      }
+
+      // Input mode: compose form for the active clue giver during clue phase,
+      // everything else disabled (pickers click cards on the board itself).
+      const useCompose = s.phase === "clue" && iAmCurrentClueGiver;
+      let placeholder = 'Waiting...';
+      if (useCompose) placeholder = 'Enter a one-word clue';
+      else if (iAmCardPicker) placeholder = 'Click cards on the board';
+      setInputAreaMode({
+        mode: useCompose ? 'compose-clue' : 'disabled',
+        header,
+        subtext,
+        inputPlaceholder: placeholder,
+        teamColor: headerTeamIdx,
+      });
+    }
+
+    function ctSubmitClue(word, count) {
+      const s = commonThreadState;
+      word = (word || "").trim();
+      count = parseInt(count, 10);
+      if (!word || !count || count < 1) return { ok: false, reason: "Enter a clue + count" };
+      // Non-host: write pendingAction and let host process.
+      if (isMultiplayer && !isHost) {
+        // Validate locally so we can surface rejection without a round-trip.
+        const norm = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const cnorm = norm(word);
+        for (const card of s.cards) {
+          const bnorm = norm(card.word);
+          if (!cnorm || !bnorm) continue;
+          if (cnorm.includes(bnorm) || bnorm.includes(cnorm)) {
+            return { ok: false, reason: "Clue overlaps a board word" };
+          }
+        }
+        syncState({ pendingAction: { type: 'ctClue', word, count, uid: myUid } });
+        playNewclue();
+        return { ok: true };
+      }
+      // Strict validation: reject if clue is substring or superstring of any
+      // board word (case-insensitive). Catches plurals and compound words.
+      const norm = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const cnorm = norm(word);
+      for (const card of s.cards) {
+        const bnorm = norm(card.word);
+        if (!cnorm || !bnorm) continue;
+        if (cnorm.includes(bnorm) || bnorm.includes(cnorm)) {
+          return { ok: false, reason: "Clue overlaps a board word" };
+        }
+      }
+      s.activeClue = { word, count, team: s.currentTeam };
+      s.picksRemaining = count;
+      s.basePoints = count * 100;
+      s.phase = "guess";
+      s.clueHistory.push({ team: s.currentTeam, word, count, outcomes: [] });
+      playNewclue();
+      ctRender();
+      ctUpdateInputArea();
+      ctSyncState();
+      return { ok: true };
+    }
+
+    function ctResetStreak(team) {
+      commonThreadState.streaks[team] = 0;
+      commonThreadState.multipliers[team] = 1.0;
+    }
+
+    function ctCurrentClueEntry() {
+      const h = commonThreadState.clueHistory;
+      return h.length ? h[h.length - 1] : null;
+    }
+
+    function ctOnCardClick(idx, opts) {
+      const trusted = opts && opts.trusted;
+      const s = commonThreadState;
+      if (s.phase !== "guess") return;
+      const card = s.cards[idx];
+      if (!card || card.revealed) return;
+      if (!trusted) {
+        // Only card pickers (current team, non-clue-giver) may click.
+        if (!amICtCardPicker()) return;
+        // Non-host: route through pendingAction and wait for host's sync.
+        if (isMultiplayer && !isHost) {
+          syncState({ pendingAction: { type: 'ctGuess', idx, uid: myUid } });
+          return;
+        }
+      }
+      card.revealed = true;
+      const guessingTeam = s.currentTeam;
+      const entry = ctCurrentClueEntry();
+
+      if (card.type === "penalty") {
+        playSlit(1, 0.5);
+        setTimeout(() => playSound(sfxWrong), 800);
+        s.scores[guessingTeam] += card.points;
+        card.revealedInfo = {
+          base: card.points, mult: 1, actual: card.points,
+          valueColor: ctTeamAccent(guessingTeam),
+        };
+        ctResetStreak(guessingTeam);
+        entry?.outcomes.push({ word: card.word, kind: "penalty", points: card.points });
+        ctRender({ delayStats: 1400 });
+        if (ctCheckRoundEnd()) { ctSyncState(); return; }
+        ctEndTurn();
+      } else if (card.team === guessingTeam) {
+        playSlit(1, 0.5);
+        setTimeout(() => playSound(sfxCorrect), 800);
+        const mult = s.multipliers[guessingTeam];
+        const base = s.basePoints;
+        const earned = Math.round(base * mult);
+        s.scores[guessingTeam] += earned;
+        card.revealedInfo = { base, mult, actual: earned };
+        s.streaks[guessingTeam] += 1;
+        s.multipliers[guessingTeam] = 1 + s.streaks[guessingTeam] * 0.2;
+        s.picksRemaining -= 1;
+        entry?.outcomes.push({ word: card.word, kind: "own", points: earned, mult });
+        ctRender({ delayStats: 1400 });
+        if (ctCheckRoundEnd()) { ctSyncState(); return; }
+        if (s.picksRemaining <= 0) ctEndTurn();
+        else { ctUpdateInputArea(); ctSyncState(); }
+      } else {
+        // Opposing team card — flat base points to the opposing team.
+        playSlit(1, 0.5);
+        setTimeout(() => playSound(sfxWrong), 800);
+        const gift = s.basePoints;
+        s.scores[card.team] += gift;
+        card.revealedInfo = { base: gift, mult: 1, actual: gift };
+        ctResetStreak(guessingTeam);
+        entry?.outcomes.push({ word: card.word, kind: "opp", points: gift, toTeam: card.team });
+        ctRender({ delayStats: 1400 });
+        if (ctCheckRoundEnd()) { ctSyncState(); return; }
+        ctEndTurn();
+      }
+    }
+
+    function ctCheckRoundEnd() {
+      // Round ends when either team has all 6 of its cards revealed.
+      const s = commonThreadState;
+      for (let t = 0; t < 2; t++) {
+        const total = s.cards.filter(c => c.team === t).length;
+        const revealed = s.cards.filter(c => c.team === t && c.revealed).length;
+        if (total > 0 && revealed >= total) {
+          ctFinishRound();
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function ctEndTurn() {
+      const s = commonThreadState;
+      s.currentTeam = 1 - s.currentTeam;
+      s.phase = "clue";
+      s.activeClue = null;
+      s.picksRemaining = 0;
+      s.composeCount = 1;
+      ctRender();
+      ctUpdateInputArea();
+      ctSyncState();
+    }
+
+    async function ctFinishRound() {
+      const s = commonThreadState;
+      s.phase = "round-end";
+      stopCtWaitingDots();
+      const onComplete = s.onComplete;
+      ctRender();
+      // Sync round-end so non-host's ctApplySyncedState flips active=false.
+      // Without this, non-host's last CT snapshot was 'guess'/'clue' with
+      // active=true; handleModuleComplete's later commonThreadState:null sync
+      // is skipped by the falsy guard in reconcile, leaving non-host's active
+      // stuck true with stale cards into the next game's CT round.
+      ctSyncState();
+      // Animation-driven summary (count scores up from 0, then apply round
+      // multiplier team-by-team). Runs on host; non-host runs the same path
+      // through ctApplySyncedState → ctShowSummary.
+      await ctShowSummary();
+      const rm = currentRoundMultiplier || 1;
+      const finalRed  = rm > 1 ? Math.round(s.scores[0] * rm) : s.scores[0];
+      const finalBlue = rm > 1 ? Math.round(s.scores[1] * rm) : s.scores[1];
+      await new Promise(r => setTimeout(r, 1500));
+      s.active = false;
+      if (typeof setMusicMode === "function") setMusicMode('playlist');
+      if (typeof onComplete === "function") {
+        onComplete({ redScore: finalRed, blueScore: finalBlue, multiplierApplied: true });
+      }
+    }
+
+    // Generic round-complete card. Flies in from below, holds, flies out.
+     // Reusable across modules — pass title/subtitle/extraClass for variants.
+     // Mounts into #module-canvas so it's clipped to the canvas area.
+    async function showRoundCompleteCard({ title, subtitle, holdMs = 2000, extraClass = "" } = {}) {
+      const host = document.getElementById("module-canvas") || document.getElementById("game-root");
+      if (!host) return;
+      // Pre-warm the custom fonts used by the card so the first frame doesn't
+      // flash with the serif fallback while the font resolves.
+      if (document.fonts && document.fonts.load) {
+        try {
+          await Promise.all([
+            document.fonts.load('2.4rem "dazzle-unicase"'),
+            document.fonts.load('1rem "futura-100"'),
+          ]);
+        } catch (e) { /* ignore */ }
+      }
+      const card = document.createElement("div");
+      card.className = "round-complete-card" + (extraClass ? (" " + extraClass) : "");
+      card.innerHTML =
+        `<div class="rcc-title">${title || "ROUND COMPLETE"}</div>` +
+        (subtitle ? `<div class="rcc-subtitle">${subtitle}</div>` : "");
+      host.appendChild(card);
+      // Force reflow so the entrance animation starts cleanly.
+      void card.offsetWidth;
+      card.classList.add("rcc-entering");
+      try { playRoundBell(); } catch (e) { /* noop */ }
+      await new Promise(r => card.addEventListener("animationend", r, { once: true }));
+      // Hold
+      await new Promise(r => setTimeout(r, holdMs));
+      // Exit
+      card.classList.remove("rcc-entering");
+      void card.offsetWidth;
+      card.classList.add("rcc-exiting");
+      await new Promise(r => card.addEventListener("animationend", r, { once: true }));
+      card.remove();
+    }
+
+    // Which team triggered the round end (the one that revealed all 6 of its cards).
+    function ctWinningTeam() {
+      const s = commonThreadState;
+      for (let t = 0; t < 2; t++) {
+        const total = s.cards.filter(c => c.team === t).length;
+        const revealed = s.cards.filter(c => c.team === t && c.revealed).length;
+        if (total > 0 && revealed >= total) return t;
+      }
+      return null;
+    }
+
+    async function ctShowSummary() {
+      const s = commonThreadState;
+      const summary = document.getElementById("ct-summary");
+      const board   = document.getElementById("ct-board");
+      const banner  = document.getElementById("ct-clue-banner");
+      const footer  = document.querySelector("#common-thread-container .ct-footer");
+      if (!summary) return;
+      // Guard against duplicate animation runs (e.g. non-host receives a
+      // second round-end snapshot). Cleared in ctHideSummary.
+      if (summary.dataset.ctAnimated === "1") return;
+      summary.dataset.ctAnimated = "1";
+
+      // 1. Let the final card's reveal + scoring countup finish playing before
+      //    tearing down the board. ctOnCardClick schedules stats at +1400ms;
+      //    an extra ~700ms covers the stat countup itself.
+      await new Promise(r => setTimeout(r, 2100));
+
+      // 2. "ROUND COMPLETE — <team> revealed all cards" card, in/hold/out.
+      const winner = ctWinningTeam();
+      const teamName = winner !== null ? ctTeamName(winner).toUpperCase() : "";
+      const teamTag  = winner === 0 ? "red" : (winner === 1 ? "blue" : "");
+      const subtitle = winner !== null
+        ? `<span class="rcc-team ct-team-tag ${teamTag}">${teamName}</span> REVEALED ALL CARDS`
+        : "";
+      await showRoundCompleteCard({
+        title: "ROUND COMPLETE",
+        subtitle,
+        extraClass: "rcc-ct",
+      });
+
+      // Slide the entire common-thread-container up off screen, swap its
+      // contents (board/banner/footer → summary) while hidden, then slide
+      // it back down. The whole panel moves as one unit.
+      const container = document.getElementById("common-thread-container");
+      if (container) {
+        // Ensure the container currently has no stale slide-in class (would
+        // win specificity against .offscreen's transform).
+        container.classList.remove("slide-in");
+        // Pin explicit start so the transition has a defined "from" value.
+        container.style.transform = "translateY(0)";
+        void container.offsetWidth;
+        container.style.transform = "";
+        container.classList.add("offscreen");
+        // Wait for the transform transition to settle (0.5s / speed).
+        await new Promise(r => setTimeout(r, 520 / (gameSpeed || 1)));
+      }
+
+      if (board)  board.style.display  = "none";
+      if (banner) banner.style.display = "none";
+      if (footer) footer.style.display = "none";
+
+      // Build end-of-round card grid. Revealed cards flip to their back
+      // face (final value). Unrevealed cards stay on the front with the
+      // clue-giver tint so the summary reads like "here's what everyone
+      // saw, plus what was left on the board."
+      const grid = document.getElementById("ct-summary-board");
+      if (grid) {
+        grid.innerHTML = "";
+        s.cards.forEach((card, i) => {
+          const el = ctBuildCardEl(card, i);
+          el.style.cursor = "default";
+          if (card.revealed) {
+            el.classList.add("ct-sum-revealed");
+            const backVal = el.querySelector(".ct-card-back .ct-value");
+            if (backVal) {
+              backVal.textContent = ctFormatRevealedValue(card);
+              backVal.style.color = card.revealedInfo?.valueColor || "";
+            }
+          } else {
+            // Mimic clue-giver front-face tinting for cards that were
+            // never revealed during the round.
+            el.classList.add("reveal-values");
+          }
+          grid.appendChild(el);
+        });
+      }
+
+      // Build clue history marquee content.
+      const track = document.getElementById("ct-summary-clues-track");
+      if (track) {
+        track.classList.remove("scrolling");
+        track.style.removeProperty("--ct-scroll-distance");
+        track.style.animationDuration = "";
+        track.innerHTML = "";
+        const entries = s.clueHistory || [];
+        if (!entries.length) {
+          track.innerHTML = `<div class="ct-clue-entry" style="color:#888;text-align:center;">No clues submitted.</div>`;
+        } else {
+          const buildHtml = (entry) => {
+            const tag = entry.team === 0 ? "red" : "blue";
+            const teamName = ctTeamName(entry.team);
+            const outcomesHtml = (entry.outcomes || []).map(oc => {
+              let label = "";
+              let pts = 0;
+              if (oc.kind === "own") {
+                label = `✓ ${oc.word}`;
+                pts = oc.points;
+              } else if (oc.kind === "opp") {
+                label = `✗ ${oc.word}`;
+                pts = -Math.abs(oc.points);
+              } else if (oc.kind === "penalty") {
+                label = `☠ ${oc.word}`;
+                pts = oc.points;
+              } else {
+                label = oc.word || "";
+                pts = oc.points || 0;
+              }
+              const cls = pts >= 0 ? "pos" : "neg";
+              const sign = pts > 0 ? "+" : (pts < 0 ? "" : "");
+              const multStr = (oc.mult && oc.mult > 1) ? ` ×${oc.mult.toFixed(1)}` : "";
+              return `<div class="ct-clue-outcome"><span class="ct-oc-label">${label}</span><span class="ct-oc-pts ${cls}">${sign}${pts}${multStr}</span></div>`;
+            }).join("");
+            const noOutcomes = !(entry.outcomes && entry.outcomes.length);
+            return `
+              <div class="ct-clue-entry">
+                <div class="ct-clue-head">
+                  <span class="ct-team-tag ${tag}">${teamName}</span>
+                  <span class="ct-word-main">"${entry.word}"</span>
+                  <span class="ct-count-main">· ${entry.count}</span>
+                </div>
+                <div class="ct-clue-outcomes">${noOutcomes ? '<div class="ct-clue-outcome" style="color:#777;">No picks</div>' : outcomesHtml}</div>
+              </div>
+            `;
+          };
+          const listHtml = entries.map(buildHtml).join("");
+          track.innerHTML = listHtml;
+          // Horizontal marquee: duplicate when content overflows for seamless loop.
+          requestAnimationFrame(() => {
+            const host = document.getElementById("ct-summary-clues");
+            if (!host || !track) return;
+            if (track.scrollWidth > host.clientWidth + 4) {
+              const firstWidth = track.scrollWidth;
+              track.innerHTML = listHtml + listHtml;
+              const distance = firstWidth;
+              track.style.setProperty("--ct-scroll-distance", `-${distance}px`);
+              const secPerPx = 0.03;
+              const dur = Math.max(10, distance * secPerPx);
+              track.style.animationDuration = `${dur}s`;
+              track.classList.add("scrolling");
+            }
+          });
+        }
+      }
+
+      // Totals. Scores initialize to 0 and count up in two phases:
+      // (1) raw round score countup (both teams in parallel), then
+      // (2) round-multiplier countup, applied left team first, then right.
+      // Final fold into teamScores happens in handleModuleComplete AFTER
+      // this animation completes (see ctFinishRound).
+      const rn = document.getElementById("ct-summary-red-name");
+      const bn = document.getElementById("ct-summary-blue-name");
+      const rs = document.getElementById("ct-summary-red-score");
+      const bs = document.getElementById("ct-summary-blue-score");
+      if (rn) rn.textContent = ctTeamName(0);
+      if (bn) bn.textContent = ctTeamName(1);
+      if (rs) rs.textContent = "0";
+      if (bs) bs.textContent = "0";
+
+      summary.classList.remove("round-summary-exit");
+      summary.style.display = "";
+
+      // Slide the container back down into view — summary now rides in
+      // with it as one panel (parent drives the motion).
+      if (container) {
+        void container.offsetWidth;
+        container.classList.remove("offscreen");
+      }
+
+      const rawRed  = s.scores[0] || 0;
+      const rawBlue = s.scores[1] || 0;
+      const rm = currentRoundMultiplier || 1;
+
+      // Settle beat before countup kicks off.
+      await new Promise(r => setTimeout(r, 700));
+
+      await Promise.all([
+        rs ? animateCountUp(rs, 0, rawRed,  { tick: true }) : Promise.resolve(),
+        bs ? animateCountUp(bs, 0, rawBlue, { tick: true }) : Promise.resolve(),
+      ]);
+
+      if (rm > 1) {
+        const finalRed  = Math.round(rawRed  * rm);
+        const finalBlue = Math.round(rawBlue * rm);
+        const gemMeta = (typeof getRoundMultiplierGem === "function") ? getRoundMultiplierGem(rm) : null;
+
+        // Spawns a gem that slams down under a team's score element,
+        // pulses while the count-up runs, then fades and removes itself.
+        const runTeamMult = async (scoreEl, fromVal, toVal) => {
+          if (!scoreEl) return;
+          const teamWrap = scoreEl.closest(".round-summary-team");
+          let gemEl = null;
+          if (teamWrap && gemMeta) {
+            gemEl = document.createElement("div");
+            gemEl.className = `round-summary-mult-gem rt-gem rt-tier-${gemMeta.tier}`;
+            gemEl.innerHTML =
+              `<img src="${gemMeta.img}" alt="${gemMeta.label}" />` +
+              `<div class="rt-gem-value">${gemMeta.label}</div>`;
+            teamWrap.appendChild(gemEl);
+            requestAnimationFrame(() => {
+              gemEl.classList.add("slam");
+              if (typeof playGlint === "function") playGlint(gemMeta.tier, 0.7);
+            });
+          }
+          scoreEl.classList.add("round-summary-score-pulse");
+          await animateCountUp(scoreEl, fromVal, toVal, { tick: true });
+          scoreEl.classList.remove("round-summary-score-pulse");
+          if (gemEl) {
+            gemEl.classList.remove("slam");
+            void gemEl.offsetWidth;
+            gemEl.classList.add("fading");
+            gemEl.addEventListener("animationend", () => gemEl.remove(), { once: true });
+            setTimeout(() => { if (gemEl.isConnected) gemEl.remove(); }, 800);
+          }
+        };
+
+        // Skip the gem reveal for any team that has nothing to multiply —
+        // count-up would flash 0 → 0 with a full gem slam/pulse for no gain.
+        await new Promise(r => setTimeout(r, 500));
+        if (rawRed > 0) {
+          await runTeamMult(rs, rawRed, finalRed);
+          await new Promise(r => setTimeout(r, 350));
+        }
+        if (rawBlue > 0) {
+          await runTeamMult(bs, rawBlue, finalBlue);
+        }
+        if (typeof hidePhaseGem === "function") hidePhaseGem();
+      }
+    }
+
+    function ctHideSummary() {
+      const summary = document.getElementById("ct-summary");
+      if (!summary) return;
+      summary.style.display = "none";
+      summary.classList.remove("round-summary-exit");
+      delete summary.dataset.ctAnimated;
+      const track = document.getElementById("ct-summary-clues-track");
+      if (track) {
+        track.classList.remove("scrolling");
+        track.style.removeProperty("--ct-scroll-distance");
+        track.style.animationDuration = "";
+        track.innerHTML = "";
+      }
+      const board   = document.getElementById("ct-board");
+      const banner  = document.getElementById("ct-clue-banner");
+      const footer  = document.querySelector("#common-thread-container .ct-footer");
+      if (board)  board.style.display  = "";
+      if (banner) banner.style.display = "";
+      if (footer) footer.style.display = "";
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // High Five / Survey (ranked-question) round summary.
+    // Slides down into view after the feud round ends, showing a
+    // downsized board recap + vertical guess history + team totals.
+    // Totals MVP: winning team shows final round contribution (already
+    // multiplied and folded into teamScores by awardRoundScore);
+    // losing team shows 0. No gem slam — multiplier drama already
+    // played on #board-round-total during awardRoundScore.
+    // ──────────────────────────────────────────────────────────────
+    // Orchestrates the full H5/Survey round-end visual sequence:
+    //   1. Round-complete card (title + team-colored phase-text subtitle)
+    //   2. Staggered reveal of unrevealed answers (revealAll)
+    //   3. Parallel exit: board-wrapper slides up + content-tv tv-off
+    //   4. H5 summary slides down into view
+    // Summary exit is handled by hideH5Summary() inside advanceRound.
+    let _h5RoundEndActive = false;
+    // Stashed by awardRoundScore before the summary runs; the summary's
+    // two-stage countup (raw → cat-mult → round-mult) reads from it, and the
+    // fold into teamScores happens AFTER the animation (mirrors CT's pattern
+    // in ctFinishRound). Non-host receives the same object via syncAfterGuess
+    // so its summary animates identically.
+    let _h5Scoring = null;
+    // Stashed by renderRoundResult; applied at the tail of showH5Summary so
+    // the point-total reveal in input-area header + phase indicator lands
+    // AFTER the summary countup. Mirrors CT's natural ordering (handleModuleComplete
+    // renders post-summary because ctFinishRound awaits ctShowSummary first).
+    let _h5PostSummary = null;
+    async function h5RunRoundEndSequence(scoringTeam, phaseText) {
+      if (_h5RoundEndActive) return;
+      _h5RoundEndActive = true;
+      try {
+        // Guard: if advanceRound has already fired (fast ready-up) bail out.
+        const piGuard = document.getElementById("phase-indicator");
+        if (!piGuard || piGuard.dataset.phase !== "round-result") return;
+
+        const colorClass = scoringTeam === 0 ? "red" : "blue";
+        const subtitle = phaseText
+          ? `<span class="rcc-team ${colorClass}">${phaseText.toUpperCase()}</span>`
+          : "";
+        await showRoundCompleteCard({
+          title: "ROUND COMPLETE",
+          subtitle,
+          extraClass: "rcc-h5",
+        });
+
+        // Re-check guard after the card hold (ready-up may have fired).
+        if (!piGuard || piGuard.dataset.phase !== "round-result") return;
+
+        await revealAll();
+
+        if (!piGuard || piGuard.dataset.phase !== "round-result") return;
+
+        const bw = document.getElementById("board-wrapper");
+        const ctv = document.getElementById("content-tv");
+        const bwPromise = (bw && bw.classList.contains("slide-in"))
+          ? (() => {
+              bw.classList.remove("slide-in");
+              bw.style.transform = "translateY(0)";
+              void bw.offsetWidth;
+              bw.style.transform = "";
+              bw.classList.add("offscreen");
+              anim.timer(bw, 350 / gameSpeed, () => playTick(0, { volume: 0.5 }));
+              return new Promise(r => setTimeout(r, 520 / gameSpeed));
+            })()
+          : Promise.resolve();
+        const ctvPromise = (ctv && !ctv.classList.contains("ct-hidden"))
+          ? anim.play(ctv, "tv-off").then(() => ctv.classList.add("ct-hidden"))
+          : Promise.resolve();
+        await Promise.all([bwPromise, ctvPromise]);
+
+        if (!piGuard || piGuard.dataset.phase !== "round-result") return;
+
+        // Collapse ranked-row out of flex flow so the summary's natural
+        // position is flush under the scoreboard. content-tv and board-wrapper
+        // are visually gone but their boxes still consume vertical space;
+        // hiding the parent is the cleanest fix. resetModuleCanvas restores
+        // display so the next ranked round's entry works normally.
+        const rankedRow = document.getElementById("ranked-row");
+        if (rankedRow) rankedRow.style.display = "none";
+
+        await showH5Summary(scoringTeam);
+      } finally {
+        _h5RoundEndActive = false;
+      }
+    }
+
+    let _h5SummaryActive = false;
+    async function showH5Summary(scoringTeam, opts) {
+      const container = document.getElementById("h5-summary-container");
+      if (!container) return;
+      if (_h5SummaryActive) return; // idempotent — avoid double-slide on re-entry
+      _h5SummaryActive = true;
+
+      // Question slot (left of board recap).
+      const qSlot = document.getElementById("h5-summary-question");
+      if (qSlot) qSlot.textContent = currentQuestion?.question || "";
+
+      // Board recap: clone the live #board-wrapper so all revealed tiles
+      // carry over exactly as shown. Preserves original answer order.
+      const recapHost = document.getElementById("h5-summary-board");
+      const liveBoard = document.getElementById("board-wrapper");
+      if (recapHost && liveBoard) {
+        recapHost.innerHTML = "";
+        const clone = liveBoard.cloneNode(true);
+        clone.removeAttribute("id");
+        clone.classList.remove("offscreen", "slide-in");
+        clone.style.transform = "";
+        clone.style.animation = "none";
+        // Strip IDs inside so tooltips + selectors don't double-match.
+        clone.querySelectorAll("[id]").forEach(el => el.removeAttribute("id"));
+        recapHost.appendChild(clone);
+
+        // Tag the (formerly-#board) answers container. It's the first
+        // non-.board-header / non-.board-footer / non-.board-stats child
+        // of the cloned board-wrapper and contains the .answer rows.
+        const answersEl = Array.from(clone.children).find(c =>
+          !c.classList.contains("board-header") &&
+          !c.classList.contains("board-footer") &&
+          !c.classList.contains("board-stats")
+        );
+        if (answersEl) {
+          answersEl.classList.add("h5-recap-answers");
+          // Wrap all .answer rows in a scroll track so CSS can animate
+          // translateY. Non-.answer children (if any) stay in place.
+          const track = document.createElement("div");
+          track.className = "h5-recap-answers-track";
+          Array.from(answersEl.children).forEach(child => {
+            if (child.classList.contains("answer")) track.appendChild(child);
+          });
+          answersEl.appendChild(track);
+          // Boomerang marquee arm: measured after layout. Duration scales
+          // with overflow distance (~30px per second, min 6s) so more
+          // overflow = longer scroll. alternate direction in CSS handles
+          // the return trip.
+          requestAnimationFrame(() => {
+            if (!track.isConnected) return;
+            const overflow = track.scrollHeight - answersEl.clientHeight;
+            if (overflow <= 2) return;
+            track.style.setProperty("--h5-board-distance", `-${overflow}px`);
+            const dur = Math.max(6, overflow / 30);
+            track.style.setProperty("--h5-board-duration", `${dur}s`);
+            track.classList.add("marquee");
+          });
+        }
+      }
+
+      // Guess history list. guessHistory is per-round; duplicate-rejected
+      // attempts are never pushed, so no filtering needed.
+      const histHost = document.getElementById("h5-summary-guesses");
+      if (histHost) {
+        histHost.innerHTML = "";
+        if (!guessHistory || !guessHistory.length) {
+          histHost.innerHTML = `<div class="h5-guess-history-empty">No guesses submitted.</div>`;
+        } else {
+          // Wrap entries in a scroll track so CSS can animate translateY
+          // when content exceeds the clip container's max-height. Matches
+          // the players-list-track / --marquee-distance pattern.
+          const track = document.createElement("div");
+          track.className = "h5-guess-history-track";
+          guessHistory.forEach(entry => {
+            const teamCls = entry.team === 0 ? "h5-team-red" : "h5-team-blue";
+            const resCls = /^✓/.test(entry.result) ? "ok"
+                         : /^✗/.test(entry.result) ? "bad" : "";
+            const row = document.createElement("div");
+            row.className = `h5-guess-entry ${teamCls}`;
+            row.innerHTML =
+              `<span class="h5-guess-player">${entry.player}</span>` +
+              `<span class="h5-guess-text">"${entry.guess}"</span>` +
+              `<span class="h5-guess-result ${resCls}">${entry.result}</span>`;
+            track.appendChild(row);
+          });
+          histHost.appendChild(track);
+          // Marquee setup: if the track overflows the clip, duplicate the
+          // rows (so the wrap-around is seamless), measure the single-pass
+          // distance, and arm the marquee class. Duration scales with
+          // content length (~1.5s per row). Deferred via rAF so layout
+          // has settled enough for scrollHeight/clientHeight to be truthful.
+          requestAnimationFrame(() => {
+            if (!histHost.isConnected) return;
+            const overflow = track.scrollHeight - histHost.clientHeight;
+            if (overflow <= 2) return;
+            const firstPass = track.cloneNode(true);
+            while (firstPass.firstChild) track.appendChild(firstPass.firstChild);
+            // Distance = height of the original (pre-duplicate) pass,
+            // which equals scrollHeight / 2 now that rows are doubled.
+            const distance = Math.round(track.scrollHeight / 2);
+            track.style.setProperty("--h5-guess-distance", `-${distance}px`);
+            const rowCount = guessHistory.length;
+            track.style.setProperty("--h5-guess-duration", `${rowCount * 1.5}s`);
+            track.classList.add("marquee");
+          });
+        }
+      }
+
+      // Totals. Read from _h5Scoring (set by awardRoundScore on host, synced
+      // by reconcile on non-host). Mirrors ctShowSummary's two-stage countup:
+      //   (1) raw contribution count-up for the scoring team
+      //   (2) multiplier stage — for each multiplier > 1, slam a gem under
+      //       the score, pulse + countup to the post-mult value, fade gem.
+      // After both stages, fold into teamScores locally (host re-syncs).
+      const rn = document.getElementById("h5-summary-red-name");
+      const bn = document.getElementById("h5-summary-blue-name");
+      const rs = document.getElementById("h5-summary-red-score");
+      const bs = document.getElementById("h5-summary-blue-score");
+      if (rn) rn.textContent = teamNames[0] || "Red";
+      if (bn) bn.textContent = teamNames[1] || "Blue";
+
+      const scoring = _h5Scoring;
+      const raw       = scoring ? scoring.raw        : (roundScore || 0);
+      const afterCat  = scoring ? scoring.afterCat   : raw;
+      const afterRound= scoring ? scoring.afterRound : raw;
+      const catMult   = scoring ? scoring.catMult    : 1;
+      const roundMult = scoring ? scoring.roundMult  : 1;
+      const scoreEl = scoringTeam === 0 ? rs : bs;
+      if (rs) rs.textContent = "0";
+      if (bs) bs.textContent = "0";
+
+      // Reveal the container by sliding it down from above the scoreboard.
+      container.style.display = "";
+      // Force a reflow so the transition from .offscreen → baseline runs.
+      void container.offsetWidth;
+      container.classList.remove("offscreen");
+
+      // Let the slide settle before count-up.
+      await new Promise(r => setTimeout(r, 700 / (gameSpeed || 1)));
+
+      // Stage 1 — raw count-up on scoring team only.
+      if (scoreEl) await animateCountUp(scoreEl, 0, raw, { tick: true });
+
+      // Stage 2 — multiplier stages with gem slam + pulse.
+      // Category multiplier uses a plain pulse (no gem asset); round
+      // multiplier uses the gem art from getRoundMultiplierGem(). Skip
+      // either stage when its multiplier is 1 or the raw value is 0.
+      const runMultStage = async (fromVal, toVal, gemMeta) => {
+        if (!scoreEl || fromVal === toVal) return;
+        const teamWrap = scoreEl.closest(".round-summary-team");
+        let gemEl = null;
+        if (teamWrap && gemMeta) {
+          gemEl = document.createElement("div");
+          gemEl.className = `round-summary-mult-gem rt-gem rt-tier-${gemMeta.tier}`;
+          gemEl.innerHTML =
+            `<img src="${gemMeta.img}" alt="${gemMeta.label}" />` +
+            `<div class="rt-gem-value">${gemMeta.label}</div>`;
+          teamWrap.appendChild(gemEl);
+          requestAnimationFrame(() => {
+            gemEl.classList.add("slam");
+            if (typeof playGlint === "function") playGlint(gemMeta.tier, 0.7);
+          });
+        }
+        scoreEl.classList.add("round-summary-score-pulse");
+        await animateCountUp(scoreEl, fromVal, toVal, { tick: true });
+        scoreEl.classList.remove("round-summary-score-pulse");
+        if (gemEl) {
+          gemEl.classList.remove("slam");
+          void gemEl.offsetWidth;
+          gemEl.classList.add("fading");
+          gemEl.addEventListener("animationend", () => gemEl.remove(), { once: true });
+          setTimeout(() => { if (gemEl.isConnected) gemEl.remove(); }, 800);
+        }
+      };
+
+      if (raw > 0 && catMult > 1) {
+        await new Promise(r => setTimeout(r, 400 / (gameSpeed || 1)));
+        // Category mult has no gem asset — pulse + count-up, no slam.
+        await runMultStage(raw, afterCat, null);
+      }
+      if (raw > 0 && roundMult > 1) {
+        await new Promise(r => setTimeout(r, 400 / (gameSpeed || 1)));
+        const gemMeta = (typeof getRoundMultiplierGem === "function")
+          ? getRoundMultiplierGem(roundMult) : null;
+        await runMultStage(afterCat, afterRound, gemMeta);
+        if (typeof hidePhaseGem === "function") hidePhaseGem();
+      }
+
+      // Fold the deferred score now that the animation has completed. Both
+      // host and non-host run this locally; host additionally re-syncs the
+      // updated teamScores (with h5Scoring cleared) so Firestore carries the
+      // post-fold canonical values for any future reconnect / winner check.
+      if (_h5Scoring) {
+        h5ApplyDeferredScoring();
+        if (isMultiplayer && isHost) {
+          try { syncState({ teamScores: [...teamScores], h5Scoring: null }); } catch (e) { /* noop */ }
+        }
+      }
+
+      // Swap input-area header + phase indicator to the point-including
+      // variants now that the summary countup has revealed them. Matches
+      // CT's pattern where handleModuleComplete (post-summary) provides
+      // the score-containing text.
+      if (_h5PostSummary) {
+        const post = _h5PostSummary;
+        _h5PostSummary = null;
+        if (post.phaseText) setPhaseText("round-result", post.phaseText);
+        if (post.msg) {
+          const turnHeader = document.getElementById("turn-header");
+          if (turnHeader) {
+            turnHeader.innerHTML = `<span class="th-inner">${post.msg}</span>`;
+            if (turnHeader.classList.contains("wrap")) {
+              fitByCharCount(turnHeader, 18, turnHeader.textContent, 0.7);
+            } else {
+              fitByCharCount(turnHeader, 12, turnHeader.textContent);
+            }
+          }
+        }
+      }
+    }
+
+    function hideH5Summary() {
+      const container = document.getElementById("h5-summary-container");
+      if (!container) { _h5SummaryActive = false; return null; }
+      if (container.style.display === "none" || container.classList.contains("offscreen")) {
+        _h5SummaryActive = false;
+        return null;
+      }
+      container.classList.remove("slide-in");
+      container.style.transform = "translateY(0)";
+      void container.offsetWidth;
+      container.style.transform = "";
+      container.classList.add("offscreen");
+      const exitPromise = new Promise(r => setTimeout(r, 520 / (gameSpeed || 1)));
+      exitPromise.then(() => {
+        container.style.display = "none";
+        _h5SummaryActive = false;
+      });
+      return exitPromise;
+    }
+
+    function enterCommonThreadRound(onComplete) {
+      // Non-host may have already received the host's ctSyncState during the
+      // round-type-selected intro await. Resetting here would clobber
+      // clueGiverUids + cards, forcing everyone to GUESSER until the next
+      // sync. Only the host (or local play) owns initial state.
+      const nonHostLive = isMultiplayer && !isHost && commonThreadState.active;
+      // Stats tracking reset is safe regardless — it's DOM-display delta
+      // state, not game state. Without this, non-host round 2 animates the
+      // scoreboard down from round 1's final values to fresh zeros.
+      ctResetStatsTracking();
+      if (!nonHostLive) {
+        resetCommonThreadState();
+        commonThreadState.active = true;
+        commonThreadState.phase = "clue";
+        // Starting team follows teamTurn so round-type picker rotation is
+        // consistent across modules.
+        commonThreadState.currentTeam = (typeof teamTurn === "number") ? teamTurn : 0;
+      }
+      commonThreadState.onComplete = onComplete;
+
+      // Pick a clue giver per team (host-authoritative; rotates by round
+      // number so it's not always the same player).
+      if (!isMultiplayer || isHost) {
+        for (let t = 0; t < 2; t++) {
+          const roster = (isMultiplayer ? (teamPlayerUids[t] || []) : []);
+          if (roster.length > 0) {
+            const idx = ((typeof roundNumber === "number" ? roundNumber : 0)) % roster.length;
+            commonThreadState.clueGiverUids[t] = roster[idx];
+          } else {
+            commonThreadState.clueGiverUids[t] = null;
+          }
+        }
+      }
+
+      // Card generation is host-authoritative. Non-host receives cards via
+      // the commonThreadState sync and renders once they arrive.
+      if (!isMultiplayer || isHost) {
+        ctBuildCards();
+      }
+
+      const container = document.getElementById("common-thread-container");
+      if (container) {
+        // Restore intra-container children that ctShowSummary hid on the
+        // previous CT round. resetModuleCanvas hides the container itself
+        // but doesn't reach inside.
+        if (typeof ctHideSummary === "function") ctHideSummary();
+        const innerBoard  = document.getElementById("ct-board");
+        const innerBanner = document.getElementById("ct-clue-banner");
+        const innerFooter = container.querySelector(".ct-footer");
+        if (innerBoard)  innerBoard.style.display  = "";
+        if (innerBanner) innerBanner.style.display = "";
+        if (innerFooter) innerFooter.style.display = "";
+
+        container.style.display = "flex";
+        container.classList.remove("slide-in");
+        container.classList.add("offscreen");
+        // Reflow then trigger slide-in
+        void container.offsetWidth;
+        container.classList.remove("offscreen");
+        container.classList.add("slide-in");
+      }
+
+      // Phase indicator override for the round
+      if (typeof setPhaseText === "function") setPhaseText("gameplay", "COMMON THREAD");
+      if (typeof setPhase === "function") setPhase("gameplay");
+
+      if (typeof setMusicMode === "function") setMusicMode('spy');
+
+      showInputArea();
+      ctRender();
+      ctUpdateInputArea();
+      ctSyncState();
+    }
+
+    function ctRemainingForTeam(t) {
+      const s = commonThreadState;
+      if (!s.cards || !s.cards.length) return 8;
+      return s.cards.filter(c => c.team === t && !c.revealed).length;
+    }
+    function ctStepCount(delta) {
+      const s = commonThreadState;
+      const max = Math.max(1, ctRemainingForTeam(s.currentTeam));
+      s.composeCount = Math.max(1, Math.min(max, (s.composeCount || 1) + delta));
+      const valEl = document.getElementById('ct-step-value');
+      if (valEl) valEl.textContent = s.composeCount;
+      const extEl = document.getElementById('ct-ext-value');
+      if (extEl) extEl.textContent = s.composeCount;
+      // Reflect bounds on arrow enablement.
+      const stepperEl = document.getElementById('ct-stepper-external');
+      if (stepperEl) {
+        const arrows = stepperEl.querySelectorAll('.ct-ext-arrow');
+        if (arrows[0]) arrows[0].disabled = s.composeCount >= max;
+        if (arrows[1]) arrows[1].disabled = s.composeCount <= 1;
+      }
+    }
+
+    function ctSubmitClueFromInput() {
+      const wEl = document.getElementById('ct-clue-word');
+      if (!wEl) return;
+      const word = wEl.value;
+      const count = commonThreadState.composeCount || 1;
+      const res = ctSubmitClue(word, count);
+      if (!res.ok) {
+        wEl.style.borderColor = 'var(--red-text)';
+        wEl.value = '';
+        wEl.placeholder = res.reason || 'Invalid clue';
+      }
     }
 
     function getScribbleTimeMultiplier(secondsRemaining) {
@@ -10845,10 +13412,17 @@ document.addEventListener('keydown', e => {
     // Called on pointerup / bucket fill / clear — not continuously.
     function scribbleBroadcastCanvas() {
       if (scribbleState.myRole !== "drawer") return;
-      if (scribbleState.phase !== "drawing") return;
+      if (scribbleState.phase !== "drawing" && scribbleState.phase !== "session-end") return;
       const c = document.getElementById("scribble-draw-canvas");
       if (!c) return;
       try {
+        // Skip entirely when the canvas is still the initial all-white
+        // fill (drawer never drew, or cleared back to blank). Without
+        // this, every viewer of a drew-nothing drawer saw a blank white
+        // image except for clients where the snapshot raced the phase
+        // flip — producing the inconsistent "some screens blank / some
+        // screens 'No drawing'" summary described in the bug.
+        if (scribbleCanvasIsBlank(c)) return;
         const dataUrl = c.toDataURL("image/jpeg", 0.5);
         // Determine my team (0 or 1) — multiplayer uses UIDs, local uses
         // the drawing session's team slot (already set during role pick).
@@ -10868,6 +13442,30 @@ document.addEventListener('keydown', e => {
         }
       } catch (e) {
         console.warn('[scribble] broadcast failed:', e);
+      }
+    }
+
+    // Returns true if the canvas pixels are all (or effectively all) the
+    // initial white fill. Samples every 3rd pixel on every 3rd row so a
+    // small mark (a single brush dab ≥ ~4px) is still caught.
+    function scribbleCanvasIsBlank(c) {
+      try {
+        const ctx = c.getContext("2d");
+        const sz = SCRIBBLE_CONFIG.canvasSize;
+        const data = ctx.getImageData(0, 0, sz, sz).data;
+        const step = 3;
+        for (let y = 0; y < sz; y += step) {
+          const row = y * sz * 4;
+          for (let x = 0; x < sz; x += step) {
+            const i = row + x * 4;
+            // Near-white (>=250/255) absorbs any drift from image decode
+            // round-trips.
+            if (data[i] < 250 || data[i + 1] < 250 || data[i + 2] < 250) return false;
+          }
+        }
+        return true;
+      } catch (e) {
+        return false;
       }
     }
 
@@ -11936,13 +14534,32 @@ document.addEventListener('keydown', e => {
     }
 
     // ── Scribble summary ──
-    function scribbleShowSummary() {
+    async function scribbleShowSummary() {
       console.log('[scribble] showSummary entry', { phase: scribbleState.phase, sessionsLen: scribbleState.sessions?.length });
       // Idempotency guard: prevents the safety-net-in-round-result +
       // local-setTimeout race from double-painting (2nd call would hit
       // wiped sessions via resetScribbleState).
       if (scribbleState.phase === "summary") return;
       scribbleState.phase = "summary";
+
+      let totalRed = 0, totalBlue = 0;
+      scribbleState.sessions.forEach(s => {
+        totalRed += s.scores[0];
+        totalBlue += s.scores[1];
+      });
+
+      // Round-complete card (flies in, holds, flies out). Title constant,
+      // subtitle depends on winner / tie.
+      const winnerTeam = totalRed === totalBlue ? null : (totalRed > totalBlue ? 0 : 1);
+      const subtitle = winnerTeam === null
+        ? "TIED ROUND"
+        : `<span class="rcc-team ${winnerTeam === 0 ? 'red' : 'blue'}">${(teamNames[winnerTeam] || (winnerTeam===0?'RED':'BLUE')).toUpperCase()}</span> WINS THE ROUND`;
+      await showRoundCompleteCard({
+        title: "ROUND COMPLETE",
+        subtitle,
+        extraClass: "rcc-scribble",
+      });
+
       const ws = document.getElementById("scribble-word-select");
       const sg = document.getElementById("scribble-game");
       const ss = document.getElementById("scribble-summary");
@@ -11959,34 +14576,79 @@ document.addEventListener('keydown', e => {
         ss.classList.add("ss-fly-in");
       }
 
-      let totalRed = 0, totalBlue = 0;
-      scribbleState.sessions.forEach(s => {
-        totalRed += s.scores[0];
-        totalBlue += s.scores[1];
-      });
-
-      const totals = document.getElementById("scribble-summary-totals");
-      if (totals) {
-        totals.innerHTML = `
-          <div class="scribble-summary-team">
-            <div class="scribble-team-name red">${teamNames[0] || "Red Team"}</div>
-            <div class="scribble-team-score">${totalRed}</div>
-          </div>
-          <div class="scribble-summary-team">
-            <div class="scribble-team-name blue">${teamNames[1] || "Blue Team"}</div>
-            <div class="scribble-team-score">${totalBlue}</div>
-          </div>`;
-      }
-
-      // Store totals for the onComplete callback
-      scribbleState._roundTotals = { redScore: totalRed, blueScore: totalBlue };
+      // Populate team names; scores start at 0 and count up.
+      const rn = document.getElementById("scribble-summary-red-name");
+      const bn = document.getElementById("scribble-summary-blue-name");
+      const rs = document.getElementById("scribble-summary-red-score");
+      const bs = document.getElementById("scribble-summary-blue-score");
+      if (rn) rn.textContent = teamNames[0] || "Red Team";
+      if (bn) bn.textContent = teamNames[1] || "Blue Team";
+      if (rs) rs.textContent = "0";
+      if (bs) bs.textContent = "0";
 
       // Render per-session recap blocks stacked vertically
       scribbleRenderSessions();
 
-      // Ready Up appears in the main input-area (home base) via
-      // handleModuleComplete. Fire immediately — the summary panel stays
-      // visible while players read it and ready up at their own pace.
+      // Settle beat before countup kicks off so the panel's fly-in reads.
+      await new Promise(r => setTimeout(r, 700));
+
+      // Phase 1: raw countup (both teams in parallel).
+      await Promise.all([
+        rs ? animateCountUp(rs, 0, totalRed,  { tick: true }) : Promise.resolve(),
+        bs ? animateCountUp(bs, 0, totalBlue, { tick: true }) : Promise.resolve(),
+      ]);
+
+      // Phase 2: round-multiplier gem slam + countup per team (parallel).
+      const rm = currentRoundMultiplier || 1;
+      let finalRed = totalRed, finalBlue = totalBlue;
+      if (rm > 1) {
+        finalRed  = Math.round(totalRed  * rm);
+        finalBlue = Math.round(totalBlue * rm);
+        const gemMeta = (typeof getRoundMultiplierGem === "function") ? getRoundMultiplierGem(rm) : null;
+
+        const runTeamMult = async (scoreEl, fromVal, toVal) => {
+          if (!scoreEl) return;
+          const teamWrap = scoreEl.closest(".round-summary-team");
+          let gemEl = null;
+          if (teamWrap && gemMeta) {
+            gemEl = document.createElement("div");
+            gemEl.className = `round-summary-mult-gem rt-gem rt-tier-${gemMeta.tier}`;
+            gemEl.innerHTML =
+              `<img src="${gemMeta.img}" alt="${gemMeta.label}" />` +
+              `<div class="rt-gem-value">${gemMeta.label}</div>`;
+            teamWrap.appendChild(gemEl);
+            requestAnimationFrame(() => {
+              gemEl.classList.add("slam");
+              if (typeof playGlint === "function") playGlint(gemMeta.tier, 0.7);
+            });
+          }
+          scoreEl.classList.add("round-summary-score-pulse");
+          await animateCountUp(scoreEl, fromVal, toVal, { tick: true });
+          scoreEl.classList.remove("round-summary-score-pulse");
+          if (gemEl) {
+            gemEl.classList.remove("slam");
+            void gemEl.offsetWidth;
+            gemEl.classList.add("fading");
+            gemEl.addEventListener("animationend", () => gemEl.remove(), { once: true });
+            setTimeout(() => { if (gemEl.isConnected) gemEl.remove(); }, 800);
+          }
+        };
+
+        await new Promise(r => setTimeout(r, 500));
+        const tasks = [];
+        if (totalRed  > 0) tasks.push(runTeamMult(rs, totalRed,  finalRed));
+        if (totalBlue > 0) tasks.push(runTeamMult(bs, totalBlue, finalBlue));
+        await Promise.all(tasks);
+        if (typeof hidePhaseGem === "function") hidePhaseGem();
+      }
+
+      // Store post-multiplier totals for onComplete. multiplierApplied: true
+      // tells handleModuleComplete not to re-apply the round multiplier.
+      scribbleState._roundTotals = { redScore: finalRed, blueScore: finalBlue, multiplierApplied: true };
+
+      // Hold briefly so the final totals register before Ready Up takes over.
+      await new Promise(r => setTimeout(r, 1500));
+
       scribbleFinishRound();
     }
 
@@ -14009,50 +16671,36 @@ document.addEventListener('keydown', e => {
     }
 
     function awardRoundScore(team, callback) {
-      // Two sequential multiplier beats: category first, then round.
-      // Round multiplier stacks multiplicatively on top of category.
+      // Scoring is now owned by the H5 summary (mirrors CT's ctShowSummary):
+      // we stash the raw + multiplied values here, keep the board-round-total
+      // at raw (the board recap clones this DOM), and defer both the fold
+      // into teamScores and the multiplier count-up to the summary. The
+      // callback still fires synchronously with `afterRound` so callsites can
+      // compose the end-of-round phase-text/message.
       const afterCat = Math.round(roundScore * categoryMultiplier);
       const afterRound = Math.round(afterCat * currentRoundMultiplier);
-      const hasCat = categoryMultiplier > 1;
-      const hasRound = currentRoundMultiplier > 1;
+      _h5Scoring = {
+        team,
+        raw: roundScore,
+        afterCat,
+        afterRound,
+        catMult: categoryMultiplier,
+        roundMult: currentRoundMultiplier,
+      };
       const totalEl = document.getElementById("board-round-total");
-      const indicator = document.getElementById("cat-mult-indicator");
+      if (totalEl) totalEl.textContent = roundScore;
+      callback(afterRound);
+    }
 
-      const animateStep = (startVal, endVal) => new Promise(resolve => {
-        if (startVal === endVal) { resolve(); return; }
-        const steps = 20;
-        const stepTime = 40 / gameSpeed;
-        let step = 0;
-        const iv = setInterval(() => {
-          step++;
-          const progress = step / steps;
-          const current = Math.round(startVal + (endVal - startVal) * progress);
-          if (totalEl) totalEl.textContent = current;
-          if (step >= steps) {
-            clearInterval(iv);
-            if (totalEl) totalEl.textContent = endVal;
-            setTimeout(resolve, 400 / gameSpeed);
-          }
-        }, stepTime);
-      });
-
-      (async () => {
-        if (hasCat) {
-          if (indicator) indicator.classList.add("mult-activate");
-          await animateStep(roundScore, afterCat);
-          if (indicator) indicator.classList.remove("mult-activate");
-        }
-        if (hasRound) {
-          // TODO: polish pass — pulse a round-multiplier badge here.
-          await animateStep(afterCat, afterRound);
-          hidePhaseGem();
-        }
-        roundScore = afterRound;
-        if (totalEl) totalEl.textContent = afterRound;
-        teamScores[team] += afterRound;
-        updateScores();
-        callback(afterRound);
-      })();
+    // Apply the deferred _h5Scoring fold — call once the summary countup has
+    // finished (or defensively from endGameByRounds / checkForWinner). Safe
+    // to call multiple times; subsequent calls are no-ops.
+    function h5ApplyDeferredScoring() {
+      if (!_h5Scoring) return;
+      const { team, afterRound } = _h5Scoring;
+      teamScores[team] = (teamScores[team] || 0) + afterRound;
+      _h5Scoring = null;
+      if (typeof updateScores === "function") updateScores();
     }
 
     async function flipTile(index, type, earnedTotal, appliedMult) {
@@ -14130,16 +16778,18 @@ document.addEventListener('keydown', e => {
     }
 
     function revealAll() {
+      if (!currentQuestion) return Promise.resolve();
       const toReveal = [];
-      if (!currentQuestion) return;
       for (let i = 0; i < currentQuestion.answers.length; i++) {
-        if (!revealed[i]) {
-          toReveal.push(i);
-        }
+        if (!revealed[i]) toReveal.push(i);
       }
-      toReveal.forEach((idx, order) => {
-        setTimeout(() => flipTile(idx, 'missed'), order * 1000 / gameSpeed);
-      });
+      if (!toReveal.length) return Promise.resolve();
+      const stagger = 1000 / gameSpeed;
+      const flips = toReveal.map((idx, order) =>
+        new Promise(r => setTimeout(() => { flipTile(idx, 'missed'); r(); }, order * stagger))
+      );
+      // Tail allows the last tile's cover-slide (~400ms) to complete before resolving.
+      return Promise.all(flips).then(() => new Promise(r => setTimeout(r, 500 / gameSpeed)));
     }
 
     function updateScores() {
@@ -14230,7 +16880,21 @@ document.addEventListener('keydown', e => {
     }
     function hidePhaseGem() {
       const el = document.getElementById("ph-gem");
-      if (el) el.remove();
+      if (!el) return;
+      // Prevent double-fade if called twice in quick succession.
+      if (el.dataset.fading === "1") return;
+      el.dataset.fading = "1";
+      // Drop the id immediately so a subsequent showPhaseGem() won't see
+      // this stale element and no-op its own hidePhaseGem() call.
+      el.id = "";
+      el.style.transition = "opacity 0.45s ease, transform 0.45s ease";
+      requestAnimationFrame(() => {
+        el.style.opacity = "0";
+        el.style.transform = "scale(0.6)";
+      });
+      const cleanup = () => { if (el.isConnected) el.remove(); };
+      el.addEventListener("transitionend", cleanup, { once: true });
+      setTimeout(cleanup, 700);
     }
 
     function rollCategoryMultiplier() {
@@ -14349,7 +17013,7 @@ document.addEventListener('keydown', e => {
       // "Player X is up" during the round-type picker instead of the
       // picker's "Waiting on Player X..." message.
       const iaMode = document.getElementById('input-area')?.getAttribute('data-ia-mode');
-      const skipTurnText = iaMode === 'disabled' || iaMode === 'action';
+      const skipTurnText = iaMode === 'disabled' || iaMode === 'action' || iaMode === 'compose-clue';
 
       if (!skipTurnText) {
         const cur = teamPlayers[teamTurn][playerIndex[teamTurn] % teamPlayers[teamTurn].length];
@@ -14605,13 +17269,20 @@ document.addEventListener('keydown', e => {
             await flipTile(idx,'correct',stealTotal,stealMult);
             awardRoundScore(stealingTeam, (final) => {
               deactivateSpeedBoost();
-              const stealPhaseText = `${teamNames[stealingTeam]} stole ${final} points!`;
-              const stealMsg = `<span class="${stealingTeam===0?"red":"blue"}">${teamNames[stealingTeam]}</span> stole ${final} points!`;
+              const teamName = teamNames[stealingTeam];
+              const colorCls = stealingTeam===0?"red":"blue";
+              const stealPhaseText = `${teamName} completes the steal!`;
+              const stealMsg = `<span class="${colorCls}">${teamName}</span> completes the steal!`;
+              const stealPostPhaseText = `${teamName} stole ${final} points!`;
+              const stealPostMsg = `<span class="${colorCls}">${teamName}</span> stole ${final} points!`;
               const result = { outcome: 'steal_success', tileIdx: idx, points: stealTotal, mult: stealMult };
-              syncAfterGuess(result, { msg: stealMsg, winner: stealingTeam, phaseText: stealPhaseText });
+              syncAfterGuess(result, { msg: stealMsg, winner: stealingTeam, phaseText: stealPhaseText,
+                postMsg: stealPostMsg, postPhaseText: stealPostPhaseText });
               if (!checkForWinner()) renderRoundResult({
                 roundResultMsg: stealMsg,
                 roundPhaseText: stealPhaseText,
+                postRoundResultMsg: stealPostMsg,
+                postRoundPhaseText: stealPostPhaseText,
                 roundWinner: stealingTeam,
                 lastResult: result,
               });
@@ -14637,13 +17308,20 @@ document.addEventListener('keydown', e => {
             awardRoundScore(1-stealingTeam, (final) => {
               deactivateSpeedBoost();
               const keepTeam = 1 - stealingTeam;
-              const keepPhaseText = `${teamNames[keepTeam]} wins the round and keeps ${final} points!`;
-              const keepMsg = `<span class="${keepTeam===0?"red":"blue"}">${teamNames[keepTeam]}</span> keeps ${final} points!`;
+              const teamName = teamNames[keepTeam];
+              const colorCls = keepTeam===0?"red":"blue";
+              const keepPhaseText = `${teamName} wins the round!`;
+              const keepMsg = `<span class="${colorCls}">${teamName}</span> wins the round!`;
+              const keepPostPhaseText = `${teamName} keeps ${final} points!`;
+              const keepPostMsg = `<span class="${colorCls}">${teamName}</span> keeps ${final} points!`;
               const result = { outcome: 'steal_fail' };
-              syncAfterGuess(result, { msg: keepMsg, winner: keepTeam, phaseText: keepPhaseText });
+              syncAfterGuess(result, { msg: keepMsg, winner: keepTeam, phaseText: keepPhaseText,
+                postMsg: keepPostMsg, postPhaseText: keepPostPhaseText });
               if (!checkForWinner()) renderRoundResult({
                 roundResultMsg: keepMsg,
                 roundPhaseText: keepPhaseText,
+                postRoundResultMsg: keepPostMsg,
+                postRoundPhaseText: keepPostPhaseText,
                 roundWinner: keepTeam,
                 lastResult: result,
               });
@@ -14703,13 +17381,20 @@ document.addEventListener('keydown', e => {
       if(!found && strikes < 3) { syncAfterGuess({ outcome: 'wrong' }); }
       if(revealed.every(r=>r)&&!stealPhase){awardRoundScore(teamTurn, (final) => {
         deactivateSpeedBoost();
-        const revealAllPhaseText = `${teamNames[teamTurn]} won the round with ${final} points!`;
-        const revealAllMsg = `<span class="${teamTurn===0?"red":"blue"}">${teamNames[teamTurn]}</span> revealed all answers! They win ${final} points.`;
+        const teamName = teamNames[teamTurn];
+        const colorCls = teamTurn===0?"red":"blue";
+        const revealAllPhaseText = `${teamName} clears the board and wins the round!`;
+        const revealAllMsg = `<span class="${colorCls}">${teamName}</span> clears the board and wins the round!`;
+        const revealAllPostPhaseText = `${teamName} won ${final} points!`;
+        const revealAllPostMsg = `<span class="${colorCls}">${teamName}</span> won ${final} points!`;
         const result = { outcome: 'correct', tileIdx: foundIdx, points: foundTotal, mult: foundMult };
-        syncAfterGuess(result, { msg: revealAllMsg, winner: teamTurn, phaseText: revealAllPhaseText });
+        syncAfterGuess(result, { msg: revealAllMsg, winner: teamTurn, phaseText: revealAllPhaseText,
+          postMsg: revealAllPostMsg, postPhaseText: revealAllPostPhaseText });
         if (!checkForWinner()) renderRoundResult({
           roundResultMsg: revealAllMsg,
           roundPhaseText: revealAllPhaseText,
+          postRoundResultMsg: revealAllPostMsg,
+          postRoundPhaseText: revealAllPostPhaseText,
           roundWinner: teamTurn,
           lastResult: result,
         });
@@ -14748,6 +17433,15 @@ document.addEventListener('keydown', e => {
         payload.roundResultMsg = roundEnd.msg;
         payload.roundWinner = roundEnd.winner;
         payload.roundPhaseText = roundEnd.phaseText;
+        // Post-summary variants (H5/Survey): point-total-including messages
+        // applied to input-area header + phase indicator after the H5 summary
+        // countup finishes. Pre-summary versions above are shown during the
+        // card + revealAll + summary animation.
+        payload.postRoundResultMsg = roundEnd.postMsg || null;
+        payload.postRoundPhaseText = roundEnd.postPhaseText || null;
+        // H5 scoring snapshot for summary countup animation. Non-host reads
+        // this into its local _h5Scoring so the summary animates identically.
+        payload.h5Scoring = _h5Scoring ? { ..._h5Scoring } : null;
         // Clear ready state from any previous round
         payload.readyPlayers = {};
         payload.readyCountdown = null;
@@ -14757,6 +17451,13 @@ document.addEventListener('keydown', e => {
 
     function checkForWinner() {
       if (gameMode === 'rounds') return false;
+      // Peek at the projected score including a pending H5 fold. If the
+      // peek shows a winner, fold immediately so endGame sees correct scores.
+      const peek = [teamScores[0] || 0, teamScores[1] || 0];
+      if (_h5Scoring) peek[_h5Scoring.team] += _h5Scoring.afterRound;
+      if (peek[0] >= targetScore || peek[1] >= targetScore) {
+        h5ApplyDeferredScoring();
+      }
       if (teamScores[0] >= targetScore || teamScores[1] >= targetScore) {
         const w = teamScores[0] >= targetScore
           ? `<span class="red">${teamNames[0]}</span>`
@@ -14768,6 +17469,10 @@ document.addEventListener('keydown', e => {
     }
 
     function endGameByRounds() {
+      // Defensive fold: if we got here before the H5 summary ran (e.g.
+      // last-round-no-faceoff shortcut path in endRound), apply the pending
+      // score so the winner determination uses correct totals.
+      if (_h5Scoring) h5ApplyDeferredScoring();
       let winnerIdx, msg;
       if (teamScores[0] > teamScores[1]) {
         winnerIdx = 0;
@@ -14808,6 +17513,19 @@ document.addEventListener('keydown', e => {
       setPhaseTeamColor(scoringTeam);
       setPhase("round-result");
 
+      // Stash post-summary text so showH5Summary can swap input-area header +
+      // phase indicator to the point-total version after its countup finishes.
+      // Cleared after use. Module-complete flows set these to null → no swap.
+      if (data.postRoundResultMsg || data.postRoundPhaseText) {
+        _h5PostSummary = {
+          msg: data.postRoundResultMsg || null,
+          phaseText: data.postRoundPhaseText || null,
+          team: scoringTeam,
+        };
+      } else {
+        _h5PostSummary = null;
+      }
+
       // setPhase early-returns when data-phase was already set above; apply
       // round-result effects (glow, SFX, blob reset) directly. Idempotent
       // via the round-glow class check.
@@ -14833,6 +17551,13 @@ document.addEventListener('keydown', e => {
       if (tib) tib.style.display = "";
 
       endRound(data.roundResultMsg, scoringTeam);
+
+      // Ranked-question summary: show after revealAll has had time to
+      // animate the remaining tiles. Module completions (scribble, CT)
+      // own their own summary panels, so gate on outcome.
+      if (data.lastResult?.outcome !== 'module-complete') {
+        h5RunRoundEndSequence(scoringTeam, data.roundPhaseText || "");
+      }
 
       // Module-complete safety net: if the local module's completion path
       // never ran (e.g. non-host missed scribble-session-end due to a
@@ -14903,8 +17628,8 @@ document.addEventListener('keydown', e => {
       // exists under the single-writer model.
       window._lastRoundWasModule = false;
 
-      // Auto-reveal remaining answers after 3 seconds
-      setTimeout(() => revealAll(), 3000 / gameSpeed);
+      // revealAll is owned by h5RunRoundEndSequence (called from renderRoundResult)
+      // so the staggered tile reveal runs AFTER the round-complete card exits.
       document.getElementById("endRound").innerHTML = "";
 
       // Reset local ready state for new round-result phase
@@ -15221,6 +17946,8 @@ document.addEventListener('keydown', e => {
       matchLog = [];
       playerIndex = [0, 0];
       lastRoundWinner = -1;
+      _prevRoundTypePicks = [];
+      resetCommonThreadState();
 
       // Restore preserved state
       usedQuestions = savedUsedQuestions;
@@ -15343,6 +18070,7 @@ document.addEventListener('keydown', e => {
       // restore round counter label, re-hide turn-header
       resetFaceoffState();
       resetScribbleState();
+      resetCommonThreadState();
       const foc = document.getElementById('faceoff-container');
       if (foc) { foc.classList.remove('active'); foc.style.display = 'none'; }
       const rl = document.getElementById('round-label');
@@ -17225,6 +19953,8 @@ document.addEventListener('keydown', e => {
       usedQuestions = [];
       resetFaceoffState();
       resetScribbleState();
+      resetCommonThreadState();
+      _prevRoundTypePicks = [];
 
       // Set scoreboard team labels
       const redLabelH4 = document.querySelector("#red-score-box .team-label h4");

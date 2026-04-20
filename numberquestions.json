@@ -1,0 +1,716 @@
+[
+  {
+    "question": "How many feet above sea level is the peak of Mount Everest?",
+    "category": "Geography",
+    "subCategory": "Physical Geography",
+    "answer": 29032,
+    "factCheck": "Updated to 29,032 in the 2020 China/Nepal joint survey; older sources and many trivia databases still cite 29,029 — both may be considered 'correct' by players who looked it up"
+  },
+  {
+    "question": "How many countries are on the continent of Africa?",
+    "category": "Geography",
+    "subCategory": "Countries",
+    "answer": 54,
+    "factCheck": "54 is the standard UN-recognized count; Western Sahara's disputed status means some sources cite 53 — confirm which authority to use"
+  },
+  {
+    "question": "How many countries share a land border with China?",
+    "category": "Geography",
+    "subCategory": "Countries",
+    "answer": 14,
+    "factCheck": "Russia, Mongolia, Kazakhstan, Kyrgyzstan, Tajikistan, Afghanistan, Pakistan, India, Nepal, Bhutan, Myanmar, Laos, Vietnam, North Korea = 14; the India-China-Bhutan tripoint area has ongoing boundary disputes that could affect this count"
+  },
+  {
+    "question": "How many feet tall is the Burj Khalifa?",
+    "category": "Geography",
+    "subCategory": "Cities & Landmarks",
+    "answer": 2717,
+    "factCheck": ""
+  },
+  {
+    "question": "How many miles long is the Mississippi River?",
+    "category": "Geography",
+    "subCategory": "US Geography",
+    "answer": 2340,
+    "factCheck": "USGS official figure is 2,340 miles; some sources round to 2,350 — minor variance unlikely to cause disputes"
+  },
+  {
+    "question": "How many national parks does the United States have?",
+    "category": "Geography",
+    "subCategory": "US Geography",
+    "answer": 63,
+    "factCheck": "63 as of 2022; the number changes with new Congressional designations — verify no parks have been added or reclassified before publishing"
+  },
+  {
+    "question": "How many countries are in South America?",
+    "category": "Geography",
+    "subCategory": "Countries",
+    "answer": 12,
+    "factCheck": ""
+  },
+  {
+    "question": "How many boroughs make up New York City?",
+    "category": "Geography",
+    "subCategory": "Cities & Landmarks",
+    "answer": 5,
+    "factCheck": ""
+  },
+  {
+    "question": "How many time zones does Russia span?",
+    "category": "Geography",
+    "subCategory": "Countries",
+    "answer": 11,
+    "factCheck": "Russia reduced from 11 to 9 time zones in 2010, then restored to 11 in 2014; verify no further changes since"
+  },
+  {
+    "question": "How many feet tall is the Statue of Liberty from the ground to the tip of the torch?",
+    "category": "Geography",
+    "subCategory": "Cities & Landmarks",
+    "answer": 305,
+    "factCheck": "305 feet 1 inch is ground-to-torch total including the pedestal; the statue alone heel-to-torch is 151 feet — question wording must make clear it includes the pedestal or the answer will seem wrong to anyone who looked up '151'"
+  },
+  {
+    "question": "How many miles long is the Great Wall of China, counting all sections from all dynasties combined?",
+    "category": "Geography",
+    "subCategory": "Physical Geography",
+    "answer": 13170,
+    "factCheck": "13,170 miles is the 2012 China State Administration of Cultural Heritage survey of all wall segments across all dynasties; the commonly cited 3,900–5,500 mile figures refer to the Ming Dynasty wall only — the question's 'all sections combined' phrasing is essential to justify this answer and still may surprise players familiar with the lower figure"
+  },
+  {
+    "question": "How many islands make up the Philippines?",
+    "category": "Geography",
+    "subCategory": "Countries",
+    "answer": 7641,
+    "factCheck": "2016 NAMRIA survey revised the count from 7,107 to 7,641; older sources (and most trivia databases) still cite 7,107 — high likelihood players will challenge this answer"
+  },
+  {
+    "question": "How many feet tall is the Eiffel Tower including its broadcast antenna?",
+    "category": "Geography",
+    "subCategory": "Cities & Landmarks",
+    "answer": 1083,
+    "factCheck": "1,083 feet with the antenna added in 1957; original 1889 structure was 984 feet — question wording must specify 'including antenna' or the 984-foot answer becomes equally defensible"
+  },
+  {
+    "question": "How many countries are members of the European Union?",
+    "category": "Geography",
+    "subCategory": "Countries",
+    "answer": 27,
+    "factCheck": "27 following Brexit (UK departed January 2020); Ukraine, Moldova, and others hold candidate status — verify no new accessions before publishing"
+  },
+  {
+    "question": "How many member states are in the United Nations?",
+    "category": "Geography",
+    "subCategory": "Countries",
+    "answer": 193,
+    "factCheck": "193 as of South Sudan's admission in 2011; Palestine and Vatican City hold observer status only — verify no new members admitted since 2011"
+  },
+
+  {
+    "question": "How many planets are in our solar system?",
+    "category": "Science",
+    "subCategory": "Astronomy",
+    "answer": 8,
+    "factCheck": "8 since the IAU reclassified Pluto as a dwarf planet in 2006; the debate has never fully settled and 'Planet Nine' remains an open hypothesis — players who learned the answer as 9 will push back"
+  },
+  {
+    "question": "How many Earth days does it take Mars to complete one orbit around the Sun?",
+    "category": "Science",
+    "subCategory": "Astronomy",
+    "answer": 687,
+    "factCheck": "686.97 Earth days, rounded to 687 — straightforward"
+  },
+  {
+    "question": "How many miles away is the Moon from Earth on average?",
+    "category": "Science",
+    "subCategory": "Astronomy",
+    "answer": 238855,
+    "factCheck": "Average (mean) distance is 238,855 miles (384,400 km); ranges from ~225,623 miles (perigee) to ~252,088 miles (apogee) — question must specify 'on average' to anchor the answer"
+  },
+  {
+    "question": "How many moons does Jupiter have?",
+    "category": "Science",
+    "subCategory": "Astronomy",
+    "answer": 95,
+    "factCheck": "IAU confirmed 12 new moons in early 2023, bringing the total to 95; the long-standing commonly cited figure was 79 — this count has been rising steadily with better telescopes and may increase further; high dispute risk"
+  },
+  {
+    "question": "How many elements are currently on the periodic table?",
+    "category": "Science",
+    "subCategory": "Chemistry",
+    "answer": 118,
+    "factCheck": "118 confirmed elements as of 2016 when oganesson (118) was officially named; verify no new elements have been synthesized and officially named since"
+  },
+  {
+    "question": "What is the atomic number of gold?",
+    "category": "Science",
+    "subCategory": "Chemistry",
+    "answer": 79,
+    "factCheck": ""
+  },
+  {
+    "question": "How many protons does a carbon atom have?",
+    "category": "Science",
+    "subCategory": "Chemistry",
+    "answer": 6,
+    "factCheck": ""
+  },
+  {
+    "question": "How many bones does the adult human body have?",
+    "category": "Science",
+    "subCategory": "Biology",
+    "answer": 206,
+    "factCheck": "206 is the standard adult figure; humans are born with roughly 270–300 bones that fuse over time, and minor individual variation exists — the 206 figure is universally accepted for trivia purposes"
+  },
+  {
+    "question": "How many chambers does the human heart have?",
+    "category": "Science",
+    "subCategory": "Biology",
+    "answer": 4,
+    "factCheck": ""
+  },
+  {
+    "question": "How many pairs of chromosomes does a typical human cell contain?",
+    "category": "Science",
+    "subCategory": "Biology",
+    "answer": 23,
+    "factCheck": "23 pairs (46 total) in somatic cells; question specifies 'pairs' which is the standard framing — straightforward"
+  },
+  {
+    "question": "How many teeth does a fully developed adult human have, including wisdom teeth?",
+    "category": "Science",
+    "subCategory": "Biology",
+    "answer": 32,
+    "factCheck": "32 is the full adult count including all four wisdom teeth; many adults have fewer if wisdom teeth are removed or fail to erupt — question's 'fully developed' and 'including wisdom teeth' phrasing is necessary to justify the answer"
+  },
+  {
+    "question": "How many degrees Fahrenheit is the boiling point of water at sea level?",
+    "category": "Science",
+    "subCategory": "Physics",
+    "answer": 212,
+    "factCheck": ""
+  },
+  {
+    "question": "How many miles per second does light travel in a vacuum?",
+    "category": "Science",
+    "subCategory": "Physics",
+    "answer": 186282,
+    "factCheck": "186,282 miles per second (299,792 km/s) is the exact figure; often rounded to 186,000 in casual usage — minor variance, but the precise answer should be accepted"
+  },
+  {
+    "question": "How many feet per second does sound travel through air at room temperature?",
+    "category": "Science",
+    "subCategory": "Physics",
+    "answer": 1125,
+    "factCheck": "~1,125 feet per second at 68°F (20°C) at sea level; speed of sound varies meaningfully with temperature and altitude — question must specify 'at room temperature' to anchor the answer"
+  },
+  {
+    "question": "How many seconds are in one day?",
+    "category": "Science",
+    "subCategory": "Physics",
+    "answer": 86400,
+    "factCheck": ""
+  },
+
+  {
+    "question": "How many regular season games are in an NFL season per team?",
+    "category": "Sports",
+    "subCategory": "NFL",
+    "answer": 17,
+    "factCheck": "Expanded from 16 to 17 games starting with the 2021 season; verify no further schedule changes"
+  },
+  {
+    "question": "How many career touchdown passes did Tom Brady throw in the NFL?",
+    "category": "Sports",
+    "subCategory": "NFL",
+    "answer": 649,
+    "factCheck": "649 regular-season touchdown passes with New England and Tampa Bay; Brady retired in February 2023 — this is a final career figure"
+  },
+  {
+    "question": "How many Super Bowls have the New England Patriots won?",
+    "category": "Sports",
+    "subCategory": "NFL",
+    "answer": 6,
+    "factCheck": "6 titles (Super Bowls XXXVI, XXXVIII, XXXIX, XLIX, LI, LIII); most recent in 2019 — verify no additional championships"
+  },
+  {
+    "question": "How many teams are in the NFL?",
+    "category": "Sports",
+    "subCategory": "NFL",
+    "answer": 32,
+    "factCheck": "32 teams since the Houston Texans joined in 2002; NFL has discussed expansion — verify no new franchises added"
+  },
+  {
+    "question": "How many yards long is an NFL football field including both end zones?",
+    "category": "Sports",
+    "subCategory": "NFL",
+    "answer": 120,
+    "factCheck": ""
+  },
+  {
+    "question": "How many career rushing yards did Emmitt Smith gain in the NFL?",
+    "category": "Sports",
+    "subCategory": "NFL",
+    "answer": 18355,
+    "factCheck": "18,355 yards is the all-time NFL regular-season rushing record; verify no running back has surpassed this total"
+  },
+
+  {
+    "question": "How many career regular-season points did Kareem Abdul-Jabbar score in the NBA?",
+    "category": "Sports",
+    "subCategory": "NBA",
+    "answer": 38387,
+    "factCheck": "38,387 points was the all-time scoring record from 1984 until LeBron James surpassed it in February 2023 — question should reference Kareem's record specifically, not 'the all-time record'"
+  },
+  {
+    "question": "How many points did Wilt Chamberlain score in his single-game NBA record?",
+    "category": "Sports",
+    "subCategory": "NBA",
+    "answer": 100,
+    "factCheck": ""
+  },
+  {
+    "question": "How many NBA championships have the Boston Celtics won?",
+    "category": "Sports",
+    "subCategory": "NBA",
+    "answer": 18,
+    "factCheck": "18 as of their 2024 NBA Finals championship; the figure was 17 from 2008 to 2024 — players who haven't updated may say 17"
+  },
+  {
+    "question": "How many NBA MVP awards did Kareem Abdul-Jabbar win?",
+    "category": "Sports",
+    "subCategory": "NBA",
+    "answer": 6,
+    "factCheck": "6 regular-season MVPs (1971, 1972, 1974, 1976, 1977, 1980) — the all-time record; straightforward"
+  },
+  {
+    "question": "How many NBA championships did Phil Jackson win as a head coach?",
+    "category": "Sports",
+    "subCategory": "NBA",
+    "answer": 11,
+    "factCheck": "11 titles (6 with Chicago Bulls, 5 with Los Angeles Lakers) — the all-time record for a head coach; straightforward"
+  },
+  {
+    "question": "How many seasons did Kobe Bryant play in the NBA?",
+    "category": "Sports",
+    "subCategory": "NBA",
+    "answer": 20,
+    "factCheck": "20 seasons, all with the Los Angeles Lakers (1996–2016) — straightforward"
+  },
+
+  {
+    "question": "How many career home runs did Barry Bonds hit in MLB?",
+    "category": "Sports",
+    "subCategory": "MLB",
+    "answer": 762,
+    "factCheck": "762 is the all-time MLB home run record; Bonds was implicated in the BALCO steroid scandal but the record stands officially — straightforward as written"
+  },
+  {
+    "question": "How many career hits did Pete Rose collect in MLB?",
+    "category": "Sports",
+    "subCategory": "MLB",
+    "answer": 4256,
+    "factCheck": "4,256 hits is the all-time MLB record; Rose is banned from baseball for gambling but the record stands — straightforward"
+  },
+  {
+    "question": "How many games are in an MLB regular season per team?",
+    "category": "Sports",
+    "subCategory": "MLB",
+    "answer": 162,
+    "factCheck": "162 games per team since 1961 (AL) and 1962 (NL) — straightforward"
+  },
+  {
+    "question": "How many feet is the distance between bases on a baseball diamond?",
+    "category": "Sports",
+    "subCategory": "MLB",
+    "answer": 90,
+    "factCheck": ""
+  },
+  {
+    "question": "How many teams are in Major League Baseball?",
+    "category": "Sports",
+    "subCategory": "MLB",
+    "answer": 30,
+    "factCheck": "30 teams since 2005; MLB has discussed expansion to 32 — verify no new franchises have been added"
+  },
+
+  {
+    "question": "How many Grand Slam singles titles did Serena Williams win?",
+    "category": "Sports",
+    "subCategory": "Tennis",
+    "answer": 23,
+    "factCheck": "23 Grand Slam singles titles; Serena retired in September 2022 — this is a final career figure"
+  },
+  {
+    "question": "How many Grand Slam singles titles did Novak Djokovic win?",
+    "category": "Sports",
+    "subCategory": "Tennis",
+    "answer": 24,
+    "factCheck": "24 as of his 2023 US Open title; Djokovic was still competing through 2024 and may have won additional majors — verify current total before publishing"
+  },
+  {
+    "question": "How many times did Rafael Nadal win the French Open?",
+    "category": "Sports",
+    "subCategory": "Tennis",
+    "answer": 14,
+    "factCheck": "14 French Open titles spanning 2005–2022; Nadal retired in November 2024 — this is a final career figure"
+  },
+  {
+    "question": "How many Grand Slam singles titles did Roger Federer win?",
+    "category": "Sports",
+    "subCategory": "Tennis",
+    "answer": 20,
+    "factCheck": "20 Grand Slam singles titles; Federer retired in September 2022 — this is a final career figure"
+  },
+
+  {
+    "question": "How many major championships did Tiger Woods win?",
+    "category": "Sports",
+    "subCategory": "Golf",
+    "answer": 15,
+    "factCheck": "15 majors (5 Masters, 3 US Opens, 3 Open Championships, 4 PGA Championships) — straightforward career total as of his last major win in 2019"
+  },
+  {
+    "question": "How many holes are played in a standard round of golf?",
+    "category": "Sports",
+    "subCategory": "Golf",
+    "answer": 18,
+    "factCheck": ""
+  },
+  {
+    "question": "How many major championships did Jack Nicklaus win?",
+    "category": "Sports",
+    "subCategory": "Golf",
+    "answer": 18,
+    "factCheck": "18 majors is the all-time record; Tiger Woods is the closest challenger at 15 — straightforward"
+  },
+
+  {
+    "question": "How many Olympic gold medals did Michael Phelps win in his career?",
+    "category": "Sports",
+    "subCategory": "Olympics",
+    "answer": 23,
+    "factCheck": "23 gold medals (28 total) across the 2000, 2004, 2008, 2012, and 2016 Games; Phelps retired after 2016 — this is a final career figure"
+  },
+  {
+    "question": "How many rings make up the Olympic symbol?",
+    "category": "Sports",
+    "subCategory": "Olympics",
+    "answer": 5,
+    "factCheck": ""
+  },
+  {
+    "question": "How many feet long is an Olympic swimming pool?",
+    "category": "Sports",
+    "subCategory": "Olympics",
+    "answer": 164,
+    "factCheck": "50 meters = 164.04 feet; rounded to 164 — minor rounding variance; question specifies feet which avoids the trivial '50 meters' answer"
+  },
+
+  {
+    "question": "How many career regular-season goals did Wayne Gretzky score in the NHL?",
+    "category": "Sports",
+    "subCategory": "NHL",
+    "answer": 894,
+    "factCheck": "894 regular-season goals; some sources combine regular season and playoffs (1,016 total) — question must specify 'regular season' to match this answer"
+  },
+  {
+    "question": "How many Stanley Cup championships have the Montreal Canadiens won?",
+    "category": "Sports",
+    "subCategory": "NHL",
+    "answer": 24,
+    "factCheck": "24 Stanley Cup championships — the most in NHL history; most recent in 1993 — straightforward"
+  },
+
+  {
+    "question": "How many FIFA World Cup titles has Brazil won?",
+    "category": "Sports",
+    "subCategory": "Soccer",
+    "answer": 5,
+    "factCheck": "5 World Cup titles (1958, 1962, 1970, 1994, 2002); most recent was 2002 — straightforward"
+  },
+
+  {
+    "question": "How many Academy Awards did 'The Lord of the Rings: The Return of the King' win?",
+    "category": "Pop Culture",
+    "subCategory": "Movies",
+    "answer": 11,
+    "factCheck": "11 wins from 11 nominations at the 76th Academy Awards (2004) — the only film to sweep every category it was nominated in; straightforward"
+  },
+  {
+    "question": "How many Oscar nominations did 'Titanic' (1997) receive?",
+    "category": "Pop Culture",
+    "subCategory": "Movies",
+    "answer": 14,
+    "factCheck": "14 nominations, tied for the all-time record with 'All About Eve' (1950) and 'La La Land' (2016); won 11 of them — straightforward"
+  },
+  {
+    "question": "How many times has Meryl Streep been nominated for an Academy Award?",
+    "category": "Pop Culture",
+    "subCategory": "Movies",
+    "answer": 21,
+    "factCheck": "21 nominations as of 2024, the most for any actor or actress in history; Streep continues to work — verify no additional nominations since 2024"
+  },
+  {
+    "question": "How many times was Jack Nicholson nominated for an Academy Award?",
+    "category": "Pop Culture",
+    "subCategory": "Movies",
+    "answer": 12,
+    "factCheck": "12 nominations — the record for any male actor; won 3 times (One Flew Over the Cuckoo's Nest, Terms of Endearment, As Good as It Gets) — straightforward"
+  },
+  {
+    "question": "How many competitive Academy Awards did Walt Disney win?",
+    "category": "Pop Culture",
+    "subCategory": "Movies",
+    "answer": 22,
+    "factCheck": "22 competitive Oscar wins — the record for any individual; also received 4 honorary awards (26 total); question specifies 'competitive' to match the 22 figure"
+  },
+  {
+    "question": "How many films make up the Star Wars Skywalker Saga?",
+    "category": "Pop Culture",
+    "subCategory": "Movies",
+    "answer": 9,
+    "factCheck": "9 films (Episodes I–IX); does not include standalone films like Rogue One or Solo — question must specify 'Skywalker Saga' to justify excluding spinoffs"
+  },
+  {
+    "question": "How many James Bond films starred Roger Moore?",
+    "category": "Pop Culture",
+    "subCategory": "Movies",
+    "answer": 7,
+    "factCheck": "7 Bond films (Live and Let Die through A View to a Kill, 1973–1985) — the most of any actor in the role; straightforward"
+  },
+  {
+    "question": "How many minutes long is 'Gone with the Wind'?",
+    "category": "Pop Culture",
+    "subCategory": "Movies",
+    "answer": 238,
+    "factCheck": "238 minutes (3 hours 58 minutes) is the standard theatrical runtime; some cuts or versions differ slightly — minor variance"
+  },
+  {
+    "question": "How many times did Tom Hanks win the Academy Award for Best Actor?",
+    "category": "Pop Culture",
+    "subCategory": "Movies",
+    "answer": 2,
+    "factCheck": "2 consecutive wins (Philadelphia 1994, Forrest Gump 1995) — only the second actor to win back-to-back after Spencer Tracy — straightforward"
+  },
+  {
+    "question": "How many Harry Potter films were released?",
+    "category": "Pop Culture",
+    "subCategory": "Movies",
+    "answer": 8,
+    "factCheck": ""
+  },
+
+  {
+    "question": "How many Grammy Awards has Beyoncé won?",
+    "category": "Pop Culture",
+    "subCategory": "Music",
+    "answer": 32,
+    "factCheck": "32 Grammy wins as of the February 2024 ceremony, the all-time record for any artist; Beyoncé was still releasing music — verify no additional wins since 2024"
+  },
+  {
+    "question": "How many #1 singles did The Beatles have on the Billboard Hot 100?",
+    "category": "Pop Culture",
+    "subCategory": "Music",
+    "answer": 20,
+    "factCheck": "20 number-one singles on the Billboard Hot 100 — the all-time record for any act; straightforward"
+  },
+  {
+    "question": "How many weeks did 'Old Town Road' by Lil Nas X spend at #1 on the Billboard Hot 100?",
+    "category": "Pop Culture",
+    "subCategory": "Music",
+    "answer": 19,
+    "factCheck": "19 consecutive weeks at #1 in 2019 — the all-time record; verify no song has since surpassed this"
+  },
+  {
+    "question": "How many Grammy Awards did Michael Jackson win?",
+    "category": "Pop Culture",
+    "subCategory": "Music",
+    "answer": 13,
+    "factCheck": "13 competitive Grammy wins including 8 in a single night at the 1984 ceremony for Thriller, which set a then-record; does not include the Grammy Legend Award or Lifetime Achievement Award — straightforward"
+  },
+  {
+    "question": "How many times did Elvis Presley reach #1 on the Billboard Hot 100?",
+    "category": "Pop Culture",
+    "subCategory": "Music",
+    "answer": 18,
+    "factCheck": "18 number-one singles is the commonly cited figure; some sources cite 17 or 19 depending on chart methodology from different eras — minor variance worth verifying"
+  },
+  {
+    "question": "How many Grammy Awards for Album of the Year has Taylor Swift won?",
+    "category": "Pop Culture",
+    "subCategory": "Music",
+    "answer": 4,
+    "factCheck": "4 wins (Fearless 2010, 1989 2016, Folklore 2021, Midnights 2024) — the all-time record; verify no additional wins since 2024"
+  },
+  {
+    "question": "How many years was The Beatles active as a band?",
+    "category": "Pop Culture",
+    "subCategory": "Music",
+    "answer": 8,
+    "factCheck": "Commonly cited as 8 years (1962–1970), counting from Ringo Starr joining; the band formed in 1960 with earlier lineups — question should specify 'classic lineup' or 'Ringo-era' to anchor the 8-year answer"
+  },
+  {
+    "question": "How many #1 singles on the Billboard Hot 100 did Mariah Carey have?",
+    "category": "Pop Culture",
+    "subCategory": "Music",
+    "answer": 19,
+    "factCheck": "19 number-one singles as of her last chart-topper; Carey has not fully retired — verify current total hasn't changed"
+  },
+  {
+    "question": "How many consecutive weeks was '(Everything I Do) I Do It for You' by Bryan Adams at #1 on the UK Singles Chart?",
+    "category": "Pop Culture",
+    "subCategory": "Music",
+    "answer": 16,
+    "factCheck": "16 consecutive weeks at #1 in 1991 — the all-time UK Singles Chart record; verify no song has surpassed this"
+  },
+  {
+    "question": "How many Grammy Awards did Adele win at the 2012 ceremony?",
+    "category": "Pop Culture",
+    "subCategory": "Music",
+    "answer": 6,
+    "factCheck": "6 Grammy Awards at the 54th Grammy Awards (2012) for 21, including Album, Record, and Song of the Year — straightforward"
+  },
+  {
+    "question": "How many weeks did 'Blinding Lights' by The Weeknd chart on the Billboard Hot 100?",
+    "category": "Pop Culture",
+    "subCategory": "Music",
+    "answer": 90,
+    "factCheck": "90 weeks on the Hot 100 — the all-time record for longest-charting song; verify this record still stands"
+  },
+  {
+    "question": "How many #1 singles on the Billboard Hot 100 did Whitney Houston have?",
+    "category": "Pop Culture",
+    "subCategory": "Music",
+    "answer": 11,
+    "factCheck": "11 number-one singles is the commonly cited figure; verify against Billboard's official tally as chart methodology evolved across her career (1985–2009)"
+  },
+
+  {
+    "question": "How many episodes did 'Seinfeld' air?",
+    "category": "Pop Culture",
+    "subCategory": "TV",
+    "answer": 180,
+    "factCheck": "180 episodes across 9 seasons (1989–1998) — straightforward"
+  },
+  {
+    "question": "How many Primetime Emmy Awards did 'Game of Thrones' win?",
+    "category": "Pop Culture",
+    "subCategory": "TV",
+    "answer": 59,
+    "factCheck": "59 Primetime Emmy Awards — the most for any scripted series in Emmy history; verify no series has surpassed this"
+  },
+  {
+    "question": "How many seasons did 'Friends' air?",
+    "category": "Pop Culture",
+    "subCategory": "TV",
+    "answer": 10,
+    "factCheck": ""
+  },
+  {
+    "question": "How many total Emmy Awards did 'Frasier' win?",
+    "category": "Pop Culture",
+    "subCategory": "TV",
+    "answer": 37,
+    "factCheck": "37 Emmy Awards across its 11-season run including 5 consecutive Outstanding Comedy Series wins (1994–1998); verify exact total as individual episode and technical Emmy counts vary by source"
+  },
+  {
+    "question": "How many episodes did 'The Office' (US version) air?",
+    "category": "Pop Culture",
+    "subCategory": "TV",
+    "answer": 201,
+    "factCheck": "201 episodes across 9 seasons (2005–2013) — straightforward"
+  },
+  {
+    "question": "How many seasons did 'M*A*S*H' run?",
+    "category": "Pop Culture",
+    "subCategory": "TV",
+    "answer": 11,
+    "factCheck": ""
+  },
+  {
+    "question": "How many total episodes did 'The Sopranos' air?",
+    "category": "Pop Culture",
+    "subCategory": "TV",
+    "answer": 86,
+    "factCheck": "86 episodes across 6 seasons (1999–2007) — straightforward"
+  },
+  {
+    "question": "How many seasons did 'ER' run?",
+    "category": "Pop Culture",
+    "subCategory": "TV",
+    "answer": 15,
+    "factCheck": "15 seasons (1994–2009) — straightforward"
+  },
+  {
+    "question": "How many seasons did the original 'Law & Order' series run?",
+    "category": "Pop Culture",
+    "subCategory": "TV",
+    "answer": 20,
+    "factCheck": "20 seasons of the original run (1990–2010); the series was revived for additional seasons beginning in 2022 — question must specify 'original series' to match the 20-season answer"
+  },
+  {
+    "question": "How many seasons did 'Cheers' run?",
+    "category": "Pop Culture",
+    "subCategory": "TV",
+    "answer": 11,
+    "factCheck": ""
+  },
+
+  {
+    "question": "How many books are in the main Harry Potter series?",
+    "category": "Pop Culture",
+    "subCategory": "Literature",
+    "answer": 7,
+    "factCheck": ""
+  },
+  {
+    "question": "How many books in 'A Song of Ice and Fire' by George R.R. Martin have been published?",
+    "category": "Pop Culture",
+    "subCategory": "Literature",
+    "answer": 5,
+    "factCheck": "5 books published as of 2024; Martin has stated the series will be 7 books but the final two remain unwritten — question must specify 'published' to match the answer of 5"
+  },
+  {
+    "question": "How many novels did Agatha Christie write?",
+    "category": "Pop Culture",
+    "subCategory": "Literature",
+    "answer": 66,
+    "factCheck": "66 detective novels is the commonly cited figure; some counts vary slightly depending on whether certain collaborative or early works are included — minor variance"
+  },
+  {
+    "question": "How many years did it take J.R.R. Tolkien to write 'The Lord of the Rings'?",
+    "category": "Pop Culture",
+    "subCategory": "Literature",
+    "answer": 12,
+    "factCheck": "Tolkien began writing in 1937 and finished in 1949 — 12 years; published in 1954–1955 — straightforward"
+  },
+  {
+    "question": "How many novels did Ernest Hemingway publish during his lifetime?",
+    "category": "Pop Culture",
+    "subCategory": "Literature",
+    "answer": 7,
+    "factCheck": "7 novels: The Torrents of Spring, The Sun Also Rises (both 1926), A Farewell to Arms (1929), To Have and Have Not (1937), For Whom the Bell Tolls (1940), Across the River and Into the Trees (1950), The Old Man and the Sea (1952); Death in the Afternoon and Green Hills of Africa are non-fiction — verify the count is 7 not 6, as The Torrents of Spring is sometimes overlooked"
+  },
+
+  {
+    "question": "How many Tony Awards did 'Hamilton' win at the 70th Tony Awards?",
+    "category": "Pop Culture",
+    "subCategory": "Theater",
+    "answer": 11,
+    "factCheck": "11 Tony Awards in 2016 from 16 nominations — tied for the most wins in a single ceremony; straightforward"
+  },
+  {
+    "question": "How many years did 'The Phantom of the Opera' run on Broadway?",
+    "category": "Pop Culture",
+    "subCategory": "Theater",
+    "answer": 35,
+    "factCheck": "Opened January 26, 1988, closed April 16, 2023 — 35 years, the longest run in Broadway history; straightforward"
+  },
+  {
+    "question": "How many Tony Awards did 'The Producers' win?",
+    "category": "Pop Culture",
+    "subCategory": "Theater",
+    "answer": 12,
+    "factCheck": "12 Tony Awards in 2001 — the all-time record for most Tonys won by a single production; straightforward"
+  }
+]

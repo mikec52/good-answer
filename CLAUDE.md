@@ -563,12 +563,21 @@ Defined near the top of the script block. Each module entry:
 ```js
 ROUND_MODULES = {
   'high-five':       { label, colorClass, minPlayersPerTeam, enter(onComplete), reset() },
-  'survey':          { label, colorClass, minPlayersPerTeam, enter(onComplete), reset() },
+  'poll-position':   { label, colorClass, minPlayersPerTeam, enter(onComplete), reset() },
   'secret-scribble': { label, colorClass, minPlayersPerTeam: 2, enter(onComplete), reset() },
+  'common-thread':   { label, colorClass, minPlayersPerTeam: 2, enter(onComplete), reset() },
 };
 ```
 
-`minPlayersPerTeam` gates the pill in the picker — Secret Scribble greys out in 1v1 games. Add new modules by extending this registry.
+`minPlayersPerTeam` gates the pill in the picker — Secret Scribble and Common Thread grey out in 1v1 games. Add new modules by extending this registry.
+
+**Current module roster (all shipped, complete):**
+- **High Five** — trivia ranked question (formerly the default feud round).
+- **Poll Position** — survey ranked question (the now-deprecated "Survey" round type spun off into its own module). Shares H5's summary classes since the format is identical (ranked answer list, one winning team).
+- **Secret Scribble** — Pictionary-style drawing minigame. See "Secret Scribble — Module Overview".
+- **Common Thread** — Codenames-style clue/guess round. See "Common Thread — Module Overview".
+
+**Next on the roadmap:** **Number is Correct** (NIC) — Price-is-Right-style numeric guessing. Not yet built.
 
 ### Round flow (host-authoritative)
 
@@ -679,7 +688,7 @@ One scribble round = 2 drawing sessions. Each session has 2 drawers (one per tea
 1. **Word selection** (`scribble-word-select`, 10s) — each drawer picks from 3 options (easy/medium/hard, 50/75/100 points). Guessers see "Drawers are selecting words". Drawers who pick early see "Pick locked in. Waiting for other drawer..." First drawer's early pick doesn't start the session — all clients wait for timer expiry so drawing starts simultaneously. Missing picks auto-fill to medium difficulty.
 2. **Drawing** (`scribble-drawing-start`, 60s) — Ready/Set/Draw countdown overlay, then drawers draw while guessers type guesses into the main input-area. Opponent canvas shows tile grid (4x4, 16 tiles) revealing one tile every 4s. Canvas snapshots sync via JPEG data URLs (`scribbleCanvases.{team}` field) on stroke-end, bucket fill, and clear — not continuously during drawing, so guessers see updates after each stroke completes.
 3. **Session end** (`scribble-session-end`) — host-authoritative. When host's timer expires or all drawings solved, host writes this phase; non-hosts mirror via `handlePhaseTransition` → `scribbleApplyEndDrawingSession`. Shows status message for 2s, then advances (next session or summary).
-4. **Summary** — `scribbleShowSummary` displays per-session scoring events + team totals. After 1.5s, `scribbleFinishRound` auto-fires `handleModuleComplete` — no Continue button; Ready Up appears in the input-area home base. Summary container stays visible through Ready Up; `advanceRound` hides it when the next round starts.
+4. **Summary** — `scribbleShowSummary` is orchestrated inside the shared Round Summary Framework (see "Round Summary Framework" section). Flow: `showRoundCompleteCard` (with team-colored subtitle or tied message) → hide word-select/game → `ss-fly-in` on `#scribble-summary` → populate team names with 0 scores → `scribbleRenderSessions()` fills per-session events into the left/right columns → 700ms beat → parallel raw-score countups (red + blue) → if the round multiplier > 1, parallel per-team `runTeamMult` gem slam + pulse + multiplier countup → `hidePhaseGem()` → 1500ms hold → `scribbleFinishRound()` → `handleModuleComplete`. Summary container stays visible through Ready Up; `advanceRound` hides it when the next round starts.
 
 ### Scoring
 
@@ -764,62 +773,147 @@ These were in flight at the branch's current head; resume here next session:
 
 5. **Stroke-level canvas sync (design choice, not a bug).** Guessers see canvas snapshots at stroke-end, not live. Mentioned for awareness — no current fix needed, revisit post-Blaze migration when continuous sync via Cloud Functions or Realtime Database becomes viable.
 
+### Scribble summary — known polish-pass items
+
+Picked up during the Round Summary Framework unification. Scribble's summary adopts the shared `.round-summary-*` classes (frosted glass background, negative margin-top, shared title/totals styling), but three visual/wording inconsistencies vs. H5 and Common Thread remain for the next polish pass:
+
+1. **Header margins** on `#scribble-summary`'s title don't match the margins other modules use — slight vertical rhythm difference.
+2. **Totals row** — red and blue team scores cluster toward the center instead of spreading to opposite edges of the panel like H5/CT do.
+3. **Round-end message wording** — scribble's `handleModuleComplete` says "[team] won X points!" instead of the standard "[team] won the round with X points!" used by other modules. Fix by updating the `resultMsg`/`phaseMsg` template in the scribble branch of `handleModuleComplete`.
+
+All cosmetic; no functional impact on the round result or scoring.
+
 ### Dev flag: removed
 
 `DEV_SKIP_TO_SCRIBBLE` existed during early integration to jump straight from lobby → scribble for rapid testing. Removed once scribble was reachable through the normal round-type picker. No longer exists in the codebase.
 
 ---
 
-## Common Thread — Integration Plan (not yet implemented)
+## Round Summary Framework
 
-Prototype exists at [common-thread.html](common-thread.html). Standalone file, fully playable locally via the perspective toggle (red clue giver / blue clue giver / guesser). Game logic, scoring, streak/multiplier, and card flip animation are all working. Next session: port into `feud.html` as a ROUND_MODULES entry, matching the scribble integration pattern.
+Shared end-of-round summary + recap system used by every module (High Five, Poll Position, Secret Scribble, Common Thread, and anything new). Unifies the visual framing and the orchestration of the post-round score reveal so the moment lands the same way across modules.
+
+### Shared CSS classes
+
+All summary panels apply `.round-summary` as a base class on the outermost container. The `.round-summary-*` family covers the structural sub-parts:
+
+- `.round-summary` — base frosted-glass panel: `rgba(26,26,26,0.75)` background, `backdrop-filter: blur(20px)`, `border-radius: 10px`, `padding: 14px 14px 12px`, `margin-top: -5px` (tucks up under the scoreboard).
+- `.round-summary-title` — the "ROUND SUMMARY" header bar (gold dazzle-unicase).
+- `.round-summary-board-recap` — slot for the answer-board recap (used by H5/Poll Position; scribble uses its own per-session column layout inside this area instead).
+- `.round-summary-scoring-recap` — slot for the per-event scoring recap rows.
+- `.round-summary-totals` — bottom band showing both teams' final scores side-by-side.
+- `.round-summary-team` / `.round-summary-team-name` / `.round-summary-team-red` / `.round-summary-team-blue` / `.round-summary-team-score` — team name + score cells inside `.round-summary-totals`.
+- `.round-summary-mult-gem` — the multiplier gem that slams onto a team's score during the round-multiplier reveal.
+- `.round-summary-score-pulse` — pulse highlight class applied briefly to the team-score number during the post-multiplier countup.
+
+Any module-specific container (e.g. `#scribble-summary`) keeps its layout-only rules and adds `.round-summary` to inherit the frosted background, border-radius, negative margin, and typography.
+
+### `showRoundCompleteCard({title, subtitle, holdMs, extraClass})`
+
+Helper that flies in a "ROUND COMPLETE" card over the module canvas, holds, then flies out. Mounted into `#module-canvas`. Used by every module as the opening beat of the round-end sequence.
+
+- `title` — typically `"ROUND COMPLETE"`.
+- `subtitle` — short outcome line (e.g. `"RED TEAM WINS THE ROUND"`, `"TIED ROUND"`). Accepts inline HTML so team-color spans can be embedded.
+- `holdMs` — milliseconds to hold fully-visible before flying out.
+- `extraClass` — optional extra class on the card (e.g. `rcc-scribble`, `rcc-ct`) for per-module styling tweaks.
+- **Plays `roundbell.wav`** internally via `playRoundBell()` immediately after adding `.rcc-entering`. Fires automatically for every module that uses this helper.
+
+### Standard round-end orchestration
+
+All modules follow the same sequence so the feel is consistent:
+
+1. `showRoundCompleteCard({...})` — round bell SFX, card flies in, holds, flies out.
+2. Module's summary container slides in (each module has its own entry animation — `ss-fly-in` for scribble, analogous classes for H5/CT).
+3. Module populates its summary with events/rows showing **raw** (pre-multiplier) points, team score cells showing 0.
+4. Short beat (~700ms) for the panel to settle.
+5. Parallel raw-score countups — both teams' `.round-summary-team-score` count up from 0 to their raw totals via `animateCountUp(..., {tick: true})`.
+6. If `currentRoundMultiplier > 1`: parallel per-team multiplier reveal (`runTeamMult`):
+   - Gem slam — a `.round-summary-mult-gem` (pulled by `getRoundMultiplierGem(mult)`) flies onto the score, plays the gem-slam glint SFX via `playGlint(tier)`.
+   - `.round-summary-score-pulse` flashes the score.
+   - Second `animateCountUp` runs from the raw total to `raw × multiplier`.
+7. `hidePhaseGem()` — tucks the phase-indicator gem away (it's now redundant with the slammed gem).
+8. Brief post-countup hold.
+9. `onComplete({ redScore, blueScore })` fires — `handleModuleComplete` folds the final (post-multiplier) scores into `teamScores[]`, sets round-result phase, shows Ready Up, and syncs.
+
+### Deferred point-announcement (true across all modules)
+
+Module round-result messaging is split into two stages so the point total lands *after* the summary countup instead of spoiling it up front:
+
+- **Pre-summary message** — `roundResultMsg` / `roundPhaseText` say something like `"[team] wins the round!"` or `"[team] clears the board!"` or `"[team] steals!"` — no points mentioned. This is what the phase indicator and input-area show during the summary animation.
+- **Post-summary message** — `postRoundResultMsg` / `postRoundPhaseText` say `"[team] won the round with X points!"` (standard wording). Swapped in at the end of the summary sequence, after the final countup has landed, so the number the player just watched tick up is the number the message references.
+
+Different modules stash this post-message in slightly different ways:
+- **H5 / Poll Position** — stash via `_h5PostSummary` at the start of the summary, swap in at the end of `showH5Summary`.
+- **Common Thread** — natural `await ctShowSummary` ordering: the next line after the await writes the point-including message.
+- **Secret Scribble** — `handleModuleComplete` runs after the scribble summary's own countup finishes, so the single result message written there is already post-countup. (See scribble polish-pass note about the current wording deviation.)
+
+This deferred-announcement pattern is a shared contract — any new module should follow the same two-stage messaging.
+
+### Adding a new module to the framework
+
+1. Apply `.round-summary` to your module's outermost summary container; use the `.round-summary-*` sub-classes for title/totals/gem so styling is inherited automatically.
+2. Call `showRoundCompleteCard({...})` as the first step of your round-end sequence (you get `roundbell.wav` for free).
+3. Sequence: card → summary fly-in → populate at raw values → beat → parallel 0→raw countups → if `currentRoundMultiplier > 1` do the parallel `runTeamMult` gem-slam + pulse + post-mult countup → `hidePhaseGem()` → hold → `onComplete`.
+4. Stash the point-including message in a post-summary field and swap it in when countup completes, so the deferred point announcement works.
+
+---
+
+## Common Thread — Module Overview
+
+Codenames-style minigame. Requires 4+ players (2 per team minimum). `minPlayersPerTeam: 2` in `ROUND_MODULES['common-thread']`. Originally prototyped at [common-thread.html](common-thread.html); now integrated into `feud.html` as a complete module.
 
 ### Premise
 
-Codenames-inspired. 4×4 grid of word cards. Each board randomly assigns:
+4×4 grid of word cards. Each board randomly assigns:
 - 6 red-team cards (+base points on reveal)
 - 6 blue-team cards (+base points on reveal)
 - 2 penalty cards worth −100
 - 2 penalty cards worth −200
 
-One player per team is the **clue giver**; all others are **guessers**. Clue giver sees each card's value (light-tinted team backgrounds on their view; gray bg + visible value for penalties). Guessers see cream fronts only.
+One player per team is the **clue giver** (randomized at module entry, locked for the whole Common Thread round). All other players on each team are **guessers**. Clue giver sees each card's value (light-tinted team backgrounds on their view; gray bg + visible value for penalties). Guessers see cream fronts only.
 
-Clue giver submits a one-word clue + quantity. Guessers pick cards up to that quantity. Picking your own team's card scores points and keeps the turn; picking the opponent's card awards them the points and ends the turn; picking a penalty subtracts and ends the turn.
+Clue giver submits a one-word clue + quantity. Guessers pick cards up to that quantity. Picking your own team's card scores points and keeps the turn; picking the opponent's card awards those points to the opponent and ends the turn; picking a penalty subtracts the penalty from the guessing team and ends the turn.
 
-### Decisions locked in this session
+### Round end
 
-| Decision | Choice |
-|---|---|
-| **Round end condition** | First team to have all 6 of their cards revealed wins the round (regardless of who revealed them). No timer in v1 — revisit after playtesting. |
-| **Clue input location** | Input-area home base — requires a new `'compose-clue'` mode with a text field on top and a number stepper (◀ 2 ▶) below, same width. |
-| **Streak/mult display** | Single module scoreboard inside the module canvas showing both teams' streak, multiplier, and current round score. Not an extension of the main scoreboard. |
-| **Clue giver rotation** | One clue giver per team, randomized once at module entry, stays for the whole Common Thread round. |
-| **Word bank source** | Pull 16 random words from `SCRIBBLE_WORD_BANK` (flatten across easy/medium/hard). Dedicated bank is a follow-up. |
-| **Clue validation** | Strict: reject the submitted clue if it is a substring or superstring of any board word (case-insensitive, normalized). Catches plurals and compound words algorithmically. Semantic variants (e.g. "MACINTOSH" for APPLE) are not caught — out of scope. |
+First team to have all 6 of their cards revealed wins the round (regardless of who revealed them). No timer.
 
-### Scoring (ported from prototype)
+### Scoring
 
 - On clue submit, **base points = quantity × 100**.
-- Own-team card correct: `earned = round(base × multiplier[team])`, then `streak++`, `multiplier = 1 + streak × 0.2`. Mirrors the ranked-question formula.
-- Opposing-team card: flat `base` points to opponents (no multiplier — they didn't earn it via clue). Guessing team's streak/mult reset.
-- Penalty: flat card value (−100 or −200) subtracted from guessing team. Streak/mult reset.
-- Revealed card back displays `+200` at mult 1.0 or `+200 x 1.2` when mult > 1.
+- Own-team card correct: `earned = round(base × multiplier[team])`, then `streak++`, `multiplier = 1 + streak × 0.2`. Mirrors the ranked-question streak formula.
+- Opposing-team card: flat `base` points to the opposing team (no multiplier — they didn't earn it via clue). Guessing team's streak/mult reset.
+- Penalty: flat card value (−100 or −200) subtracted from the guessing team. Streak/mult reset.
+- Revealed card back displays `+N` at mult 1.0, or `+N x 1.2` etc. when mult > 1.
 
-### Implementation order
+### Module scoreboard
 
-1. **Module scaffolding.** Add `ROUND_MODULES['common-thread']` entry with `label: 'Common Thread'`, `minPlayersPerTeam: 2`, `enter(onComplete)`, `reset()`. Pick a `colorClass` for the round-type picker card. Add `#common-thread-container` inside `#module-canvas` (hidden by default, revealed in `enter`).
-2. **Local single-machine path first.** Port the prototype's card build, DOM, CSS (light-tint fronts, flip-on-reveal, penalty gray, back values), and scoring logic into `feud.html`. Verify end-to-end locally before multiplayer.
-3. **Module scoreboard.** New DOM node inside `#common-thread-container` (or flanking it in the canvas). Shows: Red streak / Red mult / Red round score | Blue streak / Blue mult / Blue round score. Plain for now — polish later.
-4. **Word source.** On module entry, pick 16 random words from `SCRIBBLE_WORD_BANK` (flatten all difficulty tiers into one pool). Uppercase them for display.
-5. **Compose-clue input mode.** Extend `setInputAreaMode` with a new `'compose-clue'` mode: `#turn-input-row` renders a text input (top), then a number stepper (bottom) with `◀` / `▶` arrows flanking a value, both same width. Submit button pinned bottom-right or as a third row. Clue giver sees this mode; everyone else sees `'disabled'` with a "Waiting for [name]..." status. After submit, everyone switches to a `'guess'` mode showing the clue prominently (word + count) — guessers' submit does nothing (their input is the card click), clue giver sees disabled.
-6. **Clue validation.** `isClueValid(clue, boardWords)` — normalize (lowercase, strip non-alphanumerics), then reject if `clue` contains or is contained by any `boardWord`. Apply at submit; show inline rejection feedback in the input row.
-7. **Host-authoritative scoring.** Non-host guessers write `pendingAction: { type: 'commonThreadGuess', cardIdx, uid }`. Non-host clue giver writes `pendingAction: { type: 'commonThreadClue', word, count, uid }`. Host processes, computes scoring, writes `commonThreadState` snapshot. Mirror scribble's pendingAction pattern.
-8. **Role assignment.** Host picks one random UID per team from `teamPlayerUids[team]` as clue giver at module entry, syncs `commonThreadState.clueGiverUids: [red, blue]`. Helpers: `amIClueGiver()`, `amIGuesser()`.
-9. **Card reveal sync.** Host writes `cards[i].revealed = true` + `revealedInfo`. Non-host reconcile triggers the local Y-axis flip animation by toggling the `.flipped` class on the existing card element (prototype pattern — don't rebuild the DOM or the transition is lost).
-10. **Round end + completion.** After each reveal, check: does either team have all 6 of their cards revealed? If yes, that team wins. Call `onComplete({ redScore, blueScore })` with the module's per-team scoring totals (not the global `teamScores`). `handleModuleComplete` folds these into `teamScores` per the standard orchestrator contract.
-11. **Firestore cleanup.** Add `commonThreadState`, `pendingAction` types, and any related fields to the `lobbyStartGame` reset block so stale state doesn't bleed into new games (same pattern as `faceoffState`, `scribbleState`, etc.).
+Inside the module canvas: a single module-scoped scoreboard row showing each team's streak, multiplier, and current round score. Separate from the main `#scoreboard` — the module's own scoreboard folds into the main scoreboard via `handleModuleComplete` at round end.
 
-### Firestore schema (draft)
+### Clue validation
+
+Strict substring check: reject the clue if it is a substring or superstring of any board word (case-insensitive, normalized — lowercase + strip non-alphanumerics). Catches plurals and compound words algorithmically. Semantic variants (e.g. "MACINTOSH" for APPLE) are not caught; out of scope for v1.
+
+### Word bank
+
+Pulls 16 random words from `SCRIBBLE_WORD_BANK` (flattened across easy/medium/hard). A dedicated Common Thread word bank is a future polish item.
+
+### Compose-clue input mode
+
+`setInputAreaMode` supports a `'compose-clue'` mode: `#turn-input-row` renders a text input (clue word) with a number stepper (◀ N ▶) for the quantity, plus a Submit button. Clue giver sees this mode; everyone else sees `'disabled'` with a "Waiting for [name]..." status. After submit, everyone switches to a `'guess'` mode showing the active clue prominently (word + count). Guessers don't type — their input is clicking the cards. Clue giver sees disabled during the guess phase.
+
+### Host-authoritative sync
+
+- Non-host clue giver writes `pendingAction: { type: 'commonThreadClue', word, count, uid }`.
+- Non-host guesser writes `pendingAction: { type: 'commonThreadGuess', cardIdx, uid }`.
+- Host processes both, updates `commonThreadState`, syncs the snapshot. Mirrors the scribble `pendingAction` pattern.
+- Card reveal sync: host writes `cards[i].revealed = true` + `revealedInfo`. Non-host reconcile toggles the `.flipped` class on the existing card element for the Y-axis flip (don't rebuild the DOM or the transition is lost).
+
+### Round-end orchestration
+
+Follows the shared Round Summary Framework. `ctFinishRound` awaits `ctShowSummary`, which runs the standard card → summary-in → countup → gem-slam → post-mult sequence. After a 1500ms hold, `onComplete({redScore, blueScore})` fires `handleModuleComplete`, which writes the post-summary point-including message (`"[team] won the round with X points!"`).
+
+### Firestore schema
 
 ```js
 commonThreadState: {
@@ -836,16 +930,15 @@ commonThreadState: {
 }
 ```
 
-Plus `pendingAction` types: `commonThreadClue` (word, count), `commonThreadGuess` (cardIdx).
+`pendingAction` types: `commonThreadClue` (word, count), `commonThreadGuess` (cardIdx). All `commonThreadState` fields and pendingActions are cleared in `lobbyStartGame`'s Firestore reset block alongside `scribbleState` / `faceoffState` / etc.
 
-### Open follow-ups (defer past v1)
+### Future polish items (deferred)
 
-- **Timer.** Clue composition timer? Guess timer per pick? Decide after first playtest.
-- **Victory awards.** New compute functions for "best clue giver" (most correct per clue), "best guesser" (most cards flipped for own team), etc. Match log entries need new outcome types.
-- **Round-type picker card art.** Pick a gem tier + color treatment. Visual polish pass.
-- **Dedicated word bank.** Curated pool of clueable words (scribble words include some abstracts like "DANCE" that may be awkward for Codenames-style play).
-- **Clue validation nuance.** Semantic variants (plurals caught, synonyms not). If judge-override is needed, add a "trust the clue giver" toggle for the host.
-- **Step 7 (phase reconcile robustness)** from the Pre-Blaze Cleanup Refactor applies to Common Thread handlers too — idempotent phase transitions, no assumptions about prior local state.
+- Clue composition and/or guess timers (currently no timer).
+- Victory award compute functions specific to CT: "best clue giver" (most correct per clue), "best guesser" (most cards flipped for own team), etc. Match log entry types for CT-specific outcomes.
+- Dedicated clueable-word bank (scribble words like "DANCE" can be awkward for Codenames play).
+- Round-type picker card art pass (gem tier / color treatment).
+- Step 7 (phase reconcile robustness) from the Pre-Blaze Cleanup Refactor applies to Common Thread handlers too — idempotent phase transitions, no assumptions about prior local state.
 
 ---
 

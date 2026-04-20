@@ -54,3 +54,6 @@ gem-emerald,evergreen,A modest shine,Round total will be multiplied by 1.5x
 gem-sapphire,evergreen,Deep blue bonus,Round total will be multiplied by 2x
 gem-amethyst,evergreen,Rare and rich,Round total will be multiplied by 2.5x
 gem-topaz,evergreen,Jackpot,Round total will be multiplied by 3x
+
+ct-role-clue-giver,help,The one with the plan,You know every card's team and value. Give your teammates a one-word clue and a count — they pick the cards
+ct-role-guesser,help,Listen and pick,Your clue giver sees the card values. Use their clue to pick cards that match your team. Avoid opponents and penalties

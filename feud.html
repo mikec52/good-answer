@@ -4416,7 +4416,7 @@
       position: absolute; inset: 0; background: rgba(0,0,0,0.75); display: flex;
       align-items: center; justify-content: center; z-index: 50; border-radius: 6px; pointer-events: none;
     }
-    .scribble-countdown-text { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; font-size: 3rem; color: #fba300; animation: scribble-countdown-pop 0.8s ease-out; }
+    .scribble-countdown-text { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; font-size: 3rem; color: #fba300; animation: scribble-countdown-pop 0.8s ease-out both; }
     @keyframes scribble-countdown-pop { 0% { transform: scale(2); opacity: 0; } 30% { transform: scale(1); opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
 
     .scribble-solved-overlay {
@@ -4428,8 +4428,12 @@
       box-shadow: 0 4px 16px rgba(0,0,0,0.4);
       max-width: 88%;
     }
+    .scribble-solved-overlay.sso-stolen {
+      background: rgba(180, 30, 30, 0.85); border-color: rgba(120, 10, 10, 0.9);
+    }
     .scribble-solved-overlay .sso-title { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; font-size: 1.5rem; color: #fff; line-height: 1; }
-    .scribble-solved-overlay .sso-detail { font-family: "futura-100", sans-serif; font-weight: 500; letter-spacing: 1px; font-size: 0.8rem; color: #fff; text-align: center; line-height: 1.2; }
+    .scribble-solved-overlay .sso-word  { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; font-size: 1rem; color: #fff; line-height: 1; }
+    .scribble-solved-overlay .sso-pts   { font-family: "Bitcount Single", monospace; font-size: 0.85rem; color: rgba(255,255,255,0.85); letter-spacing: 0.5px; line-height: 1; }
 
     /* Summary panel sits flush against the scoreboard above — negative
        margin cancels #scribble-container's 8px top padding so there's no
@@ -4438,8 +4442,8 @@
       align-items: center; gap: 0;
       width: 96%; max-width: 980px;
       border-radius: 0 0 10px 10px;
-      overflow: hidden;
-      padding: 0;
+      overflow: visible;
+      padding: 14px 0 12px;
     }
 
     /* Grid-overlay stack: all session blocks occupy the same cell so the
@@ -4748,6 +4752,8 @@
       grid-template-columns: 1fr 1fr;
       gap: 8px;
       padding-top: 6px;
+      width: 100%;
+      box-sizing: border-box;
     }
     .round-summary-team { text-align: center; position: relative; }
     .round-summary-team-name {
@@ -9107,7 +9113,7 @@ document.addEventListener('keydown', e => {
         const solve = data.scribbleLastSolve;
         // Don't re-apply our own solve (host already applied it locally)
         if (!isHost) {
-          scribbleApplySolve(solve.solvedTeam, { total: solve.total, mult: solve.mult }, solve.guesserUid);
+          scribbleApplySolve(solve.solvedTeam, { total: solve.total, mult: solve.mult, raw: solve.raw }, solve.guesserUid);
         }
       }
 
@@ -11658,8 +11664,8 @@ document.addEventListener('keydown', e => {
       const winnerName = teamNames[scoringTeam] || (scoringTeam === 0 ? "Red" : "Blue");
       const winnerClass = scoringTeam === 0 ? "red" : "blue";
       const pts = scoringTeam === 0 ? redScore : blueScore;
-      const resultMsg = `<span class="${winnerClass}">${winnerName}</span> won ${pts} points!`;
-      const phaseMsg = `<span class="${winnerClass}">${winnerName}</span> won ${pts} points!`;
+      const resultMsg = `<span class="${winnerClass}">${winnerName}</span> won the round with ${pts} points!`;
+      const phaseMsg = `<span class="${winnerClass}">${winnerName}</span> won the round with ${pts} points!`;
 
       // Render via the canonical round-result renderer. Host builds the
       // same Firestore-shaped payload it's about to sync, then both paths
@@ -13669,6 +13675,7 @@ document.addEventListener('keydown', e => {
               guesserUid,
               total: scoredResult.total,
               mult: scoredResult.mult,
+              raw: scoredResult.raw,
               ts: Date.now(),
             },
             pendingAction: null,
@@ -13727,27 +13734,34 @@ document.addEventListener('keydown', e => {
       const t0 = scribbleState._team0Word, t1 = scribbleState._team1Word;
       const word = solvedTeam === 0 ? t0?.word : t1?.word;
 
-      // Build perspective-aware detail message
-      let detailMsg = "";
-      if (word) {
-        const pts = `+${result.total} pts (${result.mult}x)`;
-        const W = word.toUpperCase();
-        if (isMyTeamGuessed) {
-          detailMsg = isSteal ? `Stolen! ${W} — ${pts}` : `${W} — ${pts}`;
-        } else if (isMyTeamDrawing) {
-          detailMsg = `They stole "${W}"!`;
-        } else {
-          detailMsg = `"${W}"`;
+      // Build solved overlay data
+      const W = word ? word.toUpperCase() : null;
+      const isStolen = !isMyTeamGuessed && isMyTeamDrawing; // opponents took our word
+
+      let solvedData;
+      if (isStolen) {
+        // Red "STOLEN!" pill — show drawer bonus (always 50 × time mult)
+        solvedData = { word: W, stolen: true };
+        if (result.mult != null) {
+          solvedData.raw  = 50;
+          solvedData.mult = result.mult;
+        }
+      } else {
+        // Green "SOLVED!" pill — show guesser pts when our team scored
+        solvedData = { word: W };
+        if (isMyTeamGuessed && result.raw != null && result.mult != null) {
+          solvedData.raw  = result.raw;
+          solvedData.mult = result.mult;
         }
       }
 
       // Show solved overlay pill — location depends on role
       if (isDrawer) {
         if (isMyTeamDrawing) {
-          scribbleShowSolved("scribble-draw-panel", detailMsg);
+          scribbleShowSolved("scribble-draw-panel", solvedData);
         }
       } else {
-        scribbleShowSolved(isMyTeamDrawing ? "scribble-teammate-panel" : "scribble-opp-panel", detailMsg);
+        scribbleShowSolved(isMyTeamDrawing ? "scribble-teammate-panel" : "scribble-opp-panel", solvedData);
         if (!isMyTeamDrawing) {
           scribbleRevealAllTiles();
         }
@@ -13792,7 +13806,7 @@ document.addEventListener('keydown', e => {
         ss.teamScores[drawerTeam] += drawerBonus;
       }
 
-      return { total, mult, breakdown };
+      return { total, mult, raw, breakdown };
     }
 
     // ── Scribble countdown ──
@@ -13817,15 +13831,22 @@ document.addEventListener('keydown', e => {
     }
 
     // ── Scribble show solved overlay ──
-    function scribbleShowSolved(panelId, detailMsg) {
+    // opts: { word, raw, mult, stolen }
+    //   stolen: true  → red "STOLEN!" pill (drawing was taken by opponents)
+    //   raw+mult       → show "[raw] × [mult]" below the word (omit when no pts)
+    function scribbleShowSolved(panelId, opts = {}) {
       const panel = document.getElementById(panelId);
       if (!panel) return;
       const wrap = panel.querySelector(".scribble-canvas-wrap, .scribble-opponent-wrap");
       if (!wrap) return;
       const overlay = document.createElement("div");
-      overlay.className = "scribble-solved-overlay";
-      const detail = detailMsg ? `<span class="sso-detail">${detailMsg}</span>` : "";
-      overlay.innerHTML = `<span class="sso-title">SOLVED!</span>${detail}`;
+      overlay.className = "scribble-solved-overlay" + (opts.stolen ? " sso-stolen" : "");
+      const title   = opts.stolen ? "STOLEN!" : "SOLVED!";
+      const wordHtml = opts.word ? `<span class="sso-word">${opts.word}</span>` : "";
+      const ptsHtml  = (opts.raw != null && opts.mult != null)
+        ? `<span class="sso-pts">${opts.raw} × ${opts.mult}</span>`
+        : "";
+      overlay.innerHTML = `<span class="sso-title">${title}</span>${wordHtml}${ptsHtml}`;
       wrap.appendChild(overlay);
     }
 
@@ -14635,10 +14656,13 @@ document.addEventListener('keydown', e => {
         };
 
         await new Promise(r => setTimeout(r, 500));
-        const tasks = [];
-        if (totalRed  > 0) tasks.push(runTeamMult(rs, totalRed,  finalRed));
-        if (totalBlue > 0) tasks.push(runTeamMult(bs, totalBlue, finalBlue));
-        await Promise.all(tasks);
+        if (totalRed  > 0) {
+          await runTeamMult(rs, totalRed,  finalRed);
+          await new Promise(r => setTimeout(r, 350));
+        }
+        if (totalBlue > 0) {
+          await runTeamMult(bs, totalBlue, finalBlue);
+        }
         if (typeof hidePhaseGem === "function") hidePhaseGem();
       }
 
@@ -14822,31 +14846,31 @@ document.addEventListener('keydown', e => {
         if (_paintBucketCursorUrl) return resolve(_paintBucketCursorUrl);
         const img = new Image();
         img.onload = () => {
-          const size = 64;
+          const size = 32;
           const cvs = document.createElement("canvas");
           cvs.width = size; cvs.height = size;
           const ctx = cvs.getContext("2d");
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = "high";
           // Black circle (centered in lower-right area to leave room for arrow)
-          const cx = 38, cy = 38, r = 24;
+          const cx = 19, cy = 19, r = 12;
           ctx.fillStyle = "#000";
           ctx.beginPath();
           ctx.arc(cx, cy, r, 0, Math.PI * 2);
           ctx.fill();
           // Paint brush centered in circle
-          const brushSize = 36;
+          const brushSize = 18;
           ctx.drawImage(img, cx - brushSize / 2, cy - brushSize / 2, brushSize, brushSize);
-          // Classic arrow pointer in upper-left, tip at (2,2)
+          // Classic arrow pointer in upper-left, tip at (1,1)
           ctx.fillStyle = "#000";
           ctx.strokeStyle = "#fff";
-          ctx.lineWidth = 1.5;
+          ctx.lineWidth = 1;
           ctx.lineJoin = "round";
           ctx.beginPath();
-          ctx.moveTo(2, 2);      // tip (hotspot)
-          ctx.lineTo(22, 10);    // right edge
-          ctx.lineTo(12, 12);    // inner notch
-          ctx.lineTo(10, 22);    // down
+          ctx.moveTo(1, 1);      // tip (hotspot)
+          ctx.lineTo(11, 5);     // right edge
+          ctx.lineTo(6, 6);      // inner notch
+          ctx.lineTo(5, 11);     // down
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
@@ -14867,7 +14891,7 @@ document.addEventListener('keydown', e => {
       if (tool === "bucket") {
         buildPaintBucketCursor().then(url => {
           if (url && scribbleState.currentTool === "bucket") {
-            c.style.cursor = `url("${url}") 2 2, crosshair`;
+            c.style.cursor = `url("${url}") 1 1, crosshair`;
           } else {
             c.style.cursor = "crosshair";
           }

@@ -2309,6 +2309,313 @@
     @keyframes ctci-fade-in { to { opacity: 1; } }
 
     /* ══════════════════════════════════════
+       Secret Scribble — picker card animated logo
+       Boomerang mask-sprite wipe: erase → pause → fill → pause → loop.
+       Outline layer (2px white stroke, transparent) always visible; fill
+       layer (solid white) rides the sprite mask so the outline is exposed
+       as the fill dissolves.
+       Aspect 930:500 matches proto stage. container-type lets the font
+       size scale with card width via cqw units.
+    ══════════════════════════════════════ */
+    .rt-ss-stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 930 / 500;
+      overflow: hidden;
+      container-type: inline-size;
+      background: transparent;
+    }
+    .rt-ss-words {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.08cqw;
+    }
+    .rt-ss-line {
+      position: relative;
+      display: block;
+      font-family: "futura-100", sans-serif;
+      font-weight: 900;
+      font-size: 12.9cqw;
+      letter-spacing: 0.645cqw;
+      text-transform: uppercase;
+      line-height: 0.95;
+    }
+    .rt-ss-outline {
+      color: transparent;
+      -webkit-text-stroke: 2px #fff;
+    }
+    .rt-ss-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      color: #fff;
+      -webkit-mask-image: url(https://raw.githubusercontent.com/robin-dela/css-mask-animation/master/img/urban-sprite.png);
+              mask-image: url(https://raw.githubusercontent.com/robin-dela/css-mask-animation/master/img/urban-sprite.png);
+      -webkit-mask-size: 3000% 100%;
+              mask-size: 3000% 100%;
+      -webkit-mask-repeat: no-repeat;
+              mask-repeat: no-repeat;
+      -webkit-mask-position: 0 0;
+              mask-position: 0 0;
+      animation: rt-ss-boomerang 3.6s infinite;
+      animation-delay: 0.4s;
+    }
+    /* Cycle (3.6s): 0→1.2s erase (steps) | 1.2→1.6s pause empty |
+                    1.6→2.8s fill (steps) | 2.8→3.6s pause full */
+    @keyframes rt-ss-boomerang {
+      0%      { -webkit-mask-position: 0 0;    mask-position: 0 0;    animation-timing-function: steps(29); }
+      33.333% { -webkit-mask-position: 100% 0; mask-position: 100% 0; animation-timing-function: linear; }
+      44.444% { -webkit-mask-position: 100% 0; mask-position: 100% 0; animation-timing-function: steps(29); }
+      77.778% { -webkit-mask-position: 0 0;    mask-position: 0 0; }
+      100%    { -webkit-mask-position: 0 0;    mask-position: 0 0; }
+    }
+
+    /* ══════════════════════════════════════
+       Secret Scribble — cinematic intro overlay
+       Searchlight sweep → overhead cone reveal → slow erase wipe.
+       Stage mounts inside #module-canvas at ~75% of canvas width, with
+       the 930:500 aspect ratio preserved.
+    ══════════════════════════════════════ */
+    #ss-cinematic {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      opacity: 1;
+      transition: opacity 0.45s ease;
+    }
+    #ss-cinematic.ssci-fade-out { opacity: 0; }
+    /* Content wrapper: stage + roles. Stacks below shadow layers by DOM
+       order (shadow layers come later as absolute siblings). Stage is
+       the only in-flow child (so it sits at canvas center during the
+       cinematic). Roles is position: absolute below the stage — out of
+       flow, so the cinematic isn't pushed off-center by reserved space.
+       Slide-up moves the wrapper up at the cinematic's end, opening
+       vertical room for the roles panel to fade in below. */
+    .ssci-content {
+      position: relative;
+      z-index: 1;
+      display: block;
+      width: 100%;
+      text-align: center;
+      transition: transform 0.6s ease;
+    }
+    .ssci-content.ssci-slide-up { transform: translateY(-100px); }
+    .ssci-stage {
+      position: relative;
+      width: 75%;
+      aspect-ratio: 930 / 500;
+      overflow: visible;
+      container-type: inline-size;
+      background: transparent;
+      margin: 0 auto;
+    }
+    .ssci-words {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.08cqw;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .ssci-word {
+      position: relative;
+      display: inline-block;
+      font-family: "futura-100", sans-serif;
+      font-weight: 900;
+      font-size: 12.9cqw;
+      letter-spacing: 0.645cqw;
+      text-transform: uppercase;
+      line-height: 0.95;
+      --lit: 0;
+    }
+    .ssci-word-outline {
+      display: inline-block;
+      color: transparent;
+      -webkit-text-stroke: 2px rgba(255, 255, 255, var(--lit));
+    }
+    .ssci-word-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      color: rgb(
+        calc(10 + (248 - 10) * var(--lit)),
+        calc(10 + (250 - 10) * var(--lit)),
+        calc(10 + (252 - 10) * var(--lit))
+      );
+      text-shadow:
+        0 0 calc(14px * var(--lit)) rgba(255,255,255, calc(0.45 * var(--lit))),
+        0 0 calc(36px * var(--lit)) rgba(230,240,255, calc(0.22 * var(--lit))),
+        2px 3px 0 rgba(0,0,0, calc(0.55 * var(--lit)));
+      -webkit-mask-image: url(https://raw.githubusercontent.com/robin-dela/css-mask-animation/master/img/urban-sprite.png);
+              mask-image: url(https://raw.githubusercontent.com/robin-dela/css-mask-animation/master/img/urban-sprite.png);
+      -webkit-mask-size: 3000% 100%;
+              mask-size: 3000% 100%;
+      -webkit-mask-repeat: no-repeat;
+              mask-repeat: no-repeat;
+      -webkit-mask-position: 0 0;
+              mask-position: 0 0;
+    }
+    .ssci-word.ssci-erasing .ssci-word-fill {
+      animation: ssci-word-erase 2s steps(29) forwards;
+    }
+    @keyframes ssci-word-erase {
+      from { -webkit-mask-position: 0 0;     mask-position: 0 0; }
+      to   { -webkit-mask-position: 100% 0;  mask-position: 100% 0; }
+    }
+    /* Shadow layers span the FULL module canvas (not the stage). They sit
+       above .ssci-content via DOM order + absolute positioning, so the
+       spotlight masks the words below. All three fade out together when
+       #ss-cinematic gains .ssci-lights-off. */
+    .ssci-darken {
+      position: absolute;
+      inset: 0;
+      margin-top: -5px;
+      /* Radial vignette — darkest at center (where the words land),
+         fading to lighter at the canvas corners. Four stops exposed
+         as CSS custom properties; tweak these on .ssci-darken in
+         DevTools to fine-tune. All are alphas in the 0–1 range. */
+      --bg-inner: 0.92;  /* 0%   — center, darkest */
+      --bg-mid:   0.68;  /* 40%  — transition */
+      --bg-outer: 0.22;  /* 75%  — outer */
+      --bg-edge:  0.0;  /* 100% — canvas corners, lightest */
+      background: radial-gradient(
+        ellipse farthest-corner at 50% 50%,
+        rgba(0,0,0, var(--bg-inner)) 0%,
+        rgba(0,0,0, var(--bg-mid))   40%,
+        rgba(0,0,0, var(--bg-outer)) 75%,
+        rgba(0,0,0, var(--bg-edge))  100%
+      );
+      z-index: 3;
+      pointer-events: none;
+      --sx: 50%;
+      --sy: 50%;
+      --srx: 160px;
+      --sry: 160px;
+      --dim: 1;
+      opacity: var(--dim);
+      transition: opacity 0.5s ease;
+      -webkit-mask-image: radial-gradient(
+        ellipse var(--srx) var(--sry) at var(--sx) var(--sy),
+        transparent 0%,
+        rgba(0,0,0,0.25) 45%,
+        rgba(0,0,0,0.6)  72%,
+        rgba(0,0,0,0.88) 92%,
+        #000 100%
+      );
+      mask-image: radial-gradient(
+        ellipse var(--srx) var(--sry) at var(--sx) var(--sy),
+        transparent 0%,
+        rgba(0,0,0,0.25) 45%,
+        rgba(0,0,0,0.6)  72%,
+        rgba(0,0,0,0.88) 92%,
+        #000 100%
+      );
+    }
+    .ssci-beam {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      --sx: 50%;
+      --sy: 50%;
+      --srx: 160px;
+      --sry: 160px;
+      --beam: 0.55;
+      opacity: var(--beam);
+      transition: opacity 0.5s ease;
+      background: radial-gradient(
+        ellipse var(--srx) var(--sry) at var(--sx) var(--sy),
+        rgba(255,255,255,0.55) 0%,
+        rgba(245,250,255,0.22) 40%,
+        rgba(235,245,255,0.05) 70%,
+        transparent 100%
+      );
+    }
+    /* Overhead cone — SVG with soft trapezoid cutout + internal glow.
+       Fades in during the handoff phase. */
+    .ssci-cone {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 5;
+      pointer-events: none;
+      --cone: 0;
+      opacity: var(--cone);
+      transition: opacity 0.5s ease;
+    }
+    #ss-cinematic.ssci-lights-off .ssci-darken,
+    #ss-cinematic.ssci-lights-off .ssci-beam,
+    #ss-cinematic.ssci-lights-off .ssci-cone {
+      opacity: 0 !important;
+    }
+    /* Roles panel — mirrors .ctci-roles. Revealed after lights-off via
+       .ssci-roles-visible. Each column shows per-session drawer names.
+       Absolute-positioned below the stage so it doesn't reserve vertical
+       space during the cinematic (keeps the stage centered in canvas). */
+    .ssci-roles {
+      position: absolute;
+      top: calc(100% - 22px);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      justify-content: center;
+      gap: 102px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      white-space: nowrap;
+    }
+    .ssci-roles.ssci-roles-visible { opacity: 1; }
+    .ssci-role-col {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 280px;
+    }
+    .ssci-role-team {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 25px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .ssci-role-team.team-red  { color: var(--red-text); }
+    .ssci-role-team.team-blue { color: var(--blue-text); }
+    .ssci-role-session {
+      font-family: "futura-100", sans-serif;
+      font-weight: 500;
+      font-size: 22px;
+      letter-spacing: 0.05em;
+      color: rgba(255,255,255,0.9);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .ssci-role-badge {
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      padding: 4px 9px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .ssci-role-badge.team-red  { background: var(--red-bg);  color: #fff; }
+    .ssci-role-badge.team-blue { background: var(--blue-bg); color: #fff; }
+
+    /* ══════════════════════════════════════
        High Five — picker card loop logo
        Pure SVG, 500×210 viewBox. "HIGH" text + white pill with "5" +
        static right hand + looping left hand + white rays.
@@ -6973,7 +7280,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.15</div>
+  <div id="version-tag">v0.16</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -12342,6 +12649,8 @@ document.addEventListener('keydown', e => {
         colorClass: 'cat-popculture',
         minPlayersPerTeam: 2,
         intro: { title: 'SECRET\nSCRIBBLE', subtitle: 'Draw, guess, steal', accent: '#c000c0' },
+        artHtml: () => _buildSsPickerArtHtml(),
+        cinematic: () => _playSsCinematic(),
         enter(onComplete) { enterScribbleRound(onComplete); },
         reset() { resetScribbleState({ keepUsedWords: true }); },
       },
@@ -16065,6 +16374,261 @@ document.addEventListener('keydown', e => {
           el.remove();
           resolve();
         }, 12500);
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Secret Scribble — picker card logo + cinematic intro
+    // Ports secret-scribble-logo.html prototype: boomerang mask-sprite wipe
+    // on the picker card, and spotlight-search → overhead-cone → slow erase
+    // wipe as the cinematic intro. Stage aspect is 930:500 in both cases.
+    // ─────────────────────────────────────────────────────────────────────
+
+    // Picker card logo. The title container is ~300px wide per card; the
+    // cqw-based sizing scales font proportionally from the 930px proto.
+    function _buildSsPickerArtHtml() {
+      return ''
+        + '<div class="rt-ss-stage">'
+        +   '<div class="rt-ss-words">'
+        +     '<span class="rt-ss-line">'
+        +       '<span class="rt-ss-outline">Secret</span>'
+        +       '<span class="rt-ss-fill">Secret</span>'
+        +     '</span>'
+        +     '<span class="rt-ss-line">'
+        +       '<span class="rt-ss-outline">Scribble</span>'
+        +       '<span class="rt-ss-fill">Scribble</span>'
+        +     '</span>'
+        +   '</div>'
+        + '</div>';
+    }
+
+    // Roles panel — mirrors Common Thread's _buildRolesHtml. Shows each
+    // team's drawer assignments per scribble session. Selection logic
+    // matches scribbleDetermineRole: drawer for session N is
+    // teamPlayerUids[team][N % roster.length]. In local mode there's no
+    // per-session drawer rotation, so we show a neutral placeholder.
+    function _buildSsRolesHtml() {
+      if (!isMultiplayer) {
+        return '<div class="ssci-role-col" style="min-width:0;text-align:center">' +
+          '<div class="ssci-role-session" style="color:rgba(255,255,255,0.45);font-size:14px;letter-spacing:0.1em">' +
+            'Each team rotates drawers between sessions' +
+          '</div>' +
+        '</div>';
+      }
+      let html = '';
+      [0, 1].forEach(t => {
+        const teamClass = t === 0 ? 'team-red' : 'team-blue';
+        const teamNameEl = document.querySelectorAll('.team-label h4')[t];
+        const displayTeam = teamNameEl ? teamNameEl.textContent.trim() : (t === 0 ? 'Red Team' : 'Blue Team');
+        const roster = teamPlayerUids[t] || [];
+        const names  = teamPlayers[t] || [];
+        const rosterLen = roster.length || 1;
+        function drawerNameForSession(sessionIdx) {
+          const drawIdx = sessionIdx % rosterLen;
+          const uid = roster[drawIdx];
+          if (!uid) return names[drawIdx] || (t === 0 ? 'Player 1' : 'Player 2');
+          const i = roster.indexOf(uid);
+          return (i >= 0 && names[i]) ? names[i] : (names[drawIdx] || 'Player');
+        }
+        const d0 = drawerNameForSession(0);
+        const d1 = drawerNameForSession(1);
+        html += `<div class="ssci-role-col">`;
+        html += `<div class="ssci-role-team ${teamClass}">${displayTeam}</div>`;
+        html += `<div class="ssci-role-session">` +
+                  `<span class="ssci-role-badge ${teamClass}">Session 1</span>` +
+                  `${d0}` +
+                `</div>`;
+        html += `<div class="ssci-role-session">` +
+                  `<span class="ssci-role-badge ${teamClass}">Session 2</span>` +
+                  `${d1}` +
+                `</div>`;
+        html += `</div>`;
+      });
+      return html;
+    }
+
+    // Cinematic intro. Timeline (7000ms rAF drive, ~12750ms total):
+    //   0    → 4000ms  searching sweep (spline-driven spotlight)
+    //   4000 → 4750ms  handoff — search ellipse fades out, cone fades in
+    //   4750 → 4950ms  short hold with cone fully lit
+    //   4950 → 6950ms  slow erase wipe — fill dissolves, outline remains
+    //   6950 → 7250ms  settle buffer
+    //   7250         lights-off + slide-up + roles reveal
+    //   12250        begin fade-out
+    //   12710        remove + resolve
+    function _playSsCinematic() {
+      return new Promise((resolve) => {
+        const root = document.getElementById('module-canvas') || document.getElementById('game-root');
+        if (!root) { resolve(); return; }
+        const stale = document.getElementById('ss-cinematic');
+        if (stale) stale.remove();
+
+        const el = document.createElement('div');
+        el.id = 'ss-cinematic';
+        el.innerHTML =
+          '<div class="ssci-content">' +
+            '<div class="ssci-stage">' +
+              '<div class="ssci-words">' +
+                '<div class="ssci-word ssci-word--secret">' +
+                  '<span class="ssci-word-outline">Secret</span>' +
+                  '<span class="ssci-word-fill">Secret</span>' +
+                '</div>' +
+                '<div class="ssci-word ssci-word--scribble">' +
+                  '<span class="ssci-word-outline">Scribble</span>' +
+                  '<span class="ssci-word-fill">Scribble</span>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="ssci-roles" id="ssci-roles-panel">' + _buildSsRolesHtml() + '</div>' +
+          '</div>' +
+          '<div class="ssci-darken"></div>' +
+          '<div class="ssci-beam"></div>' +
+          '<svg class="ssci-cone" viewBox="0 0 930 500" preserveAspectRatio="none">' +
+            '<defs>' +
+              '<filter id="ssCineConeBlur" x="-30%" y="-30%" width="160%" height="160%">' +
+                '<feGaussianBlur stdDeviation="42" />' +
+              '</filter>' +
+              '<mask id="ssCineConeMask">' +
+                '<rect x="0" y="0" width="930" height="500" fill="white" />' +
+                '<polygon points="400,-20 530,-20 905,460 25,460" fill="black" filter="url(#ssCineConeBlur)" />' +
+              '</mask>' +
+              '<linearGradient id="ssCineConeGlow" x1="50%" y1="0%" x2="50%" y2="100%">' +
+                '<stop offset="0%"  stop-color="#ffffff" stop-opacity="0.75" />' +
+                '<stop offset="35%" stop-color="#ffffff" stop-opacity="0.45" />' +
+                '<stop offset="70%" stop-color="#ffffff" stop-opacity="0.25" />' +
+                '<stop offset="100%" stop-color="#ffffff" stop-opacity="0.0" />' +
+              '</linearGradient>' +
+            '</defs>' +
+            '<rect width="930" height="500" fill="#000" mask="url(#ssCineConeMask)" />' +
+            '<g style="mix-blend-mode: screen;">' +
+              '<polygon points="400,-20 530,-20 905,460 25,460" fill="url(#ssCineConeGlow)" filter="url(#ssCineConeBlur)" />' +
+            '</g>' +
+          '</svg>';
+        root.appendChild(el);
+
+        const darken = el.querySelector('.ssci-darken');
+        const beam   = el.querySelector('.ssci-beam');
+        const cone   = el.querySelector('.ssci-cone');
+        const stage  = el.querySelector('.ssci-stage');
+        const wSec   = stage.querySelector('.ssci-word--secret');
+        const wScr   = stage.querySelector('.ssci-word--scribble');
+
+        // Search-path waypoints (x,y as %, rx/ry in px). Scaled so the last
+        // waypoint lands at T=0.7143 — beam parked by the time erase kicks
+        // in at T=0.7071. Absolute timing of the search phase (~4s) matches
+        // the original 5s-total prototype.
+        const WAYPOINTS = [
+          { t: 0.00000, x: 6,   y: 30, rx: 130, ry: 130 },
+          { t: 0.07143, x: 24,  y: 29, rx: 130, ry: 130 },
+          { t: 0.14286, x: 44,  y: 31, rx: 130, ry: 130 },
+          { t: 0.21429, x: 64,  y: 29, rx: 130, ry: 130 },
+          { t: 0.28571, x: 88,  y: 31, rx: 130, ry: 130 },
+          { t: 0.35714, x: 78,  y: 60, rx: 135, ry: 135 },
+          { t: 0.42857, x: 50,  y: 72, rx: 140, ry: 140 },
+          { t: 0.50000, x: 22,  y: 60, rx: 145, ry: 145 },
+          { t: 0.60714, x: 50,  y: 45, rx: 140, ry: 140 },
+          { t: 0.71429, x: 50,  y: 45, rx: 140, ry: 140 },
+        ];
+        function catmull(p0, p1, p2, p3, t) {
+          const t2 = t*t, t3 = t2*t;
+          return 0.5 * (
+            (2 * p1) +
+            (-p0 + p2) * t +
+            (2*p0 - 5*p1 + 4*p2 - p3) * t2 +
+            (-p0 + 3*p1 - 3*p2 + p3) * t3
+          );
+        }
+        function smoothstep(t) { return t * t * (3 - 2 * t); }
+        function sampleSpline(T) {
+          const wps = WAYPOINTS;
+          let i = 0;
+          for (; i < wps.length - 1; i++) {
+            if (T <= wps[i + 1].t) break;
+          }
+          if (i >= wps.length - 1) {
+            const last = wps[wps.length - 1];
+            return { x: last.x, y: last.y, rx: last.rx, ry: last.ry };
+          }
+          const p1 = wps[i], p2 = wps[i + 1];
+          const p0 = wps[i - 1] || p1;
+          const p3 = wps[i + 2] || p2;
+          const localT = (T - p1.t) / (p2.t - p1.t);
+          const x = catmull(p0.x, p1.x, p2.x, p3.x, localT);
+          const y = catmull(p0.y, p1.y, p2.y, p3.y, localT);
+          const e = smoothstep(localT);
+          const rx = p1.rx + (p2.rx - p1.rx) * e;
+          const ry = p1.ry + (p2.ry - p1.ry) * e;
+          return { x, y, rx, ry };
+        }
+
+        const DURATION      = 7000;
+        const HANDOFF_START = 4000 / 7000;   // ≈ 0.5714
+        const HANDOFF_END   = 4750 / 7000;   // ≈ 0.6786
+        const ERASE_START   = 4950 / 7000;   // ≈ 0.7071  (200ms after HANDOFF_END)
+
+        // Defensive: ensure any prior erase state is cleared so the CSS
+        // erase animation doesn't fire immediately at T=0. (In practice
+        // the stale element is already removed above; kept for parity
+        // with the proto's cloneNode replay guard.)
+        wSec.classList.remove('ssci-erasing');
+        wScr.classList.remove('ssci-erasing');
+
+        const start = performance.now();
+        let erased = false;
+
+        function frame(now) {
+          const T = Math.min(1, (now - start) / DURATION);
+          const { x, y, rx, ry } = sampleSpline(T);
+
+          darken.style.setProperty('--sx',  x + '%');
+          darken.style.setProperty('--sy',  y + '%');
+          darken.style.setProperty('--srx', rx + 'px');
+          darken.style.setProperty('--sry', ry + 'px');
+          beam.style.setProperty('--sx',  x + '%');
+          beam.style.setProperty('--sy',  y + '%');
+          beam.style.setProperty('--srx', rx + 'px');
+          beam.style.setProperty('--sry', ry + 'px');
+
+          const h = T <= HANDOFF_START ? 0
+                  : T >= HANDOFF_END   ? 1
+                  : smoothstep((T - HANDOFF_START) / (HANDOFF_END - HANDOFF_START));
+
+          darken.style.setProperty('--dim',  (1 - h).toFixed(3));
+          beam.style.setProperty('--beam',   (0.55 * (1 - h)).toFixed(3));
+          cone.style.setProperty('--cone',   h.toFixed(3));
+
+          const lit = h;
+          wSec.style.setProperty('--lit', lit.toFixed(3));
+          wScr.style.setProperty('--lit', lit.toFixed(3));
+
+          if (!erased && T >= ERASE_START) {
+            erased = true;
+            wSec.classList.add('ssci-erasing');
+            wScr.classList.add('ssci-erasing');
+          }
+
+          if (T < 1) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+
+        // 7250ms — after erase settles: lights off, logo slides up, roles
+        // panel fades in. Matches Common Thread cinematic's choreography.
+        setTimeout(() => {
+          el.classList.add('ssci-lights-off');
+          const content = el.querySelector('.ssci-content');
+          const roles   = el.querySelector('.ssci-roles');
+          if (content) content.classList.add('ssci-slide-up');
+          if (roles)   roles.classList.add('ssci-roles-visible');
+        }, DURATION + 250);
+
+        // Hold roles ~5s after reveal, then fade out and resolve.
+        // 7250 (reveal) + 5000 (hold) = 12250 → fade 460 → 12710 done.
+        setTimeout(async () => {
+          el.classList.add('ssci-fade-out');
+          await anim.wait(460);
+          el.remove();
+          resolve();
+        }, DURATION + 250 + 5000);
       });
     }
 

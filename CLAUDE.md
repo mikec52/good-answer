@@ -579,6 +579,27 @@ ROUND_MODULES = {
 
 **Next on the roadmap:** **Number is Correct** (NIC) — Price-is-Right-style numeric guessing. Not yet built.
 
+### Module Visual Identity — Animated Logos
+
+Each module has two logo/animation deliverables that share the same SVG asset:
+
+1. **Cinematic intro** — full-screen overlay on `#module-canvas` that plays before the round begins (via `mod.cinematic()` in `ROUND_MODULES`). Sequenced CSS keyframe animations reveal the logo dramatically, then fade out and resolve a Promise so the module entry function can proceed. Common Thread's cinematic (`_playCtCinematic`) is the reference implementation — it animates text trace + fill, draws the thread line, slides the logo up, and fades in role assignments for multiplayer.
+
+2. **Animated logo on the round-type picker card** — a compact looping animation displayed inside the `.rt-card` while the player is choosing a round. Loops indefinitely via CSS `animation: ... infinite`. Common Thread uses a boomerang `stroke-dashoffset` loop on the thread path (`.rt-ct-logo-line`).
+
+**Status by module:**
+- **Common Thread** — ✅ Both done. SVG: inline in `feud.html` (viewBox `0 0 500 210`, Futura Bold text + cubic-bezier thread path). Cinematic: `_playCtCinematic()`. Picker logo: `.rt-ct-logo-line` boomerang animation.
+- **High Five** — 🚧 SVG asset locked in at `drafts/high-five.svg` (viewBox `0 0 1000 1000`, 14 paths). Three animation groups confirmed: `class="left-hand"` (P1–P5), `class="right-hand"` (P6–P11), `class="rays"` (P12–P14). Cinematic and picker logo not yet implemented.
+- **Secret Scribble** — ❌ Not started.
+- **Poll Position** — ❌ Not started.
+
+**Implementation pattern for new module cinematics:**
+- Mount to `#module-canvas` (≈930px wide) via `document.getElementById('module-canvas') || document.getElementById('game-root')`
+- `position: absolute; inset: 0` on the overlay div so it fills the canvas
+- SVG width tuned to `~78%` of canvas width for breathing room
+- Resolve the Promise after fade-out so the module entry function chains correctly
+- Register as `cinematic: () => _playModuleCinematic()` in `ROUND_MODULES`
+
 ### Round flow (host-authoritative)
 
 1. `advanceRound()` — flips `teamTurn`, increments `roundNumber`, runs exit animations, clears ready state (`_readyPlayersMap`, `_readyCountdownInterval`, `_readyCountdownEnd`), resets input-area to neutral state, hides any lingering scribble container.

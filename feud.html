@@ -2155,6 +2155,156 @@
       color: #d8d8d8;
       letter-spacing: 0.3px;
     }
+    /* ── Common Thread animated logo inside the picker card title ── */
+    .rt-card-title.rt-card-logo {
+      height: auto;
+      padding: 10px 10px 6px;
+    }
+    .rt-ct-svg { display: block; overflow: visible; width: 100%; height: auto; }
+    .rt-ct-word {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 76px;
+      text-anchor: middle;
+      paint-order: stroke fill;
+      fill: #fff;
+    }
+    .rt-ct-word-common { letter-spacing: -5.5px; }
+    .rt-ct-word-thread { letter-spacing: 7.5px; transform: translateX(9px); }
+    .rt-ct-logo-line {
+      fill: none;
+      stroke: #fff;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 1500;
+      stroke-dashoffset: 1500;
+      animation: rt-ct-boomerang 5s linear infinite;
+    }
+    @keyframes rt-ct-boomerang {
+      0%   { stroke-dashoffset: 1500; animation-timing-function: ease-in-out; }
+      38%  { stroke-dashoffset: 0;    animation-timing-function: linear; }
+      50%  { stroke-dashoffset: 0;    animation-timing-function: ease-in-out; }
+      88%  { stroke-dashoffset: 1500; animation-timing-function: linear; }
+      100% { stroke-dashoffset: 1500; }
+    }
+
+    /* ── Common Thread cinematic intro overlay ── */
+    #ct-cinematic {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      opacity: 1;
+      transition: opacity 0.45s ease;
+    }
+    #ct-cinematic.ctci-fade-out { opacity: 0; }
+    .ctci-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      transition: transform 0.6s ease;
+    }
+    .ctci-content {
+      width: 100%;
+    }
+    .ctci-content.ctci-slide-up { transform: translateY(-51px); }
+    .ctci-svg { display: block; overflow: visible; width: 78%; max-width: none; height: auto; margin: 0 auto; }
+    .ctci-roles {
+      display: flex;
+      justify-content: center;
+      gap: 102px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      margin-top: 7px;
+    }
+    .ctci-roles.ctci-roles-visible { opacity: 1; }
+    .ctci-role-col {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 323px;
+    }
+    .ctci-role-team {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 25px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+    .ctci-role-team.team-red  { color: var(--red-text); }
+    .ctci-role-team.team-blue { color: var(--blue-text); }
+    .ctci-role-player {
+      font-family: "futura-100", sans-serif;
+      font-weight: 500;
+      font-size: 29px;
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.85);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .ctci-role-badge {
+      font-size: 17px;
+      letter-spacing: 0.12em;
+      padding: 4px 10px;
+      border-radius: 3px;
+      text-transform: uppercase;
+    }
+    .ctci-role-badge.clue-giver.team-red  { background: var(--red-bg);  color: #fff; }
+    .ctci-role-badge.clue-giver.team-blue { background: var(--blue-bg); color: #fff; }
+    .ctci-role-badge.guesser.team-red  { background: none; color: #fff; border: 1.5px solid var(--red-text); }
+    .ctci-role-badge.guesser.team-blue { background: none; color: #fff; border: 1.5px solid var(--blue-text); }
+    .ctci-word {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 76px;
+      text-anchor: middle;
+      paint-order: stroke fill;
+    }
+    .ctci-word-common { letter-spacing: -5.5px; }
+    .ctci-word-thread { letter-spacing: 7.5px; transform: translateX(9px); }
+    .ctci-cin-word {
+      fill: transparent;
+      stroke: #fff;
+      stroke-width: 1;
+      stroke-dasharray: 400;
+      stroke-dashoffset: 400;
+    }
+    .ctci-cin-word.ctci-word-common {
+      animation: ctci-draw-stroke 3s ease 0.2s forwards, ctci-fill-word 0.5s ease 3.4s forwards;
+    }
+    .ctci-cin-word.ctci-word-thread {
+      animation: ctci-draw-stroke 3s ease 0.5s forwards, ctci-fill-word 0.5s ease 3.4s forwards;
+    }
+    @keyframes ctci-draw-stroke { to { stroke-dashoffset: 0; } }
+    @keyframes ctci-fill-word   { to { fill: #fff; } }
+    .ctci-line {
+      fill: none;
+      stroke: #fff;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      mix-blend-mode: exclusion;
+      stroke-dasharray: 1500;
+      stroke-dashoffset: 1500;
+      animation: ctci-draw-line 2.2s ease 4.2s forwards;
+    }
+    @keyframes ctci-draw-line { to { stroke-dashoffset: 0; } }
+    .ctci-subtitle {
+      font-family: "futura-100", sans-serif;
+      font-weight: 300;
+      font-size: 14px;
+      fill: #fff;
+      letter-spacing: 0.1em;
+      opacity: 0;
+      animation: ctci-fade-in 0.5s ease 5s forwards;
+    }
+    @keyframes ctci-fade-in { to { opacity: 1; } }
 
     /* ── Round multiplier gem badge ──
        Straddles the seam between rt-card-title and rt-card-body (vertically
@@ -11161,6 +11311,24 @@ document.addEventListener('keydown', e => {
     // Round Type Picker — orchestrator UI
     // ─────────────────────────────────────────────────────────────────────
 
+    let _rtArtRaf = null;
+
+    function _startRtArtDangle(container) {
+      cancelAnimationFrame(_rtArtRaf);
+      const tailEl = container.querySelector('.rt-ct-tail');
+      if (!tailEl) return;
+      let θ = 0, ω = 0.003;
+      const g = 0.001;
+      tailEl.style.transform = 'rotate(0deg)';
+      function tick() {
+        ω -= g * Math.sin(θ);   // damp = 1.0, perpetual swing
+        θ += ω;
+        tailEl.style.transform = `rotate(${(θ * 180 / Math.PI).toFixed(3)}deg)`;
+        _rtArtRaf = requestAnimationFrame(tick);
+      }
+      _rtArtRaf = requestAnimationFrame(tick);
+    }
+
     function showRoundTypePicker(syncedData) {
       // Canvas is already clean (resetModuleCanvas ran in advanceRound).
       // Just claim the picker container.
@@ -11257,6 +11425,9 @@ document.addEventListener('keydown', e => {
         const tipAttr = disabled ? ` data-tip="rt-disabled"` : ` data-tip="rt-${key}"`;
         const clickAttr = disabled ? '' : ` onclick="onRoundTypePick('${key}')"`;
         const desc = mod.description || '';
+        const titleHtml = mod.artHtml
+          ? `<div class="rt-card-title rt-card-logo">${mod.artHtml}</div>`
+          : `<div class="rt-card-title">${mod.label}</div>`;
         const gem = getRoundMultiplierGem(_roundTypePickMultipliers[key] || 1);
         const hasGemClass = gem ? ` rt-has-gem rt-tier-${gem.tier}` : '';
         const gemHtml = gem
@@ -11274,7 +11445,7 @@ document.addEventListener('keydown', e => {
             `</div>`
           : '';
         pickerHtml += `<div class="rt-card ${cc}${disabledClass}${hasGemClass}"${tipAttr}${clickAttr}>` +
-                        `<div class="rt-card-title">${mod.label}</div>` +
+                        titleHtml +
                         `<div class="rt-card-body"><div class="rt-card-desc">${desc}</div></div>` +
                         `<div class="rt-card-shine"></div>` +
                         `<div class="rt-card-glint"></div>` +
@@ -11357,6 +11528,7 @@ document.addEventListener('keydown', e => {
     // needs on its own children — the canvas is otherwise in its canonical
     // empty baseline from resetModuleCanvas.
     function hideRoundTypePicker() {
+      cancelAnimationFrame(_rtArtRaf);
       const pickerArea = document.getElementById("round-type-picker-container");
       if (!pickerArea) return Promise.resolve();
       const cards = pickerArea.querySelectorAll(".rt-card");
@@ -11604,6 +11776,12 @@ document.addEventListener('keydown', e => {
         colorClass: 'cat-geography',
         minPlayersPerTeam: 2,
         intro: { title: 'COMMON\nTHREAD', subtitle: 'Clue, guess, avoid', accent: '#00c000' },
+        artHtml: '<svg class="rt-ct-svg" width="100%" height="auto" viewBox="0 0 500 210" overflow="visible">' +
+          '<text class="rt-ct-word rt-ct-word-common" x="250" y="101">COMMON</text>' +
+          '<text class="rt-ct-word rt-ct-word-thread" x="250" y="159">THREAD</text>' +
+          '<path class="rt-ct-logo-line" d="M20.2,93.81c295.48-9.76,443.63-9.11,444.41,1.95,1.01,14.28-422.29,39.95-421.63,62.46.48,16.44,226.58,23.03,396.26,26.03"/>' +
+          '</svg>',
+        cinematic: () => _playCtCinematic(),
         enter(onComplete) { enterCommonThreadRound(onComplete); },
         reset() { resetCommonThreadState(); },
       },
@@ -15242,10 +15420,88 @@ document.addEventListener('keydown', e => {
     // Stores the in-flight promise on window._moduleIntroPromise so downstream
     // handlers (non-host category-select, etc.) can await completion before
     // kicking off their own animations.
+    function _playCtCinematic() {
+      return new Promise((resolve) => {
+        const root = document.getElementById('module-canvas') || document.getElementById('game-root');
+        if (!root) { resolve(); return; }
+        const stale = document.getElementById('ct-cinematic');
+        if (stale) stale.remove();
+
+        // Build role columns — computed from same formula as enterCommonThreadRound
+        function _buildRolesHtml() {
+          if (!isMultiplayer) {
+            return `<div class="ctci-role-col" style="min-width:0;text-align:center">
+              <div class="ctci-role-player" style="color:rgba(255,255,255,0.45);font-size:11px;letter-spacing:0.1em">
+                One player per team gives clues — everyone else guesses
+              </div>
+            </div>`;
+          }
+          let html = '';
+          [0, 1].forEach(t => {
+            const roster = teamPlayerUids[t] || [];
+            const clueUid = roster.length
+              ? roster[(roundNumber || 0) % roster.length]
+              : null;
+            const teamClass = t === 0 ? 'team-red' : 'team-blue';
+            const teamNameEl = document.querySelectorAll('.team-label h4')[t];
+            const displayTeam = teamNameEl ? teamNameEl.textContent.trim() : (t === 0 ? 'Red Team' : 'Blue Team');
+            html += `<div class="ctci-role-col">`;
+            html += `<div class="ctci-role-team ${teamClass}">${displayTeam}</div>`;
+            (teamPlayers[t] || []).forEach((name, i) => {
+              const uid = (teamPlayerUids[t] || [])[i];
+              const isCG = isMultiplayer ? (uid === clueUid) : (i === 0);
+              const teamClass = t === 0 ? 'team-red' : 'team-blue';
+              html += `<div class="ctci-role-player">
+                ${name}
+                <span class="ctci-role-badge ${isCG ? 'clue-giver' : 'guesser'} ${teamClass}">${isCG ? 'Clue Giver' : 'Guesser'}</span>
+              </div>`;
+            });
+            html += `</div>`;
+          });
+          return html;
+        }
+
+        const el = document.createElement('div');
+        el.id = 'ct-cinematic';
+        el.innerHTML =
+          `<div class="ctci-content">` +
+            `<svg class="ctci-svg" viewBox="0 0 500 210" overflow="visible">` +
+              `<text class="ctci-word ctci-cin-word ctci-word-common" x="250" y="101">COMMON</text>` +
+              `<text class="ctci-word ctci-cin-word ctci-word-thread" x="250" y="159">THREAD</text>` +
+              `<path class="ctci-line" d="M20.2,93.81c295.48-9.76,443.63-9.11,444.41,1.95,1.01,14.28-422.29,39.95-421.63,62.46.48,16.44,226.58,23.03,396.26,26.03"/>` +
+              `<text class="ctci-subtitle" x="250" y="195" text-anchor="middle">DEDUCE LOOSELY CONNECTED WORDS</text>` +
+            `</svg>` +
+            `<div class="ctci-roles" id="ctci-roles-panel">${_buildRolesHtml()}</div>` +
+          `</div>`;
+        root.appendChild(el);
+
+        // Line finishes at ~6.4s — slide up logo, reveal roles
+        setTimeout(() => {
+          const content = el.querySelector('.ctci-content');
+          const roles   = el.querySelector('.ctci-roles');
+          if (content) content.classList.add('ctci-slide-up');
+          if (roles)   roles.classList.add('ctci-roles-visible');
+        }, 6500);
+
+        // Hold roles for 5s then fade out (6.5 + 0.5 fade-in + 5s hold = 12s)
+        setTimeout(async () => {
+          el.classList.add('ctci-fade-out');
+          await anim.wait(460);
+          el.remove();
+          resolve();
+        }, 12500);
+      });
+    }
+
     function playModuleIntro(moduleKey) {
       const mod = ROUND_MODULES[moduleKey];
       const cfg = mod && mod.intro;
       if (!cfg) return Promise.resolve();
+      if (mod.cinematic) {
+        const p = mod.cinematic();
+        window._moduleIntroPromise = p;
+        return p;
+      }
       const p = new Promise((resolve) => {
         const root = document.getElementById('module-canvas')
                   || document.getElementById('game-root');

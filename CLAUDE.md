@@ -589,9 +589,20 @@ Each module has two logo/animation deliverables that share the same SVG asset:
 
 **Status by module:**
 - **Common Thread** — ✅ Both done. SVG: inline in `feud.html` (viewBox `0 0 500 210`, Futura Bold text + cubic-bezier thread path). Cinematic: `_playCtCinematic()`. Picker logo: `.rt-ct-logo-line` boomerang animation.
-- **High Five** — 🚧 SVG asset locked in at `drafts/high-five.svg` (viewBox `0 0 1000 1000`, 14 paths). Three animation groups confirmed: `class="left-hand"` (P1–P5), `class="right-hand"` (P6–P11), `class="rays"` (P12–P14). Cinematic and picker logo not yet implemented.
+- **High Five** — ✅ Both done. Picker logo: `_buildH5PickerArtHtml` — "HIGH" word + numeric "5" in rounded pill + hand SVG (nested at `translate(560 0) scale(0.20)`, viewBox `0 0 826 260`). Cinematic: `_playH5Cinematic()` — 999→5 odometer countdown + high-five slap + 1.8s hold, then **docks in place** (shrinks to 66.5% + `translateY(-190px)` via `.h5ci-docked` class) instead of fading out. While docked, an "SELECT A CATEGORY" subhead (`.h5ci-subhead`) fades in with delay timed to land after pills finish entering. See "High Five round flow" below.
 - **Secret Scribble** — ❌ Not started.
 - **Poll Position** — ❌ Not started.
+
+**High Five round flow (dock + pills-from-below pattern):**
+- H5 is the only module where the cinematic does not exit before the module starts — it docks above and the category pills slide up from below into the vacated space.
+- `#h5-cinematic.h5ci-docked` gets `pointer-events: none` so clicks pass through to the pills beneath it.
+- `#category-pills-area.pills-from-below` swaps the container's entry animation from `translateX` (slide from left) to `translateY` (rise from below), bottom-anchors the pills (`bottom: 20px`), and overrides each `.cat-row`'s `animation-name` to `cat-slide-in-below`. Must override BOTH the container and the child rows — cat-rows have their own independent `animation: cat-slide-in` (translateX) that the container class alone doesn't affect.
+- Host path: `hostProcessRoundTypePick_highFive()` adds `pills-from-below` then calls `showCategorySelection(null, { excludeSurvey: true })`.
+- Non-host path: the `case 'category-select':` handler in `reconcileLocalState` adds `pills-from-below` when `data.selectedRoundType === 'high-five'`, mirroring the host.
+- `resetModuleCanvas()` is **H5-aware**: it preserves both `#h5-cinematic` AND `pills-from-below` while the cinematic is docked. Without this, the non-host path would wipe both between `round-type-selected` and `category-select` phases, since resetModuleCanvas runs after the cinematic resolves but before `showCategorySelection`.
+- Exit gate in `animateCategoryTransition`: all three exit streams must `Promise.all` before the function returns — (1) `#h5-cinematic` fade-out (`.h5ci-fade-out`, 450ms), (2) unselected cat-rows fade-out (`cat-fade-out` keyframe, staggered), (3) selected cat-row glow → CRT power-off. Only after all resolve does `pickCategory` begin content-tv tv-on and board-wrapper slide-in, so no entry animation overlaps with an unfinished exit.
+
+**Animation change (2026-04-21):** Unselected pills' exit animation changed from `cat-slide-out-left` (translateX slide) to `cat-fade-out` (opacity only). Path A items now fade in place instead of sliding off-canvas. The `cat-slide-out-left` keyframe is retained — still used by the non-host spectator exit path in the gameplay handler.
 
 **Implementation pattern for new module cinematics:**
 - Mount to `#module-canvas` (≈930px wide) via `document.getElementById('module-canvas') || document.getElementById('game-root')`

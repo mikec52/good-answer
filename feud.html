@@ -327,37 +327,142 @@
       transform: translateY(-10%);
     }
     #start-logo {
-    font-size: 8rem;
-    text-align: center;
-    line-height: 0.9;
-    pointer-events: none;
-    font-family: 'futura-100';
-    color: white;
-    mix-blend-mode: multiply;
-    opacity: .85;
-    transition: transform 1s ease, mix-blend-mode 0.5s ease, opacity 0.8s ease;
+      pointer-events: none;
+      transition: transform 1s ease;
     }
     #start-logo.logo-to-top {
       transform: translateY(-180px) scale(0.5);
-      mix-blend-mode: normal;
-      opacity: 1;
     }
 
-    #logo-good {
+    /* ===== Start-screen logo (GOOD text + ANSWER dot-matrix marquee) ===== */
+    #start-logo .logo-stack {
+      width: 600px;
+      margin: 0 auto;
+    }
+    #start-logo .stage {
+      position: relative;
+      width: 600px;
+      background: transparent;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    /* Explicit heights from 3280×<h> aspect at 600px wide (aspect-ratio alone
+       was getting squashed by the surrounding flex layout). */
+    #start-logo .stage.good   { height: 283px; z-index: 1; overflow: visible; }
+    #start-logo .stage.answer { height: 132px; z-index: 0; margin-top: -69px; }
+    #start-logo .fx { position: absolute; inset: 0; pointer-events: none; }
+
+    /* GOOD text — flat Futura, white → gold on active */
+    #start-logo .good-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "futura-pt", "Futura", sans-serif;
       font-weight: 900;
-      position: relative;
-      z-index: 2;
-      font-size: 11rem;
-      letter-spacing: -10px;
-      display: inline-block;
+      font-size: 14rem;
+      line-height: 1;
+      letter-spacing: -1.3rem;
+      color: #ffffff;
+      transition: color 0.35s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    /* Futura's D sits a bit wider than OO; nudge it left to visually even things out */
+    #start-logo .good-text .good-d { margin-left: -0.5rem; }
+    #start-logo .logo-stack.active .good-text { color: #fba300; }
+    #start-logo .logo-stack.active #stageGood { animation: gold-pulse 5s ease-in-out infinite; }
+    @keyframes gold-pulse {
+      0%, 35%, 100% {
+        filter:
+          drop-shadow(0 0  4px rgba(255,200,60,0.50))
+          drop-shadow(0 0 11px rgba(251,163,0,0.42))
+          drop-shadow(0 0 28px rgba(251,163,0,0.28));
+      }
+      60% {
+        filter:
+          drop-shadow(0 0  8px rgba(255,220,100,0.55))
+          drop-shadow(0 0 24px rgba(251,163,0,0.50))
+          drop-shadow(0 0 60px rgba(251,163,0,0.40));
+      }
     }
 
-    #logo-answer {
-      display: inline-block;
-      position: relative;
-      z-index: 1;
-      line-height: 0.75;
-      padding: 2px 6px;
+    /* ANSWER marquee — continuous rightward scroll, two copies for seamless loop */
+    #start-logo .answer-text {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+    }
+    #start-logo .answer-track {
+      display: flex;
+      width: max-content;
+      animation: answer-scroll 13s linear infinite;
+    }
+    #start-logo .answer-track > span {
+      font-family: "Bitcount Single", monospace;
+      font-weight: 350;
+      font-size: 110px;
+      line-height: 1;
+      letter-spacing: 0.04em;
+      color: #ffffff;
+      padding: 0 120px;
+      text-shadow:
+        0 0 2px rgba(0,0,0,0.6),
+        0 0 8px rgba(0,0,0,0.35);
+      transition: color 0.35s ease, text-shadow 0.35s ease;
+    }
+    #start-logo .logo-stack.active .answer-track > span {
+      color: #fba300;
+      text-shadow:
+        0 0 2px rgba(0,0,0,0.4),
+        0 0 10px rgba(251,163,0,0.35);
+    }
+    @keyframes answer-scroll {
+      from { transform: translateX(-50%); }
+      to   { transform: translateX(0); }
+    }
+
+    /* ANSWER dot-matrix field */
+    #start-logo .fx-ledmatrix {
+      background-color: #222;
+      background-image:
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.06) 0 1.2px, transparent 1.6px),
+        radial-gradient(circle at 50% 50%, rgba(0,0,0,0.55) 0 2px, transparent 2.4px);
+      background-size: 7px 7px, 7px 7px;
+      background-position: 0 0, 0 0;
+      background-repeat: repeat, repeat;
+    }
+
+    /* Thin metal frame around the ANSWER rectangle */
+    #start-logo .stage.answer {
+      border: 3px solid #5a5a5a;
+      border-radius: 4px;
+      box-shadow:
+        inset 0 2px 0 rgba(255,255,255,0.22),
+        inset 0 -2px 2px rgba(0,0,0,0.45),
+        inset 2px 0 2px rgba(0,0,0,0.25),
+        inset -2px 0 2px rgba(0,0,0,0.25),
+        0 0 0 1px #1a1a1a,
+        0 4px 10px rgba(0,0,0,0.55);
+    }
+    #start-logo .stage.answer::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.18) 0%,
+        rgba(255,255,255,0.04) 18%,
+        rgba(0,0,0,0) 40%,
+        rgba(0,0,0,0) 60%,
+        rgba(0,0,0,0.18) 100%);
+      z-index: 3;
     }
 
     #start-mascot-sprite {
@@ -7341,12 +7446,26 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.17</div>
+  <div id="version-tag">v0.18</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
     <div id="start-content">
-      <div id="start-logo"><span id="logo-good">GOOD</span><br><span id="logo-answer">ANSWER</span></div>
+      <div id="start-logo">
+        <div class="logo-stack" id="start-logo-stack">
+          <!-- GOOD — flat Futura, white dormant, gold active -->
+          <div class="stage good" id="stageGood">
+            <div class="good-text">GOO<span class="good-d">D</span></div>
+          </div>
+          <!-- ANSWER — LED-matrix rectangle with CSS-rendered text -->
+          <div class="stage answer" id="stageAnswer">
+            <div class="fx fx-ledmatrix" id="ansFxEl"></div>
+            <div class="answer-text">
+              <div class="answer-track"><span>ANSWER</span><span>ANSWER</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
       <h1>Click anywhere to start</h1>
     </div>
     <div id="start-mascot-sprite"></div>
@@ -20989,6 +21108,9 @@ document.addEventListener('keydown', e => {
 
       // Reverse logo transition
       if (logo) logo.classList.remove('logo-to-top');
+      const stack = document.getElementById('start-logo-stack');
+      if (stack) stack.classList.remove('active');
+      if (window._startLogoResumeNoise) window._startLogoResumeNoise();
 
       // Restore h1 + copyright
       if (h1) { h1.classList.remove('start-fade-out'); h1.style.visibility = ''; h1.style.opacity = ''; }
@@ -21009,6 +21131,8 @@ document.addEventListener('keydown', e => {
       startScreen.addEventListener('click', function() {
         startBgMusic();
         startScreen.style.pointerEvents = 'none';
+        const stack = document.getElementById('start-logo-stack');
+        if (stack) stack.classList.add('active');
         _dismissStartScreen();
       }, { once: true });
     }
@@ -22016,6 +22140,8 @@ document.addEventListener('keydown', e => {
       startScreen.addEventListener('click', function() {
         startBgMusic();
         startScreen.style.pointerEvents = 'none'; // prevent double-clicks
+        const stack = document.getElementById('start-logo-stack');
+        if (stack) stack.classList.add('active');
         _dismissStartScreen();
       }, { once: true });
     })();

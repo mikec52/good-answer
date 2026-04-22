@@ -41,6 +41,16 @@
       --cat-survey: #00c0c0;
       --cat-sports: #c0c000;
 
+      /* Module color identity — independent of --cat-* so modules and
+         categories can diverge over time. rt-card-title + phase-indicator
+         (during module play) consume --mod-color, set by the parallel
+         .mod-* class stamp. */
+      --mod-highfive:     #0000c0;
+      --mod-pollposition: #00c0c0;
+      --mod-scribble:     #c000c0;
+      --mod-commonthread: #00c000;
+      --mod-faceoff:      #222222;
+
       /* Game speed — set by JS via setGameSpeed(). 1 = normal, 2 = double speed.
          CSS gameplay animations use calc(duration / var(--speed)) so they scale. */
       --speed: 1;
@@ -1806,6 +1816,47 @@
     #phase-indicator.round-glow {
       box-shadow: 0 0 30px rgba(255,255,255,0.6), 0 0 60px rgba(255,255,255,0.3);
     }
+    /* Module mode — stamped on container during module play. Consumes
+       --mod-color (set by the parallel .mod-* class). Hides all phase-text
+       spans; shows the .ph-module-logo span with the module's picker logo. */
+    #phase-indicator.in-module {
+      background: color-mix(in srgb, var(--mod-color, #222) 90%, black);
+    }
+    #phase-indicator.in-module .ph-span:not(.ph-module-logo) {
+      display: none !important;
+      opacity: 0 !important;
+    }
+    #phase-indicator .ph-span.ph-module-logo {
+      display: flex;
+      opacity: 0;
+      padding: 10px 14px;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    #phase-indicator.in-module .ph-span.ph-module-logo {
+      opacity: 1;
+    }
+    /* Child art scales to container width; the rt-* selectors reuse the
+       picker card's animated logo markup so loops continue to fire. */
+    #phase-indicator .ph-module-logo > * {
+      width: 100%;
+      max-height: 120px;
+    }
+    /* Face-off "FACE" / "OFF" in team colors on the --mod-faceoff bg. */
+    #phase-indicator .ph-faceoff-logo {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35em;
+      font-family: "dazzle-unicase", "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 3rem;
+      letter-spacing: 0.08em;
+      line-height: 1;
+    }
+    #phase-indicator .ph-faceoff-logo .ph-fo-face { color: var(--red-text); }
+    #phase-indicator .ph-faceoff-logo .ph-fo-off  { color: var(--blue-text); }
 
     /* Phase spans — each sits flush with the container, only one visible at a
        time (driven by data-phase). Absolute positioning allows the "knock"
@@ -2140,7 +2191,7 @@
       color: #fff;
       text-transform: uppercase;
       line-height: 1.15;
-      background: var(--cat-solid, #fba300);
+      background: var(--mod-color, #fba300);
       box-shadow: inset 0 -2px 0 rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.3);
     }
     .rt-card-body {
@@ -3487,6 +3538,16 @@
     .cat-popculture { --cat-face: color-mix(in srgb, var(--cat-popculture) 90%, transparent); --cat-solid: var(--cat-popculture); --cat-text: #fff; --cat-text-hover: #fff; }
     .cat-survey     { --cat-face: color-mix(in srgb, var(--cat-survey)     90%, transparent); --cat-solid: var(--cat-survey);     --cat-text: #fff; --cat-text-hover: #fff; }
     .cat-sports     { --cat-face: color-mix(in srgb, var(--cat-sports)     90%, transparent); --cat-solid: var(--cat-sports);     --cat-text: #000; --cat-text-hover: #000; }
+
+    /* Module color classes — set the single intermediate --mod-color var.
+       Consumed by .rt-card-title and #phase-indicator.mod-* module mode.
+       One rule, many values: rules referencing --mod-color work for every
+       module without per-module duplication. */
+    .mod-highfive     { --mod-color: var(--mod-highfive); }
+    .mod-pollposition { --mod-color: var(--mod-pollposition); }
+    .mod-scribble     { --mod-color: var(--mod-scribble); }
+    .mod-commonthread { --mod-color: var(--mod-commonthread); }
+    .mod-faceoff      { --mod-color: var(--mod-faceoff); }
     /* Category row — wraps button + optional badge.
        Fixed 80px height so the row occupies a known slot regardless of
        the button's margin contribution, and so the row can go
@@ -7280,7 +7341,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.16</div>
+  <div id="version-tag">v0.17</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -7473,6 +7534,7 @@
           <span class="ph-span ph-gameplay"></span>
           <span class="ph-span ph-steal-chance"></span>
           <span class="ph-span ph-round-result"></span>
+          <span class="ph-span ph-module-logo"></span>
         </div>
 
         <!-- Input-area home base. Module code never mutates this; it's
@@ -11673,6 +11735,56 @@ document.addEventListener('keydown', e => {
       }
       pi.setAttribute("data-phase", newPhase);
     }
+    // Module-mode stamp. During a module's lifetime (from round-type pick
+    // through round-result), the phase-indicator displays the module's
+    // picker logo on a module-colored background instead of phase text.
+    // CSS hides all .ph-span:not(.ph-module-logo), so existing setPhase /
+    // setPhaseText calls still run as harmless fallbacks if this is cleared.
+    const _MOD_CLASSES = ['mod-highfive', 'mod-pollposition', 'mod-scribble', 'mod-commonthread', 'mod-faceoff'];
+    const _MOD_KEY_TO_CLASS = {
+      'high-five': 'mod-highfive',
+      'survey': 'mod-pollposition',
+      'secret-scribble': 'mod-scribble',
+      'common-thread': 'mod-commonthread',
+      'faceoff': 'mod-faceoff',
+    };
+    function _getModuleLogoHtml(moduleKey) {
+      if (moduleKey === 'faceoff') {
+        return '<span class="ph-faceoff-logo"><span class="ph-fo-face">FACE</span><span class="ph-fo-off">OFF</span></span>';
+      }
+      const mod = ROUND_MODULES[moduleKey];
+      if (!mod) return '';
+      const art = typeof mod.artHtml === 'function' ? mod.artHtml() : mod.artHtml;
+      return art || mod.label || '';
+    }
+    function setPhaseModule(moduleKey) {
+      const pi = document.getElementById('phase-indicator');
+      if (!pi) return;
+      const cls = _MOD_KEY_TO_CLASS[moduleKey];
+      if (!cls) return;
+      _MOD_CLASSES.forEach(c => pi.classList.remove(c));
+      pi.classList.remove('round-glow');
+      pi.classList.add('in-module', cls);
+      const logoSpan = pi.querySelector('.ph-module-logo');
+      if (logoSpan) logoSpan.innerHTML = _getModuleLogoHtml(moduleKey);
+    }
+    function clearPhaseModule() {
+      const pi = document.getElementById('phase-indicator');
+      if (!pi) return;
+      pi.classList.remove('in-module');
+      _MOD_CLASSES.forEach(c => pi.classList.remove(c));
+      pi.removeAttribute('data-phase');
+      const logoSpan = pi.querySelector('.ph-module-logo');
+      if (logoSpan) {
+        const token = (logoSpan._clearToken || 0) + 1;
+        logoSpan._clearToken = token;
+        setTimeout(() => {
+          if (logoSpan._clearToken === token && !pi.classList.contains('in-module')) {
+            logoSpan.innerHTML = '';
+          }
+        }, 320);
+      }
+    }
     function showPhaseIndicator() {
       const pi = document.getElementById("phase-indicator");
       if (!pi) return;
@@ -11687,6 +11799,7 @@ document.addEventListener('keydown', e => {
         pi.classList.add("offscreen");
         pi.classList.remove("slide-out");
         pi.removeAttribute("data-phase");
+        clearPhaseModule();
       });
     }
 
@@ -12206,6 +12319,10 @@ document.addEventListener('keydown', e => {
       // Just claim the picker container.
       setMusicMode('roundselect');
 
+      // Leave module mode — return to team-colored phase-indicator for
+      // round-type selection. Harmless no-op if never stamped.
+      clearPhaseModule();
+
       // Determine available modules (check min player counts)
       const teamSizes = isMultiplayer
         ? [teamPlayerUids[0]?.length || 0, teamPlayerUids[1]?.length || 0]
@@ -12455,6 +12572,11 @@ document.addEventListener('keydown', e => {
       currentRoundType = data.selectedRoundType;
       currentRoundMultiplier = data.selectedRoundMultiplier || 1;
 
+      // Stamp phase-indicator into module mode immediately — the cinematic
+      // runs over the top, but this means the phase-indicator already shows
+      // the module logo + bg color the instant the picker starts sliding up.
+      setPhaseModule(data.selectedRoundType);
+
       const hidePromise = hideRoundTypePicker();
       if (currentRoundMultiplier > 1) showPhaseGem(currentRoundMultiplier);
 
@@ -12624,7 +12746,7 @@ document.addEventListener('keydown', e => {
       'high-five': {
         label: 'High Five',
         description: 'Pick a trivia category and rank the top five answers.',
-        colorClass: 'cat-science',
+        colorClass: 'mod-highfive',
         minPlayersPerTeam: 1,
         intro: { title: 'HIGH FIVE', subtitle: 'Rank the top five', accent: '#0000c0' },
         artHtml: () => _buildH5PickerArtHtml(),
@@ -12635,7 +12757,7 @@ document.addEventListener('keydown', e => {
       'survey': {
         label: 'Poll Position',
         description: 'Guess how the crowd answered an open-ended question.',
-        colorClass: 'cat-survey',
+        colorClass: 'mod-pollposition',
         minPlayersPerTeam: 1,
         intro: { title: 'POLL\nPOSITION', subtitle: 'What did the crowd say?', accent: '#00c0c0' },
         artHtml: () => _buildPpPickerArtHtml(),
@@ -12646,7 +12768,7 @@ document.addEventListener('keydown', e => {
       'secret-scribble': {
         label: 'Secret Scribble',
         description: 'Draw your secret word while the other team tries to steal it.',
-        colorClass: 'cat-popculture',
+        colorClass: 'mod-scribble',
         minPlayersPerTeam: 2,
         intro: { title: 'SECRET\nSCRIBBLE', subtitle: 'Draw, guess, steal', accent: '#c000c0' },
         artHtml: () => _buildSsPickerArtHtml(),
@@ -12657,7 +12779,7 @@ document.addEventListener('keydown', e => {
       'common-thread': {
         label: 'Common Thread',
         description: 'Give a one-word clue. Your team picks cards that match.',
-        colorClass: 'cat-geography',
+        colorClass: 'mod-commonthread',
         minPlayersPerTeam: 2,
         intro: { title: 'COMMON\nTHREAD', subtitle: 'Clue, guess, avoid', accent: '#00c000' },
         artHtml: '<svg class="rt-ct-svg" width="100%" height="auto" viewBox="0 0 500 210" overflow="visible">' +
@@ -17070,6 +17192,8 @@ document.addEventListener('keydown', e => {
       // the prior ranked/scribble round so it doesn't linger on non-host
       // clients (awardRoundScore only runs host-side).
       hidePhaseGem();
+      // Stamp phase-indicator with FACE/OFF logo on --mod-faceoff bg.
+      setPhaseModule('faceoff');
       // Show the face-off container
       const foc = document.getElementById('faceoff-container');
       if (foc) {

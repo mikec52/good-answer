@@ -2313,6 +2313,40 @@ Loser score of 0 is treated as 1 for the 2× check (`Math.max(lScore, 1)`).
 
 ---
 
+## Game Recap Dialog
+
+The victory panel is a two-tab "Game Recap" dialog that replaces the old simple winner/awards layout. Prototype: [recap-demo.html](recap-demo.html). Driven from `playVictoryAnimation(winnerIdx, awards)`.
+
+### Tabs
+
+- **Game Summary** — results table with per-round rows (round label, module type, red delta, blue delta) that reveal sequentially, then a totals strip (red score / "Team X wins!" / blue score) that counts up from 0, with a `.winner-slam` pop on the winning score and the `.victory-message` fading in once the tally lands. Awards card auto-cycles every 3.2s with manual ◀/▶ arrows and clickable dots.
+- **Stats** — per-player stats table with per-round-type subtabs ("Overall" + one subtab per round type with per-player entries in `matchLog`). Columns: Player, Points, Accuracy, Best Single, Max Streak, Multiplied, Duplicates, Categories, Streaks Ended. Click any header to cycle sort (desc → asc → default points-desc). Sticky `<thead>`.
+
+### Data sources
+
+- **`roundsMeta`** — populated by `pushRoundMeta()` at each round's scoring-complete moment. Entry shape: `{ round, type, category, red, blue, isFaceoff }`. `type` is stored as the **display label** (via `ROUND_TYPE_LABELS`), not the raw module key. Host writes via `syncState({ roundsMeta })` immediately after each push; non-host reconcile preserves local entries when incoming array is shorter (guards against stale snapshots).
+- **`matchLog`** — per-guess entries carry `roundType` as the **raw key** (`'high-five'`, `'survey'`, etc.). `_recapTypeLabel(typeKey)` normalizes keys to labels via `ROUND_TYPE_LABELS`, and the stats tab compares on labels so matchLog/roundsMeta cross-reference cleanly.
+- **`awards`** — host computes once in `endGame()`, syncs via `_syncedAwards`. `_enrichAwards()` layers in `flavor` + `description` from `tooltipData` (keyed by `award-{id}`).
+
+### Key functions
+
+- `buildResultsTable()` — renders `#results-tbody` rows from `roundsMeta`. Last row gets label "Final Round" (handles face-off or any module designated final).
+- `revealRowsSequentially()` — adds `.revealed` to each row at 650ms intervals. If cumulative rows overflow `#results-scroll`, pushes `#results-marquee`'s `translateY` up after each reveal so the newest row stays visible. Once all rows are in, switches to a CSS-driven marquee loop (`--marquee-start` / `--marquee-end` / `--marquee-dur` / `--marquee-intro-dur`). Chains into `runTallyAnimation()` after the last row.
+- `runTallyAnimation()` → `_recapAnimateCountUp()` — rAF-based cubic-ease count-up (separate from the tick-based `animateCountUp` used during gameplay scoring). Triggers winner text + `.winner-slam` + victory-message fade at the end.
+- `showAward(idx)` / `startAwardCycle()` / `manualAward(dir)` / `renderAwardDots()` — award auto-cycle with fade-out / fade-in. Manual arrows reset the interval so the user always gets full dwell time on the card they navigated to.
+- `getStatsRoundTypes()` / `aggregatePlayerStats(filter)` / `buildStatsSubtabs()` / `renderStatsTable()` / `cycleSort(col)` — stats tab. Aggregation seeds every player in `teamPlayers` so zero-participation rows still render with em-dashes.
+- `switchRecapTab(name)` — flips `.active` between the two tabs; lazy-initializes stats table (and wires sortable headers via `_wireRecapHeaders`) on first Stats-tab click.
+
+### Timer lifecycle
+
+`_recapRowTimers` (array of setTimeout handles) and `_recapAwardTimer` (setInterval handle) are cleared by `_recapClearTimers()`. Called from `stopVictoryAnimation()`, `slideOutVictoryPanel()`, and at the top of `playVictoryAnimation()` so re-entry (play-again, scenario switch) doesn't leak.
+
+### Dismiss / restore
+
+Unchanged from previous victory panel — `.victory-toggle-arrow` in the header corner toggles `.victory-dismissed`, sliding the panel down so only the title peeks above the canvas bottom edge. Clicks on a dismissed panel restore it.
+
+---
+
 ## Match Log — `matchLog` Array
 
 A per-session array that records every guess across all rounds. Cleared on `resetGame()`, persists across rounds (unlike `guessHistory` which resets per round).

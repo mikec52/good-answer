@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Game Recap — Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bitcount+Single:wght@100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.typekit.net/lps4irc.css">
+  <style>
+    :root {
+      --red-bg:   #990b0b;
+      --red-text: #ff5555;
+      --blue-bg:  #053977;
+      --blue-text: #4c8cff;
+      --speed: 1;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #0a0a0a;
+      overflow: hidden;
+      font-family: "futura-100", sans-serif;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #game-root {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+      background: #1b1b28;
+      overflow: hidden;
+      box-shadow: 0 0 0 2px #222;
+    }
+    #game-root *, #game-root *::before, #game-root *::after { box-sizing: border-box; }
+
+    #dev-controls {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 99999;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      max-width: 360px;
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      color: #ccc;
+    }
+    #dev-controls button {
+      background: #333;
+      color: #eee;
+      border: 1px solid #555;
+      border-radius: 4px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font: inherit;
+    }
+    #dev-controls button:hover { background: #444; }
+
+    /* ---------- Dialog shell ---------- */
+    .victory-backdrop {
+      position: absolute;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      background: transparent;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .victory-panel {
+      pointer-events: all;
+      background: var(--victory-bg, rgba(26, 26, 26, 0.75));
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px 16px 0 0;
+      padding: 14px 32px 15px;
+      width: 80%;
+      height: 80%;
+      margin-bottom: -2px;
+      color: #fff;
+      font-family: "futura-100", sans-serif;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .victory-panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: var(--victory-header-h, 48px);
+      background: var(--victory-header-bg, #222);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .victory-panel > * { position: relative; z-index: 1; }
+    .victory-backdrop.active .victory-panel {
+      transform: translateY(0);
+    }
+    .victory-backdrop.active .victory-panel.victory-dismissed {
+      transform: translateY(calc(100% - 46px));
+      cursor: pointer;
+    }
+    .victory-title {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: -7px;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+
+    /* ---------- Tabs ---------- */
+    .victory-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .victory-tab {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #ccc;
+      font-family: "futura-100", sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 7px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .victory-tab:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .victory-tab.active {
+      background: #fba300;
+      color: #111;
+      border-color: #fba300;
+    }
+
+    .victory-tab-panels {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr;
+      min-height: 0;
+    }
+    .victory-tab-panel {
+      grid-area: 1 / 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      min-width: 0;
+      visibility: hidden;
+    }
+    .victory-tab-panel.active { visibility: visible; }
+
+    /* ---------- Game summary content ---------- */
+    .victory-message {
+      font-size: 1.1rem;
+      font-weight: 200;
+      line-height: 1.6;
+      letter-spacing: 0.2px;
+      color: #fff;
+      margin-bottom: 14px;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+      min-height: 1.76em;
+    }
+    .victory-message.shown {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .victory-message .red  { color: var(--red-text); }
+    .victory-message .blue { color: var(--blue-text); }
+
+    .victory-body {
+      display: flex;
+      flex-direction: row;
+      gap: 16px;
+      flex: 1;
+      min-height: 0;
+      margin-bottom: 14px;
+    }
+    .victory-round-history {
+      flex: 1 1 60%;
+      min-width: 0;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 10px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .victory-awards {
+      flex: 1 1 40%;
+      min-width: 0;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 10px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .block-title {
+      font-family: "futura-100", sans-serif;
+      font-weight: 500;
+      font-size: 0.95rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #fba300;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    /* ---------- Results table ---------- */
+    .results-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .results-marquee {
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.35s ease;
+    }
+    .results-marquee.marquee-on {
+      animation:
+        results-marquee-intro var(--marquee-intro-dur, 6s) ease-in-out 1 both,
+        results-marquee-loop  var(--marquee-dur, 12s) ease-in-out infinite var(--marquee-intro-dur, 6s);
+      transition: none;
+    }
+    /* One-time intro: from the push-up position up to the top of content */
+    @keyframes results-marquee-intro {
+      0%   { transform: translateY(var(--marquee-start, 0)); }
+      15%  { transform: translateY(var(--marquee-start, 0)); }
+      85%  { transform: translateY(0); }
+      100% { transform: translateY(0); }
+    }
+    /* Continuous loop: bounce between top (0) and bottom (-overflow) */
+    @keyframes results-marquee-loop {
+      0%   { transform: translateY(0); }
+      8%   { transform: translateY(0); }
+      48%  { transform: translateY(var(--marquee-end, 0)); }
+      56%  { transform: translateY(var(--marquee-end, 0)); }
+      96%  { transform: translateY(0); }
+      100% { transform: translateY(0); }
+    }
+
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 0.9rem;
+    }
+    .results-table th {
+      font-family: "futura-100", sans-serif;
+      font-weight: 500;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #aaa;
+      padding: 4px 6px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.18);
+      text-align: center;
+      white-space: nowrap;
+    }
+    .results-table th.th-round { text-align: left; }
+    .results-table th.th-type  { text-align: center; }
+    .results-table th.th-red   { color: var(--red-text); }
+    .results-table th.th-blue  { color: var(--blue-text); }
+    /* Shared column widths via <col> so head + body align */
+    .results-table .col-round { width: 95px; }
+    .results-table .col-type  { width: auto; }
+    .results-table .col-red   { width: 80px; }
+    .results-table .col-blue  { width: 80px; }
+    .results-head-table { margin-bottom: 0; }
+    .results-body-table tbody tr:first-child td { border-top: 0; }
+
+    .results-table td {
+      padding: 7px 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-family: "futura-100", sans-serif;
+      font-size: 0.9rem;
+      color: #fff;
+      text-align: center;
+      white-space: nowrap;
+    }
+    /* Reveal: rows collapse height until revealed so earlier rows shift up as new rows appear */
+    .results-table tbody tr {
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    .results-table tbody tr:not(.revealed) td {
+      padding-top: 0;
+      padding-bottom: 0;
+      border-bottom-color: transparent;
+      line-height: 0;
+      height: 0;
+      overflow: hidden;
+      transition: padding 0.35s ease, line-height 0.35s ease, height 0.35s ease;
+    }
+    .results-table tbody tr.revealed { opacity: 1; }
+    .results-table tbody tr.revealed td {
+      transition: padding 0.35s ease, line-height 0.35s ease, height 0.35s ease;
+    }
+    .rt-round {
+      text-align: left;
+      font-family: "futura-100", sans-serif;
+      font-weight: 500;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #888;
+      white-space: nowrap;
+    }
+    .rt-type {
+      text-align: center;
+      font-weight: 500;
+    }
+    .rt-score {
+      font-family: "Bitcount Single", sans-serif;
+      font-weight: 300;
+      font-size: 1.2rem;
+    }
+
+    /* ---------- Awards auto-cycle block ---------- */
+    .award-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      min-height: 0;
+    }
+    .award-card {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .award-card.shown { opacity: 1; }
+    .aw-name {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.5rem;
+      line-height: 1.1;
+      color: #fff;
+    }
+    .aw-flavor {
+      font-size: 0.85rem;
+      font-style: italic;
+      color: #fba300;
+    }
+    .aw-description {
+      font-size: 0.85rem;
+      color: #ccc;
+      line-height: 1.4;
+      max-width: 90%;
+    }
+    .aw-recipient {
+      margin-top: 6px;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .aw-recipient.red  { color: var(--red-text); }
+    .aw-recipient.blue { color: var(--blue-text); }
+    .award-dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .award-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.22);
+      transition: background 0.25s ease;
+    }
+    .award-dot.active { background: #fba300; }
+    .award-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff;
+      width: 26px;
+      height: 34px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: "futura-100", sans-serif;
+      font-size: 1rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.7;
+      transition: opacity 0.2s, background 0.2s;
+      z-index: 2;
+    }
+    .award-arrow:hover { opacity: 1; background: rgba(255,255,255,0.14); }
+    .award-arrow.left  { left: 6px; }
+    .award-arrow.right { right: 6px; }
+
+    /* ---------- Total strip ---------- */
+    .victory-total {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 10px 18px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+    .vt-team {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .vt-team-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .vt-team-name.red  { color: var(--red-text); }
+    .vt-team-name.blue { color: var(--blue-text); }
+    .vt-score {
+      font-family: "Bitcount Single", sans-serif;
+      font-size: 2.4rem;
+      font-weight: 300;
+      color: #fff;
+      line-height: 1;
+      transition: color 0.25s ease;
+      display: inline-block;
+    }
+    .vt-score.winner-slam {
+      color: #fba300;
+      animation: vt-winner-slam 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    @keyframes vt-winner-slam {
+      0%   { transform: translateY(0)    scale(1); }
+      40%  { transform: translateY(-18px) scale(1.22); }
+      70%  { transform: translateY(3px)  scale(0.96); }
+      85%  { transform: translateY(-2px) scale(1.02); }
+      100% { transform: translateY(0)    scale(1); }
+    }
+    .vt-winner {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #fba300;
+      min-width: 160px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .vt-winner.shown { opacity: 1; }
+
+    /* ---------- Stats tab ---------- */
+    .stats-subtabs {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .stats-subtab {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #ccc;
+      font-family: "futura-100", sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 5px 14px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .stats-subtab:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .stats-subtab.active {
+      background: #fba300;
+      color: #111;
+      border-color: #fba300;
+    }
+    .stats-scroll-wrap {
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      display: flex;
+    }
+    .stats-scroll {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: scroll;
+      min-height: 0;
+      min-width: 0;
+      max-width: 100%;
+      padding: 0;
+      scrollbar-color: #fba300 rgba(255,255,255,0.08);
+      scrollbar-width: auto;
+    }
+    /* Styled scrollbars (WebKit) — both axes */
+    .stats-scroll::-webkit-scrollbar {
+      height: 15px;
+      width: 15px;
+    }
+    .stats-scroll::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.06);
+      margin: 12px;
+    }
+    .stats-scroll::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #fdbe3d 0%, #fba300 100%);
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.25);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+    .stats-scroll::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #ffcf58 0%, #fcb31f 100%);
+    }
+    .stats-scroll::-webkit-scrollbar-corner { background: transparent; }
+    /* Lock a comfortable min column width so the table overflows → slider shows */
+    .stats-table { min-width: 780px; }
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: "futura-100", sans-serif;
+      font-size: 0.9rem;
+    }
+    .stats-table thead th {
+      position: sticky;
+      top: 0;
+      background: rgba(20,20,20,0.95);
+      color: #aaa;
+      font-weight: 500;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .stats-table thead th.sort-player { text-align: left; }
+    .stats-table thead th:hover { color: #fff; }
+    .stats-table thead th.sorted { color: #fba300; }
+    .stats-table thead th .sort-indicator {
+      display: inline-block;
+      width: 12px;
+      margin-left: 4px;
+      opacity: 0.7;
+    }
+    .stats-table tbody td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      color: #fff;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .stats-table tbody td.col-player {
+      text-align: left;
+      font-weight: 500;
+    }
+    .stats-table tbody td.col-player.red  { color: var(--red-text); }
+    .stats-table tbody td.col-player.blue { color: var(--blue-text); }
+    .stats-table tbody td.dash { color: #666; }
+    .stats-table tbody tr:hover td { background: rgba(255,255,255,0.04); }
+
+    /* ---------- Actions ---------- */
+    .victory-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .victory-toggle-arrow {
+      position: absolute;
+      top: 6px;
+      right: 10px;
+      z-index: 2;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.1rem;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+      padding: 4px 8px;
+      pointer-events: all;
+      font-family: "futura-100", sans-serif;
+    }
+    .victory-toggle-arrow:hover { opacity: 1; }
+    .action-btn {
+      width: 100%;
+      min-width: 0;
+      background: rgba(17,17,17,0.9);
+      color: #fff;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 10px 8px;
+      font-family: "futura-100", sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+    }
+    .action-btn:hover { background: #1b1b1b; }
+  </style>
+</head>
+<body>
+
+<div id="dev-controls">
+  <button onclick="replaySequence()">Replay Sequence</button>
+  <button onclick="toggleVictoryPanel()">Toggle Collapse</button>
+  <button onclick="switchWinner(0)">Red Wins</button>
+  <button onclick="switchWinner(1)">Blue Wins</button>
+  <button onclick="switchScenario('blowout')">Blowout</button>
+  <button onclick="switchScenario('close')">Close</button>
+  <button onclick="switchScenario('tie')">Tiebreaker</button>
+</div>
+
+<div id="game-root">
+  <div id="victory-backdrop" class="victory-backdrop active">
+    <div class="victory-panel">
+      <div class="victory-title">Game Recap</div>
+
+      <div class="victory-tabs">
+        <button class="victory-tab active" data-tab="summary" onclick="switchTab('summary')">Game Summary</button>
+        <button class="victory-tab" data-tab="stats" onclick="switchTab('stats')">Stats</button>
+      </div>
+
+      <div class="victory-tab-panels">
+        <!-- Game Summary tab -->
+        <div class="victory-tab-panel active" data-tab="summary">
+          <div class="victory-message"></div>
+
+          <div class="victory-body">
+            <div class="victory-round-history">
+              <div class="block-title">Results</div>
+              <table class="results-table results-head-table">
+                <colgroup>
+                  <col class="col-round">
+                  <col class="col-type">
+                  <col class="col-red">
+                  <col class="col-blue">
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th class="th-round"></th>
+                    <th class="th-type">Type</th>
+                    <th class="th-red" id="th-red-name">Red</th>
+                    <th class="th-blue" id="th-blue-name">Blue</th>
+                  </tr>
+                </thead>
+              </table>
+              <div class="results-scroll" id="results-scroll">
+                <div class="results-marquee" id="results-marquee">
+                  <table class="results-table results-body-table">
+                    <colgroup>
+                      <col class="col-round">
+                      <col class="col-type">
+                      <col class="col-red">
+                      <col class="col-blue">
+                    </colgroup>
+                    <tbody id="results-tbody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="victory-awards">
+              <div class="block-title">Awards</div>
+              <button class="award-arrow left"  onclick="manualAward(-1)" aria-label="Previous award">◀</button>
+              <button class="award-arrow right" onclick="manualAward(1)"  aria-label="Next award">▶</button>
+              <div class="award-stage">
+                <div class="award-card" id="award-card"></div>
+                <div class="award-dots" id="award-dots"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="victory-total">
+            <div class="vt-team">
+              <div class="vt-team-name red" id="vt-red-name">Red Team</div>
+              <div class="vt-score" id="vt-red-score">0</div>
+            </div>
+            <div class="vt-winner" id="vt-winner"></div>
+            <div class="vt-team">
+              <div class="vt-team-name blue" id="vt-blue-name">Blue Team</div>
+              <div class="vt-score" id="vt-blue-score">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats tab -->
+        <div class="victory-tab-panel" data-tab="stats">
+          <div class="stats-subtabs" id="stats-subtabs"></div>
+          <div class="stats-scroll-wrap">
+          <div class="stats-scroll">
+            <table class="stats-table" id="stats-table">
+              <thead>
+                <tr id="stats-thead-row">
+                  <th data-col="player"       class="sort-player">Player</th>
+                  <th data-col="points"       class="sort-num">Points</th>
+                  <th data-col="accuracy"     class="sort-num">Accuracy</th>
+                  <th data-col="best"         class="sort-num">Best Single</th>
+                  <th data-col="maxStreak"    class="sort-num">Max Streak</th>
+                  <th data-col="multiplied"   class="sort-num">Multiplied</th>
+                  <th data-col="duplicates"   class="sort-num">Duplicates</th>
+                  <th data-col="categories"   class="sort-num">Categories</th>
+                  <th data-col="streaksEnded" class="sort-num">Streaks Ended</th>
+                </tr>
+              </thead>
+              <tbody id="stats-tbody"></tbody>
+            </table>
+          </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="victory-actions">
+        <button class="action-btn">Play Again</button>
+        <button class="action-btn">Return to Lobby</button>
+        <button class="action-btn">Exit to Menu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---------- Fake game state ----------
+  const teamNames = ['Red Team', 'Blue Team'];
+  let teamScores = [2850, 2120];
+  const teamPlayers = [
+    ['Alice', 'Bob', 'Cara'],
+    ['Dave', 'Evan'],
+  ];
+
+  // Per-round metadata (type + category). Face-off is always last under current rules.
+  const roundsMeta = [
+    { round: 1, type: 'High Five',      category: 'Sports' },
+    { round: 2, type: 'High Five',      category: 'Science' },
+    { round: 3, type: 'Poll Position',  category: 'Pop Culture' },
+    { round: 4, type: 'Secret Scribble',category: '—' },
+    { round: 5, type: 'Common Thread',  category: '—' },
+    { round: 6, type: 'Poll Position',  category: 'Survey' },
+    { round: 7, type: 'High Five',      category: 'Geography' },
+    { round: 8, type: 'Face-off',       category: '—', isFaceoff: true },
+  ];
+
+  // Fake matchLog. Ranked-question rounds (High Five + Poll Position) have per-player
+  // entries with outcomes and streakBroken; module rounds only have team-level totals.
+  const matchLog = [
+    // Round 1 — High Five (Sports)
+    { player: 'Alice', team: 0, outcome: 'correct',       points: 40, streak: 0, streakBroken: 0, round: 1, roundType: 'High Five',     category: 'Sports' },
+    { player: 'Dave',  team: 1, outcome: 'correct',       points: 30, streak: 0, streakBroken: 0, round: 1, roundType: 'High Five',     category: 'Sports' },
+    { player: 'Bob',   team: 0, outcome: 'correct',       points: 25, streak: 1, streakBroken: 0, round: 1, roundType: 'High Five',     category: 'Sports' },
+    { player: 'Evan',  team: 1, outcome: 'wrong',         points: 0,  streak: 0, streakBroken: 1, round: 1, roundType: 'High Five',     category: 'Sports' },
+    { player: 'Cara',  team: 0, outcome: 'correct',       points: 15, streak: 2, streakBroken: 0, round: 1, roundType: 'High Five',     category: 'Sports' },
+    { player: 'Dave',  team: 1, outcome: 'wrong',         points: 0,  streak: 0, streakBroken: 0, round: 1, roundType: 'High Five',     category: 'Sports' },
+
+    // Round 2 — High Five (Science)
+    { player: 'Dave',  team: 1, outcome: 'correct',       points: 45, streak: 0, streakBroken: 0, round: 2, roundType: 'High Five',     category: 'Science' },
+    { player: 'Evan',  team: 1, outcome: 'correct',       points: 30, streak: 1, streakBroken: 0, round: 2, roundType: 'High Five',     category: 'Science' },
+    { player: 'Dave',  team: 1, outcome: 'correct',       points: 20, streak: 2, streakBroken: 0, round: 2, roundType: 'High Five',     category: 'Science' },
+    { player: 'Evan',  team: 1, outcome: 'wrong',         points: 0,  streak: 0, streakBroken: 3, round: 2, roundType: 'High Five',     category: 'Science' },
+    { player: 'Alice', team: 0, outcome: 'steal_success', points: 10, streak: 0, streakBroken: 0, round: 2, roundType: 'High Five',     category: 'Science' },
+
+    // Round 3 — Poll Position (Pop Culture)
+    { player: 'Cara',  team: 0, outcome: 'correct',       points: 50, streak: 0, streakBroken: 0, round: 3, roundType: 'Poll Position', category: 'Pop Culture' },
+    { player: 'Dave',  team: 1, outcome: 'correct',       points: 35, streak: 0, streakBroken: 0, round: 3, roundType: 'Poll Position', category: 'Pop Culture' },
+    { player: 'Cara',  team: 0, outcome: 'duplicate',     points: 0,  streak: 0, streakBroken: 0, round: 3, roundType: 'Poll Position', category: 'Pop Culture' },
+    { player: 'Bob',   team: 0, outcome: 'correct',       points: 20, streak: 1, streakBroken: 0, round: 3, roundType: 'Poll Position', category: 'Pop Culture' },
+    { player: 'Evan',  team: 1, outcome: 'correct',       points: 15, streak: 1, streakBroken: 0, round: 3, roundType: 'Poll Position', category: 'Pop Culture' },
+
+    // Round 4 — Secret Scribble (team-level only; excluded from player stats)
+    { team: 0, outcome: 'module_score', points: 225, round: 4, roundType: 'Secret Scribble', category: 'Scribble' },
+    { team: 1, outcome: 'module_score', points: 175, round: 4, roundType: 'Secret Scribble', category: 'Scribble' },
+
+    // Round 5 — Common Thread (team-level only)
+    { team: 1, outcome: 'module_score', points: 300, round: 5, roundType: 'Common Thread',   category: 'Common Thread' },
+    { team: 0, outcome: 'module_score', points: 200, round: 5, roundType: 'Common Thread',   category: 'Common Thread' },
+
+    // Round 6 — Poll Position (Survey)
+    { player: 'Alice', team: 0, outcome: 'correct',       points: 55, streak: 0, streakBroken: 0, round: 6, roundType: 'Poll Position', category: 'Survey' },
+    { player: 'Bob',   team: 0, outcome: 'correct',       points: 30, streak: 1, streakBroken: 0, round: 6, roundType: 'Poll Position', category: 'Survey' },
+    { player: 'Dave',  team: 1, outcome: 'wrong',         points: 0,  streak: 0, streakBroken: 2, round: 6, roundType: 'Poll Position', category: 'Survey' },
+    { player: 'Cara',  team: 0, outcome: 'correct',       points: 25, streak: 2, streakBroken: 0, round: 6, roundType: 'Poll Position', category: 'Survey' },
+    { player: 'Alice', team: 0, outcome: 'correct',       points: 15, streak: 3, streakBroken: 0, round: 6, roundType: 'Poll Position', category: 'Survey' },
+
+    // Round 7 — High Five (Geography)
+    { player: 'Evan',  team: 1, outcome: 'correct',       points: 40, streak: 0, streakBroken: 0, round: 7, roundType: 'High Five',     category: 'Geography' },
+    { player: 'Alice', team: 0, outcome: 'correct',       points: 30, streak: 0, streakBroken: 0, round: 7, roundType: 'High Five',     category: 'Geography' },
+    { player: 'Dave',  team: 1, outcome: 'correct',       points: 20, streak: 1, streakBroken: 0, round: 7, roundType: 'High Five',     category: 'Geography' },
+    { player: 'Bob',   team: 0, outcome: 'wrong',         points: 0,  streak: 0, streakBroken: 1, round: 7, roundType: 'High Five',     category: 'Geography' },
+    { player: 'Cara',  team: 0, outcome: 'wrong',         points: 0,  streak: 0, streakBroken: 0, round: 7, roundType: 'High Five',     category: 'Geography' },
+    { player: 'Evan',  team: 1, outcome: 'correct',       points: 15, streak: 2, streakBroken: 0, round: 7, roundType: 'High Five',     category: 'Geography' },
+
+    // Round 8 — Face-off (team-level only; 2x mult applied)
+    { team: 0, outcome: 'module_score', points: 320, round: 8, roundType: 'Face-off',        category: 'Face-off' },
+    { team: 1, outcome: 'module_score', points: 260, round: 8, roundType: 'Face-off',        category: 'Face-off' },
+  ];
+
+  // Fake pre-computed awards with flavor + description
+  const fakeAwards = [
+    { id: 'mvp',             name: 'MVP',             player: 'Cara',  team: 0,
+      flavor: 'The GOAT',
+      description: 'Scored the most total points across all rounds' },
+    { id: 'heavy-hitter',    name: 'Heavy Hitter',    player: 'Cara',  team: 0,
+      flavor: 'One big swing',
+      description: 'Scored the most points from a single answer' },
+    { id: 'going-streaking', name: 'Going Streaking', player: 'Evan',  team: 1,
+      flavor: 'Through the quad!',
+      description: 'Contributed to the longest streak of consecutive correct answers' },
+    { id: 'opportunist',     name: 'Opportunist',     player: 'Alice', team: 0,
+      flavor: 'Right place right time',
+      description: 'Submitted the most correct answers that had multipliers applied' },
+    { id: 'lvp',             name: 'LVP',             player: 'Dave',  team: 1,
+      flavor: '"I hate that game!"',
+      description: 'Scored the fewest total points (but at least tried)' },
+    { id: 'the-science-guy', name: 'The Science Guy', player: 'Evan',  team: 1,
+      flavor: 'Top Billing',
+      description: 'Scored the most points in Science categories' },
+  ];
+
+  // ---------- Per-round totals ----------
+  function computeRoundScores() {
+    return roundsMeta.map(meta => {
+      let red = 0, blue = 0;
+      for (const e of matchLog) {
+        if (e.round !== meta.round) continue;
+        if (e.outcome !== 'correct' && e.outcome !== 'steal_success') continue;
+        if (e.team === 0) red += e.points || 0;
+        else              blue += e.points || 0;
+      }
+      return { ...meta, red, blue };
+    });
+  }
+  let roundTotals = computeRoundScores();
+
+  // ---------- Message ----------
+  function buildVictoryMessage(winnerIdx) {
+    const loserIdx = winnerIdx === 0 ? 1 : 0;
+    const wCls = winnerIdx === 0 ? 'red' : 'blue';
+    const lCls = loserIdx === 0 ? 'red' : 'blue';
+    const winner = `<span class="${wCls}">${teamNames[winnerIdx]}</span>`;
+    const loser  = `<span class="${lCls}">${teamNames[loserIdx]}</span>`;
+    const wScore = teamScores[winnerIdx];
+    const lScore = teamScores[loserIdx];
+    const margin = wScore - lScore;
+    if (margin === 0) return `Tied on points! ${winner} wins the tiebreaker by taking the final round of play!`;
+    if (wScore > Math.max(lScore, 1) * 2 && margin > 100) return `That was a total trivial bloodbath! Was ${loser} even trying? ${winner} will be telling their great grandkids about this one.`;
+    if (margin < 100) return `It was close, but ${winner} pulled it out despite a valiant effort from ${loser}!`;
+    return `${winner} takes home the win!`;
+  }
+
+  // ---------- Results table ----------
+  function buildResultsTable() {
+    const tbody = document.getElementById('results-tbody');
+    tbody.innerHTML = roundTotals.map(r => {
+      const label = r.isFaceoff ? 'Final Round' : `Round ${r.round}`;
+      return `
+      <tr>
+        <td class="rt-round">${label}</td>
+        <td class="rt-type">${r.type}</td>
+        <td class="rt-score">${r.red > 0 ? '+' + r.red : r.red}</td>
+        <td class="rt-score">${r.blue > 0 ? '+' + r.blue : r.blue}</td>
+      </tr>
+    `;
+    }).join('');
+  }
+
+  // Reveal timing
+  const ROW_REVEAL_MS    = 650;  // gap between rows
+  const TALLY_DELAY_MS   = 700;  // after last row
+  const TALLY_COUNT_MS   = 1400;
+  const AWARD_CYCLE_MS   = 3200; // per card
+  const AWARD_FADE_MS    = 400;
+
+  let _rowTimers = [];
+  let _awardTimer = null;
+  let _awardIdx = 0;
+
+  function clearTimers() {
+    _rowTimers.forEach(clearTimeout);
+    _rowTimers = [];
+    if (_awardTimer) { clearInterval(_awardTimer); _awardTimer = null; }
+  }
+
+  function revealRowsSequentially() {
+    const rows = document.querySelectorAll('#results-tbody tr');
+    const scroll  = document.getElementById('results-scroll');
+    const marquee = document.getElementById('results-marquee');
+    marquee.classList.remove('marquee-on');
+    marquee.style.removeProperty('--marquee-offset');
+    marquee.style.removeProperty('--marquee-dur');
+    marquee.style.transform = 'translateY(0)';
+    rows.forEach(r => r.classList.remove('revealed'));
+    rows.forEach((row, i) => {
+      const t = setTimeout(() => {
+        row.classList.add('revealed');
+        // After reveal animation settles, if newest row overflows, shift the marquee up
+        setTimeout(() => {
+          const containerH = scroll.clientHeight;
+          const rowBottom  = row.offsetTop + row.offsetHeight;
+          const currentShift = parseFloat((marquee.style.transform.match(/-?\d+(\.\d+)?/) || [0])[0]) || 0;
+          // rowBottom is measured in marquee's coord space; its visible bottom = rowBottom + currentShift
+          const visibleBottom = rowBottom + currentShift;
+          if (visibleBottom > containerH - 4) {
+            const newShift = containerH - 4 - rowBottom;
+            marquee.style.transform = `translateY(${newShift}px)`;
+          }
+        }, 380);
+      }, i * ROW_REVEAL_MS + 250);
+      _rowTimers.push(t);
+    });
+    const totalRowsMs = rows.length * ROW_REVEAL_MS + 250;
+    // Start marquee (if overflow) shortly after all rows are revealed
+    _rowTimers.push(setTimeout(() => {
+      const overflow = marquee.scrollHeight - scroll.clientHeight;
+      if (overflow > 1) {
+        // Start the animation from the current push-up position so there's no jump back to top.
+        const currentShift = parseFloat((marquee.style.transform.match(/-?\d+(\.\d+)?/) || [0])[0]) || 0;
+        marquee.style.transform = '';
+        marquee.style.setProperty('--marquee-start',     `${currentShift}px`);
+        marquee.style.setProperty('--marquee-end',       `-${overflow}px`);
+        marquee.style.setProperty('--marquee-dur',       `${Math.max(10, overflow / 15)}s`);
+        // Intro covers |currentShift| pixels back to top; scale roughly by the same pace.
+        const introDist = Math.abs(currentShift);
+        marquee.style.setProperty('--marquee-intro-dur', `${Math.max(3, introDist / 15)}s`);
+        marquee.classList.add('marquee-on');
+      }
+    }, totalRowsMs + 600));
+    // Tally countup after last row
+    _rowTimers.push(setTimeout(runTallyAnimation, totalRowsMs + TALLY_DELAY_MS));
+  }
+
+  // ---------- Final tally ----------
+  function animateCountUp(el, from, to, ms = TALLY_COUNT_MS) {
+    const start = performance.now();
+    const diff = to - from;
+    function tick(t) {
+      const p = Math.min((t - start) / ms, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(from + diff * eased).toString();
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  function runTallyAnimation() {
+    resetTally();
+    animateCountUp(document.getElementById('vt-red-score'),  0, teamScores[0]);
+    animateCountUp(document.getElementById('vt-blue-score'), 0, teamScores[1]);
+    setTimeout(() => {
+      const winnerIdx = teamScores[0] >= teamScores[1] ? 0 : 1;
+      const w = document.getElementById('vt-winner');
+      w.textContent = `${teamNames[winnerIdx]} wins!`;
+      w.classList.add('shown');
+      // Winner score: pop up + slam down + turn gold
+      const winnerScoreEl = document.getElementById(winnerIdx === 0 ? 'vt-red-score' : 'vt-blue-score');
+      winnerScoreEl.classList.remove('winner-slam');
+      void winnerScoreEl.offsetWidth; // restart animation
+      winnerScoreEl.classList.add('winner-slam');
+      // Reveal victory-message once countup + slam lands
+      setTimeout(() => {
+        document.querySelector('.victory-message').classList.add('shown');
+      }, 450);
+    }, TALLY_COUNT_MS + 150);
+  }
+  function resetTally() {
+    const redEl  = document.getElementById('vt-red-score');
+    const blueEl = document.getElementById('vt-blue-score');
+    redEl.textContent  = '0';
+    blueEl.textContent = '0';
+    redEl.classList.remove('winner-slam');
+    blueEl.classList.remove('winner-slam');
+    const w = document.getElementById('vt-winner');
+    w.textContent = '';
+    w.classList.remove('shown');
+    document.querySelector('.victory-message').classList.remove('shown');
+  }
+
+  // ---------- Awards auto-cycle ----------
+  function renderAwardDots() {
+    const dots = document.getElementById('award-dots');
+    dots.innerHTML = fakeAwards.map((_, i) =>
+      `<div class="award-dot${i === _awardIdx ? ' active' : ''}"></div>`
+    ).join('');
+  }
+  function showAward(idx) {
+    _awardIdx = idx;
+    const card = document.getElementById('award-card');
+    const a = fakeAwards[idx];
+    const cls = a.team === 0 ? 'red' : 'blue';
+    card.classList.remove('shown');
+    setTimeout(() => {
+      card.innerHTML = `
+        <div class="aw-name">${a.name}</div>
+        <div class="aw-flavor">${a.flavor}</div>
+        <div class="aw-description">${a.description}</div>
+        <div class="aw-recipient ${cls}">${a.player}</div>
+      `;
+      card.classList.add('shown');
+      renderAwardDots();
+    }, AWARD_FADE_MS);
+  }
+  function startAwardCycle() {
+    showAward(0);
+    if (_awardTimer) clearInterval(_awardTimer);
+    _awardTimer = setInterval(() => {
+      showAward((_awardIdx + 1) % fakeAwards.length);
+    }, AWARD_CYCLE_MS);
+  }
+  function manualAward(dir) {
+    const n = fakeAwards.length;
+    showAward(((_awardIdx + dir) % n + n) % n);
+    if (_awardTimer) { clearInterval(_awardTimer); }
+    _awardTimer = setInterval(() => {
+      showAward((_awardIdx + 1) % fakeAwards.length);
+    }, AWARD_CYCLE_MS);
+  }
+
+  // ---------- Stats tab ----------
+  // Which round types have per-player entries in the log (drives subtab list)
+  function getStatsRoundTypes() {
+    const seen = new Set();
+    for (const e of matchLog) {
+      if (e.player && e.roundType) seen.add(e.roundType);
+    }
+    // Preserve roundsMeta order for stable ordering
+    const ordered = [];
+    for (const m of roundsMeta) {
+      if (seen.has(m.type) && !ordered.includes(m.type)) ordered.push(m.type);
+    }
+    return ordered;
+  }
+
+  // Aggregate per-player stats. filter = 'Overall' or a roundType string.
+  function aggregatePlayerStats(filter) {
+    const entries = matchLog.filter(e => {
+      if (!e.player) return false;
+      if (filter === 'Overall') return true;
+      return e.roundType === filter;
+    });
+    // Seed with all players (so zero-participation rows still render with em-dashes)
+    const stats = {};
+    const teamOf = {};
+    teamPlayers.forEach((roster, tIdx) => {
+      roster.forEach(name => {
+        stats[name] = {
+          player: name, team: tIdx,
+          points: 0, correct: 0, wrong: 0, best: 0,
+          maxStreak: 0, multiplied: 0, duplicates: 0,
+          _cats: new Set(),
+          streaksEnded: 0, participated: 0,
+        };
+        teamOf[name] = tIdx;
+      });
+    });
+    for (const e of entries) {
+      const s = stats[e.player];
+      if (!s) continue;
+      s.participated++;
+      if (e.outcome === 'correct' || e.outcome === 'steal_success') {
+        s.points += e.points || 0;
+        s.correct++;
+        if ((e.points || 0) > s.best) s.best = e.points;
+        // streak field = streak BEFORE this answer. After increment = streak + 1.
+        const afterStreak = (e.streak || 0) + 1;
+        if (afterStreak > s.maxStreak) s.maxStreak = afterStreak;
+        // Answer was scored at mult > 1 when streak-before > 0.
+        if ((e.streak || 0) >= 1) s.multiplied++;
+        if (e.category) s._cats.add(e.category);
+      } else if (e.outcome === 'wrong') {
+        s.wrong++;
+      } else if (e.outcome === 'duplicate') {
+        s.duplicates++;
+      }
+      if (e.streakBroken && e.streakBroken > 0) s.streaksEnded++;
+    }
+    return Object.values(stats).map(s => ({ ...s, categories: s._cats.size }));
+  }
+
+  // Sort state: { col, dir } — dir 'asc' | 'desc' | null
+  const _statsState = { subtab: 'Overall', sortCol: 'points', sortDir: 'desc' };
+
+  function buildStatsSubtabs() {
+    const container = document.getElementById('stats-subtabs');
+    const types = ['Overall', ...getStatsRoundTypes()];
+    if (!types.includes(_statsState.subtab)) _statsState.subtab = 'Overall';
+    container.innerHTML = types.map(t =>
+      `<button class="stats-subtab ${t === _statsState.subtab ? 'active' : ''}" onclick="switchStatsSubtab('${t.replace(/'/g,"\\'")}')">${t}</button>`
+    ).join('');
+  }
+
+  function switchStatsSubtab(name) {
+    _statsState.subtab = name;
+    buildStatsSubtabs();
+    renderStatsTable();
+  }
+
+  function cycleSort(col) {
+    if (_statsState.sortCol !== col) {
+      _statsState.sortCol = col;
+      _statsState.sortDir = (col === 'player') ? 'asc' : 'desc';
+    } else {
+      // three-state: desc -> asc -> default(points desc)
+      if (_statsState.sortDir === 'desc') _statsState.sortDir = 'asc';
+      else if (_statsState.sortDir === 'asc') {
+        _statsState.sortCol = 'points';
+        _statsState.sortDir = 'desc';
+      }
+    }
+    renderStatsTable();
+  }
+
+  function renderStatsTable() {
+    const rows = aggregatePlayerStats(_statsState.subtab);
+    // Sort
+    const col = _statsState.sortCol;
+    const dir = _statsState.sortDir === 'asc' ? 1 : -1;
+    rows.sort((a, b) => {
+      let av, bv;
+      if (col === 'player') { av = a.player.toLowerCase(); bv = b.player.toLowerCase(); }
+      else if (col === 'accuracy') {
+        const aDen = a.correct + a.wrong, bDen = b.correct + b.wrong;
+        av = aDen > 0 ? a.correct / aDen : -1;
+        bv = bDen > 0 ? b.correct / bDen : -1;
+      } else if (col === 'best')         { av = a.best;         bv = b.best; }
+      else if (col === 'maxStreak')      { av = a.maxStreak;    bv = b.maxStreak; }
+      else if (col === 'multiplied')     { av = a.multiplied;   bv = b.multiplied; }
+      else if (col === 'duplicates')     { av = a.duplicates;   bv = b.duplicates; }
+      else if (col === 'categories')     { av = a.categories;   bv = b.categories; }
+      else if (col === 'streaksEnded')   { av = a.streaksEnded; bv = b.streaksEnded; }
+      else                               { av = a.points;       bv = b.points; }
+      if (av < bv) return -1 * dir;
+      if (av > bv) return  1 * dir;
+      return a.player.localeCompare(b.player);
+    });
+
+    // Header indicators
+    document.querySelectorAll('#stats-thead-row th').forEach(th => {
+      const c = th.dataset.col;
+      const ind = th.querySelector('.sort-indicator') || (() => {
+        const s = document.createElement('span'); s.className = 'sort-indicator'; th.appendChild(s); return s;
+      })();
+      if (c === _statsState.sortCol) {
+        th.classList.add('sorted');
+        ind.textContent = _statsState.sortDir === 'asc' ? '▲' : '▼';
+      } else {
+        th.classList.remove('sorted');
+        ind.textContent = '';
+      }
+    });
+
+    const dash = '<span class="dash">—</span>';
+    const tbody = document.getElementById('stats-tbody');
+    tbody.innerHTML = rows.map(r => {
+      const teamCls = r.team === 0 ? 'red' : 'blue';
+      const denom = r.correct + r.wrong;
+      const accCell = denom > 0 ? `${Math.round((r.correct / denom) * 100)}%` : dash;
+      const pointsCell     = r.participated > 0 ? r.points : dash;
+      const bestCell       = r.best > 0 ? r.best : dash;
+      const maxStreakCell  = r.maxStreak > 0 ? r.maxStreak : dash;
+      const multipliedCell = r.participated > 0 ? r.multiplied : dash;
+      const duplicatesCell = r.participated > 0 ? r.duplicates : dash;
+      const categoriesCell = r.participated > 0 ? r.categories : dash;
+      const streaksCell    = r.participated > 0 ? r.streaksEnded : dash;
+      return `<tr>
+        <td class="col-player ${teamCls}">${r.player}</td>
+        <td>${pointsCell}</td>
+        <td>${accCell}</td>
+        <td>${bestCell}</td>
+        <td>${maxStreakCell}</td>
+        <td>${multipliedCell}</td>
+        <td>${duplicatesCell}</td>
+        <td>${categoriesCell}</td>
+        <td>${streaksCell}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Wire sortable headers once
+  document.querySelectorAll('#stats-thead-row th').forEach(th => {
+    th.addEventListener('click', () => cycleSort(th.dataset.col));
+  });
+
+  // ---------- Tabs ----------
+  function switchTab(name) {
+    document.querySelectorAll('.victory-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.victory-tab-panel').forEach(p => p.classList.toggle('active', p.dataset.tab === name));
+    if (name === 'stats') { buildStatsSubtabs(); renderStatsTable(); }
+  }
+
+  // ---------- Top-level render / replay ----------
+  let _currentWinner = 0;
+  function renderAll() {
+    document.querySelector('.victory-message').innerHTML = buildVictoryMessage(_currentWinner);
+    document.getElementById('th-red-name').textContent  = teamNames[0];
+    document.getElementById('th-blue-name').textContent = teamNames[1];
+    document.getElementById('vt-red-name').textContent  = teamNames[0];
+    document.getElementById('vt-blue-name').textContent = teamNames[1];
+    buildResultsTable();
+    resetTally();
+    // Measure title bottom
+    const panel = document.querySelector('.victory-panel');
+    const titleEl = panel.querySelector('.victory-title');
+    requestAnimationFrame(() => {
+      const titleBottom = titleEl.offsetTop + titleEl.offsetHeight + 4;
+      panel.style.setProperty('--victory-header-h', titleBottom + 'px');
+    });
+  }
+  function replaySequence() {
+    clearTimers();
+    if (_awardTimer) { clearInterval(_awardTimer); _awardTimer = null; }
+    renderAll();
+    revealRowsSequentially();
+    startAwardCycle();
+  }
+  function switchWinner(idx) { _currentWinner = idx; replaySequence(); }
+  function switchScenario(kind) {
+    if (kind === 'blowout')    teamScores = [3400, 1100];
+    else if (kind === 'close') teamScores = [2350, 2310];
+    else if (kind === 'tie')   teamScores = [2500, 2500];
+    replaySequence();
+  }
+  function toggleVictoryPanel() {
+    document.querySelector('.victory-panel').classList.toggle('victory-dismissed');
+  }
+  document.querySelector('.victory-panel').addEventListener('click', (e) => {
+    const panel = document.querySelector('.victory-panel');
+    if (panel.classList.contains('victory-dismissed') && !e.target.closest('.victory-toggle-arrow')) {
+      panel.classList.remove('victory-dismissed');
+    }
+  });
+
+  // Initial render + sequence
+  replaySequence();
+
+  window.__recap = { matchLog, roundsMeta, roundTotals, teamNames, teamScores, teamPlayers, fakeAwards, replaySequence };
+</script>
+
+</body>
+</html>

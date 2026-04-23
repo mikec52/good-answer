@@ -1,0 +1,530 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Good Answer logo proto</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #0a0a0a; color: #eee; font-family: system-ui, sans-serif; }
+  .controls { padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; background: #141414; border-bottom: 1px solid #222; position: sticky; top: 0; z-index: 10; }
+  .controls label { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+  .controls select, .controls input[type=color] { background: #222; color: #eee; border: 1px solid #333; padding: 3px 6px; }
+  .stage-wrap { padding: 40px; display: flex; justify-content: center; }
+
+  /* Full logo = GOOD (3280×1549) stacked on ANSWER (3280×719). Shared width 900px. */
+  .logo-stack {
+    width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .stage {
+    position: relative;
+    width: 100%;
+    background: var(--stage-bg, #111);
+    overflow: hidden;
+  }
+  .stage.good   { aspect-ratio: 3280 / 1549; border-radius: 8px 8px 0 0; background: transparent !important; }
+  .stage.answer { aspect-ratio: 3280 /  719; border-radius: 0 0 8px 8px; background: transparent !important; }
+
+  .logo-box, .fx, .fill { position: absolute; inset: 0; pointer-events: none; }
+  .logo-box img { width: 100%; height: 100%; display: block; }
+
+  /* ================= ACTIVE state (click to toggle) ================= */
+  .logo-stack { cursor: pointer; transition: background 0.25s ease; }
+  /* Let glow escape stage bounds in active mode. */
+  .logo-stack.active .stage { overflow: visible; }
+  /* Active-state twin layers — always styled for gold/LED, crossfaded via opacity. */
+  #goodFx, #goodFxActive, #ansFxEl, #ansFxElActive {
+    transition: opacity 0.35s ease;
+  }
+  #goodFxActive {
+    opacity: 0;
+    background: #fba300;
+  }
+  .logo-stack.active #goodFx { opacity: 0; }
+  .logo-stack.active #goodFxActive { opacity: 1; }
+  /* Glow filter applied at stage level — operates on the composited letter
+     shape (gold faces + 3D walls + image pixels), so the shadow can extend
+     beyond the chroma mask. Toned ~50% and slowed; quiet tail between pulses. */
+  .logo-stack.active #stageGood {
+    animation: gold-pulse 5s ease-in-out infinite;
+  }
+  @keyframes gold-pulse {
+    0%, 35%, 100% {
+      filter:
+        drop-shadow(0 0  4px rgba(255,200,60,0.50))
+        drop-shadow(0 0 11px rgba(251,163,0,0.42))
+        drop-shadow(0 0 28px rgba(251,163,0,0.28));
+    }
+    60% {
+      filter:
+        drop-shadow(0 0  8px rgba(255,220,100,0.55))
+        drop-shadow(0 0 24px rgba(251,163,0,0.50))
+        drop-shadow(0 0 60px rgba(251,163,0,0.40));
+    }
+  }
+
+  /* CRT power-off + power-on for the smpte → gold swap. */
+  #goodFx { transform-origin: center center; }
+  .crt-off { animation: crt-power-off 0.42s cubic-bezier(.4,0,.6,1) forwards !important; }
+  .crt-on  { animation: crt-power-on  0.55s cubic-bezier(.4,0,.6,1) forwards !important; }
+  @keyframes crt-power-off {
+    0%   { transform: scale(1,1); filter: brightness(1) saturate(1); opacity: 1; }
+    30%  { transform: scale(1,0.03); filter: brightness(1.4) saturate(1); opacity: 1; }
+    45%  { transform: scale(1,0.03); filter: brightness(3) saturate(0); opacity: 1; }
+    65%  { transform: scale(0.012,0.03); filter: brightness(2.2) saturate(0); opacity: 1; }
+    100% { transform: scale(0,0); filter: brightness(0); opacity: 0; }
+  }
+  @keyframes crt-power-on {
+    0%   { transform: scale(0,0); filter: brightness(0); opacity: 0; }
+    25%  { transform: scale(0.012,0.03); filter: brightness(2.2); opacity: 1; }
+    45%  { transform: scale(1,0.03); filter: brightness(3) saturate(0); opacity: 1; }
+    65%  { transform: scale(1,0.03); filter: brightness(1.5); opacity: 1; }
+    100% { transform: scale(1,1); filter: brightness(1); opacity: 1; }
+  }
+  /* ANSWER active twin — flat #222 + dormant LED matrix. */
+  #ansFxElActive {
+    opacity: 0;
+    background-color: #222;
+    background-image:
+      radial-gradient(circle at 50% 50%, rgba(255,255,255,0.06) 0 1.2px, transparent 1.6px),
+      radial-gradient(circle at 50% 50%, rgba(0,0,0,0.55) 0 2px, transparent 2.4px);
+    background-size: 7px 7px, 7px 7px;
+    background-position: 0 0, 0 0;
+    background-repeat: repeat, repeat;
+  }
+  .logo-stack.active #ansFxEl { opacity: 0; }
+  .logo-stack.active #ansFxElActive { opacity: 1; }
+  /* ANSWER text fill → gold (background color transitions smoothly). */
+  #ansTextFill { transition: background 0.35s ease; }
+  .logo-stack.active #ansTextFill {
+    background: #fba300 !important;
+  }
+
+  /* ====================== GOOD: locked SMPTE bars ====================== */
+  .fx-smpte {
+    background:
+      linear-gradient(to bottom,
+        rgba(0,0,0,0)   0%,
+        rgba(0,0,0,0.1) 50%,
+        rgba(0,0,0,0)   100%),
+      repeating-linear-gradient(
+        to bottom,
+        rgba(0,0,0,0) 0 2px,
+        rgba(0,0,0,0.32) 3px 5px
+      ),
+      linear-gradient(to bottom,
+        rgba(255,255,255,0.08) 0%,
+        rgba(255,255,255,0) 10%,
+        rgba(255,255,255,0) 90%,
+        rgba(0,0,0,0.2) 100%),
+      linear-gradient(to right,
+        #bfbf00 0      16.666%,
+        #00bfbf 16.666% 33.333%,
+        #00bf00 33.333% 50%,
+        #bf00bf 50%     66.666%,
+        #bf0000 66.666% 83.333%,
+        #0000bf 83.333% 100%);
+    background-size: 100% 140px, 100% 5px, 100% 100%, 100% 100%;
+    background-repeat: no-repeat, repeat, no-repeat, no-repeat;
+    animation: smpte-scanroll 1.6s linear infinite, smpte-syncroll 14s linear infinite;
+  }
+  @keyframes smpte-scanroll {
+    from { background-position: 0 0, 0 0px, 0 0, 0 0; }
+    to   { background-position: 0 0, 0 5px, 0 0, 0 0; }
+  }
+  @keyframes smpte-syncroll {
+    0%   { background-position: 0 -140px, 0 0, 0 0, 0 0; }
+    70%  { background-position: 0 calc(100% + 140px), 0 0, 0 0, 0 0; }
+    100% { background-position: 0 calc(100% + 140px), 0 0, 0 0, 0 0; }
+  }
+
+  /* ====================== ANSWER: selectable effects ====================== */
+
+  /* Blue-screen CRT — the default.
+     Deep blue field with phosphor glow + scanlines + a slow sync roll. */
+  .fx-bluecrt {
+    background:
+      /* scanlines */
+      repeating-linear-gradient(
+        to bottom,
+        rgba(0,0,0,0)   0 2px,
+        rgba(0,0,0,0.30) 3px 5px
+      ),
+      /* soft horizontal vignette */
+      linear-gradient(to bottom,
+        rgba(255,255,255,0.10) 0%,
+        rgba(255,255,255,0)    20%,
+        rgba(255,255,255,0)    80%,
+        rgba(0,0,0,0.25)       100%),
+      /* blue field with subtle phosphor gradient */
+      radial-gradient(ellipse at 50% 50%, #1a4bc2 0%, #0a2a78 70%, #051a4f 100%);
+    background-size: 100% 5px, 100% 100%, 100% 100%;
+    background-repeat: repeat, no-repeat, no-repeat;
+    animation: bluecrt-scanroll 1.8s linear infinite;
+  }
+  @keyframes bluecrt-scanroll {
+    from { background-position: 0 0,   0 0, 0 0; }
+    to   { background-position: 0 5px, 0 0, 0 0; }
+  }
+
+  /* Analog white noise — TV static. Frames generated in JS and cycled. */
+  .fx-noise {
+    background-color: #111;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+
+  /* Amber/green monochrome phosphor (retro terminal) */
+  .fx-phosphor-green {
+    background:
+      repeating-linear-gradient(to bottom,
+        rgba(0,0,0,0) 0 2px,
+        rgba(0,0,0,0.35) 3px 5px),
+      radial-gradient(ellipse at 50% 50%, #1c7a2e 0%, #0a3b17 70%, #051f0c 100%);
+    background-size: 100% 5px, 100% 100%;
+    background-repeat: repeat, no-repeat;
+    animation: bluecrt-scanroll 1.8s linear infinite;
+  }
+  .fx-phosphor-amber {
+    background:
+      repeating-linear-gradient(to bottom,
+        rgba(0,0,0,0) 0 2px,
+        rgba(0,0,0,0.35) 3px 5px),
+      radial-gradient(ellipse at 50% 50%, #c27a1a 0%, #5a3205 70%, #2a1702 100%);
+    background-size: 100% 5px, 100% 100%;
+    background-repeat: repeat, no-repeat;
+    animation: bluecrt-scanroll 1.8s linear infinite;
+  }
+
+  /* Rainbow sweep */
+  .fx-rainbow {
+    background: linear-gradient(90deg, #ff3d3d, #fb8c00, #fdd835, #4caf50, #2a6cff, #c000c0, #ff3d3d);
+    background-size: 300% 100%;
+    animation: rainbow-pan 6s linear infinite;
+  }
+  @keyframes rainbow-pan {
+    from { background-position:   0% 50% }
+    to   { background-position: 300% 50% }
+  }
+
+  /* Solid color (ANSWER face takes the color of the CSS var) */
+  .fx-solid {
+    background: var(--solid-color, #0a2a78);
+  }
+
+  .note { padding: 12px 16px; font-size: 13px; color: #9aa; max-width: 900px; margin: 0 auto; }
+  code { background: #1a1a1a; padding: 1px 5px; border-radius: 3px; }
+</style>
+</head>
+<body>
+  <div class="controls">
+    <label>ANSWER effect
+      <select id="ansFx">
+        <option value="bluecrt" selected>Blue-screen CRT</option>
+        <option value="noise">White noise (TV static)</option>
+        <option value="phosphor-green">Green phosphor</option>
+        <option value="phosphor-amber">Amber phosphor</option>
+        <option value="rainbow">Rainbow sweep</option>
+        <option value="solid">Solid color</option>
+      </select>
+    </label>
+    <label>ANSWER text color
+      <input type="color" id="textColor" value="#ffffff">
+    </label>
+    <label>Solid fallback
+      <input type="color" id="solidColor" value="#0a2a78">
+    </label>
+    <label>Stage bg
+      <input type="color" id="bgColor" value="#111111">
+    </label>
+    <label><input type="checkbox" id="scaleToggle"> 2× scale</label>
+    <label style="display:none"><input type="range" id="ansYOffset" min="-200" max="100" value="-103"><span id="ansYOffsetVal"></span></label>
+    <label style="display:none"><input type="range" id="ansXOffset" min="-200" max="200" value="-9"><span id="ansXOffsetVal"></span></label>
+    <label style="display:none"><input type="range" id="ansScale" min="50" max="150" value="96"><span id="ansScaleVal"></span></label>
+    <label style="display:none"><input type="checkbox" id="answerOnTop"></label>
+    <span id="status" style="font-size:12px;color:#9aa"></span>
+  </div>
+
+  <div class="stage-wrap">
+    <div class="logo-stack" id="stack">
+      <!-- GOOD — SMPTE + gold-active twin, fixed -->
+      <div class="stage good" id="stageGood">
+        <div class="fx fx-smpte" id="goodFx"></div>
+        <div class="fx fx-good-active" id="goodFxActive"></div>
+        <div class="logo-box"><img alt="GOOD" id="goodImg"></div>
+      </div>
+      <!-- ANSWER — effect + active-LED twin + text-color fill, all chroma-keyed -->
+      <div class="stage answer" id="stageAnswer">
+        <div class="fx fx-bluecrt" id="ansFxEl"></div>
+        <div class="fx fx-ans-active" id="ansFxElActive"></div>
+        <div class="fill" id="ansTextFill" style="background:#ffffff"></div>
+        <div class="logo-box"><img alt="ANSWER" id="answerImg"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="drafts/goodchroma-png.js"></script>
+  <script src="drafts/answerchroma-png.js"></script>
+
+  <div class="note">
+    <p><b>Two chroma passes per image.</b> GOOD keys <code>#FF00FF</code> magenta → face region (SMPTE bars show through).
+    ANSWER keys <code>#FF00FF</code> magenta → face region (selected effect shows through) AND <code>#00FF00</code> green →
+    text region (solid color fill; recolor via "ANSWER text color"). 3D side walls remain as original pixels in both.</p>
+    <p>Chroma tolerance is locked at 80 (full) since the exported PNGs use clean keys.</p>
+  </div>
+
+<script>
+  // ===== chroma tolerance locked =====
+  const CHROMA_TOL = 80;
+  const tol2 = CHROMA_TOL * CHROMA_TOL * 3;
+
+  // ===== controls =====
+  const ansFxSel = document.getElementById('ansFx');
+  const ansFxEl  = document.getElementById('ansFxEl');
+  const textColorInp = document.getElementById('textColor');
+  const solidColorInp = document.getElementById('solidColor');
+  const bgColor  = document.getElementById('bgColor');
+  const scaleToggle = document.getElementById('scaleToggle');
+  const stack    = document.getElementById('stack');
+  const stageGood = document.getElementById('stageGood');
+  const stageAnswer = document.getElementById('stageAnswer');
+  const ansTextFill = document.getElementById('ansTextFill');
+  const statusEl = document.getElementById('status');
+
+  // (noise-aware change handler attached later, after noise helpers are defined)
+  textColorInp.addEventListener('input', () => {
+    ansTextFill.style.background = textColorInp.value;
+  });
+  solidColorInp.addEventListener('input', () => {
+    document.documentElement.style.setProperty('--solid-color', solidColorInp.value);
+  });
+  document.documentElement.style.setProperty('--solid-color', solidColorInp.value);
+  bgColor.addEventListener('input', () => {
+    stack.style.background = bgColor.value;
+  });
+  stack.style.background = bgColor.value;
+  scaleToggle.addEventListener('change', () => {
+    stack.style.width = scaleToggle.checked ? '1600px' : '900px';
+  });
+
+  // Stages need positioning + transform-origin for X/Y/scale to behave together.
+  stageGood.style.position = 'relative';
+  stageGood.style.zIndex = '1';
+  stageAnswer.style.position = 'relative';
+  stageAnswer.style.zIndex = '0';
+  stageAnswer.style.transformOrigin = 'center top';
+
+  const ansYOffset = document.getElementById('ansYOffset');
+  const ansYOffsetVal = document.getElementById('ansYOffsetVal');
+  const ansXOffset = document.getElementById('ansXOffset');
+  const ansXOffsetVal = document.getElementById('ansXOffsetVal');
+  const ansScale = document.getElementById('ansScale');
+  const ansScaleVal = document.getElementById('ansScaleVal');
+  const answerOnTop = document.getElementById('answerOnTop');
+
+  function applyAnsTransform() {
+    const x = parseInt(ansXOffset.value, 10);
+    const s = parseInt(ansScale.value, 10) / 100;
+    stageAnswer.style.transform = `translateX(${x}px) scale(${s})`;
+  }
+  // apply initial values (hidden sliders won't emit input events on load)
+  stageAnswer.style.marginTop = ansYOffset.value + 'px';
+  applyAnsTransform();
+
+  // ===== active-state click toggle (CSS crossfade between twin FX layers) =====
+  stack.addEventListener('click', () => {
+    const nowActive = !stack.classList.contains('active');
+    stack.classList.toggle('active', nowActive);
+    // Let the dormant noise keep animating through the crossfade, then pause.
+    if (nowActive) {
+      setTimeout(() => {
+        if (stack.classList.contains('active') && noiseInterval) {
+          clearInterval(noiseInterval);
+          noiseInterval = null;
+        }
+      }, 400);
+    } else if (ansFxSel.value === 'noise' && !noiseInterval) {
+      startNoiseAnim();
+    }
+  });
+  ansYOffset.addEventListener('input', () => {
+    const v = parseInt(ansYOffset.value, 10);
+    stageAnswer.style.marginTop = v + 'px';
+    ansYOffsetVal.textContent = v + 'px';
+  });
+  ansXOffset.addEventListener('input', () => {
+    ansXOffsetVal.textContent = ansXOffset.value + 'px';
+    applyAnsTransform();
+  });
+  ansScale.addEventListener('input', () => {
+    ansScaleVal.textContent = ansScale.value + '%';
+    applyAnsTransform();
+  });
+  answerOnTop.addEventListener('change', () => {
+    if (answerOnTop.checked) {
+      stageGood.style.zIndex = '0';
+      stageAnswer.style.zIndex = '1';
+    } else {
+      stageGood.style.zIndex = '1';
+      stageAnswer.style.zIndex = '0';
+    }
+  });
+
+  // ===== chroma processing =====
+  // For a source PNG with two chroma colors (magenta faces, optional green text),
+  // produce up to three outputs:
+  //   - logoDataUrl: original with magenta AND green punched to transparent
+  //   - faceMaskDataUrl: white where magenta was (for effect clip)
+  //   - textMaskDataUrl: white where green was (for color-fill clip)
+  function processChroma(srcImg, { includeText }) {
+    const W = srcImg.naturalWidth, H = srcImg.naturalHeight;
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+    ctx.drawImage(srcImg, 0, 0, W, H);
+    const src = ctx.getImageData(0, 0, W, H).data;
+
+    const holeData = ctx.createImageData(W, H);
+    const faceMask = ctx.createImageData(W, H);
+    const textMask = includeText ? ctx.createImageData(W, H) : null;
+    const hd = holeData.data, fm = faceMask.data;
+    const tm = textMask ? textMask.data : null;
+
+    for (let i = 0; i < W * H; i++) {
+      const j = i * 4;
+      const r = src[j], g = src[j+1], b = src[j+2], a = src[j+3];
+      if (a <= 16) continue;
+
+      // magenta distance²
+      const mr = r - 255, mg = g - 0, mb = b - 255;
+      const mDist = mr*mr + mg*mg + mb*mb;
+      const isFace = mDist <= tol2;
+
+      let isText = false;
+      if (includeText) {
+        const gr = r - 0, gg = g - 255, gb = b - 0;
+        const gDist = gr*gr + gg*gg + gb*gb;
+        isText = gDist <= tol2;
+      }
+
+      if (isFace) {
+        fm[j] = 255; fm[j+1] = 255; fm[j+2] = 255; fm[j+3] = 255;
+      } else if (isText) {
+        tm[j] = 255; tm[j+1] = 255; tm[j+2] = 255; tm[j+3] = 255;
+      } else {
+        hd[j] = r; hd[j+1] = g; hd[j+2] = b; hd[j+3] = a;
+      }
+    }
+
+    ctx.putImageData(faceMask, 0, 0);
+    const faceMaskDataUrl = cv.toDataURL('image/png');
+    let textMaskDataUrl = null;
+    if (includeText) {
+      ctx.putImageData(textMask, 0, 0);
+      textMaskDataUrl = cv.toDataURL('image/png');
+    }
+    ctx.putImageData(holeData, 0, 0);
+    const logoDataUrl = cv.toDataURL('image/png');
+    return { logoDataUrl, faceMaskDataUrl, textMaskDataUrl };
+  }
+
+  function applyMaskTo(el, dataUrl) {
+    if (!dataUrl) return;
+    el.style.webkitMaskImage = `url(${dataUrl})`;
+    el.style.maskImage = `url(${dataUrl})`;
+    el.style.webkitMaskSize = '100% 100%';
+    el.style.maskSize = '100% 100%';
+    el.style.webkitMaskRepeat = 'no-repeat';
+    el.style.maskRepeat = 'no-repeat';
+  }
+
+  function loadAndProcess(src, opts) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        try { resolve(processChroma(img, opts)); }
+        catch (e) { reject(e); }
+      };
+      img.onerror = () => reject(new Error('img load failed'));
+      img.src = src;
+    });
+  }
+
+  // ===== pre-generated noise frames for fx-noise =====
+  // Generate N chunky black/white noise frames once, then cycle them via setInterval.
+  // This is a real frame-swap static, not a panned tile.
+  const NOISE_FRAMES = [];
+  const NOISE_FRAME_COUNT = 24;
+  const NOISE_W = 1200, NOISE_H = 500;
+  const NOISE_FPS = 24; // fast enough to read as continuous hiss
+  // grayscale distribution — centered gray with moderate spread, so overlaid
+  // white text stays readable. Box-Muller gives gaussian; clamp to [40, 220].
+  function noiseValue() {
+    const u1 = Math.random() || 1e-9;
+    const u2 = Math.random();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    const v = 130 + z * 35;
+    return Math.max(40, Math.min(220, v | 0));
+  }
+  function buildNoiseFrames() {
+    for (let f = 0; f < NOISE_FRAME_COUNT; f++) {
+      const c = document.createElement('canvas');
+      c.width = NOISE_W; c.height = NOISE_H;
+      const cx = c.getContext('2d');
+      const img = cx.createImageData(NOISE_W, NOISE_H);
+      const d = img.data;
+      for (let i = 0; i < NOISE_W * NOISE_H; i++) {
+        const v = noiseValue();
+        const j = i * 4;
+        d[j] = v; d[j+1] = v; d[j+2] = v; d[j+3] = 255;
+      }
+      cx.putImageData(img, 0, 0);
+      NOISE_FRAMES.push(c.toDataURL('image/png'));
+    }
+  }
+  let noiseFrameIdx = 0;
+  let noiseInterval = null;
+  function startNoiseAnim() {
+    if (noiseInterval) return;
+    ansFxEl.style.imageRendering = 'pixelated';
+    noiseInterval = setInterval(() => {
+      noiseFrameIdx = (noiseFrameIdx + 1) % NOISE_FRAMES.length;
+      ansFxEl.style.backgroundImage = `url(${NOISE_FRAMES[noiseFrameIdx]})`;
+    }, 1000 / NOISE_FPS);
+  }
+  function stopNoiseAnim() {
+    if (noiseInterval) { clearInterval(noiseInterval); noiseInterval = null; }
+    ansFxEl.style.backgroundImage = '';
+    ansFxEl.style.imageRendering = '';
+  }
+  ansFxSel.addEventListener('change', () => {
+    stopNoiseAnim();
+    ansFxEl.className = 'fx fx-' + ansFxSel.value;
+    if (ansFxSel.value === 'noise') startNoiseAnim();
+  });
+
+  async function init() {
+    buildNoiseFrames();
+    statusEl.textContent = 'processing chroma…';
+    try {
+      const good = await loadAndProcess(window.GOODCHROMA_PNG, { includeText: false });
+      document.getElementById('goodImg').src = good.logoDataUrl;
+      applyMaskTo(document.getElementById('goodFx'), good.faceMaskDataUrl);
+      applyMaskTo(document.getElementById('goodFxActive'), good.faceMaskDataUrl);
+
+      const ans = await loadAndProcess(window.ANSWERCHROMA_PNG, { includeText: true });
+      document.getElementById('answerImg').src = ans.logoDataUrl;
+      applyMaskTo(ansFxEl, ans.faceMaskDataUrl);
+      applyMaskTo(document.getElementById('ansFxElActive'), ans.faceMaskDataUrl);
+      applyMaskTo(ansTextFill, ans.textMaskDataUrl);
+
+      statusEl.textContent = 'ready';
+    } catch (e) {
+      statusEl.textContent = 'failed: ' + e.message;
+    }
+  }
+  init();
+</script>
+</body>
+</html>

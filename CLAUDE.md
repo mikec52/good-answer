@@ -994,6 +994,35 @@ commonThreadState: {
 - Round-type picker card art pass (gem tier / color treatment).
 - Step 7 (phase reconcile robustness) from the Pre-Blaze Cleanup Refactor applies to Common Thread handlers too — idempotent phase transitions, no assumptions about prior local state.
 
+### To-do: Common Thread scoring tracking (next session)
+
+Mirror the scribble-stats pattern so the Game Recap Stats tab has a "Common Thread" subtab with CT-specific columns. Scribble is the reference implementation — same shape applies here.
+
+**Data layer:**
+- Add `commonThreadPlayerStats = {}` state (parallel to `scribblePlayerStats`). Shape per player: `{ cluesGiven, cluesLanded, cardsFlipped, ownTeamHits, opponentHits, penaltyHits }`. "Clues landed" = at least one correct own-team card flipped during the clue. "ownTeamHits" counts cards the player personally flipped that matched their team; "opponentHits" = flipped an opponent's card; "penaltyHits" = flipped a penalty card.
+- Increment counters at the host-side process points:
+  - `hostProcessCommonThreadClue`: `cluesGiven++` for the clue giver.
+  - `hostProcessCommonThreadGuess`: bucket the flip by `card.type` (own-team vs opponent vs penalty) for the guessing player. When the clue's active team flips at least one own-team card before turn ends, bump `cluesLanded` on that clue's giver (track via a `_ctCurrentClueGiverUid` + a "clue landed this turn" bit, flushed on turn end).
+- Add `commonThreadPlayerStats` to the synced state object; mirror on reconcile (same pattern as scribble at line 11370).
+- Clear `commonThreadPlayerStats = {}` in all the reset sites scribble touches: `lobbyStartGame` Firestore reset block, local `resetGame`, `play-again` executor, state init block at top of script.
+
+**matchLog entries:**
+- Emit matchLog entries from `hostProcessCommonThreadGuess` after each card flip: one per player action. Fields: `player`, `team`, `guess: card.word`, `outcome: 'ct_own' | 'ct_opp' | 'ct_penalty'`, `points`, `multiplier`, `round`, `question: activeClue.word` (the clue itself), `category: 'Common Thread'`, `timestamp`, `roundType: 'common-thread'`.
+- Clue-submission entries are optional; skip unless a CT-specific award needs them later.
+
+**Stats tab:**
+- Add `_STATS_COLS_COMMON_THREAD` alongside `_STATS_COLS_SCRIBBLE` (feud.html:9787). Columns: Player, Points, Clue Accuracy (`cluesLanded / cluesGiven`), Cards Flipped, Own-Team %, Penalties Hit. Use em-dash for 0-denominator rates exactly like scribble's drawSuccess.
+- Wire into `_getStatsCols(subtab)` — add `if (subtab === 'Common Thread') return _STATS_COLS_COMMON_THREAD;`.
+- Extend `aggregatePlayerStats` to pull CT counters from `commonThreadPlayerStats[name]` when populating each player's stats object (parallel to the `sp` scribble block).
+- Extend `_statsSortVal` + `_statsCell` with the new column keys (rate keys return -1 when denominator is 0 for sort; cell renders em-dash).
+
+**Gotchas:**
+- `getStatsRoundTypes()` filters based on `matchLog` entries' `roundType` — emitting CT entries is what makes the subtab appear. Zero-CT-round games must not show a CT subtab.
+- The Overall tab uses `_STATS_COLS_OVERALL` which drops Accuracy. If CT introduces a new canonical metric worth surfacing in Overall, add it there too — otherwise leave Overall alone.
+- Use raw `roundType` keys in matchLog (`'common-thread'`), display labels only via `_recapTypeLabel()`. The scribble path does this correctly; don't regress.
+
+Reference commits: scribble stats wiring (state + sync + aggregation + subtab) landed in the same session as the scribble-scoring framework. Grep for `scribblePlayerStats` to see every integration point — do the same for `commonThreadPlayerStats`.
+
 ---
 
 ## Question Bank — JSON Schema

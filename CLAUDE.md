@@ -343,6 +343,28 @@ Between rounds, all players see a "Ready Up" button. First click starts a 10-sec
 - **"Ship it" trigger phrase:** user says "Ship it" to mean bump hundredths + commit + push to `main` (which auto-deploys to GitHub Pages). Variations: "Ship it at v0.20" for a manual tenths bump; "Commit but don't ship" to commit without pushing.
 - **Dev mode button removed from start screen** but underlying `activateDevMode()` / `_dismissStartScreen()` JS retained so it can be re-enabled quickly if needed. The button was irrelevant during most recent development.
 
+### `TEST_MODE` constant — solo-dev conveniences
+
+A single master switch at the top of the main `<script>` block (near `let devMode = false;`) that gates every solo-dev convenience. `const TEST_MODE = true;` during development, `false` for ships.
+
+**Effects when `TEST_MODE === true`:**
+
+- **Question pool trimmed** to ~10 per category (`computeDevModeQuestions()` runs at game start) so you cycle through the same familiar questions across test games.
+- **Round-multiplier gem density inflated** — `rollRoundMultiplier()` uses the test-mode weights (3x=5%, 2.5x=10%, 2x=20%, 1.5x=40%, 1x=25%) instead of production rates. Makes gem-related UI easy to observe mid-session.
+- **Lobby game code** = single character from `"123"` (so you can type join codes in ~1 key). Production uses 3 random digits from `0-9`.
+- **Music volume slider jumps to 0 on first start-screen click** via `_applyTestModeFirstClick()`. Dev mode (`activateDevMode()`) still mutes unconditionally regardless of `TEST_MODE`, since it's a strict solo-dev entry.
+
+**Ship workflow — flip `TEST_MODE` off for the ship, then back on after.**
+
+When the user says "Ship it":
+1. Flip `TEST_MODE = true` → `TEST_MODE = false`.
+2. Bump `#version-tag`, commit, push.
+3. Flip `TEST_MODE = false` → `TEST_MODE = true` locally (no commit — keep the dev toggle on locally).
+
+Optional bundling: the post-ship flip-back can be committed as a tiny follow-up (`"re-enable TEST_MODE locally"`) if leaving it uncommitted in the working tree would cause friction, but the default is to keep it as an uncommitted local change so the deployed `main` tree reads `false`.
+
+**Adding a new test-mode convenience:** gate it on `TEST_MODE` (or `devMode || TEST_MODE` if it should also trigger from the dev-mode entry path), and add it to the bullet list in the comment block above `const TEST_MODE = true;` so the catalog stays discoverable.
+
 ### Host/non-host UI drift at round-result (spawned as separate task)
 
 Observed end of scribble round with visible divergences between host and non-host:

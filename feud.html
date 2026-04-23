@@ -331,7 +331,7 @@
       transition: transform 1s ease;
     }
     #start-logo.logo-to-top {
-      transform: translateY(-180px) scale(0.5);
+      transform: translateY(-160px) scale(0.5);
     }
 
     /* ===== Start-screen logo (GOOD text + ANSWER dot-matrix marquee) ===== */
@@ -359,11 +359,12 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: "futura-pt", "Futura", sans-serif;
+      font-family: "futura-100", "Futura", sans-serif;
       font-weight: 900;
       font-size: 14rem;
       line-height: 1;
-      letter-spacing: -1.3rem;
+      margin-bottom: 65px;
+      letter-spacing: -1.2rem;
       color: #ffffff;
       transition: color 0.35s ease;
       pointer-events: none;
@@ -371,7 +372,7 @@
     }
     /* Futura's D sits a bit wider than OO; nudge it left to visually even things out */
     #start-logo .good-text .good-d { margin-left: -0.5rem; }
-    #start-logo .logo-stack.active .good-text { color: #fba300; }
+    #start-logo .logo-stack.active .good-text { color: #fba300;     -webkit-text-stroke: 2px white;}
     #start-logo .logo-stack.active #stageGood { animation: gold-pulse 5s ease-in-out infinite; }
     @keyframes gold-pulse {
       0%, 35%, 100% {
@@ -7966,7 +7967,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.19</div>
+  <div id="version-tag">v0.20</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -7975,7 +7976,7 @@
         <div class="logo-stack" id="start-logo-stack">
           <!-- GOOD — flat Futura, white dormant, gold active -->
           <div class="stage good" id="stageGood">
-            <div class="good-text">GOO<span class="good-d">D</span></div>
+            <div class="good-text"><span>G</span><span>O</span><span>O</span><span class="good-d">D</span></div>
           </div>
           <!-- ANSWER — LED-matrix rectangle with CSS-rendered text -->
           <div class="stage answer" id="stageAnswer">
@@ -10940,11 +10941,20 @@ document.addEventListener('keydown', e => {
     let devModeAllowedQuestions = null;
 
     // ── TEST MODE ──────────────────────────────────────────────────────
-    // Flip to `false` for full question pool (real playtests with others).
-    // Flip to `true` for a trimmed pool (10 questions per category) during
-    // solo dev work so you cycle through the same familiar content.
+    // Single master switch that toggles all solo-dev conveniences. Flip to
+    // `false` before shipping; flip back to `true` after.
     // The user will say "remove testmode" / "go back to testmode" to toggle.
-    const TEST_MODE = true;
+    // When true:
+    //   • Question pool trimmed to ~10 per category (cycle familiar content)
+    //   • Higher density of round-multiplier gems on the picker
+    //   • Lobby code is a single char from "123" (fast to type)
+    //   • Music volume slider jumps to 0 on first start-screen click
+    // When false (production):
+    //   • Full question pool
+    //   • Normal gem drop rates
+    //   • 3-digit numeric lobby code
+    //   • Music volume left at whatever the user set
+    const TEST_MODE = false;
 
     let roundNumber = 0;
     let gameEnded = false;
@@ -12182,11 +12192,24 @@ document.addEventListener('keydown', e => {
       }
     }
 
+    // Test-mode first-click side effects. Runs once per start-screen click
+    // (both normal and dev-mode entry paths call this). Currently only mutes
+    // music, but lives alongside the other TEST_MODE conveniences so future
+    // additions have an obvious home.
+    function _applyTestModeFirstClick() {
+      if (!TEST_MODE) return;
+      volumeMusic = 0;
+      const volMusicEl = document.getElementById('vol-music');
+      if (volMusicEl) volMusicEl.value = 0;
+      applyVolumes();
+    }
+
     function activateDevMode() {
       devMode = true;
       if (questions.length > 0) computeDevModeQuestions();
 
-      // Mute music before starting bg music so the fade-in captures gain=0
+      // Mute music before starting bg music so the fade-in captures gain=0.
+      // Unconditional here (dev mode is a strict solo-dev entry point).
       volumeMusic = 0;
       const volMusicEl = document.getElementById('vol-music');
       if (volMusicEl) volMusicEl.value = 0;
@@ -22114,6 +22137,7 @@ document.addEventListener('keydown', e => {
 
       // Re-register the click handler (original was { once: true })
       startScreen.addEventListener('click', function() {
+        _applyTestModeFirstClick();
         startBgMusic();
         startScreen.style.pointerEvents = 'none';
         const stack = document.getElementById('start-logo-stack');
@@ -22183,11 +22207,13 @@ document.addEventListener('keydown', e => {
       }, 250);
     }
 
-    // Generate a short alphanumeric game code
+    // Generate a short game code. Production = 3-digit numeric. Test mode
+    // = single char from "123" so dev can type the same codes quickly.
     function generateGameCode() {
-      const chars = '123'; // dev testing only — restore full set before shipping
+      const chars = TEST_MODE ? '123' : '0123456789';
+      const len = TEST_MODE ? 1 : 3;
       let code = '';
-      for (let i = 0; i < 1; i++) code += chars[Math.floor(Math.random() * chars.length)];
+      for (let i = 0; i < len; i++) code += chars[Math.floor(Math.random() * chars.length)];
       return code;
     }
 
@@ -23125,6 +23151,7 @@ document.addEventListener('keydown', e => {
       };
 
       startScreen.addEventListener('click', function() {
+        _applyTestModeFirstClick();
         startBgMusic();
         startScreen.style.pointerEvents = 'none'; // prevent double-clicks
         const stack = document.getElementById('start-logo-stack');

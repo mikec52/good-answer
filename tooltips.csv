@@ -43,7 +43,7 @@ award-the-jock,evergreen,Go sports!,Scored the most points in Sports categories
 award-multitudes,evergreen,You're like an onion,Scored points in more unique categories than anyone else
 award-frequent-flyer,evergreen,Where in the world?,Scored the most points in Geography categories
 award-hoi-polloi,evergreen,Person of the people,Scored the most points in Pop Culture categories
-award-sergeis-fez,evergreen,Legally we can't say that rhymes with something,Scored the most points in Survey categorieslobby-host,evergreen,Running the show,The host manages game settings and can reassign captains in the lobby
+award-sergeis-fez,evergreen,Legally we can't say that rhymes with something,Scored the most points in Survey categorieslobby-host
 lobby-captain,evergreen,Team leader,Captains decide how to use team prizes. The captain or host can reassign this role before the game starts
 lobby-make-captain,help,Pass the torch,Make this player your team's captain
 lobby-edit-team-name,help,Captain's call,Click to rename your team
@@ -54,6 +54,6 @@ gem-emerald,evergreen,A modest shine,Round total will be multiplied by 1.5x
 gem-sapphire,evergreen,Deep blue bonus,Round total will be multiplied by 2x
 gem-amethyst,evergreen,Rare and rich,Round total will be multiplied by 2.5x
 gem-topaz,evergreen,Jackpot,Round total will be multiplied by 3x
-
+,,,
 ct-role-clue-giver,help,The one with the plan,You know every card's team and value. Give your teammates a one-word clue and a count — they pick the cards
 ct-role-guesser,help,Listen and pick,Your clue giver sees the card values. Use their clue to pick cards that match your team. Avoid opponents and penalties

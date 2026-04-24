@@ -1036,6 +1036,231 @@ Reference commits: scribble stats wiring (state + sync + aggregation + subtab) l
 
 ---
 
+## Grid Lock — Module (integrated; in-progress on `main-gridlock`)
+
+Boggle-style 5×5 word-forming minigame. All players play simultaneously for the full round (no turn rotation within the round). Requires 2+ players per team. Original single-player prototype: [grid-lock.html](grid-lock.html). Now integrated into `feud.html` as `ROUND_MODULES['grid-lock']` with full multiplayer + reveal + summary + Round Summary Framework support.
+
+### Implementation status (as of session end)
+
+**Done:**
+- Core port: tile generation, dictionary loader (`dictionary.txt`, ~278k words), prefix-pruned solver, weighted letter distribution with anti-clustering (`CLUSTER_PENALTY = 0.5`), vowel floor (7) + row/col vowel max (4), solvability floor (150) with reroll retry.
+- Word validation, scoring, bonus computation (`glComputeBonuses`):
+  - First-to-enter (+50) — earliest valid uncancelled submission per word, cross-team.
+  - Longest valid word (×2) — length computed across the **whole round**, only uncancelled scored words on EITHER team at that length qualify.
+  - Most valid words (+100) — cancellation-blind. Tie-split: `Math.floor(100 / numWinners)` per tied player, remainder discarded. Cross-team eligible.
+- Cancellation: word valid on both teams → scores nothing for either team and earns no first-entry / longest bonus. Same-team duplicates each score independently.
+- Multiplayer (host-authoritative): board generation + lock rotation + timer all run on host; non-hosts mirror via `gridLockState` Firestore sync. Submissions route through `pendingAction: { type: 'gridLockSubmit', word, uid }`. Non-host pre-checks (length / dict / self-duplicate) reject locally with neutralbeep + shake — only valid dict words round-trip to the host. Display uses `_localRejects` for local-only failures.
+- Wall-clock timer: host stamps `roundEndsAt`; non-host runs a display-only 250ms-tick countdown bound to that timestamp. Only host triggers `glEndRound` on expiry.
+- Intro: cover-plate shake + 3-2-1-GO countdown, then `glStartPlay`.
+- TIME'S UP overlay (rounded black card, futura preloaded), 1.5s hold.
+- Play → reveal exit: left-col slides left + right-col slides down (parallel). 500ms beat. Reveal mode swap: 4-quadrant pane, board reparents into top-right. Quadrants enter pre-staged then slide in (grid + cancelled from right; teams from left).
+- Reveal stagger: cancelled first, then team 0, then team 1. Sort: length asc, alphabetical asc within length. Path flash on grid per word in team color (or neutral red for cancelled). Auto-scroll: `.gl-reveal-list-track` translates up via 350ms transition as rows accumulate so newest stays visible.
+- Round Complete card ("FINALIZING SCORING" subtitle). Reveal quadrants exit in opposite directions before summary slides in.
+- Summary panel (`.round-summary` framework + grid-lock-specific layout):
+  - Two-column body — left stacks WORDS SUBMITTED + POINTS SCORED rankings (top 6, team-colored names, sorted desc); right column WORDS FOUND (alphabetical, gray cancelled / red / blue scored), marquee loops if overflow.
+  - Solid `#111` data fields under each frosted-glass header.
+  - Slides in from above. Body bg extends 18px above module-canvas via `top: -18px; padding-top: 32px` so the panel fills the scoreboard's rounded-corner gap. Scoreboard has `position: relative; z-index: 2` so its opaque body covers everything except the corner transparency.
+  - Parallel raw countups, then sequential per-team gem slam (`runTeamMult`, red → 350ms beat → blue) using the canonical `rt-gem rt-tier-{tier}` class set with `gemMeta.img`.
+  - Slide-up exit (`.gl-summary-out`) wired into `advanceRound` (host) + `handlePhaseTransition` round-type-select (non-host) Promise.all alongside other module exits.
+- State management:
+  - `gridLockState` cleared by host in Firestore on round end (in `handleModuleComplete`) so subsequent CT/H5 rounds don't carry stale `phase: 'reveal'` snapshots that re-trigger phantom reveals on non-host.
+  - Non-host reconcile gates the reveal trigger on `data.selectedRoundType === 'grid-lock'` (defense-in-depth).
+  - Generation counter (`_revealGen`) on `glRunReveal` + `glShowSummary` aborts in-flight invocations cleanly when `resetGridLockState` runs (prevents round-1 stagger loop from writing stale rows into round-2 tracks).
+  - Comprehensive class cleanup in `resetModuleCanvas` + `enterGridLockRound`: strips `.gl-play-exit`, `.gl-cover-off`, `.gl-cover-shake`, `.gl-pre-enter-*`, `.gl-enter-*`, `.gl-exit-*`, `.gl-summary-out`, `.gl-flash-red/-blue`, plus inline transforms on tracks. Re-parents board to play-mode wrap if still in reveal grid holder.
+- `#module-canvas` flipped from `overflow-y: clip` to `overflow: visible` (both axes). Scoreboard `z-index: 2` covers any module bleed above except border-radius corner gaps. Benefits every module's summary panel, not just grid-lock.
+
+**Outstanding (next session):**
+1. **Stats integration** — emit `roundType: 'grid-lock'` entries into `matchLog` from `hostProcessGridLockSubmit` + `glEndRound`. Add `_STATS_COLS_GRID_LOCK` (Words / Cancelled / Avg Length / Bonuses / Points) to Game Recap Stats tab; wire into `_getStatsCols` + `aggregatePlayerStats` + `_statsSortVal` + `_statsCell`. Follows the scribble stats pattern exactly — see CLAUDE.md "To-do: Common Thread scoring tracking" for the template (same shape, different columns). Highest-value remaining work.
+2. **Round-type picker card art** — currently uses a plain `GRID / LOCK` text stand-in (`_buildGlPickerArtHtml` equivalent missing). Needs Grid Lock card visual matching the vocabulary of other module cards (High Five "5"+hand, Scribble urban-sprite loop, CT thread).
+3. **Real cinematic** (optional polish) — replaces default `playModuleIntro` splash with Grid Lock-themed animation. Current splash works fine; nice-to-have.
+4. **Victory awards** (optional) — add Grid Lock-specific awards to `awards.json` + `awardComputers` ("Wordsmith" most valid count, "Scrabble hand" longest word, "Canceller" most cross-team cancellations caused, etc.).
+5. **Diagnostic logs** — temporary `console.log` entries in `enterGridLockRound`, `glEndRound`, and the reveal-trigger reconcile path (logs "[grid-lock] reconcile triggering glRunReveal" / "[grid-lock] IGNORED stale reveal snapshot"). Remove once the module proves stable across more sessions.
+
+### Branch state
+Branch `main-gridlock` (off `main`). All Grid Lock work is on this branch. NOT yet merged to `main` and NOT shipped — `#version-tag` still reads `v0.22`. Pick up next session by continuing on this branch; merge to `main` when stats + picker card land.
+
+### Round structure
+
+- Single shared 5×5 grid generated at round start, identical for every player.
+- **3-minute round timer.** Everyone submits simultaneously into their own private word list (no turn handoff).
+- **Rolling tile lock.** Every 30s, one random tile becomes locked (grayscale + 0.35 opacity, excluded from valid paths). The previous lock releases simultaneously. A tile cannot re-lock in the same round (`lockHistory` set). Over a 3-min round there are 5 lock rotations at 0:30 / 1:00 / 1:30 / 2:00 / 2:30.
+- On expiry: no more submissions accepted, flow advances to the reveal screen.
+
+### Grid generation (finalized in proto)
+
+Algorithm constants, tuned via playtesting — port verbatim:
+
+```js
+const LETTER_CAPS = {
+  J:1, X:1, Z:1, Qu:1, K:2, V:2, W:2, Y:2, F:2, H:2,
+  E:4, A:4, I:4, O:4, U:3,
+  N:4, R:4, S:4, T:4, L:3,
+};
+const CLUSTER_PENALTY = 0.5;   // adj-same-letter weight multiplier
+const VOWEL_FLOOR = 7;         // grid-wide minimum vowels (of 25 tiles)
+const ROW_COL_VOWEL_MAX = 4;   // no row/col may have 4+ vowels
+const SOLVABILITY_MIN = 150;   // reroll if solver finds fewer valid words
+```
+
+- `pickWeighted` consults the in-progress tile's 8-neighbor set; if a candidate letter is already adjacent, its weight is multiplied by `CLUSTER_PENALTY` (0.5).
+- `buildGridOnce` fills in a shuffled-index order so penalties compound naturally as tiles land.
+- `generateGrid` retries up to 80 times for constraints (vowel floor + row/col ceiling) and additionally re-solves for a `SOLVABILITY_MIN`-word floor, falling back to the last attempt if unmet.
+- "Qu" is a single tile; it contributes the two characters `QU` to any walk.
+- Solver uses a **prefix Set** (from `dictionary.txt`, every 2+ prefix of every 4+ letter word) for DFS pruning — without this the solver hangs for seconds per grid.
+- Playtested spread across 10 boards: 153 / 385 / 161 / 201 / 443 / 222 / 273 / 258 / 220 / 175 valid words. Good variance, no catastrophic lows.
+
+### Word validation
+
+- Minimum length 4. DFS with 8-neighbor adjacency + visited-set + `lockedIdx` exclusion.
+- `wordPath(word, tiles, lockedIdx)` returns the winning path or null.
+- Dictionary source: `dictionary.txt` (uppercase, 4+ letters). Same file the solver uses.
+- Per-player: duplicates inside your own list are silently rejected; cross-team duplicates are NOT — they get cancelled out at reveal time.
+- Must check both path validity AND dictionary membership. Reject with visual feedback (invalid path, not-a-word, duplicate, uses-locked-tile) but still log every attempt to `state.entries` (see Scoring).
+
+### Scoring
+
+Base points per letter (Scrabble-ish):
+```
+A,E,I,L,N,O,R,S,T,U = 1    D,G = 2    B,C,M,P = 3
+F,H,V,W,Y = 4              K = 5       J,X = 8     Q,Z = 10
+```
+Word base score = sum of letter values. "Qu" tile contributes Q(10) + U(1) = 11.
+
+**Core scoring:** all valid, non-cancelled words score their base value for the player's team. A word is "cancelled" if any opposing-team player also submitted it (valid path, valid dict) — both sides lose points on it. Same-team dupes just don't double-count.
+
+**Three bonuses, computed by a pure function `computeGridLockBonuses(entries)`:**
+
+1. **First-to-enter** (+50): for each unique valid word across all players, the earliest-timestamped entry's player gets +50. Works across teams — whoever clocked the word first.
+2. **Longest valid word per team** (×2): each team's longest valid word length; all valid words at that max length on that team get a 2× on their base. Ties all benefit.
+3. **Most valid words by an individual** (+100): counts **valid** submissions per player (dict-passing + path-valid at submit time, regardless of whether the word ended up cancelled by the opposing team). Invalid attempts (typos, non-words, wrong-path) are NOT factored. Ties all benefit.
+
+Bonus function signature: `{ firstBonus: {player: points}, longestMultWords: {0: Set, 1: Set}, countBonus: {player: points} }`.
+
+**Entry log shape** (every submission, regardless of outcome):
+```js
+{ player, team, word, valid, reason, timestamp, path }
+```
+`reason` is one of `'ok' | 'invalid-path' | 'not-word' | 'duplicate-self' | 'uses-locked' | 'too-short'`. The bonus computer only reads `valid`, `word`, `player`, `team`, `timestamp`.
+
+**Client-side pre-rejection (non-host).** Because invalid submissions don't count toward any bonus and don't need host arbitration, the non-host filters length / dict / self-duplicate rejects locally — neutralbeep + shake + strikethrough entry in the private word list, no Firestore round-trip. Only dict-passing words route to the host for authoritative path + score validation. Host-mode submissions still run the full pipeline locally.
+
+### Private word list (per-player UI)
+
+Each player sees only their own submissions during the round. Running list, chat-style:
+- Newest-at-bottom.
+- Auto-scroll to bottom on each new entry.
+- **Respect manual scroll-up** — if user has scrolled up, don't yank them back; show a "new entries ↓" affordance or re-anchor only when they scroll near bottom again.
+- Valid entries show points earned; invalid show a subtle strike-through or neutral gray with the reason.
+
+### Intro choreography
+
+1. Grid container slides in from below the canvas with a **black cover plate** over the tiles (tiles are rendered but invisible behind the cover).
+2. Cover (and container) **shakes/wiggles** for 2s — implies "locked". Same vocabulary as input-shake but slower/larger.
+3. **3 — 2 — 1 — GO** countdown overlay (centered, big numerals). Play existing `flick.wav` or similar on each tick; a climactic SFX on GO.
+4. On GO, cover slides off to reveal tiles. Round timer starts. Input enabled.
+
+### Reveal screen (before summary)
+
+After timer expiry, a three-column reveal runs — **shortest words first, building up to longest**, like "Reveal All" in feud. Columns:
+
+```
+CANCELLED OUT   |   TEAM 1   |   TEAM 2
+```
+
+- Cancelled column shows words both teams submitted (those words score nothing for either side). Both teams' submissions of that word collapse into one row.
+- Team columns show that team's non-cancelled valid words, with per-word points including bonuses applied.
+- Stagger by word length: all 4-letter words reveal first (some SFX per item, maybe `playTick` with rising pitch), then 5s, etc.
+- **Team totals are deferred** — not shown on this screen. They belong to the Round Summary that follows.
+
+### Summary screen
+
+Uses the shared **Round Summary Framework** (see that section):
+- `showRoundCompleteCard` with team-color subtitle (winner or tied).
+- `#grid-lock-summary` container slides in, shows per-player breakdown rows (words count, base points, bonuses earned, final contribution) under each team header.
+- Parallel raw-score countups on team totals → if `currentRoundMultiplier > 1`, per-team `runTeamMult` gem slam + post-mult countup → `hidePhaseGem` → 1500ms hold → `onComplete({ redScore, blueScore })` → `handleModuleComplete` writes the post-summary "[team] won the round with X points!" message.
+
+### Firestore schema (proposed)
+
+```js
+gridLockState: {
+  phase: 'intro' | 'play' | 'reveal' | 'summary',
+  tiles: [25 strings, 'Qu' included as multi-char],
+  lockedIdx: number | null,
+  lockHistory: [indices already locked this round],
+  roundEndsAt: serverTimestamp,       // wall-clock target
+  nextLockAt: serverTimestamp,        // next rotation tick
+  entries: [ { player, team, word, valid, reason, timestamp, path } ],
+  bonuses: null | { firstBonus, longestMultWords, countBonus },  // computed at end by host
+  solutionsCount: number,             // solver count, for awards or stats
+}
+```
+
+`pendingAction` types: `gridLockSubmit` (word string). Host validates against `tiles` + `lockedIdx` + dict, appends an entry to `gridLockState.entries` via `arrayUnion`, syncs. Non-host reads `entries.filter(e => e.player === myName)` for their private list.
+
+All `gridLockState` fields cleared in `lobbyStartGame`'s Firestore reset block alongside `scribbleState` / `commonThreadState` / etc.
+
+### Module-scoped DOM
+
+Lives inside `#module-canvas`:
+- `#grid-lock-container` — outer scaffold (grid + timer + lock indicator)
+- `#grid-lock-grid` — 5×5 tile grid
+- `#grid-lock-cover` — intro cover plate
+- `#grid-lock-timer` — countdown display (warn at ≤30s, red at 0)
+- `#grid-lock-private-list` — this player's running word list (sidebar? or below grid? — decide at integration)
+- `#grid-lock-reveal` — three-column reveal screen (mounted at reveal-phase start)
+- `#grid-lock-summary` — summary panel (applies `.round-summary` + `.round-summary-*` classes)
+
+Input-area home base: during `play`, use `setInputAreaMode({mode: 'guess', header: 'Enter words!', ...})`. Guess input drives submissions. During `intro` / `reveal` / `summary`, use `'disabled'` with contextual placeholder. Summary screen transitions to `'action'` for Ready Up after `handleModuleComplete` fires.
+
+### Host-authoritative patterns
+
+- Host runs the one authoritative timer; `roundEndsAt` is a wall-clock timestamp everyone reads. Non-hosts display countdown from the synced value; only the host triggers `phase: 'reveal'` at expiry.
+- Lock rotation: host writes `lockedIdx` + `lockHistory` + next `nextLockAt` each rotation. Non-hosts' displays react to the snapshot — no local setInterval driving gameplay state.
+- Submission race: use `clientTs` inside each entry so the bonus computer ranks first-to-enter deterministically even when entries arrive at the host out of order.
+- Bonus computation: host runs `computeGridLockBonuses(state.entries)` once at round end, writes to `gridLockState.bonuses`. All clients render the reveal + summary from the synced result.
+
+### Phase reconcile robustness (Step 7 guidance)
+
+Each `case 'gridlock-<phase>':` handler must be idempotent — "bring the client to this phase's canonical state," no assumptions about what was applied locally. Fast-forward through skipped intermediate steps using fields the snapshot carries (entries array is the source of truth; reveal can always re-derive from it).
+
+### Known pitfalls (from proto + anticipated at integration)
+
+- **Solver performance** — always use prefix pruning. Without it, full-board solve hangs.
+- **Set serialization** — `longestMultWords` uses Sets. Don't JSON-stringify for Firestore; convert to arrays at the boundary, rehydrate on read.
+- **Chat-style scroll** — the "respect manual scroll-up" nuance is easy to miss. Use the `scrollTop + clientHeight >= scrollHeight - threshold` check on every render.
+- **Locked-tile visual** — grayscale filter interacts oddly with the tile-hover transforms in the existing tile visual language; verify at integration.
+- **Cover-plate shake timing** — 2s feels right in proto; tune against the 3-2-1-GO cadence so total intro is ~5s, not longer.
+
+### Clarifying questions to settle at integration time
+
+1. Where does the private word list live in the layout — sidebar replacing `#input-area`'s neighborhood, or below the grid in the module canvas?
+2. Are bonuses highlighted inline in the reveal screen (badge on the word row) or saved for summary only?
+3. Cancelled-out column: show BOTH teams' submissions collapsed into one row, or just the word once with a "cancelled" tag?
+4. Does the round-multiplier gem apply to bonuses too, or only to base word points?
+5. SFX palette for reveal stagger — reuse `playTick` / `playGlint` / chime, or new sounds?
+6. What happens to a player who submits zero valid words — do they still appear in the summary per-player breakdown (for the `+100 most submissions` eligibility)?
+7. Should the locked tile's position be visible to all players identically (yes, presumably — reads from host snapshot), or can different tiles be locked per player for asymmetric play (no — stick with shared)?
+8. Does Grid Lock need victory-award compute functions (best-grid-lock-player, most-cancellations-caused, etc.) in v1, or defer?
+
+### Porting checklist
+
+- [ ] Add module entry to `ROUND_MODULES`: key `'grid-lock'`, `minPlayersPerTeam: 2`, `enter(onComplete)` + `reset()` + `cinematic()`.
+- [ ] Port `generateGrid` + `solveGrid` + `PREFIX` dict loading. Dict file is already `dictionary.txt`.
+- [ ] Port `computeGridLockBonuses` verbatim.
+- [ ] Port `wordPath` / `wordScore` with `lockedIdx` param.
+- [ ] Build module-scoped DOM under `#module-canvas`.
+- [ ] Wire `pendingAction: { type: 'gridLockSubmit', word }` pattern.
+- [ ] Host timer + lock rotation via server timestamps.
+- [ ] Intro cinematic (cover plate + shake + 3-2-1-GO + cover slide-off).
+- [ ] Reveal screen (three-column, shortest-first stagger).
+- [ ] Summary screen applying Round Summary Framework + deferred point announcement.
+- [ ] Stats tab: `_STATS_COLS_GRID_LOCK` with Words, Cancelled, Avg Length, Bonuses, Points. Add to `_getStatsCols` + `aggregatePlayerStats` + `_statsSortVal` + `_statsCell`. Emit `roundType: 'grid-lock'` in matchLog entries.
+- [ ] `lobbyStartGame` Firestore reset clears `gridLockState` + `pendingAction`.
+- [ ] Picker card art + tooltip for the Grid Lock round type.
+- [ ] Cinematic animation (TBD, not yet prototyped — similar treatment to other modules).
+
+---
+
 ## Question Bank — JSON Schema
 
 Each question object has this shape:

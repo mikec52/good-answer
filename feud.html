@@ -4425,24 +4425,24 @@
       margin-bottom: 10px;
     }
     .stats-subtab {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.18);
+      background: transparent;
+      border: none;
       color: #ccc;
       font-family: "futura-100", sans-serif;
       font-size: 0.75rem;
       font-weight: 500;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      padding: 5px 14px;
-      border-radius: 5px;
+      padding: 5px 10px 4px;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
       cursor: pointer;
-      transition: background 0.2s, color 0.2s, border-color 0.2s;
+      transition: color 0.2s, border-color 0.2s;
     }
-    .stats-subtab:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .stats-subtab:hover { color: #fff; }
     .stats-subtab.active {
-      background: #fba300;
-      color: #111;
-      border-color: #fba300;
+      color: #fba300;
+      border-bottom-color: #fba300;
     }
     .stats-scroll-wrap {
       flex: 1;
@@ -7957,7 +7957,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.21</div>
+  <div id="version-tag">v0.22</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -8890,6 +8890,8 @@
     const sfxDecreaseBlip = new Audio("decreaseblip.mp3");
     const sfxNeutralBeep = new Audio("neutralbeep.wav");
     const sfxNegativeBeep = new Audio("negativebeep.wav");
+    const sfxWinChime    = new Audio("winchime.wav");
+    const sfxSadTrombone = new Audio("sadtrombone.wav");
     // Per-track base volume (multiplied with master × sfx gain)
     sfxCorrect.baseVolume    = 0.6;
     sfxWrong.baseVolume      = 0.6;
@@ -9632,6 +9634,18 @@
       resetTally();
       _recapAnimateCountUp(document.getElementById('vt-red-score'), 0, teamScores[0] || 0);
       _recapAnimateCountUp(document.getElementById('vt-blue-score'), 0, teamScores[1] || 0);
+      // Scoreboard countup runs in parallel — release the defer flag and drive
+      // the evergreen scoreboard from its currently-displayed (pre-faceoff)
+      // value up to the final teamScores alongside the recap tally.
+      if (_deferFaceoffScoreboard) {
+        _deferFaceoffScoreboard = false;
+        const redSb = document.getElementById('red-score');
+        const blueSb = document.getElementById('blue-score');
+        const fromRed = parseInt(redSb?.textContent, 10) || 0;
+        const fromBlue = parseInt(blueSb?.textContent, 10) || 0;
+        _recapAnimateCountUp(redSb, fromRed, teamScores[0] || 0);
+        _recapAnimateCountUp(blueSb, fromBlue, teamScores[1] || 0);
+      }
       setTimeout(() => {
         const winnerIdx = (teamScores[0] || 0) >= (teamScores[1] || 0) ? 0 : 1;
         const w = document.getElementById('vt-winner');
@@ -9645,6 +9659,45 @@
           void winnerScoreEl.offsetWidth;
           winnerScoreEl.classList.add('winner-slam');
         }
+        // Update input-area home base with the winner message now that the
+        // scoreboard countup has landed on the final total.
+        try {
+          const teamClr = winnerIdx === 0 ? 'red' : 'blue';
+          const winHeader = `<span class="team-name ${teamClr}">${teamNames[winnerIdx]}</span> wins with ${teamScores[winnerIdx] || 0} points!`;
+          setInputAreaMode({
+            mode: 'disabled',
+            header: winHeader,
+            subtext: 'Game over',
+            teamColor: winnerIdx,
+            headerWrap: true,
+          });
+        } catch (e) { /* defensive — setInputAreaMode missing shouldn't break tally */ }
+        // Release held particles + swap music: face-off track has been
+        // sustaining suspense through the tally; now the winner is announced,
+        // so confetti/fireworks fire and maintheme takes over.
+        try {
+          if (typeof VICTORY !== "undefined") {
+            VICTORY._particlesHeld = false;
+            if (VICTORY.confetti && VICTORY.confetti.length === 0 && VICTORY.CONFETTI_COUNT) {
+              for (let i = 0; i < VICTORY.CONFETTI_COUNT; i++) {
+                VICTORY.confetti.push(makeConfetti(true));
+              }
+            }
+          }
+        } catch (e) { }
+        try { setMusicMode('maintheme'); } catch (e) { }
+        // End-of-game SFX: local player's team wins → winchime, else sad trombone.
+        // In local / hot-seat mode there's no single local player; play winchime.
+        try {
+          let localWon = true;
+          if (isMultiplayer && myUid) {
+            const myTeamIdx =
+              (teamPlayerUids[0] || []).includes(myUid) ? 0 :
+              (teamPlayerUids[1] || []).includes(myUid) ? 1 : -1;
+            if (myTeamIdx !== -1) localWon = (myTeamIdx === winnerIdx);
+          }
+          playSound(localWon ? sfxWinChime : sfxSadTrombone);
+        } catch (e) { }
         setTimeout(() => {
           const msg = document.querySelector('.victory-message');
           if (msg) msg.classList.add('shown');
@@ -9732,12 +9785,19 @@
           const name = typeof p === 'object' ? p.name : p;
           if (!name) return;
           const sp = scribblePlayerStats[name] || { drAtt: 0, drSucc: 0, guessOpp: 0, guessSucc: 0 };
+          const cp = commonThreadPlayerStats[name] || { cluesGiven: 0, cluesLanded: 0, cardsFlipped: 0, ownTeamHits: 0, opponentHits: 0, penaltyHits: 0, pointsContributed: 0, bestSingle: 0, giverFlips: 0, giverOwnFlips: 0 };
           stats[name] = {
             player: name, team: tIdx,
             points: 0, correct: 0, wrong: 0, best: 0,
             maxStreak: 0, multiplied: 0, duplicates: 0,
             _cats: new Set(), streaksEnded: 0, participated: 0,
             drAtt: sp.drAtt, drSucc: sp.drSucc, guessOpp: sp.guessOpp, guessSucc: sp.guessSucc,
+            cluesGiven: cp.cluesGiven, cluesLanded: cp.cluesLanded,
+            cardsFlipped: cp.cardsFlipped, ownTeamHits: cp.ownTeamHits,
+            opponentHits: cp.opponentHits, penaltyHits: cp.penaltyHits,
+            ctPointsContributed: cp.pointsContributed || 0,
+            ctBestSingle: cp.bestSingle || 0,
+            giverFlips: cp.giverFlips || 0, giverOwnFlips: cp.giverOwnFlips || 0,
           };
         });
       });
@@ -9760,7 +9820,21 @@
         }
         if (e.streakBroken && e.streakBroken > 0) s.streaksEnded++;
       }
-      return Object.values(stats).map(s => ({ ...s, categories: s._cats.size }));
+      return Object.values(stats).map(s => {
+        const row = { ...s, categories: s._cats.size };
+        if (filter === 'Common Thread') {
+          row.points = s.ctPointsContributed || 0;
+          row.best = Math.max(row.best, s.ctBestSingle || 0);
+          const touchedCt = (s.cluesGiven || 0) + (s.cardsFlipped || 0);
+          if (touchedCt > 0) row.participated = Math.max(row.participated, 1);
+        } else if (filter === 'Overall') {
+          row.points += s.ctPointsContributed || 0;
+          row.best = Math.max(row.best, s.ctBestSingle || 0);
+          const touchedCt = (s.cluesGiven || 0) + (s.cardsFlipped || 0);
+          if (touchedCt > 0) row.participated = Math.max(row.participated, 1);
+        }
+        return row;
+      });
     }
 
     const _statsState = { subtab: 'Overall', sortCol: 'points', sortDir: 'desc' };
@@ -9790,9 +9864,18 @@
       { key: 'drawSuccess', label: 'Drawing Success', cls: 'sort-num' },
       { key: 'guessSuccess', label: 'Guessing Success', cls: 'sort-num' },
     ];
+    const _STATS_COLS_COMMON_THREAD = [
+      { key: 'player', label: 'Player', cls: 'sort-player' },
+      { key: 'points', label: 'Points', cls: 'sort-num' },
+      { key: 'clueAccuracy', label: 'Clue Accuracy', cls: 'sort-num' },
+      { key: 'cardsFlipped', label: 'Cards Flipped', cls: 'sort-num' },
+      { key: 'ownTeamPct', label: 'Own-Team %', cls: 'sort-num' },
+      { key: 'penaltyHits', label: 'Penalties Hit', cls: 'sort-num' },
+    ];
     function _getStatsCols(subtab) {
       if (subtab === 'Overall') return _STATS_COLS_OVERALL;
       if (subtab === 'Secret Scribble') return _STATS_COLS_SCRIBBLE;
+      if (subtab === 'Common Thread') return _STATS_COLS_COMMON_THREAD;
       return _STATS_COLS_FEUD;
     }
 
@@ -9842,6 +9925,12 @@
       if (key === 'guessSuccess') {
         return (row.guessOpp || 0) > 0 ? row.guessSucc / row.guessOpp : -1;
       }
+      if (key === 'clueAccuracy') {
+        return (row.giverFlips || 0) > 0 ? row.giverOwnFlips / row.giverFlips : -1;
+      }
+      if (key === 'ownTeamPct') {
+        return (row.cardsFlipped || 0) > 0 ? row.ownTeamHits / row.cardsFlipped : -1;
+      }
       return row[key] != null ? row[key] : 0;
     }
 
@@ -9866,6 +9955,20 @@
       if (key === 'guessSuccess') {
         const opp = row.guessOpp || 0;
         return `<td>${opp > 0 ? Math.round((row.guessSucc / opp) * 100) + '%' : _DASH_CELL}</td>`;
+      }
+      if (key === 'clueAccuracy') {
+        const g = row.giverFlips || 0;
+        return `<td>${g > 0 ? Math.round((row.giverOwnFlips / g) * 100) + '%' : _DASH_CELL}</td>`;
+      }
+      if (key === 'cardsFlipped') {
+        return `<td>${(row.cardsFlipped || 0) > 0 ? row.cardsFlipped : _DASH_CELL}</td>`;
+      }
+      if (key === 'ownTeamPct') {
+        const f = row.cardsFlipped || 0;
+        return `<td>${f > 0 ? Math.round((row.ownTeamHits / f) * 100) + '%' : _DASH_CELL}</td>`;
+      }
+      if (key === 'penaltyHits') {
+        return `<td>${(row.cardsFlipped || 0) > 0 ? row.penaltyHits : _DASH_CELL}</td>`;
       }
       return `<td>${_DASH_CELL}</td>`;
     }
@@ -10063,10 +10166,9 @@
       VICTORY.fireworkCount = 0;
       VICTORY.running = true;
       VICTORY._lastTime = performance.now();
-
-      for (let i = 0; i < VICTORY.CONFETTI_COUNT; i++) {
-        VICTORY.confetti.push(makeConfetti(true));
-      }
+      // Hold particles back until the recap tally lands on the final totals
+      // (released in runTallyAnimation's winner-announcement setTimeout).
+      VICTORY._particlesHeld = true;
 
       VICTORY.rafId = requestAnimationFrame(victoryLoop);
     }
@@ -10238,7 +10340,7 @@
 
       // --- Firework launching ---
       VICTORY.fireworkTimer += dt * 1000;
-      if (VICTORY.fireworkCount < VICTORY.FIREWORK_BURSTS && VICTORY.fireworkTimer > 0) {
+      if (!VICTORY._particlesHeld && VICTORY.fireworkCount < VICTORY.FIREWORK_BURSTS && VICTORY.fireworkTimer > 0) {
         const interval = VICTORY.fireworkCount === 0 ? 0 : 800 + Math.random() * 600;
         if (VICTORY.fireworkTimer >= interval) {
           launchFirework();
@@ -11014,6 +11116,15 @@ document.addEventListener('keydown', e => {
     //   drAtt/drSucc      — drawings attempted / succeeded (drawing was guessed by anyone)
     //   guessOpp/guessSucc — guessing opportunities / successes (per drawing player was not drawer of)
     let scribblePlayerStats = {};
+    // Per-player Common Thread counters, persists across all CT rounds in a
+    // game. Keyed by player display name. Fields:
+    //   cluesGiven    — clues submitted as clue giver
+    //   cluesLanded   — clues where their team flipped at least one own-team card
+    //   cardsFlipped  — total cards this player clicked (own/opp/penalty)
+    //   ownTeamHits   — cards flipped that were their team's color
+    //   opponentHits  — cards flipped that were the opposing team's color
+    //   penaltyHits   — penalty cards flipped
+    let commonThreadPlayerStats = {};
     let _roundStartScores = [0, 0]; // snapshot at round start for delta computation
     let teamNames = ["Red Team", "Blue Team"];
     let startingTeam = 0;
@@ -11164,7 +11275,7 @@ document.addEventListener('keydown', e => {
                 && commonThreadState.phase === 'guess'
                 && roster.includes(action.uid)
                 && commonThreadState.clueGiverUids[t] !== action.uid) {
-              ctOnCardClick(action.idx, { trusted: true });
+              ctOnCardClick(action.idx, { trusted: true, actorUid: action.uid });
             }
           }
           _prevSnapshot = data;
@@ -11371,6 +11482,11 @@ document.addEventListener('keydown', e => {
         scribblePlayerStats = { ...data.scribblePlayerStats };
       }
 
+      // ── Common Thread per-player counters (host-authoritative) ──
+      if (data.commonThreadPlayerStats) {
+        commonThreadPlayerStats = { ...data.commonThreadPlayerStats };
+      }
+
       // ── Rounds meta (per-round summary recap) ──
       // Only adopt incoming if it's at least as long as local — guards the
       // host against a stale non-host-triggered reconcile shrinking its array
@@ -11415,6 +11531,11 @@ document.addEventListener('keydown', e => {
       if (data.faceoffState) {
         const prevBattle = faceoffState.currentBattle;
         const wasActive = faceoffState.active;
+        // Snapshot prev reveals so we can detect new ones for SFX + overlay.
+        const _prevRevealed = [
+          [...(faceoffState.revealed[0] || [])],
+          [...(faceoffState.revealed[1] || [])],
+        ];
         hydrateFaceoffState(data.faceoffState);
         if (faceoffState.active && !wasActive) {
           // Entering face-off on non-host: mirror the exit choreography
@@ -11481,7 +11602,25 @@ document.addEventListener('keydown', e => {
             }
           })();
         } else if (faceoffState.active) {
-          // Mid-battle update: re-render current battle tiles
+          // Detect newly-revealed tiles (by non-host clients) and fire the
+          // correct / top-answer SFX + overlay so it plays on all screens.
+          // Host already played it locally in evaluateFaceoffGuess; its own
+          // snapshot is skipped by the self-echo guard, so this branch only
+          // fires on other clients.
+          for (let b = 0; b < 2; b++) {
+            const cur = faceoffState.revealed[b] || [];
+            const old = _prevRevealed[b] || [];
+            for (let i = 0; i < cur.length; i++) {
+              if (cur[i] && !old[i]) {
+                const d = faceoffState.revealedData[b]?.[i];
+                // Only "team-correct" reveals (team 0/1) should play the ding;
+                // 'missed' reveals (timer expiry) should not.
+                if (d && (d.team === 0 || d.team === 1)) {
+                  playCorrect(i === 0);
+                }
+              }
+            }
+          }
           renderFaceoffBoard(0);
           renderFaceoffBoard(1);
           updateFaceoffBattleTotalDisplay(0);
@@ -11500,7 +11639,7 @@ document.addEventListener('keydown', e => {
           // drift).
           if (faceoffState.timerInterval) { clearInterval(faceoffState.timerInterval); faceoffState.timerInterval = null; }
           if (data.teamScores) teamScores = [...data.teamScores];
-          updateScores();
+          _deferFaceoffScoreboard = true;
         }
       }
 
@@ -14184,6 +14323,39 @@ document.addEventListener('keydown', e => {
       };
     }
 
+    // Resolve player name for a CT actor. In multiplayer, looks up the UID.
+    // In local hot-seat, falls back to the team roster indexed by
+    // roundNumber + offset (clue giver = 0, picker = 1) so stats attribute
+    // to a consistent teammate. Returns null if the roster is empty.
+    function _ctActorName(team, role, actorUid) {
+      if (isMultiplayer && actorUid) {
+        const n = findPlayerName(actorUid);
+        if (n) return n;
+      }
+      const roster = teamPlayers[team] || [];
+      if (!roster.length) return null;
+      const offset = role === 'clue-giver' ? 0 : 1;
+      const idx = ((roundNumber || 0) + offset) % roster.length;
+      const p = roster[idx];
+      return typeof p === 'object' ? p.name : p;
+    }
+
+    function _ctBumpStat(name, field, amount = 1) {
+      if (!name) return;
+      if (!commonThreadPlayerStats[name]) {
+        commonThreadPlayerStats[name] = {
+          cluesGiven: 0, cluesLanded: 0, cardsFlipped: 0,
+          ownTeamHits: 0, opponentHits: 0, penaltyHits: 0,
+          pointsContributed: 0, bestSingle: 0,
+          giverFlips: 0, giverOwnFlips: 0,
+        };
+      }
+      commonThreadPlayerStats[name][field] += amount;
+      if (field === 'pointsContributed' && amount > (commonThreadPlayerStats[name].bestSingle || 0)) {
+        commonThreadPlayerStats[name].bestSingle = amount;
+      }
+    }
+
     function amICtClueGiver() {
       if (!isMultiplayer) return true; // local hot-seat — single device
       const t = commonThreadState.currentTeam;
@@ -14241,7 +14413,11 @@ document.addEventListener('keydown', e => {
         basePoints: s.basePoints,
         clueHistory: s.clueHistory,
       };
-      syncState({ commonThreadState: payload });
+      syncState({
+        commonThreadState: payload,
+        matchLog: matchLog.map(e => ({ ...e })),
+        commonThreadPlayerStats: { ...commonThreadPlayerStats },
+      });
     }
 
     // Called from reconcileLocalState when commonThreadState changes in a
@@ -14312,12 +14488,8 @@ document.addEventListener('keydown', e => {
     }
 
     function ctPickWords() {
-      // Flatten all scribble word tiers into one pool; pick 16 unique uppercase.
-      const pool = [
-        ...(SCRIBBLE_WORD_BANK.easy || []),
-        ...(SCRIBBLE_WORD_BANK.medium || []),
-        ...(SCRIBBLE_WORD_BANK.hard || []),
-      ].map(w => String(w).toUpperCase());
+      // Pick 16 unique uppercase words from the CT word bank (ctwords.csv).
+      const pool = (CT_WORD_BANK || []).map(w => String(w).toUpperCase());
       const unique = Array.from(new Set(pool));
       // Fisher-Yates
       for (let i = unique.length - 1; i > 0; i--) {
@@ -14471,14 +14643,13 @@ document.addEventListener('keydown', e => {
       if (!banner) return;
       const s = commonThreadState;
       // Only show the clue banner during active play (clue compose or guess).
-      // At round-end (or any other phase) use visibility:hidden so the layout
-      // space is preserved — otherwise the board visibly jumps up on the
-      // frame the banner vanishes (most obvious on non-host summary paths).
+      // At round-end / any other phase, fully hide it — ctShowSummary's slide-
+      // up + container swap covers the brief layout shift.
       if (s.phase !== "guess" && s.phase !== "clue") {
         stopCtWaitingDots();
         banner.innerHTML = '';
-        banner.style.display = 'flex';
-        banner.style.visibility = 'hidden';
+        banner.style.display = 'none';
+        banner.style.visibility = '';
         return;
       }
       banner.style.display = "flex";
@@ -14636,9 +14807,18 @@ document.addEventListener('keydown', e => {
       }
       s.activeClue = { word, count, team: s.currentTeam };
       s.picksRemaining = count;
-      s.basePoints = count * 100;
+      s.basePoints = count * 50;
       s.phase = "guess";
       s.clueHistory.push({ team: s.currentTeam, word, count, outcomes: [] });
+
+      // Stats: bump cluesGiven for the clue giver. Host/local only — non-host
+      // reconciles via synced commonThreadPlayerStats.
+      if (!isMultiplayer || isHost) {
+        const giverUid = s.clueGiverUids?.[s.currentTeam] || null;
+        const giverName = _ctActorName(s.currentTeam, 'clue-giver', giverUid);
+        _ctBumpStat(giverName, 'cluesGiven');
+      }
+
       playNewclue();
       ctRender();
       ctUpdateInputArea();
@@ -14674,6 +14854,10 @@ document.addEventListener('keydown', e => {
       card.revealed = true;
       const guessingTeam = s.currentTeam;
       const entry = ctCurrentClueEntry();
+      const canLog = !isMultiplayer || isHost;
+      const pickerName = canLog ? _ctActorName(guessingTeam, 'picker', opts?.actorUid) : null;
+      const giverName = canLog ? _ctActorName(guessingTeam, 'clue-giver', s.clueGiverUids?.[guessingTeam]) : null;
+      const clueWord = s.activeClue?.word || null;
 
       if (card.type === "penalty") {
         playSlit(1, 0.5);
@@ -14685,6 +14869,20 @@ document.addEventListener('keydown', e => {
         };
         ctResetStreak(guessingTeam);
         entry?.outcomes.push({ word: card.word, kind: "penalty", points: card.points });
+        if (canLog) {
+          _ctBumpStat(pickerName, 'cardsFlipped');
+          _ctBumpStat(pickerName, 'penaltyHits');
+          _ctBumpStat(pickerName, 'pointsContributed', card.points);
+          if (giverName) _ctBumpStat(giverName, 'giverFlips');
+          if (giverName && giverName !== pickerName) {
+            _ctBumpStat(giverName, 'pointsContributed', card.points);
+          }
+          logGuess({
+            player: pickerName, team: guessingTeam, guess: card.word,
+            outcome: 'ct_penalty', points: card.points, multiplier: 1,
+            roundType: 'common-thread', category: 'Common Thread', question: clueWord,
+          });
+        }
         ctRender({ delayStats: 1400 });
         if (ctCheckRoundEnd()) { ctSyncState(); return; }
         ctEndTurn();
@@ -14699,7 +14897,24 @@ document.addEventListener('keydown', e => {
         s.streaks[guessingTeam] += 1;
         s.multipliers[guessingTeam] = 1 + s.streaks[guessingTeam] * 0.2;
         s.picksRemaining -= 1;
+        const firstOwnHit = !entry?.outcomes.some(o => o.kind === 'own');
         entry?.outcomes.push({ word: card.word, kind: "own", points: earned, mult });
+        if (canLog) {
+          _ctBumpStat(pickerName, 'cardsFlipped');
+          _ctBumpStat(pickerName, 'ownTeamHits');
+          _ctBumpStat(pickerName, 'pointsContributed', earned);
+          if (giverName) {
+            _ctBumpStat(giverName, 'giverFlips');
+            _ctBumpStat(giverName, 'giverOwnFlips');
+          }
+          if (firstOwnHit) _ctBumpStat(giverName, 'cluesLanded');
+          _ctBumpStat(giverName, 'pointsContributed', earned);
+          logGuess({
+            player: pickerName, team: guessingTeam, guess: card.word,
+            outcome: 'ct_own', points: earned, multiplier: mult,
+            roundType: 'common-thread', category: 'Common Thread', question: clueWord,
+          });
+        }
         ctRender({ delayStats: 1400 });
         if (ctCheckRoundEnd()) { ctSyncState(); return; }
         if (s.picksRemaining <= 0) ctEndTurn();
@@ -14713,6 +14928,22 @@ document.addEventListener('keydown', e => {
         card.revealedInfo = { base: gift, mult: 1, actual: gift };
         ctResetStreak(guessingTeam);
         entry?.outcomes.push({ word: card.word, kind: "opp", points: gift, toTeam: card.team });
+        if (canLog) {
+          _ctBumpStat(pickerName, 'cardsFlipped');
+          _ctBumpStat(pickerName, 'opponentHits');
+          if (giverName) _ctBumpStat(giverName, 'giverFlips');
+          const benGiverName = _ctActorName(card.team, 'clue-giver', s.clueGiverUids?.[card.team]);
+          const benPickerName = _ctActorName(card.team, 'picker', null);
+          _ctBumpStat(benGiverName, 'pointsContributed', gift);
+          if (benPickerName && benPickerName !== benGiverName) {
+            _ctBumpStat(benPickerName, 'pointsContributed', gift);
+          }
+          logGuess({
+            player: pickerName, team: guessingTeam, guess: card.word,
+            outcome: 'ct_opp', points: gift, multiplier: 1,
+            roundType: 'common-thread', category: 'Common Thread', question: clueWord,
+          });
+        }
         ctRender({ delayStats: 1400 });
         if (ctCheckRoundEnd()) { ctSyncState(); return; }
         ctEndTurn();
@@ -15551,6 +15782,31 @@ document.addEventListener('keydown', e => {
           `hard=${SCRIBBLE_WORD_BANK.hard.length}`);
       })
       .catch(e => console.warn('[scribble] failed to load scribblewords.csv, using seed bank', e));
+
+    // Common Thread word bank — populated at page load from ctwords.csv.
+    // Flat list, no difficulty tiers. CSV format: Word,Source (source col
+    // ignored). Falls back to a small seed if fetch fails.
+    const CT_WORD_BANK = [
+      "APPLE","BRIDGE","CASTLE","DRAGON","EAGLE","FOREST","GHOST","HARBOR",
+      "ISLAND","JAGUAR","KITCHEN","LANTERN","MOUNTAIN","NINJA","OCEAN","PIRATE",
+    ];
+    fetch('ctwords.csv')
+      .then(r => r.text())
+      .then(csv => {
+        const loaded = [];
+        csv.split('\n').slice(1).forEach(line => {
+          if (!line.trim()) return;
+          const [word] = parseCSVLine(line);
+          if (!word) return;
+          loaded.push(word.trim().toUpperCase());
+        });
+        if (loaded.length) {
+          CT_WORD_BANK.length = 0;
+          CT_WORD_BANK.push(...loaded);
+        }
+        console.log('[ct] loaded word bank:', CT_WORD_BANK.length);
+      })
+      .catch(e => console.warn('[ct] failed to load ctwords.csv, using seed bank', e));
 
     function scribblePickWord(difficulty) {
       const pool = SCRIBBLE_WORD_BANK[difficulty].filter(w => !scribbleState.usedWords.has(w));
@@ -18753,6 +19009,18 @@ document.addEventListener('keydown', e => {
       const duringCountdown = !!faceoffState._countdownActive;
       const canInput = amIActive && !duringCountdown;
 
+      // Did this player already play in an earlier (now-completed) battle?
+      let alreadyPlayed = false;
+      if (isMultiplayer && myUid) {
+        for (let i = 0; i < b; i++) {
+          const uids = faceoffState.playerUids[i] || [];
+          if (uids[0] === myUid || uids[1] === myUid) {
+            alreadyPlayed = true;
+            break;
+          }
+        }
+      }
+
       let header, subtext, placeholder;
       if (amIActive && duringCountdown) {
         header = "YOU'RE UP NEXT";
@@ -18762,6 +19030,10 @@ document.addEventListener('keydown', e => {
         header = "YOU'RE UP NOW";
         subtext = `Battle ${b + 1}`;
         placeholder = 'Enter your guess';
+      } else if (alreadyPlayed) {
+        header = 'WAITING FOR OTHER BATTLE TO FINISH';
+        subtext = `Battle ${b + 1} in progress`;
+        placeholder = 'Waiting...';
       } else if (duringCountdown) {
         header = 'WAITING FOR YOUR BATTLE';
         subtext = `Battle ${b + 1} is starting`;
@@ -18836,6 +19108,7 @@ document.addEventListener('keydown', e => {
 
       const playerName = team === 0 ? faceoffState.playerNames[b][0] : faceoffState.playerNames[b][1];
 
+      if (!faceoffState._playerStreaks) faceoffState._playerStreaks = {};
       if (foundIdx >= 0) {
         const ans = q.answers[foundIdx];
         const pts = ans.points || 0;
@@ -18844,11 +19117,15 @@ document.addEventListener('keydown', e => {
         faceoffState.battleScores[b][team] += pts;
         playCorrect(foundIdx === 0);
         renderFaceoffBoard(b);
-        // Log to matchLog for awards (face-off has no streak/multiplier)
+        // Track per-player consecutive-correct streak so maxStreak stat
+        // reflects actual streaks. aggregator reads afterStreak = streak + 1.
+        const priorStreak = faceoffState._playerStreaks[playerName] || 0;
+        faceoffState._playerStreaks[playerName] = priorStreak + 1;
         logGuess({
           player: playerName, team, guess, outcome: 'correct',
-          points: pts, multiplier: null, streak: null, streakBroken: 0,
+          points: pts, multiplier: null, streak: priorStreak, streakBroken: 0,
           isSteal: false, question: q.question, category: q.category,
+          roundType: 'faceoff',
         });
         // Sync to all clients (include matchLog so non-host awards compute correctly)
         if (isMultiplayer) {
@@ -18867,11 +19144,13 @@ document.addEventListener('keydown', e => {
           inp.classList.add('input-shake');
         }
         playSound(sfxWrong);
-        // Log wrong guess to matchLog
+        const brokenStreak = faceoffState._playerStreaks[playerName] || 0;
+        faceoffState._playerStreaks[playerName] = 0;
         logGuess({
           player: playerName, team, guess, outcome: 'wrong',
-          points: null, multiplier: null, streak: null, streakBroken: 0,
+          points: null, multiplier: null, streak: null, streakBroken: brokenStreak,
           isSteal: false, question: q.question, category: q.category,
+          roundType: 'faceoff',
         });
       }
     }
@@ -18937,7 +19216,7 @@ document.addEventListener('keydown', e => {
       const blue = (faceoffState.battleScores[0][1] + faceoffState.battleScores[1][1]) * 2;
       teamScores[0] += red;
       teamScores[1] += blue;
-      updateScores();
+      _deferFaceoffScoreboard = true;
       pushRoundMeta({ type: 'faceoff', isFaceoff: true, redOverride: red, blueOverride: blue });
       if (isMultiplayer && isHost) {
         syncState({
@@ -19895,7 +20174,9 @@ document.addEventListener('keydown', e => {
       return Promise.all(flips).then(() => new Promise(r => setTimeout(r, 500 / gameSpeed)));
     }
 
+    let _deferFaceoffScoreboard = false;
     function updateScores() {
+      if (_deferFaceoffScoreboard) return;
       const redEl = document.getElementById("red-score");
       const blueEl = document.getElementById("blue-score");
       const oldRed = parseInt(redEl?.textContent, 10) || 0;
@@ -21082,6 +21363,7 @@ document.addEventListener('keydown', e => {
       matchLog = [];
       roundsMeta = [];
       scribblePlayerStats = {};
+      commonThreadPlayerStats = {};
       playerIndex = [0, 0];
       lastRoundWinner = -1;
       _prevRoundTypePicks = [];
@@ -21364,6 +21646,7 @@ document.addEventListener('keydown', e => {
       matchLog = [];
       roundsMeta = [];
       scribblePlayerStats = {};
+      commonThreadPlayerStats = {};
       playerIndex = [0, 0];
       lastRoundWinner = -1;
 
@@ -21562,7 +21845,7 @@ document.addEventListener('keydown', e => {
       resetEvergreenRegions();
       gameSpeedSetting = 1;
       setGameSpeed(1);
-      teamScores=[0,0];usedQuestions=[];roundNumber=0;gameEnded=false;matchLog=[];roundsMeta=[];scribblePlayerStats={};playerIndex=[0,0];startingTeam=0;_syncedAwards=null;
+      teamScores=[0,0];usedQuestions=[];roundNumber=0;gameEnded=false;matchLog=[];roundsMeta=[];scribblePlayerStats={};commonThreadPlayerStats={};playerIndex=[0,0];startingTeam=0;_syncedAwards=null;_deferFaceoffScoreboard=false;
       gameMode='rounds';maxRounds=0;lastRoundWinner=-1;
       resetFaceoffState();
       // Tear down face-off DOM if it was active and restore normal game elements
@@ -22987,6 +23270,9 @@ document.addEventListener('keydown', e => {
         scribbleEndSessionData: null,
         scribbleEndTs: null,
         scribbleSession: null,
+        scribblePlayerStats: null,
+        commonThreadState: null,
+        commonThreadPlayerStats: null,
         selectedRoundType: null,
         awards: null,
         gameEnded: false,
@@ -23098,6 +23384,7 @@ document.addEventListener('keydown', e => {
       matchLog = [];
       roundsMeta = [];
       scribblePlayerStats = {};
+      commonThreadPlayerStats = {};
       // Use host-determined startingTeam so both clients agree
       startingTeam = _lobbyStartingTeam !== null ? _lobbyStartingTeam : Math.floor(Math.random() * 2);
       _lobbyStartingTeam = null;

@@ -36,7 +36,6 @@ bell,easy
 bib,Medium
 bike,Medium
 biscuit,hard
-biscuit,hard
 blueprint,hard
 bobsled,hard
 bonnet,hard
@@ -146,13 +145,11 @@ firefighter,Medium
 fish,easy
 flag,easy
 float,easy
-float,easy
 fly,easy
 foam,hard
 food,Medium
 football,easy
 fork,easy
-frog,easy
 frog,easy
 front porch,Medium
 fruit,Medium
@@ -163,16 +160,12 @@ gasoline,hard
 geyser,hard
 glitter,hard
 goat,Medium
-goat,Medium
 gold medal,hard
 gown,hard
 grass,easy
 grasslands,hard
 hail,Medium
-hail,hard
 hair,easy
-hair,easy
-hair,Medium
 hair dryer,Medium
 hairspray,hard
 half,hard
@@ -199,10 +192,8 @@ jump,Medium
 jungle,Medium
 key,Medium
 knee,easy
-knee,easy
 lace,hard
 ladder,Medium
-ladybug,easy
 ladybug,easy
 lamp,easy
 landscape,hard
@@ -211,14 +202,11 @@ laser,hard
 latitude,Medium
 lawn mower,Medium
 lecture,hard
-lecture,hard
 legs,easy
 librarian,Medium
 light,easy
 line,easy
-line,easy
 lizard,easy
-locket,Medium
 locket,Medium
 love,easy
 lunch tray,hard
@@ -226,7 +214,6 @@ magic,Medium
 man,easy
 mascot,hard
 mast,hard
-meteor,Medium
 meteor,Medium
 midnight,hard
 milk,easy
@@ -245,13 +232,11 @@ nap,hard
 napkin,Medium
 narwhal,Medium
 neck,easy
-neck,Medium
 necktie,Medium
 needle,Medium
 neighbor,Medium
 newsletter,hard
 night,easy
-nose,easy
 nose,easy
 notepad,Medium
 oar,Medium
@@ -285,15 +270,12 @@ pocket,Medium
 point,hard
 poodle,Medium
 potato,Medium
-potato,Medium
 president,hard
 pretzel,Medium
-princess,Medium
 princess,Medium
 printer,Medium
 punk,hard
 puzzle,Medium
-quadrant,hard
 quadrant,hard
 quarter,Medium
 quilt,Medium
@@ -310,7 +292,6 @@ right,hard
 ring,easy
 river,easy
 robe,hard
-robe,hard
 robot,easy
 rocket,easy
 roller blading,Medium
@@ -322,12 +303,10 @@ saddle,Medium
 safe,hard
 safety goggles,Medium
 sandal,Medium
-sandal,Medium
 saw,Medium
 scar,Medium
 scarf,Medium
 scream,hard
-sea turtle,easy
 sea turtle,easy
 seashell,easy
 servant,hard
@@ -336,8 +315,6 @@ shallow,Medium
 sheep,easy
 sheep dog,hard
 ship,easy
-ship,easy
-shoe,easy
 shoe,easy
 shoulder,Medium
 shower curtain,hard
@@ -349,7 +326,6 @@ ski goggles,hard
 skirt,Medium
 sleeve,Medium
 slope,Medium
-slope,Medium
 smile,Medium
 smoke,Medium
 snail,easy
@@ -360,13 +336,10 @@ snow,Medium
 snowflake,easy
 snowman,easy
 spaceship,Medium
-spaceship,hard
 spare,hard
 speakers,hard
 spider web,easy
-spider web,easy
 sponge,Medium
-spoon,easy
 spoon,easy
 squirrel,Medium
 state,Medium
@@ -391,10 +364,8 @@ think,hard
 thrift store,hard
 throat,Medium
 tide,hard
-tide,hard
 tin,hard
 tip,Medium
-tip,hard
 toddler,hard
 toe,Medium
 toolbox,hard
@@ -406,11 +377,9 @@ tree,easy
 triangle,easy
 tricycle,Medium
 truck,Medium
-truck,easy
 trunk,Medium
 turtle,easy
 unite,Medium
-vanilla,hard
 vanilla,hard
 violent,hard
 volleyball,hard
@@ -422,7 +391,6 @@ whale,easy
 wheelbarrow,Medium
 wig,hard
 window,easy
-window,Medium
 windshield,Medium
 wood,Medium
 wool,hard

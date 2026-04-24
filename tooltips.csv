@@ -30,8 +30,8 @@ award-heavy-hitter,evergreen,One big swing,Scored the most points from a single 
 award-lvp,evergreen,"""I hate that game!""",Scored the fewest total points (but at least tried)
 award-quality-over-quantity,evergreen,When it counts,Highest average points per correct answer — without having the most correct answers
 award-doesnt-pay-attention,evergreen,"""Then what's the RULE?""",Submitted the most duplicate answers that were already on the board
-award-sharpshooter,evergreen,Locked in,Highest correct answer accuracy across all rounds
-award-mendoza-line,evergreen,Batting .200,Accuracy at or below 20% — a dubious achievement
+award-sharpshooter,evergreen,Locked in,Highest correct answer accuracy in High Five and Poll Position rounds
+award-mendoza-line,evergreen,Batting .200,Accuracy at or below 20% in High Five and Poll Position rounds — a dubious achievement
 award-going-streaking,evergreen,Through the quad!,Contributed to the longest streak of consecutive correct answers
 award-birthday-ruiner,evergreen,"Thanks, Jill",Got a strike that ended an active streak the most times
 award-opportunist,evergreen,Right place right time,Submitted the most correct answers that had multipliers applied

@@ -8,7 +8,7 @@ Family Feud-inspired game with original features and styling. Working title: **G
 - Number Is Correct question bank: `numberquestions.json` (numeric questions for NIC module — `{question, category, subCategory, answer, factCheck}`)
 - Award definitions: `awards.json` (name, id, compute key — see "Victory Awards" section)
 - Tooltip definitions: `tooltips.csv` (id, class, flavor, description — see "Tooltip System" section)
-- Sound files alongside feud.html: `ding.mp3` (correct answer reveal), `newstrike.wav` (incorrect answer), `goodanswer.mp3` (top answer reveal, 300ms delayed, baseVolume 0.35), `negativebeep.wav` (failed steal attempt), `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX + board-wrapper slide), `phonetype.wav` (typewriter keystroke SFX + tile-cover hover), `balbg.mp3` (background music, looping), `roundend.wav` (round winner determined), `decreaseblip.mp3` (streak/mult decrease), `neutralbeep.wav` (duplicate answer rejection), `chime.wav` (badge bounce SFX), `zoop.wav` (speed stepper SFX), `slit.wav` (fly-in/out whoosh — cat-row entry/exit, dialog open/close), `tap1.wav` (button click — setup nav, menu, confirm), `tap2.wav` (element landing — input area fly in/out), `tvon.wav` (CRT power-on), `powerdown.wav` (CRT power-off)
+- Sound files alongside feud.html: `ding.mp3` (correct answer reveal), `newstrike.wav` (incorrect answer), `goodanswer.mp3` (top answer reveal, 300ms delayed, baseVolume 0.35), `negativebeep.wav` (failed steal attempt), `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX + board-wrapper slide), `phonetype.wav` (typewriter keystroke SFX + tile-cover hover), `balbg.mp3` (background music, looping), `roundend.wav` (round winner determined), `decreaseblip.mp3` (streak/mult decrease), `neutralbeep.wav` (duplicate answer rejection), `chime.wav` (badge bounce SFX), `zoop.wav` (speed stepper SFX), `slit.wav` (fly-in/out whoosh — cat-row entry/exit, dialog open/close), `tap1.wav` (button click — setup nav, menu, confirm), `tap2.wav` (element landing — input area fly in/out), `tvon.wav` (CRT power-on), `powerdown.wav` (CRT power-off), `blockshake.wav` (Grid Lock cover-plate shake, playbackRate 1.5×, 3 plays per intro), `lock.wav` (Grid Lock tile lock-on), `unlock.wav` (Grid Lock tile unlock)
 
 ### Branch structure
 - **`main`** — **active development branch.** Source of truth for the current state of the game. Includes: Firebase/Firestore multiplayer foundation, Secret Scribble module, module orchestration layer (round type picker), input-area "home base" refactor (`setInputAreaMode` API), and the renaming of feud rounds to "ranked questions" (High Five + Survey). Previously named `multi-scribble`; renamed to `main` on 2026-04-19 when branch structure was cleaned up.
@@ -1061,7 +1061,7 @@ Reference commits: scribble stats wiring (state + sync + aggregation + subtab) l
 
 ---
 
-## Grid Lock — Module (integrated; in-progress on `main-gridlock`)
+## Grid Lock — Module (shipped)
 
 Boggle-style 5×5 word-forming minigame. All players play simultaneously for the full round (no turn rotation within the round). Requires 2+ players per team. Original single-player prototype: [grid-lock.html](grid-lock.html). Now integrated into `feud.html` as `ROUND_MODULES['grid-lock']` with full multiplayer + reveal + summary + Round Summary Framework support.
 
@@ -1096,23 +1096,36 @@ Boggle-style 5×5 word-forming minigame. All players play simultaneously for the
 
 - **Stats integration** ✅ Done. Host-only `glAggregatePlayerStats()` runs in `glEndRound` before reveal: walks `gridLockState.entries` + `glComputeBonuses` output to build per-player counters, merges into `gridLockPlayerStats` ({ words, cancelled, totalLength, bonuses, points }), and emits one matchLog entry per player with `roundType: 'grid-lock'`, `outcome: 'gl_round'`, `category: 'Grid Lock'`. Bonus accounting: `longest×2` doubled-portion treated as a bonus delta; firstBonus + countBonus added to both points and bonuses; cancelled words contribute to `totalLength` (so avg length is across all valid attempts) but not to `words`. State synced via `glSyncState` payload (`matchLog` + `gridLockPlayerStats`); reconcile pulls `gridLockPlayerStats` on non-host. `_STATS_COLS_GRID_LOCK` (Player, Points, Words, Cancelled, Avg Length, Bonuses) wired into `_getStatsCols('Grid Lock')` + `aggregatePlayerStats` (per-row glPoints/glWords/glCancelled/glTotalLength/glBonuses; Overall fold adds glPoints to row.points and bumps participated). Avg-length sort `(totalLength)/(words+cancelled)` with `-1` sentinel; em-dash for non-participants. `'grid-lock' → 'Grid Lock'` added to `ROUND_TYPE_LABELS`. Reset sites updated (5): lobbyStartGame Firestore reset, local resetGame, play-again, init line, final reset.
 
-**Done this session:**
-- **Round-type picker card art** ✅ — `_buildGlPickerArtHtml` ships the stacked GRID/LOCK tile rows + tilted lock badge crossfade.
-- **Cinematic intro** ✅ — `_playGlCinematic` flies in from below, wiggles, unlocks, hops tiles, holds subtitle 1.5s, fades out. Mounted on `#module-canvas` like the other module cinematics.
-- **Diagnostic logs** ✅ removed — temporary `console.log` entries in `enterGridLockRound`, `glEndRound`, and the reveal-trigger reconcile path are gone.
+**Cover plate + intro polish (shipped):**
+- `.gl-cover` is glossy `#fba300` plastic — multi-stop gradient (`#ffb12b → #fba300 → #d98700`), inset highlight + bottom shade, outer drop-shadow, plus a `::before` radial sheen. Branded with the same stacked `GRID / LOCK` tile logo used on the picker card (built via `_buildGlStackedLogoHtml(58, 7, false)` and injected by `enterGridLockRound`), styled in `.gl-cover-logo` as 3px white-bordered tiles + white letters at `transform: rotate(-45deg)` for an engraved-on-plastic look.
+- Intro pacing: container slide-in lands → **`SHAKE_DELAY = 1500ms` hold** → cover shakes for 2s while `blockshake.wav` plays 3× (initial + first 2 `animationiteration` events; capped via a counter so the trailing iteration doesn't bleed past the visible shake) → 3-2-1 countdown ticks (rising-pitch `playTick`) → `GO!` shows + plays climactic tick → **250ms hold on `GO!`** → `glStartPlay` (cover slides off + timer kicks in). Total intro ≈ 8.95s scaled by `gameSpeed`.
+- Countdown styling: `.gl-countdown` is `7.5rem` Bitcount Single, white with a 4-layer dark drop-shadow stack (tight black halo + mid drop + wide soft drop + ambient blur) and `z-index: 4` so it punches through both the cover-logo (`z-index: 2`) and the orange cover beneath.
+- Round-color theming: `--mod-gridlock` is `#fba300`. The cinematic plastic cover (`.gll-cover`, used by `_playGlCinematic`) was recolored from yellow to the same orange ramp as the in-round cover — `#ffc04d → #ffb12b → #fba300 → #cc8400` with the deep drop-shadow tinted `#7a4f00`.
+
+**Lock / unlock animation (shipped):**
+- 30s rotation cadence preserved. Within each cycle the lock now lives 28.5s and the tile sits unlocked for the 1.5s gap before the next rotation, so the lock-on and unlock moments feel distinct.
+- Implementation: host's `glRotateLock` calls `glScheduleUnlock` after applying a new lock, which sets `_unlockHandle` to a `setTimeout(28500)` that clears `lockedIdx` and syncs. Non-hosts mirror via `lockedIdx` snapshots — the animation logic lives entirely in `glUpdateLockDisplay` and runs the same way regardless of whether the transition was scheduled locally or arrived via reconcile.
+- Visuals on lock: red lock SVG (`fill: #d62828`) drops onto the locked tile centered, plus a 2.5px red box-shadow border that pulses via `gl-locked-pulse` (1s loop). Pulse keyframes list the red spread *before* the brown `0 2px 0 #8a6f3d` tile-thickness shadow so the bottom of the border isn't covered. Tile is desaturated via a gradient bg swap (`#d8d8d8 → #b0b0b0`) instead of `filter: grayscale(1)` — `filter` cascades to children, which would dim the SVG and the border. `lock.wav` plays.
+- Visuals on unlock: SVG swaps to a green unlocked variant (`fill: #2dbe3a`), the pulsing border + desaturation drop instantly (via `.unlocking` class), the green sits solid for **250ms hold**, then fades out via `gl-lock-fade-out` (0.5s opacity + scale-to-0.85). Total green-visible window: 750ms. `unlock.wav` plays. `_unlockHandle` is cleared in `resetGridLockState`, the `nonHostLive` reset branch, and at the top of `glEndRound`.
+- SFX gating: lock/unlock SFX only fire when `phase === 'play'`, so reveal-time teardown (which sets `lockedIdx = null` to clean up) stays silent.
+
+**Single-source-of-truth disabled-input fix (shipped):**
+- `glStartPlay` explicitly sets `guess.disabled = false` and `#turn-body .dome-button.disabled = false` after `setInputAreaMode('guess')`. Same fix-shape as NIC and face-off — `updateRoleUI` early-returns for `gridLockState.active`, and `setInputAreaMode('guess')` no longer touches `disabled` in MP, so the module has to own enabling explicitly. Without this, the input + submit appeared inactive throughout the round.
+
+**Other polish (shipped):**
+- `.gl-left-col` swapped to frosted glass (`rgba(26,26,26,0.75)` + `backdrop-filter: blur(20px)`) matching the framework panels.
+- `.gl-timer` is white with a soft text-shadow stack (legible against the orange cover during intro, fine on the dark canvas during play). Timer remains a sibling of `.gl-board-wrap` inside `.gl-right-col` — an attempt to overlay it inside the wrap was reverted.
+- `.gl-wl-row.ok .gl-wl-pts` no longer pins `font-weight: 700` so the points number inherits Bitcount Single's natural weight from `.gl-wordlist`.
 
 **Folded into broader buckets:**
 - General polish (board sizing inside module canvas, summary panel rhythm) → Pre-Blaze Cleanup Refactor Step 6 (screen-by-screen polish pass).
 - Grid Lock-specific victory awards → "Newer-module awards + existing-awards cleanup" feature roadmap entry.
 
-### Branch state
-Branch `main-gridlock` (off `main`). All Grid Lock work landed on this branch and merged into `main` for shipping. Stats integration landed (matchLog + Game Recap subtab). Picker card art and cinematic shipped this session.
-
 ### Round structure
 
 - Single shared 5×5 grid generated at round start, identical for every player.
 - **3-minute round timer.** Everyone submits simultaneously into their own private word list (no turn handoff).
-- **Rolling tile lock.** Every 30s, one random tile becomes locked (grayscale + 0.35 opacity, excluded from valid paths). The previous lock releases simultaneously. A tile cannot re-lock in the same round (`lockHistory` set). Over a 3-min round there are 5 lock rotations at 0:30 / 1:00 / 1:30 / 2:00 / 2:30.
+- **Rolling tile lock.** Every 30s a random tile becomes locked (desaturated bg via gradient swap + red lock SVG + pulsing 2.5px red border, excluded from valid paths). The previous lock unlocks **1.5s before the next rotation** (28.5s after it dropped) — green unlock SVG holds 250ms then fades over 0.5s. So each cycle has a brief unlocked-and-clear window before the next lock arrives. A tile cannot re-lock in the same round (`lockHistory` set). Over a 3-min round there are 5 lock rotations at 0:30 / 1:00 / 1:30 / 2:00 / 2:30.
 - On expiry: no more submissions accepted, flow advances to the reveal screen.
 
 ### Grid generation (finalized in proto)
@@ -1181,12 +1194,13 @@ Each player sees only their own submissions during the round. Running list, chat
 - **Respect manual scroll-up** — if user has scrolled up, don't yank them back; show a "new entries ↓" affordance or re-anchor only when they scroll near bottom again.
 - Valid entries show points earned; invalid show a subtle strike-through or neutral gray with the reason.
 
-### Intro choreography
+### Intro choreography (shipped)
 
-1. Grid container slides in from below the canvas with a **black cover plate** over the tiles (tiles are rendered but invisible behind the cover).
-2. Cover (and container) **shakes/wiggles** for 2s — implies "locked". Same vocabulary as input-shake but slower/larger.
-3. **3 — 2 — 1 — GO** countdown overlay (centered, big numerals). Play existing `flick.wav` or similar on each tick; a climactic SFX on GO.
-4. On GO, cover slides off to reveal tiles. Round timer starts. Input enabled.
+1. Grid container slides in from below the canvas. The cover plate is glossy `#fba300` plastic with the engraved-look stacked-tile `GRID / LOCK` logo at -45°.
+2. **`SHAKE_DELAY = 1500ms` hold** after the slide-in lands so the entry settles before the shake begins.
+3. Cover shakes for 2s. `blockshake.wav` plays 3× — initial play + first 2 `animationiteration` events (capped via counter so the trailing iteration doesn't bleed past the visible shake). Audio runs at `playbackRate = 1.5×` to match the shake cadence.
+4. **3 — 2 — 1 — GO** countdown overlay (`7.5rem` Bitcount Single, white with heavy 4-layer drop-shadow). Each tick uses `playTick(progress, { volume: ... })` with rising pitch.
+5. **`GO!` holds for 250ms** before `glStartPlay` fires (cover slides off via `gl-cover-off` translateY(-110%) + opacity 0; round timer starts; input + submit explicitly enabled).
 
 ### Reveal screen (before summary)
 

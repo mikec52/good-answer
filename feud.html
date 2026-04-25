@@ -49,8 +49,8 @@
       --mod-pollposition: #00c0c0;
       --mod-scribble:     #c000c0;
       --mod-commonthread: #00c000;
-      --mod-gridlock:     #c0c000;
-      --mod-nic:          #c06000;
+      --mod-gridlock:     #fba300;
+      --mod-nic:          #c00000;
       --mod-faceoff:      #222222;
 
       /* Game speed — set by JS via setGameSpeed(). 1 = normal, 2 = double speed.
@@ -8082,7 +8082,9 @@
       flex: 0 0 34%;
       display: flex;
       flex-direction: column;
-      background: #1a1a1a;
+      background: rgba(26,26,26,0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border-radius: 10px;
       padding: 10px;
       min-height: 0;
@@ -8140,17 +8142,22 @@
       border-bottom: 1px dotted #222;
       color: #f0f0f0;
     }
-    .gl-wl-row.ok .gl-wl-pts { color: #fba300; font-weight: 700; }
+    .gl-wl-row.ok .gl-wl-pts { color: #fba300; }
     .gl-wl-row.bad { color: #666; }
     .gl-wl-row.bad .gl-wl-word { text-decoration: line-through; }
     .gl-wl-row.bad .gl-wl-pts { color: #777; font-size: 0.8rem; font-style: italic; }
     .gl-timer {
+      position: relative;
+      z-index: 6;
       font-family: "Bitcount Single", monospace;
       font-variant-numeric: tabular-nums;
       font-size: 1.8rem;
       font-weight: 400;
-      color: #f0f0f0;
+      color: #ffffff;
       letter-spacing: 0.05em;
+      text-shadow:
+        0 1px 2px rgba(0,0,0,0.55),
+        0 0 6px rgba(0,0,0,0.35);
     }
     .gl-timer.warn { color: #ef9a3a; }
     .gl-timer.done { color: #ef5350; }
@@ -8188,22 +8195,115 @@
       font-weight: 600;
       color: #5a4420;
     }
+    /* Desaturate via background swap (not `filter: grayscale`) so the lock
+       overlay + pulsing red border aren't dragged through the cascade. */
     .gl-tile.locked {
-      filter: grayscale(1);
-      opacity: 0.35;
-      transition: opacity 0.3s ease, filter 0.3s ease;
+      background: linear-gradient(180deg, #d8d8d8 0%, #b0b0b0 100%);
+      color: #555;
+      transition: background 0.3s ease, color 0.3s ease;
+      animation: gl-locked-pulse 1s ease-in-out infinite;
+    }
+    .gl-tile.locked .gl-pts { color: #777; }
+    .gl-tile.unlocking {
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    @keyframes gl-locked-pulse {
+      /* Red spread listed FIRST so it renders on top of the brown drop —
+         otherwise the bottom 1.5–2.5px of the border is covered by the
+         tile's `0 2px 0 #8a6f3d` thickness shadow. */
+      0%, 100% {
+        box-shadow:
+          0 0 0 2.5px rgba(255,51,51,1),
+          0 0 8px rgba(255,51,51,0.45),
+          0 2px 0 #8a6f3d,
+          inset 0 1px 0 rgba(255,255,255,0.5);
+      }
+      50% {
+        box-shadow:
+          0 0 0 2.5px rgba(255,90,90,1),
+          0 0 16px rgba(255,51,51,0.85),
+          0 2px 0 #8a6f3d,
+          inset 0 1px 0 rgba(255,255,255,0.5);
+      }
+    }
+    .gl-lock-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .gl-lock-overlay svg {
+      width: 60%;
+      height: 60%;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+    }
+    .gl-lock-overlay.locked-svg svg path { fill: #d62828; }
+    .gl-lock-overlay.unlocked-svg svg path { fill: #2dbe3a; }
+    .gl-lock-overlay.fading {
+      animation: gl-lock-fade-out 0.5s ease-out forwards;
+    }
+    @keyframes gl-lock-fade-out {
+      0%   { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.85); }
     }
     .gl-cover {
       position: absolute;
       inset: 0;
-      background: #0a0a0a;
+      background:
+        linear-gradient(180deg,
+          rgba(255,255,255,0.18) 0%,
+          rgba(255,255,255,0.04) 38%,
+          rgba(0,0,0,0.06) 62%,
+          rgba(0,0,0,0.22) 100%),
+        linear-gradient(180deg, #ffb12b 0%, #fba300 50%, #d98700 100%);
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: opacity 0.5s ease, transform 0.5s ease;
       z-index: 5;
+      overflow: hidden;
+      box-shadow:
+        inset 0 2px 0 rgba(255,255,255,0.55),
+        inset 0 -3px 0 rgba(120,60,0,0.45),
+        inset 0 0 0 1px rgba(0,0,0,0.18),
+        0 4px 8px rgba(0,0,0,0.35);
     }
+    .gl-cover::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(120% 60% at 50% -10%, rgba(255,255,255,0.55), rgba(255,255,255,0) 60%),
+        radial-gradient(140% 70% at 50% 110%, rgba(0,0,0,0.30), rgba(0,0,0,0) 55%);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .gl-cover-logo {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(-45deg);
+      pointer-events: none;
+      user-select: none;
+      z-index: 2;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.35));
+    }
+    .gl-cover-logo .gll-logo { animation: none; }
+    /* Engraved-style logo: drop the cream tile fill + brown shadow and use
+       a 3px white outline + white letters on each tile. */
+    .gl-cover-logo .gll-tile {
+      background: transparent;
+      box-shadow: none;
+      border: 3px solid #ffffff;
+      color: #ffffff;
+    }
+    .gl-cover-logo .gll-tile .gll-pts { display: none; }
     .gl-cover-shake { animation: gl-cover-shake 0.6s ease-in-out infinite; }
     @keyframes gl-cover-shake {
       0%, 100% { transform: translate(0,0) rotate(0); }
@@ -8217,11 +8317,20 @@
       pointer-events: none;
     }
     .gl-countdown {
+      position: relative;
+      /* Above .gl-cover-logo (z-index: 2) so the 3-2-1-GO sits on top of
+         the engraved tile logo. White with a heavy dark drop-shadow stack
+         so it reads against the white-bordered logo behind it. */
+      z-index: 4;
       font-family: "Bitcount Single", monospace;
       font-weight: 400;
-      font-size: 5rem;
-      color: #fba300;
-      text-shadow: 0 0 20px rgba(251,163,0,0.6);
+      font-size: 7.5rem;
+      color: #ffffff;
+      text-shadow:
+        0 0 4px rgba(0,0,0,0.95),
+        0 4px 10px rgba(0,0,0,0.85),
+        0 8px 22px rgba(0,0,0,0.7),
+        0 0 28px rgba(0,0,0,0.55);
     }
     /* Reveal mode: hide play children, show 2×2 quadrant pane.
        Applied to #grid-lock-container when phase flips to 'reveal'. */
@@ -8677,11 +8786,11 @@
       inset: 0;
       border-radius: calc(var(--gll-tile-size, 100px) * 0.14);
       background:
-        linear-gradient(180deg, #e6e600 0%, #d4d400 22%, #c0c000 55%, #a8a800 100%);
+        linear-gradient(180deg, #ffc04d 0%, #ffb12b 22%, #fba300 55%, #cc8400 100%);
       box-shadow:
         inset 0 calc(var(--gll-tile-size, 100px) * 0.05) 0 rgba(255,255,255,0.55),
         inset 0 calc(var(--gll-tile-size, 100px) * -0.06) 0 rgba(0,0,0,0.18),
-        0 calc(var(--gll-tile-size, 100px) * 0.04) 0 #6b6b00,
+        0 calc(var(--gll-tile-size, 100px) * 0.04) 0 #7a4f00,
         0 calc(var(--gll-tile-size, 100px) * 0.06) calc(var(--gll-tile-size, 100px) * 0.08) rgba(0,0,0,0.45);
       display: flex;
       align-items: center;
@@ -9254,7 +9363,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.25</div>
+  <div id="version-tag">v0.26</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -9815,6 +9924,7 @@
                 <div class="gl-board-wrap">
                   <div id="grid-lock-board" class="gl-board"></div>
                   <div id="grid-lock-cover" class="gl-cover">
+                    <div class="gl-cover-logo"></div>
                     <div id="grid-lock-countdown" class="gl-countdown"></div>
                   </div>
                 </div>
@@ -10295,6 +10405,10 @@
     const sfxNegativeBeep = new Audio("negativebeep.wav");
     const sfxWinChime    = new Audio("winchime.wav");
     const sfxSadTrombone = new Audio("sadtrombone.wav");
+    const sfxBlockShake  = new Audio("blockshake.wav");
+    sfxBlockShake.playbackRate = 1.5;
+    const sfxLock        = new Audio("lock.wav");
+    const sfxUnlock      = new Audio("unlock.wav");
     // Per-track base volume (multiplied with master × sfx gain)
     sfxCorrect.baseVolume    = 0.6;
     sfxWrong.baseVolume      = 0.6;
@@ -19937,6 +20051,7 @@ document.addEventListener('keydown', e => {
     function resetGridLockState() {
       if (gridLockState.timerHandle) { clearInterval(gridLockState.timerHandle); gridLockState.timerHandle = null; }
       if (gridLockState.lockHandle) { clearInterval(gridLockState.lockHandle); gridLockState.lockHandle = null; }
+      if (gridLockState._unlockHandle) { clearTimeout(gridLockState._unlockHandle); gridLockState._unlockHandle = null; }
       if (gridLockState.introHandles) gridLockState.introHandles.forEach(h => clearTimeout(h));
       gridLockState.introHandles = [];
       // Bump generation so any prior in-flight glRunReveal sees a mismatch
@@ -19999,9 +20114,48 @@ document.addEventListener('keydown', e => {
         grid.appendChild(el);
       });
     }
+    // Drive lock/unlock visuals + SFX from lockedIdx transitions.
+    // - tile newly locked (no .locked → .locked): drop red lock SVG, pulse border
+    // - tile newly unlocked (.locked → no): swap to green unlocked SVG, fade out
+    // SFX is gated on phase==='play' so reveal-time teardown stays silent.
     function glUpdateLockDisplay() {
       const tileEls = document.querySelectorAll('#grid-lock-board .gl-tile');
-      tileEls.forEach((el, i) => el.classList.toggle('locked', i === gridLockState.lockedIdx));
+      const phase = gridLockState.phase;
+      tileEls.forEach((el, i) => {
+        const wasLocked = el.classList.contains('locked');
+        const shouldLock = (i === gridLockState.lockedIdx);
+        if (shouldLock && !wasLocked) {
+          el.classList.remove('unlocking');
+          const stale = el.querySelector('.gl-lock-overlay');
+          if (stale) stale.remove();
+          el.classList.add('locked');
+          const overlay = document.createElement('div');
+          overlay.className = 'gl-lock-overlay locked-svg';
+          overlay.innerHTML = `<svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">${_GLL_LOCK_SVG_INNER}</svg>`;
+          el.appendChild(overlay);
+          if (phase === 'play' && typeof playSound === "function") playSound(sfxLock);
+        } else if (!shouldLock && wasLocked) {
+          el.classList.remove('locked');
+          el.classList.add('unlocking');
+          const overlay = el.querySelector('.gl-lock-overlay');
+          if (overlay) {
+            overlay.classList.remove('locked-svg');
+            overlay.classList.add('unlocked-svg');
+            overlay.innerHTML = `<svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">${_GLL_UNLOCK_SVG_INNER}</svg>`;
+          }
+          if (phase === 'play' && typeof playSound === "function") playSound(sfxUnlock);
+          // Hold the green unlock solid for 0.25s, then start the 0.5s fade.
+          setTimeout(() => {
+            const o = el.querySelector('.gl-lock-overlay');
+            if (o) o.classList.add('fading');
+          }, 250);
+          setTimeout(() => {
+            el.classList.remove('unlocking');
+            const o = el.querySelector('.gl-lock-overlay');
+            if (o) o.remove();
+          }, 750);
+        }
+      });
     }
     function glPickNextLockIdx() {
       const used = new Set(gridLockState.lockHistory);
@@ -20010,6 +20164,26 @@ document.addEventListener('keydown', e => {
       if (!candidates.length) return null;
       return candidates[Math.floor(Math.random() * candidates.length)];
     }
+    // Host-only: clear current lock 1.5s before the next 30s rotation so the
+    // lock and unlock moments feel distinct. Non-hosts mirror via lockedIdx
+    // snapshots — glUpdateLockDisplay handles the animation either way.
+    function glScheduleUnlock() {
+      if (isMultiplayer && !isHost) return;
+      if (gridLockState._unlockHandle) {
+        clearTimeout(gridLockState._unlockHandle);
+        gridLockState._unlockHandle = null;
+      }
+      const targetIdx = gridLockState.lockedIdx;
+      if (targetIdx == null) return;
+      gridLockState._unlockHandle = setTimeout(() => {
+        gridLockState._unlockHandle = null;
+        if (gridLockState.phase !== 'play') return;
+        if (gridLockState.lockedIdx !== targetIdx) return;
+        gridLockState.lockedIdx = null;
+        glUpdateLockDisplay();
+        glSyncState();
+      }, 28500);
+    }
     function glRotateLock() {
       if (gridLockState.phase !== 'play') return;
       const next = glPickNextLockIdx();
@@ -20017,6 +20191,7 @@ document.addEventListener('keydown', e => {
       if (next != null) gridLockState.lockHistory.push(next);
       glUpdateLockDisplay();
       glSyncState();
+      glScheduleUnlock();
     }
 
     function glRenderWordList() {
@@ -20976,6 +21151,7 @@ document.addEventListener('keydown', e => {
       // syncs gridLockPlayerStats + matchLog, all clients render from it.
       try { glAggregatePlayerStats(); } catch (e) { console.warn('[grid-lock] glAggregatePlayerStats failed', e); }
 
+      if (gridLockState._unlockHandle) { clearTimeout(gridLockState._unlockHandle); gridLockState._unlockHandle = null; }
       gridLockState.phase = 'reveal';
       gridLockState.lockedIdx = null;
       glUpdateLockDisplay();
@@ -21072,7 +21248,14 @@ document.addEventListener('keydown', e => {
           inputPlaceholder: 'Enter a word…',
         });
       }
+      // GL is all-players-simultaneous; updateRoleUI early-returns for
+      // gridLockState.active so it can't enable the input/submit, and in MP
+      // setInputAreaMode('guess') no longer touches `disabled`. Same fix
+      // pattern as NIC + face-off — explicitly enable here.
       const input = document.getElementById('guess');
+      const submitBtn = document.querySelector('#turn-body .dome-button');
+      if (input) input.disabled = false;
+      if (submitBtn) submitBtn.disabled = false;
       if (input) input.focus();
     }
 
@@ -21080,18 +21263,45 @@ document.addEventListener('keydown', e => {
       gridLockState.phase = 'intro';
       const cover = document.getElementById('grid-lock-cover');
       const countEl = document.getElementById('grid-lock-countdown');
-      if (cover) { cover.classList.remove('gl-cover-off'); cover.classList.add('gl-cover-shake'); }
+      if (cover) cover.classList.remove('gl-cover-off', 'gl-cover-shake');
       if (countEl) countEl.textContent = '';
       const push = (fn, ms) => { gridLockState.introHandles.push(setTimeout(fn, ms)); };
-      push(() => { if (cover) cover.classList.remove('gl-cover-shake'); }, 2000);
-      push(() => { if (countEl) { countEl.textContent = '3'; if (typeof playTick === "function") playTick(0, { volume: 0.5 }); } }, 2000);
-      push(() => { if (countEl) { countEl.textContent = '2'; if (typeof playTick === "function") playTick(0.33, { volume: 0.6 }); } }, 3000);
-      push(() => { if (countEl) { countEl.textContent = '1'; if (typeof playTick === "function") playTick(0.66, { volume: 0.7 }); } }, 4000);
+      // Container slide-in is 0.5s; hold an extra 1s after it lands before
+      // the cover starts shaking. Subsequent steps shift by SHAKE_DELAY.
+      const SHAKE_DELAY = 1500;
+      push(() => {
+        if (!cover) return;
+        cover.classList.add('gl-cover-shake');
+        // Play once at shake start + first 2 iterations (3 plays total).
+        // The trailing iteration was running past the visual shake.
+        let shakePlays = 1;
+        if (typeof playSound === "function") playSound(sfxBlockShake);
+        const onIter = () => {
+          if (shakePlays >= 3) return;
+          shakePlays++;
+          if (typeof playSound === "function") playSound(sfxBlockShake);
+        };
+        cover.addEventListener('animationiteration', onIter);
+        gridLockState._shakeIterHandler = onIter;
+      }, SHAKE_DELAY);
+      push(() => {
+        if (!cover) return;
+        cover.classList.remove('gl-cover-shake');
+        if (gridLockState._shakeIterHandler) {
+          cover.removeEventListener('animationiteration', gridLockState._shakeIterHandler);
+          gridLockState._shakeIterHandler = null;
+        }
+      }, SHAKE_DELAY + 2000);
+      push(() => { if (countEl) { countEl.textContent = '3'; if (typeof playTick === "function") playTick(0, { volume: 0.5 }); } }, SHAKE_DELAY + 2000);
+      push(() => { if (countEl) { countEl.textContent = '2'; if (typeof playTick === "function") playTick(0.33, { volume: 0.6 }); } }, SHAKE_DELAY + 3000);
+      push(() => { if (countEl) { countEl.textContent = '1'; if (typeof playTick === "function") playTick(0.66, { volume: 0.7 }); } }, SHAKE_DELAY + 4000);
       push(() => {
         if (countEl) { countEl.textContent = 'GO!'; if (typeof playTick === "function") playTick(1, { volume: 1.0 }); }
-        glStartPlay();
-      }, 5000);
-      push(() => { if (countEl) countEl.textContent = ''; }, 5700);
+      }, SHAKE_DELAY + 5000);
+      // Hold GO! visible for 250ms before the cover slides off and the
+      // timer starts — the previous flash was too brief to register.
+      push(() => { glStartPlay(); }, SHAKE_DELAY + 5250);
+      push(() => { if (countEl) countEl.textContent = ''; }, SHAKE_DELAY + 5950);
     }
 
     async function enterGridLockRound(onComplete) {
@@ -21118,6 +21328,7 @@ document.addEventListener('keydown', e => {
         gridLockState._playerTeamMap = null;
         gridLockState.submittedByPlayer = {};
         if (gridLockState.timerHandle) { clearInterval(gridLockState.timerHandle); gridLockState.timerHandle = null; }
+        if (gridLockState._unlockHandle) { clearTimeout(gridLockState._unlockHandle); gridLockState._unlockHandle = null; }
         if (gridLockState.introHandles) gridLockState.introHandles.forEach(h => clearTimeout(h));
         gridLockState.introHandles = [];
       }
@@ -21139,6 +21350,10 @@ document.addEventListener('keydown', e => {
       if (_glCover) {
         _glCover.classList.remove('gl-cover-off', 'gl-cover-shake');
         _glCover.style.display = '';
+        const _coverLogo = _glCover.querySelector('.gl-cover-logo');
+        if (_coverLogo && typeof _buildGlStackedLogoHtml === "function") {
+          _coverLogo.innerHTML = _buildGlStackedLogoHtml(58, 7, false);
+        }
       }
       const _glPaneE = document.getElementById('gl-reveal-pane');
       if (_glPaneE) {

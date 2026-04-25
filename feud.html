@@ -49,6 +49,7 @@
       --mod-pollposition: #00c0c0;
       --mod-scribble:     #c000c0;
       --mod-commonthread: #00c000;
+      --mod-gridlock:     #c0c000;
       --mod-faceoff:      #222222;
 
       /* Game speed — set by JS via setGameSpeed(). 1 = normal, 2 = double speed.
@@ -2074,15 +2075,12 @@
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      /* Vertical clipping is load-bearing: scribble-summary uses
-         translateY(-100%) to hide above module-canvas (see ss-fly-in),
-         and face-off splash sizes to these bounds. But horizontal
-         overflow must be free so the category-multiplier board-badge
-         can hang ~10px past the right edge without being clipped.
-         `clip` + `visible` coexist on opposite axes (unlike `hidden`,
-         which silently promotes the other axis to `auto`). */
-      overflow-x: visible;
-      overflow-y: clip;
+      /* Both axes visible so summary panels can bleed up into the
+         scoreboard's rounded-corner gap. The scoreboard (z-index: 2,
+         opaque bg) covers any scribble/CT/H5 bleed above module-canvas
+         except where border-radius leaves corners transparent, which is
+         exactly where we want the summary bg to show through. */
+      overflow: visible;
       min-width: 0;
       box-sizing: border-box;
       position: relative;
@@ -3653,6 +3651,7 @@
     .mod-pollposition { --mod-color: var(--mod-pollposition); }
     .mod-scribble     { --mod-color: var(--mod-scribble); }
     .mod-commonthread { --mod-color: var(--mod-commonthread); }
+    .mod-gridlock     { --mod-color: var(--mod-gridlock); }
     .mod-faceoff      { --mod-color: var(--mod-faceoff); }
     /* Category row — wraps button + optional badge.
        Fixed 80px height so the row occupies a known slot regardless of
@@ -4772,6 +4771,13 @@
 
     /* Scoreboard: 5-col grid — #222 frame with #111 value fields */
     #scoreboard {
+      /* z-index above module-canvas content so summary panels that bleed
+         up past the module-canvas top (via overflow-clip-margin) are
+         covered by the scoreboard's opaque bg — EXCEPT in the transparent
+         corner arcs from border-radius, which is exactly the gap we
+         want the summary's ::before to show through. */
+      position: relative;
+      z-index: 2;
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
       align-items: end; /* bottom-justify all columns so their bottom edges align */
@@ -7813,6 +7819,739 @@
       font-weight: 500;
       color: #111;
     }
+
+    /* ───── Grid Lock module ───── */
+    #grid-lock-container {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      box-sizing: border-box;
+      /* overflow must be visible so #gl-summary::before can bleed up into
+         the scoreboard's rounded-corner gap (module-canvas owns the outer
+         clip via overflow-y: clip + overflow-clip-margin: 25px). */
+      overflow: visible;
+      transition: transform 0.5s ease;
+    }
+    #grid-lock-container.offscreen { transform: translateY(-120%); }
+    #grid-lock-container.slide-in  { transform: translateY(0); }
+    .gl-left-col {
+      flex: 0 0 34%;
+      display: flex;
+      flex-direction: column;
+      background: #1a1a1a;
+      border-radius: 10px;
+      padding: 10px;
+      min-height: 0;
+    }
+    .gl-right-col {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .gl-wordlist-header {
+      display: flex;
+      justify-content: space-between;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #fba300;
+      border-bottom: 1px solid #333;
+      padding-bottom: 6px;
+      margin-bottom: 6px;
+    }
+    .gl-wordlist {
+      flex: 1 1 0;
+      overflow-y: auto;
+      font-family: "Bitcount Single", monospace;
+      font-size: 1rem;
+      min-height: 0;
+      max-height: 100%;
+      color: #f0f0f0;
+      padding-right: 10px;
+      scrollbar-color: #fba300 rgba(255,255,255,0.08);
+      scrollbar-width: thin;
+    }
+    .gl-wordlist::-webkit-scrollbar {
+      width: 10px;
+    }
+    .gl-wordlist::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.06);
+      margin: 6px 0;
+    }
+    .gl-wordlist::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #fdbe3d 0%, #fba300 100%);
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.25);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+    .gl-wordlist::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #ffcf58 0%, #fcb31f 100%);
+    }
+    .gl-wl-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 4px;
+      border-bottom: 1px dotted #222;
+      color: #f0f0f0;
+    }
+    .gl-wl-row.ok .gl-wl-pts { color: #fba300; font-weight: 700; }
+    .gl-wl-row.bad { color: #666; }
+    .gl-wl-row.bad .gl-wl-word { text-decoration: line-through; }
+    .gl-wl-row.bad .gl-wl-pts { color: #777; font-size: 0.8rem; font-style: italic; }
+    .gl-timer {
+      font-family: "Bitcount Single", monospace;
+      font-variant-numeric: tabular-nums;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #f0f0f0;
+      letter-spacing: 0.05em;
+    }
+    .gl-timer.warn { color: #ef9a3a; }
+    .gl-timer.done { color: #ef5350; }
+    .gl-board-wrap {
+      position: relative;
+      padding: 8px;
+      background: #1a1a1a;
+      border-radius: 10px;
+    }
+    .gl-board {
+      display: grid;
+      grid-template-columns: repeat(5, 74px);
+      grid-template-rows: repeat(5, 74px);
+      gap: 6px;
+    }
+    .gl-tile {
+      position: relative;
+      background: linear-gradient(180deg, #f4e4bf 0%, #e4ce96 100%);
+      color: #1a1a1a;
+      border-radius: 8px;
+      box-shadow: 0 2px 0 #8a6f3d, inset 0 1px 0 rgba(255,255,255,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 2rem;
+      user-select: none;
+    }
+    .gl-tile .gl-pts {
+      position: absolute;
+      bottom: 3px;
+      right: 5px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #5a4420;
+    }
+    .gl-tile.locked {
+      filter: grayscale(1);
+      opacity: 0.35;
+      transition: opacity 0.3s ease, filter 0.3s ease;
+    }
+    .gl-cover {
+      position: absolute;
+      inset: 0;
+      background: #0a0a0a;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      z-index: 5;
+    }
+    .gl-cover-shake { animation: gl-cover-shake 0.6s ease-in-out infinite; }
+    @keyframes gl-cover-shake {
+      0%, 100% { transform: translate(0,0) rotate(0); }
+      25% { transform: translate(-3px, 2px) rotate(-0.4deg); }
+      50% { transform: translate(3px, -2px) rotate(0.4deg); }
+      75% { transform: translate(-2px, -3px) rotate(-0.3deg); }
+    }
+    .gl-cover-off {
+      opacity: 0;
+      transform: translateY(-110%);
+      pointer-events: none;
+    }
+    .gl-countdown {
+      font-family: "Bitcount Single", monospace;
+      font-weight: 700;
+      font-size: 5rem;
+      color: #fba300;
+      text-shadow: 0 0 20px rgba(251,163,0,0.6);
+    }
+    /* Reveal mode: hide play children, show 2×2 quadrant pane.
+       Applied to #grid-lock-container when phase flips to 'reveal'. */
+    #grid-lock-container.gl-reveal-mode {
+      display: flex;
+      align-items: flex-start;  /* top-anchor — summary slides down over top */
+      justify-content: center;
+      flex-direction: row;
+      gap: 0;
+      padding: 12px;
+    }
+    #grid-lock-container.gl-reveal-mode > .gl-left-col,
+    #grid-lock-container.gl-reveal-mode > .gl-right-col { display: none !important; }
+    #gl-reveal-pane {
+      /* Fixed 2×2 layout. Team quadrants (left column) are 100px wider
+         than the grid/cancelled column so longer words + badges fit
+         without clipping. Top-anchored in container. */
+      display: grid;
+      grid-template-columns: 350px 250px;
+      grid-template-rows: 250px 250px;
+      gap: 10px;
+    }
+    .gl-reveal-team, .gl-reveal-cancelled {
+      background: #1a1a1a;
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .gl-reveal-team-head {
+      padding-bottom: 4px;
+      margin-bottom: 4px;
+      border-bottom: 1px solid #333;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+    .gl-reveal-team-red  .gl-reveal-team-name { color: var(--red-text); }
+    .gl-reveal-team-blue .gl-reveal-team-name { color: var(--blue-text); }
+    .gl-reveal-cancelled-head {
+      padding-bottom: 4px; margin-bottom: 4px;
+      border-bottom: 1px solid #333;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      color: #aaa;
+      letter-spacing: 0.12em;
+    }
+    /* Viewport clips the list; .gl-reveal-list-track grows freely inside. */
+    .gl-reveal-list {
+      flex: 1 1 0;
+      min-height: 0;
+      overflow: hidden;
+      font-family: "Bitcount Single", monospace;
+      font-size: 0.85rem;
+      color: #f0f0f0;
+      position: relative;
+    }
+    .gl-reveal-list-track {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    /* Overflow marquee: continuous top-to-bottom loop once final contents
+       don't fit. Activated by JS adding .gl-marquee-active + setting
+       --gl-marquee-distance / --gl-marquee-dur. */
+    .gl-reveal-list.gl-marquee-active .gl-reveal-list-track {
+      animation: gl-list-marquee var(--gl-marquee-dur, 12s) linear infinite;
+    }
+    @keyframes gl-list-marquee {
+      0%   { transform: translateY(0); }
+      100% { transform: translateY(var(--gl-marquee-distance, 0px)); }
+    }
+
+    .gl-reveal-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 2px;
+      border-bottom: 1px dotted #222;
+      opacity: 0;
+      transform: translateY(-4px);
+      animation: gl-reveal-row-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      flex-shrink: 0;
+    }
+    /* Cancelled column: words stay centered. */
+    #gl-reveal-cancelled .gl-reveal-row { justify-content: center; }
+    /* Team columns: left-justified so rows stack consistently whether or
+       not badges are present. Word takes natural width, badges tail it
+       on the left, points chip floats right. */
+    .gl-reveal-team .gl-reveal-row { justify-content: flex-start; }
+    .gl-reveal-team .gl-reveal-row .gl-reveal-word { flex: 0 0 auto; }
+    .gl-reveal-team .gl-reveal-row .gl-reveal-badges { margin-left: 6px; }
+    .gl-reveal-team .gl-reveal-row .gl-reveal-pts { margin-left: auto; }
+    @keyframes gl-reveal-row-in {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .gl-reveal-row .gl-reveal-word { flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .gl-reveal-row .gl-reveal-player { color: #888; font-size: 0.75rem; margin-left: 4px; }
+    .gl-reveal-row .gl-reveal-badges { display: flex; gap: 3px; align-items: center; flex-shrink: 0; }
+    .gl-reveal-row .gl-reveal-pts { font-weight: 700; color: #fba300; min-width: 32px; text-align: right; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+    .gl-reveal-row.gl-cancelled { color: #666; }
+    .gl-reveal-row.gl-cancelled .gl-reveal-word { text-decoration: line-through; }
+    .gl-reveal-row.gl-cancelled .gl-reveal-pts { display: none; }
+    .gl-reveal-badge {
+      font-family: "futura-100", sans-serif;
+      font-size: 0.58rem;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 4px;
+      letter-spacing: 0.06em;
+    }
+    .gl-reveal-badge.first { background: #3b5998; color: #dff1ff; }
+    .gl-reveal-badge.long  { background: #7d3bb2; color: #f6e1ff; }
+    .gl-reveal-badge.mult  { background: #fba300; color: #1a1a1a; }
+
+    /* Totals row sits on a solid dark field to match the WORDS SUBMITTED
+       / POINTS SCORED / WORDS FOUND containers. Scoped to #gl-summary
+       so it doesn't regress other modules' totals styling. */
+    #gl-summary .round-summary-totals {
+      background: #111;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-top: 8px;
+    }
+
+    /* Per-player ranking columns inside the summary panel. */
+    .gl-summary-ranks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 8px 10px 4px;
+    }
+    .gl-summary-rank-col { min-width: 0; }
+    .gl-summary-rank-head {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #aaa;
+      font-size: 0.78rem;
+      border-bottom: 1px solid #333;
+      padding-bottom: 3px;
+      margin-bottom: 4px;
+    }
+    .gl-summary-rank-list {
+      list-style: none;
+      margin: 0; padding: 6px 8px;
+      font-family: "Bitcount Single", monospace;
+      font-size: 0.9rem;
+      background: #111;
+      border-radius: 6px;
+    }
+    .gl-summary-rank-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 1px 2px;
+    }
+    .gl-summary-rank-list li .gl-rank-name { color: #f0f0f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .gl-summary-rank-list li .gl-rank-name.team-red  { color: var(--red-text); }
+    .gl-summary-rank-list li .gl-rank-name.team-blue { color: var(--blue-text); }
+    .gl-summary-rank-list li .gl-rank-val { color: #fba300; font-variant-numeric: tabular-nums; font-weight: 700; min-width: 38px; text-align: right; }
+
+    /* Reveal mode grid shrink. The live #grid-lock-board is re-parented
+       into #gl-reveal-grid-holder. Fixed 200×200 — tiles stay 1:1 via
+       explicit square dimensions (no aspect-ratio dependence on parent
+       height which was letting tiles stretch). */
+    .gl-reveal-grid-holder {
+      background: #1a1a1a;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      box-sizing: border-box;
+    }
+    .gl-reveal-grid-holder > .gl-board {
+      display: grid;
+      grid-template-columns: repeat(5, 42px);
+      grid-template-rows: repeat(5, 42px);
+      gap: 4px;
+    }
+    .gl-reveal-grid-holder .gl-tile {
+      width: 42px; height: 42px;
+      min-width: 42px; min-height: 42px;
+      font-size: 1.15rem;
+    }
+    .gl-reveal-grid-holder .gl-tile .gl-pts { font-size: 0.6rem; }
+
+    /* Path flash: tile highlighted in team color. Explicit 0% keyframe
+       so re-applying the class on a tile that was recently flashed (and
+       still carries .forwards-pinned state) restarts cleanly. */
+    .gl-tile.gl-flash-red, .gl-tile.gl-flash-blue { z-index: 2; }
+    .gl-tile.gl-flash-red  { animation: gl-flash-red  0.5s ease-out forwards; }
+    .gl-tile.gl-flash-blue { animation: gl-flash-blue 0.5s ease-out forwards; }
+    @keyframes gl-flash-red {
+      0%   { box-shadow: 0 0 0 3px var(--red-text), 0 0 14px var(--red-text); filter: brightness(1.55); }
+      100% { box-shadow: 0 0 0 0 transparent, 0 0 0 transparent; filter: brightness(1); }
+    }
+    @keyframes gl-flash-blue {
+      0%   { box-shadow: 0 0 0 3px var(--blue-text), 0 0 14px var(--blue-text); filter: brightness(1.55); }
+      100% { box-shadow: 0 0 0 0 transparent, 0 0 0 transparent; filter: brightness(1); }
+    }
+
+    /* Summary panel sits on top of the reveal pane with the existing
+       .round-summary framework styling (frosted glass, -5px top margin
+       to bleed under the scoreboard). Slides down from behind scoreboard. */
+    /* Panel is anchored 18px ABOVE module-canvas's top edge so its body bg
+       extends up behind the scoreboard's rounded corner gaps. Padding-top
+       absorbs the bleed so content sits at the same visual position as if
+       top were 0. Requires #module-canvas { overflow-clip-margin: 25px }
+       to allow bleed past the Y-axis clip. Scoreboard has z-index: 2 so
+       it paints its opaque body over this bleed — the corner transparency
+       from border-radius is the only place our bleed shows through. */
+    #gl-summary {
+      position: absolute;
+      top: -18px; left: 0; right: 0;
+      margin-top: 0;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      padding: 32px 14px 12px;
+      box-sizing: border-box;
+      animation: gl-summary-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    @keyframes gl-summary-in {
+      0% { transform: translateY(-110%); }
+      100% { transform: translateY(0); }
+    }
+    #gl-summary.gl-summary-out {
+      animation: gl-summary-out 0.45s cubic-bezier(0.55, 0, 0.68, 0.19) forwards;
+    }
+    @keyframes gl-summary-out {
+      0%   { transform: translateY(0); }
+      100% { transform: translateY(-110%); }
+    }
+
+    /* Two-column body: left stacks WORDS SUBMITTED + POINTS SCORED,
+       right is the alphabetical WORDS FOUND list. */
+    .gl-summary-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      padding: 6px 6px 4px;
+      min-height: 0;
+    }
+    .gl-summary-left-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+    .gl-summary-right-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+    .gl-summary-words-found-head {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #aaa;
+      font-size: 0.78rem;
+      border-bottom: 1px solid #333;
+      padding-bottom: 3px;
+      margin-bottom: 4px;
+    }
+    .gl-summary-words-found {
+      flex: 1 1 0;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+      background: #111;
+      border-radius: 6px;
+      padding: 6px 8px;
+      box-sizing: border-box;
+    }
+    .gl-summary-words-found-track {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      font-family: "Bitcount Single", monospace;
+      font-size: 0.9rem;
+    }
+    .gl-summary-words-found.gl-marquee-active .gl-summary-words-found-track {
+      animation: gl-list-marquee var(--gl-marquee-dur, 12s) linear infinite;
+    }
+    .gl-summary-words-found-track .gl-found-row {
+      padding: 1px 2px;
+      border-bottom: 1px dotted #222;
+    }
+    .gl-summary-words-found-track .gl-found-row.team-red  { color: var(--red-text); }
+    .gl-summary-words-found-track .gl-found-row.team-blue { color: var(--blue-text); }
+    .gl-summary-words-found-track .gl-found-row.cancelled { color: #666; text-decoration: line-through; }
+
+    /* TIME'S UP: rounded black card centered on module-canvas (no dimmed
+       backdrop — the card alone reads as the "time up" beat). */
+    .gl-times-up-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: transparent;
+      z-index: 40;
+      pointer-events: none;
+    }
+    .gl-times-up-overlay.gl-times-up-out .gl-times-up-card { animation: gl-times-up-card-out 0.35s ease-in forwards; }
+    .gl-times-up-card {
+      background: #0a0a0a;
+      border: 1px solid #1f1f1f;
+      border-radius: 14px;
+      padding: 20px 46px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+      animation: gl-times-up-card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    .gl-times-up-text {
+      font-family: "futura-100", "Futura", sans-serif;
+      font-weight: 700;
+      font-size: 4.2rem;
+      color: #fba300;
+      letter-spacing: 0.12em;
+      text-shadow: 0 0 30px rgba(251,163,0,0.55);
+    }
+    @keyframes gl-times-up-card-in {
+      0%   { opacity: 0; transform: scale(0.85); }
+      60%  { opacity: 1; transform: scale(1.04); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes gl-times-up-card-out {
+      0%   { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.92); }
+    }
+
+    /* Play → reveal exit: left-col slides off-left and fades;
+       right-col (grid) slides down and fades. */
+    .gl-left-col.gl-play-exit  { animation: gl-play-exit-left 0.5s cubic-bezier(0.55, 0, 0.68, 0.19) forwards; }
+    .gl-right-col.gl-play-exit { animation: gl-play-exit-down 0.5s cubic-bezier(0.55, 0, 0.68, 0.19) forwards; }
+    @keyframes gl-play-exit-left {
+      0%   { opacity: 1; transform: translateX(0); }
+      100% { opacity: 0; transform: translateX(-120%); }
+    }
+    @keyframes gl-play-exit-down {
+      0%   { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(120%); }
+    }
+
+    /* Reveal quadrant entry: grid + cancelled slide in from right,
+       team quadrants slide in from left (fired after the right pair lands).
+       Pre-enter class keeps them hidden + offscreen UNTIL the enter class
+       is swapped in, so they never flash in their final position first. */
+    #gl-reveal-pane .gl-pre-enter-right { opacity: 0; transform: translateX(80px); }
+    #gl-reveal-pane .gl-pre-enter-left  { opacity: 0; transform: translateX(-80px); }
+    #gl-reveal-pane .gl-enter-right { animation: gl-quad-enter-right 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    #gl-reveal-pane .gl-enter-left  { animation: gl-quad-enter-left  0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    @keyframes gl-quad-enter-right {
+      0%   { opacity: 0; transform: translateX(80px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes gl-quad-enter-left {
+      0%   { opacity: 0; transform: translateX(-80px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    /* Reveal quadrant exit: slide/fade out in the OPPOSITE direction of
+       their entry (grid+cancelled exit right, teams exit left). Fired
+       after showRoundCompleteCard lands and before the summary panel
+       slides in. */
+    #gl-reveal-pane .gl-exit-right { animation: gl-quad-exit-right 0.45s cubic-bezier(0.55, 0, 0.68, 0.19) forwards; }
+    #gl-reveal-pane .gl-exit-left  { animation: gl-quad-exit-left  0.45s cubic-bezier(0.55, 0, 0.68, 0.19) forwards; }
+    @keyframes gl-quad-exit-right {
+      0%   { opacity: 1; transform: translateX(0); }
+      100% { opacity: 0; transform: translateX(80px); }
+    }
+    @keyframes gl-quad-exit-left {
+      0%   { opacity: 1; transform: translateX(0); }
+      100% { opacity: 0; transform: translateX(-80px); }
+    }
+
+    /* Auto-scroll: track glides up as rows exceed the viewport. Smooth
+       transition matches the game recap results-marquee feel. */
+    .gl-reveal-list-track { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+
+    /* ── Grid Lock — picker logo + cinematic intro ──────────────────── */
+    /* gll- prefix avoids collision with the in-game .gl-tile / .gl-cover
+       gameplay rules above. */
+    .gll-logo {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: var(--gll-gap, 10px);
+      transform-origin: 50% 50%;
+    }
+    .gll-logo.gll-struggle { animation: gll-struggle 1.5s ease-in-out 1 forwards; }
+    @keyframes gll-struggle {
+      0%   { transform: rotate(0deg)   translateX(0)   scale(1); }
+      4%   { transform: rotate(-2.5deg) translateX(-3px) scale(1.012); }
+      9%   { transform: rotate(2.5deg)  translateX(3px)  scale(1.012); }
+      14%  { transform: rotate(-1.4deg) translateX(-1px) scale(1.006); }
+      18%  { transform: rotate(0deg)   translateX(0)   scale(1); }
+      30%  { transform: rotate(0deg)   translateX(0)   scale(1); }
+      34%  { transform: rotate(3.2deg)  translateX(4px)  scale(1.018); }
+      39%  { transform: rotate(-3.2deg) translateX(-4px) scale(1.018); }
+      44%  { transform: rotate(1.6deg)  translateX(2px)  scale(1.008); }
+      48%  { transform: rotate(0deg)   translateX(0)   scale(1); }
+      60%  { transform: rotate(0deg)   translateX(0)   scale(1); }
+      64%  { transform: rotate(-3.8deg) translateX(-5px) scale(1.022); }
+      69%  { transform: rotate(3.8deg)  translateX(5px)  scale(1.022); }
+      74%  { transform: rotate(-1.8deg) translateX(-2px) scale(1.01); }
+      78%  { transform: rotate(0deg)   translateX(0)   scale(1); }
+      100% { transform: rotate(0deg)   translateX(0)   scale(1); }
+    }
+    .gll-row { display: flex; gap: var(--gll-gap, 10px); }
+    .gll-tile {
+      position: relative;
+      width: var(--gll-tile-size, 100px);
+      height: var(--gll-tile-size, 100px);
+      background: linear-gradient(180deg, #f4e4bf 0%, #e4ce96 100%);
+      color: #1a1a1a;
+      border-radius: calc(var(--gll-tile-size, 100px) * 0.09);
+      box-shadow:
+        0 calc(var(--gll-tile-size, 100px) * 0.025) 0 #8a6f3d,
+        inset 0 1px 0 rgba(255,255,255,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: calc(var(--gll-tile-size, 100px) * 0.55);
+      line-height: 1;
+      user-select: none;
+    }
+    .gll-tile.gll-hop {
+      animation: gll-letter-hop 0.55s cubic-bezier(.4,0,.2,1) both;
+      transform-origin: 50% 100%;
+    }
+    @keyframes gll-letter-hop {
+      0%   { transform: translateY(0)     rotate(0); }
+      25%  { transform: translateY(-22%)  rotate(-3deg); }
+      45%  { transform: translateY(-26%)  rotate(2.5deg); }
+      70%  { transform: translateY(-10%)  rotate(-1deg); }
+      100% { transform: translateY(0)     rotate(0); }
+    }
+    .gll-tile .gll-pts {
+      position: absolute;
+      bottom: calc(var(--gll-tile-size, 100px) * 0.06);
+      right: calc(var(--gll-tile-size, 100px) * 0.09);
+      font-size: calc(var(--gll-tile-size, 100px) * 0.18);
+      font-weight: 600;
+      color: #5a4420;
+      line-height: 1;
+    }
+
+    /* Cinematic plastic cover — wiggles, crossfades lock→unlock, lifts away */
+    .gll-cover {
+      position: absolute;
+      inset: 0;
+      border-radius: calc(var(--gll-tile-size, 100px) * 0.14);
+      background:
+        linear-gradient(180deg, #e6e600 0%, #d4d400 22%, #c0c000 55%, #a8a800 100%);
+      box-shadow:
+        inset 0 calc(var(--gll-tile-size, 100px) * 0.05) 0 rgba(255,255,255,0.55),
+        inset 0 calc(var(--gll-tile-size, 100px) * -0.06) 0 rgba(0,0,0,0.18),
+        0 calc(var(--gll-tile-size, 100px) * 0.04) 0 #6b6b00,
+        0 calc(var(--gll-tile-size, 100px) * 0.06) calc(var(--gll-tile-size, 100px) * 0.08) rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: transform 720ms cubic-bezier(.4,0,.2,1), opacity 380ms ease-in 360ms;
+    }
+    .gll-cover::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(ellipse 50% 30% at 30% 18%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0) 80%);
+      pointer-events: none;
+    }
+    .gll-cover.lift { transform: translateY(-185%); opacity: 0; }
+    .gll-cover-lock,
+    .gll-cover-unlock {
+      position: absolute;
+      width: 45%;
+      height: auto;
+      color: #fff;
+      fill: currentColor;
+      filter: drop-shadow(0 calc(var(--gll-tile-size, 100px) * 0.02) calc(var(--gll-tile-size, 100px) * 0.04) rgba(0,0,0,0.35));
+      transition: opacity 80ms linear;
+    }
+    .gll-cover-unlock { opacity: 0; }
+    .gll-cover.unlocked .gll-cover-lock { opacity: 0; }
+    .gll-cover.unlocked .gll-cover-unlock { opacity: 1; }
+    .gll-cover.unlock-fade .gll-cover-unlock {
+      opacity: 0;
+      transition: opacity 280ms ease-out;
+    }
+
+    /* Cinematic subtitle, fades in alongside the letter hop */
+    .gll-subtitle {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 12%;
+      text-align: center;
+      color: #fba300;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.4rem;
+      letter-spacing: 6px;
+      opacity: 0;
+      transition: opacity 600ms ease-in;
+    }
+    .gll-subtitle.show { opacity: 1; }
+
+    /* Cinematic full-canvas overlay */
+    #gl-cinematic {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 60;
+      pointer-events: none;
+      transition: opacity 460ms ease-out;
+    }
+    #gl-cinematic.glci-fade-out { opacity: 0; }
+    #gl-cinematic:not(.glci-flown-in) .gll-logo { transform: translateY(720px); }
+    #gl-cinematic.glci-flown-in .gll-logo {
+      animation: glci-fly-in 0.6s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    #gl-cinematic.glci-flown-in .gll-logo.gll-struggle {
+      animation: gll-struggle 1.5s ease-in-out 1 forwards;
+    }
+    @keyframes glci-fly-in {
+      0%   { transform: translateY(720px); }
+      100% { transform: translateY(0); }
+    }
+    /* Phase-indicator picker logo: center the intrinsically-sized picker
+       inside the .ph-module-logo span instead of stretching it to 100%. */
+    #phase-indicator .ph-module-logo .gll-picker {
+      width: auto;
+      margin: 0 auto;
+    }
+
+    /* Picker card logo — stacked tiles + tilted lock badge crossfade */
+    .gll-picker {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: var(--gll-gap, 4px);
+    }
+    .gll-picker-lock {
+      position: absolute;
+      width: calc(var(--gll-tile-size, 36px) * 1.1);
+      height: calc(var(--gll-tile-size, 36px) * 1.1);
+      top: calc(var(--gll-tile-size, 36px) * -0.55);
+      right: calc(var(--gll-tile-size, 36px) * -0.55);
+      transform: rotate(18deg);
+      pointer-events: none;
+    }
+    .gll-picker-lock svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      color: #fff;
+      fill: currentColor;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.45));
+    }
+    .gll-picker-lock .gll-pl-locked   { animation: gll-pl-fade-locked   2.6s ease-in-out infinite; }
+    .gll-picker-lock .gll-pl-unlocked { animation: gll-pl-fade-unlocked 2.6s ease-in-out infinite; }
+    @keyframes gll-pl-fade-locked {
+      0%, 40%   { opacity: 1; }
+      50%, 90%  { opacity: 0; }
+      100%      { opacity: 1; }
+    }
+    @keyframes gll-pl-fade-unlocked {
+      0%, 40%   { opacity: 0; }
+      50%, 90%  { opacity: 1; }
+      100%      { opacity: 0; }
+    }
+    .rt-card-title.rt-card-logo .gll-picker { margin: 0 auto; }
   </style>
 </head>
 <body>
@@ -7957,7 +8696,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.22</div>
+  <div id="version-tag">v0.23</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -8499,6 +9238,79 @@
                   <div class="round-summary-team">
                     <div class="round-summary-team-name round-summary-team-blue" id="ct-summary-blue-name">Blue</div>
                     <div class="round-summary-team-score" id="ct-summary-blue-score">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Grid Lock container: Boggle-style 5x5 word grid minigame.
+                 Hidden until grid-lock round triggers. -->
+            <div id="grid-lock-container" class="offscreen" style="display:none;">
+              <div class="gl-left-col">
+                <div class="gl-wordlist-header">
+                  <span>Words: <span id="gl-header-count">0</span></span>
+                  <span>Score: <span id="gl-header-score">0</span></span>
+                </div>
+                <div id="grid-lock-wordlist" class="gl-wordlist"></div>
+              </div>
+              <div class="gl-right-col">
+                <div id="grid-lock-timer" class="gl-timer">3:00</div>
+                <div class="gl-board-wrap">
+                  <div id="grid-lock-board" class="gl-board"></div>
+                  <div id="grid-lock-cover" class="gl-cover">
+                    <div id="grid-lock-countdown" class="gl-countdown"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reveal pane: 2×2 quadrants. Hidden until host flips
+                   gridLockState.phase → 'reveal'. Board re-parents here. -->
+              <div id="gl-reveal-pane" style="display:none;">
+                <div class="gl-reveal-team gl-reveal-team-red" id="gl-reveal-red">
+                  <div class="gl-reveal-team-head"><span class="gl-reveal-team-name" id="gl-reveal-red-name">Red</span></div>
+                  <div class="gl-reveal-list" id="gl-reveal-red-list"><div class="gl-reveal-list-track"></div></div>
+                </div>
+                <div class="gl-reveal-grid-holder" id="gl-reveal-grid-holder"></div>
+                <div class="gl-reveal-team gl-reveal-team-blue" id="gl-reveal-blue">
+                  <div class="gl-reveal-team-head"><span class="gl-reveal-team-name" id="gl-reveal-blue-name">Blue</span></div>
+                  <div class="gl-reveal-list" id="gl-reveal-blue-list"><div class="gl-reveal-list-track"></div></div>
+                </div>
+                <div class="gl-reveal-cancelled" id="gl-reveal-cancelled">
+                  <div class="gl-reveal-cancelled-head">CANCELLED OUT</div>
+                  <div class="gl-reveal-list" id="gl-reveal-cancelled-list"><div class="gl-reveal-list-track"></div></div>
+                </div>
+              </div>
+
+              <!-- Summary panel: Round Summary Framework. Slides in over the
+                   reveal pane after the shortest-first stagger finishes. -->
+              <div id="gl-summary" class="round-summary" style="display:none;">
+                <div class="round-summary-title">ROUND SUMMARY</div>
+                <div class="gl-summary-body">
+                  <div class="gl-summary-left-col">
+                    <div class="gl-summary-rank-col">
+                      <div class="gl-summary-rank-head">WORDS SUBMITTED</div>
+                      <ol class="gl-summary-rank-list" id="gl-summary-words-rank"></ol>
+                    </div>
+                    <div class="gl-summary-rank-col">
+                      <div class="gl-summary-rank-head">POINTS SCORED</div>
+                      <ol class="gl-summary-rank-list" id="gl-summary-points-rank"></ol>
+                    </div>
+                  </div>
+                  <div class="gl-summary-right-col">
+                    <div class="gl-summary-words-found-head">WORDS FOUND</div>
+                    <div class="gl-summary-words-found" id="gl-summary-words-found">
+                      <div class="gl-summary-words-found-track"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="round-summary-totals">
+                  <div class="round-summary-team">
+                    <div class="round-summary-team-name round-summary-team-red" id="gl-summary-red-name">Red</div>
+                    <div class="round-summary-team-score" id="gl-summary-red-score">0</div>
+                  </div>
+                  <div class="round-summary-team">
+                    <div class="round-summary-team-name round-summary-team-blue" id="gl-summary-blue-name">Blue</div>
+                    <div class="round-summary-team-score" id="gl-summary-blue-score">0</div>
                   </div>
                 </div>
               </div>
@@ -9786,6 +10598,7 @@
           if (!name) return;
           const sp = scribblePlayerStats[name] || { drAtt: 0, drSucc: 0, guessOpp: 0, guessSucc: 0 };
           const cp = commonThreadPlayerStats[name] || { cluesGiven: 0, cluesLanded: 0, cardsFlipped: 0, ownTeamHits: 0, opponentHits: 0, penaltyHits: 0, pointsContributed: 0, bestSingle: 0, giverFlips: 0, giverOwnFlips: 0 };
+          const gp = gridLockPlayerStats[name] || { words: 0, cancelled: 0, totalLength: 0, bonuses: 0, points: 0 };
           stats[name] = {
             player: name, team: tIdx,
             points: 0, correct: 0, wrong: 0, best: 0,
@@ -9798,6 +10611,9 @@
             ctPointsContributed: cp.pointsContributed || 0,
             ctBestSingle: cp.bestSingle || 0,
             giverFlips: cp.giverFlips || 0, giverOwnFlips: cp.giverOwnFlips || 0,
+            glWords: gp.words || 0, glCancelled: gp.cancelled || 0,
+            glTotalLength: gp.totalLength || 0, glBonuses: gp.bonuses || 0,
+            glPoints: gp.points || 0,
           };
         });
       });
@@ -9827,11 +10643,18 @@
           row.best = Math.max(row.best, s.ctBestSingle || 0);
           const touchedCt = (s.cluesGiven || 0) + (s.cardsFlipped || 0);
           if (touchedCt > 0) row.participated = Math.max(row.participated, 1);
+        } else if (filter === 'Grid Lock') {
+          row.points = s.glPoints || 0;
+          const touchedGl = (s.glWords || 0) + (s.glCancelled || 0);
+          if (touchedGl > 0) row.participated = Math.max(row.participated, 1);
         } else if (filter === 'Overall') {
           row.points += s.ctPointsContributed || 0;
+          row.points += s.glPoints || 0;
           row.best = Math.max(row.best, s.ctBestSingle || 0);
           const touchedCt = (s.cluesGiven || 0) + (s.cardsFlipped || 0);
           if (touchedCt > 0) row.participated = Math.max(row.participated, 1);
+          const touchedGl = (s.glWords || 0) + (s.glCancelled || 0);
+          if (touchedGl > 0) row.participated = Math.max(row.participated, 1);
         }
         return row;
       });
@@ -9872,10 +10695,19 @@
       { key: 'ownTeamPct', label: 'Own-Team %', cls: 'sort-num' },
       { key: 'penaltyHits', label: 'Penalties Hit', cls: 'sort-num' },
     ];
+    const _STATS_COLS_GRID_LOCK = [
+      { key: 'player', label: 'Player', cls: 'sort-player' },
+      { key: 'points', label: 'Points', cls: 'sort-num' },
+      { key: 'glWords', label: 'Words', cls: 'sort-num' },
+      { key: 'glCancelled', label: 'Cancelled', cls: 'sort-num' },
+      { key: 'glAvgLength', label: 'Avg Length', cls: 'sort-num' },
+      { key: 'glBonuses', label: 'Bonuses', cls: 'sort-num' },
+    ];
     function _getStatsCols(subtab) {
       if (subtab === 'Overall') return _STATS_COLS_OVERALL;
       if (subtab === 'Secret Scribble') return _STATS_COLS_SCRIBBLE;
       if (subtab === 'Common Thread') return _STATS_COLS_COMMON_THREAD;
+      if (subtab === 'Grid Lock') return _STATS_COLS_GRID_LOCK;
       return _STATS_COLS_FEUD;
     }
 
@@ -9931,6 +10763,10 @@
       if (key === 'ownTeamPct') {
         return (row.cardsFlipped || 0) > 0 ? row.ownTeamHits / row.cardsFlipped : -1;
       }
+      if (key === 'glAvgLength') {
+        const total = (row.glWords || 0) + (row.glCancelled || 0);
+        return total > 0 ? (row.glTotalLength || 0) / total : -1;
+      }
       return row[key] != null ? row[key] : 0;
     }
 
@@ -9969,6 +10805,22 @@
       }
       if (key === 'penaltyHits') {
         return `<td>${(row.cardsFlipped || 0) > 0 ? row.penaltyHits : _DASH_CELL}</td>`;
+      }
+      if (key === 'glWords') {
+        const touched = (row.glWords || 0) + (row.glCancelled || 0);
+        return `<td>${touched > 0 ? (row.glWords || 0) : _DASH_CELL}</td>`;
+      }
+      if (key === 'glCancelled') {
+        const touched = (row.glWords || 0) + (row.glCancelled || 0);
+        return `<td>${touched > 0 ? (row.glCancelled || 0) : _DASH_CELL}</td>`;
+      }
+      if (key === 'glAvgLength') {
+        const total = (row.glWords || 0) + (row.glCancelled || 0);
+        return `<td>${total > 0 ? ((row.glTotalLength || 0) / total).toFixed(1) : _DASH_CELL}</td>`;
+      }
+      if (key === 'glBonuses') {
+        const touched = (row.glWords || 0) + (row.glCancelled || 0);
+        return `<td>${touched > 0 ? (row.glBonuses || 0) : _DASH_CELL}</td>`;
       }
       return `<td>${_DASH_CELL}</td>`;
     }
@@ -11125,6 +11977,14 @@ document.addEventListener('keydown', e => {
     //   opponentHits  — cards flipped that were the opposing team's color
     //   penaltyHits   — penalty cards flipped
     let commonThreadPlayerStats = {};
+    // Per-player Grid Lock counters, persists across all GL rounds in a game.
+    // Keyed by player display name. Fields:
+    //   words         — valid (uncancelled) scored words submitted
+    //   cancelled     — words submitted that were cancelled by opposing team
+    //   totalLength   — sum of letter counts across valid+cancelled (for avg-length)
+    //   bonuses       — bonus points earned (first-to-enter, longest, most-words)
+    //   points        — total round points contributed (base + bonuses, post-cancellation)
+    let gridLockPlayerStats = {};
     let _roundStartScores = [0, 0]; // snapshot at round start for delta computation
     let teamNames = ["Red Team", "Blue Team"];
     let startingTeam = 0;
@@ -11267,6 +12127,8 @@ document.addEventListener('keydown', e => {
                 && commonThreadState.clueGiverUids[commonThreadState.currentTeam] === action.uid) {
               ctSubmitClue(action.word, action.count);
             }
+          } else if (action.type === 'gridLockSubmit') {
+            hostProcessGridLockSubmit(action.word, action.uid);
           } else if (action.type === 'ctGuess') {
             // Validate sender is on the current team and NOT the clue giver.
             const t = commonThreadState.currentTeam;
@@ -11372,6 +12234,25 @@ document.addEventListener('keydown', e => {
       // Receive scribble scoring updates from host
       if (scribbleState.active && data.scribbleScoring) {
         scribbleState.sessionScoring = data.scribbleScoring;
+      }
+
+      // Receive grid-lock state from host (non-host applies + re-renders).
+      // Gated on phase to avoid late/stale snapshots after round-end clobbering
+      // the next module's UI. Additionally gated on selectedRoundType so a
+      // stale gridLockState carried forward in Firestore during a non-GL
+      // round (e.g. CT / H5 snapshots still show the last GL reveal state)
+      // doesn't fire a phantom reveal on the non-host.
+      if (!isHost && data.gridLockState && data.selectedRoundType === 'grid-lock') {
+        const glp = data.gridLockState.phase;
+        const prevPhase = gridLockState.phase;
+        if (glp === 'intro' || glp === 'play' || glp === 'reveal') {
+          glApplySyncedState(data.gridLockState);
+          // Reveal transition: kick off local reveal animation when host
+          // flips phase → 'reveal'. Guarded by _revealRan inside glRunReveal.
+          if (glp === 'reveal' && prevPhase !== 'reveal') {
+            glRunReveal();
+          }
+        }
       }
 
       // Receive common-thread state from host (non-host applies + re-renders).
@@ -11485,6 +12366,11 @@ document.addEventListener('keydown', e => {
       // ── Common Thread per-player counters (host-authoritative) ──
       if (data.commonThreadPlayerStats) {
         commonThreadPlayerStats = { ...data.commonThreadPlayerStats };
+      }
+
+      // ── Grid Lock per-player counters (host-authoritative) ──
+      if (data.gridLockPlayerStats) {
+        gridLockPlayerStats = { ...data.gridLockPlayerStats };
       }
 
       // ── Rounds meta (per-round summary recap) ──
@@ -11884,6 +12770,17 @@ document.addEventListener('keydown', e => {
             }
             // H5/Survey summary slide-up if the prior round was a ranked question.
             const _h5Promise = hideH5Summary();
+            // Grid-lock summary slide-up if the prior round was grid-lock.
+            const _glSum = document.getElementById("gl-summary");
+            const _glSumExiting = _glSum && _glSum.style.display !== "none";
+            let _glSumPromise = null;
+            if (_glSumExiting) {
+              _glSum.classList.remove("gl-summary-out");
+              void _glSum.offsetWidth;
+              _glSum.classList.add("gl-summary-out");
+              _glSumPromise = new Promise(r => setTimeout(r, 470 / (gameSpeed || 1)))
+                .then(() => { _glSum.style.display = "none"; _glSum.classList.remove("gl-summary-out"); });
+            }
             (async () => {
               await Promise.all([
                 (async () => {
@@ -11894,6 +12791,7 @@ document.addEventListener('keydown', e => {
                 _ssExiting ? anim.done(_ss) : Promise.resolve(),
                 _ctcPromise,
                 _h5Promise,
+                _glSumPromise,
               ]);
               // 2s buffer so non-host isn't racing the round-type picker.
               // Skip on round 1 — nothing is exiting at game start.
@@ -11920,6 +12818,11 @@ document.addEventListener('keydown', e => {
             (async () => {
               await _rtsIntroPromise;
               enterCommonThreadRound(handleModuleComplete);
+            })();
+          } else if (data.selectedRoundType === 'grid-lock') {
+            (async () => {
+              await _rtsIntroPromise;
+              enterGridLockRound(handleModuleComplete);
             })();
           } else {
             setMusicMode('playlist');
@@ -12047,9 +12950,17 @@ document.addEventListener('keydown', e => {
             categoryMultiplier = data.categoryMultiplier || 1;
             if (data.usedQuestions) usedQuestions = [...data.usedQuestions];
             // Use the same exit animation as the host (Path A slide-out +
-            // Path B glow → CRT on the selected category), then build question screen
+            // Path B glow → CRT on the selected category), then build question screen.
+            // Wait for any in-flight module cinematic (Poll Position / Survey
+            // auto-picks, which fast-forward straight to gameplay without a
+            // category-select pit-stop) so the question screen doesn't race in
+            // on top of the splash.
             const _pickedCat = currentQuestion.category;
-            animateCategoryTransition(_pickedCat).then(() => setupQuestionScreenForSpectator());
+            (async () => {
+              await (window._moduleIntroPromise || Promise.resolve());
+              await animateCategoryTransition(_pickedCat);
+              setupQuestionScreenForSpectator();
+            })();
           }
           break;
         case 'steal':
@@ -12120,6 +13031,7 @@ document.addEventListener('keydown', e => {
           // from the prior game.
           resetCommonThreadState();
           resetScribbleState();
+          resetGridLockState();
           // Tear down face-off DOM if it was showing
           resetFaceoffState();
           {
@@ -12300,6 +13212,9 @@ document.addEventListener('keydown', e => {
       if (scribbleState.active && !inRoundResultEarly) { updateScribbleRoleUI(); return; }
       // Face-off has its own role UI — don't let normal turn logic override it
       if (faceoffState.active && !inRoundResultEarly) { updateFaceoffRoleUI(); return; }
+      // Grid Lock is all-players-simultaneous — every player types into their
+      // own word list. Don't gate input by teamTurn/playerIndex.
+      if (gridLockState.active && !inRoundResultEarly) return;
       const isActive = (activeUid === myUid);
       const guessInput = document.getElementById('guess');
       const inputArea = document.getElementById('input-area');
@@ -13020,12 +13935,13 @@ document.addEventListener('keydown', e => {
     // picker logo on a module-colored background instead of phase text.
     // CSS hides all .ph-span:not(.ph-module-logo), so existing setPhase /
     // setPhaseText calls still run as harmless fallbacks if this is cleared.
-    const _MOD_CLASSES = ['mod-highfive', 'mod-pollposition', 'mod-scribble', 'mod-commonthread', 'mod-faceoff'];
+    const _MOD_CLASSES = ['mod-highfive', 'mod-pollposition', 'mod-scribble', 'mod-commonthread', 'mod-gridlock', 'mod-faceoff'];
     const _MOD_KEY_TO_CLASS = {
       'high-five': 'mod-highfive',
       'survey': 'mod-pollposition',
       'secret-scribble': 'mod-scribble',
       'common-thread': 'mod-commonthread',
+      'grid-lock': 'mod-gridlock',
       'faceoff': 'mod-faceoff',
     };
     function _getModuleLogoHtml(moduleKey) {
@@ -13239,6 +14155,82 @@ document.addEventListener('keydown', e => {
       // internal state machine for inter-module cleanliness.
       const scribble = document.getElementById("scribble-container");
       if (scribble) scribble.style.display = "none";
+
+      // Grid Lock container
+      const glEl = document.getElementById("grid-lock-container");
+      if (glEl) {
+        glEl.style.display = "none";
+        glEl.classList.remove("slide-in", "gl-reveal-mode");
+        glEl.classList.add("offscreen");
+        const glBoard = document.getElementById("grid-lock-board");
+        if (glBoard) glBoard.innerHTML = "";
+        const glList = document.getElementById("grid-lock-wordlist");
+        if (glList) glList.innerHTML = "";
+        // Re-home the board back into its play-mode parent (reveal mode
+        // re-parents it into gl-reveal-grid-holder).
+        const playWrap = glEl.querySelector(".gl-right-col .gl-board-wrap");
+        if (playWrap && glBoard && glBoard.parentElement !== playWrap) {
+          playWrap.insertBefore(glBoard, playWrap.firstChild);
+        }
+        // COMPREHENSIVE animation-class cleanup. `forwards` fill-mode on
+        // exit animations pins opacity/transform to the end state, which
+        // leaves the element invisible/off-screen on the NEXT round unless
+        // the class is explicitly removed here. Touches everything in the
+        // grid-lock container tree that could have lingering state.
+        const leftCol  = glEl.querySelector(".gl-left-col");
+        const rightCol = glEl.querySelector(".gl-right-col");
+        if (leftCol)  leftCol.classList.remove("gl-play-exit");
+        if (rightCol) rightCol.classList.remove("gl-play-exit");
+        const glCover = document.getElementById("grid-lock-cover");
+        if (glCover) {
+          glCover.classList.remove("gl-cover-off", "gl-cover-shake");
+          glCover.style.display = "";
+        }
+        const glPane = document.getElementById("gl-reveal-pane");
+        if (glPane) {
+          glPane.style.display = "none";
+          glPane.style.visibility = "";
+          // Strip entry/exit animation classes from each quadrant so round-2
+          // reveal can re-trigger them cleanly.
+          ["gl-reveal-red", "gl-reveal-blue", "gl-reveal-cancelled", "gl-reveal-grid-holder"].forEach(id => {
+            const q = document.getElementById(id);
+            if (q) q.classList.remove("gl-pre-enter-left", "gl-pre-enter-right", "gl-enter-left", "gl-enter-right", "gl-exit-left", "gl-exit-right");
+          });
+          // Clear ROWS, not the track wrapper itself — the track div is
+          // infrastructure (CSS marquee animation target) and must persist
+          // across rounds. Wiping list innerHTML destroyed it, causing
+          // round-2+ reveals to silently skip every row (trackFor → null).
+          ["gl-reveal-red-list", "gl-reveal-blue-list", "gl-reveal-cancelled-list"].forEach(id => {
+            const el = document.getElementById(id); if (!el) return;
+            el.classList.remove("gl-marquee-active");
+            const track = el.querySelector(".gl-reveal-list-track");
+            if (track) {
+              track.innerHTML = "";
+              track.style.transform = "";
+              track.style.removeProperty("--gl-marquee-distance");
+              track.style.removeProperty("--gl-marquee-dur");
+            } else {
+              el.innerHTML = '<div class="gl-reveal-list-track"></div>';
+            }
+          });
+        }
+        const glSum = document.getElementById("gl-summary");
+        if (glSum) {
+          glSum.style.display = "none";
+          glSum.classList.remove("gl-summary-out");
+          glSum.style.animation = "";
+        }
+        // Strip any path-flash classes left on tiles (they normally self-clean
+        // but if a stagger was aborted mid-run they can stick).
+        document.querySelectorAll(".gl-tile.gl-flash-red, .gl-tile.gl-flash-blue").forEach(el => {
+          el.classList.remove("gl-flash-red", "gl-flash-blue");
+        });
+      }
+      // Always reset grid-lock state + strip any stale overlays, even if
+      // active was already false — belt-and-suspenders for bug class where
+      // round-specific flags (_revealRan, entries) leak between rounds.
+      if (typeof resetGridLockState === "function") resetGridLockState();
+      document.querySelectorAll('.gl-times-up-overlay').forEach(n => n.remove());
 
       // Common Thread container
       const ctEl = document.getElementById("common-thread-container");
@@ -13504,6 +14496,18 @@ document.addEventListener('keydown', e => {
       // other exit animations.
       const h5SummaryExitPromise = hideH5Summary();
 
+      // Grid-lock summary — slide it up off-screen if still visible.
+      const glSummaryExit = document.getElementById("gl-summary");
+      const glSummaryExiting = glSummaryExit && glSummaryExit.style.display !== "none";
+      let glSummaryExitPromise = null;
+      if (glSummaryExiting) {
+        glSummaryExit.classList.remove("gl-summary-out");
+        void glSummaryExit.offsetWidth;
+        glSummaryExit.classList.add("gl-summary-out");
+        glSummaryExitPromise = new Promise(r => setTimeout(r, 470 / (gameSpeed || 1)))
+          .then(() => { glSummaryExit.style.display = "none"; glSummaryExit.classList.remove("gl-summary-out"); });
+      }
+
       await Promise.all([
         // Content-tv tv-off (collapses in place, replaces old slide-out-left).
         // Input-area stays put — it's the persistent home base.
@@ -13515,6 +14519,7 @@ document.addEventListener('keydown', e => {
         scribbleSummaryExitPromise,
         ctContainerExitPromise,
         h5SummaryExitPromise,
+        glSummaryExitPromise,
       ]);
 
       // 2-second breathing buffer before the next phase kicks off. Gives
@@ -13908,6 +14913,8 @@ document.addEventListener('keydown', e => {
           // 'spy' directly, matching the scribble pattern. The intermediate
           // playlist call caused a 1.5–2s flash of default bg music.
           enterCommonThreadRound(handleModuleComplete);
+        } else if (moduleKey === 'grid-lock') {
+          enterGridLockRound(handleModuleComplete);
         }
       })();
     }
@@ -14072,6 +15079,17 @@ document.addEventListener('keydown', e => {
         enter(onComplete) { enterCommonThreadRound(onComplete); },
         reset() { resetCommonThreadState(); },
       },
+      'grid-lock': {
+        label: 'Grid Lock',
+        description: 'Trace words on a 5x5 grid. Beat the rolling lock.',
+        colorClass: 'mod-gridlock',
+        minPlayersPerTeam: 1,
+        intro: { title: 'GRID\nLOCK', subtitle: 'Trace words around the lock', accent: '#fba300' },
+        artHtml: () => _buildGlPickerArtHtml(),
+        cinematic: () => _playGlCinematic(),
+        enter(onComplete) { enterGridLockRound(onComplete); },
+        reset() { resetGridLockState(); },
+      },
     };
 
     // Called by non-feud modules when they finish. Folds scores into the
@@ -14128,6 +15146,13 @@ document.addEventListener('keydown', e => {
       if (isMultiplayer && isHost) {
         if (completedRoundType === 'common-thread') {
           syncState({ commonThreadState: null });
+        }
+        if (completedRoundType === 'grid-lock') {
+          // Wipe gridLockState in Firestore so subsequent CT/H5/etc.
+          // round snapshots don't carry stale { phase: 'reveal', entries }
+          // that re-triggers glRunReveal on non-host at the start of
+          // the next round. See CLAUDE.md "stale grid-lock sync" note.
+          syncState({ gridLockState: null });
         }
       }
 
@@ -17751,6 +18776,1550 @@ document.addEventListener('keydown', e => {
     if (document.readyState !== "loading") scribbleWireDrawingEvents();
 
     // ─────────────────────────────────────────────────────────────────────
+    // Grid Lock module — Boggle-style 5x5 word grid (commit 1: local-only core)
+    // ─────────────────────────────────────────────────────────────────────
+
+    const GL_LETTER_POINTS = {
+      A:5, E:5, I:5, O:5, U:5, L:5, N:5, S:5, T:5, R:5,
+      D:10, G:10, B:10, C:10, M:10, P:10,
+      F:15, H:15, V:15, W:15, Y:15, K:15,
+      J:20, X:20,
+      Qu:25, Z:25,
+    };
+    const GL_LETTER_WEIGHTS = {
+      A:9, B:2, C:2, D:4, E:12, F:2, G:3, H:2, I:9, J:1,
+      K:1, L:4, M:2, N:6, O:8, P:2, Qu:1, R:6, S:4, T:6,
+      U:4, V:2, W:2, X:1, Y:2, Z:1,
+    };
+    const GL_LETTER_CAPS = {
+      J:1, X:1, Z:1, Qu:1, K:2, V:2, W:2, Y:2, F:2, H:2,
+      E:4, A:4, I:4, O:4, U:3,
+      N:4, R:4, S:4, T:4, L:3,
+    };
+    const GL_CLUSTER_PENALTY = 0.5;
+    const GL_VOWELS = new Set(['A','E','I','O','U']);
+    const GL_VOWEL_FLOOR = 7;
+    const GL_ROW_COL_VOWEL_MAX = 4;
+    const GL_SOLVABILITY_MIN = 150;
+    const GL_GRID_N = 5;
+    const GL_ROUND_SECONDS = 180;
+    const GL_LOCK_INTERVAL = 30;
+    const GL_FIRST_BONUS = 50;
+    const GL_COUNT_BONUS = 100;
+
+    let GL_DICT = null;
+    let GL_PREFIX = null;
+    let GL_DICT_LOADING = null;
+
+    function loadGridLockDict() {
+      if (GL_DICT) return Promise.resolve();
+      if (GL_DICT_LOADING) return GL_DICT_LOADING;
+      GL_DICT_LOADING = fetch('dictionary.txt')
+        .then(r => r.text())
+        .then(text => {
+          const set = new Set();
+          const pref = new Set();
+          for (const raw of text.split(/\r?\n/)) {
+            const w = raw.trim().toUpperCase();
+            if (w.length >= 4 && /^[A-Z]+$/.test(w)) {
+              set.add(w);
+              for (let i = 2; i <= w.length; i++) pref.add(w.slice(0, i));
+            }
+          }
+          GL_DICT = set;
+          GL_PREFIX = pref;
+          console.log(`[grid-lock] dictionary loaded: ${set.size} words`);
+        })
+        .catch(e => {
+          console.warn('[grid-lock] failed to load dictionary.txt', e);
+          GL_DICT = new Set();
+          GL_PREFIX = new Set();
+        });
+      return GL_DICT_LOADING;
+    }
+    loadGridLockDict();
+
+    function glNeighbors(idx) {
+      const r = Math.floor(idx / GL_GRID_N), c = idx % GL_GRID_N;
+      const out = [];
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < GL_GRID_N && nc >= 0 && nc < GL_GRID_N) out.push(nr * GL_GRID_N + nc);
+        }
+      }
+      return out;
+    }
+    function glTileChars(tile) { return tile === 'Qu' ? 'QU' : tile; }
+
+    function glPickWeighted(weights, excludeFull, tiles, idx) {
+      const adjLetters = new Set();
+      if (tiles && idx != null) {
+        for (const n of glNeighbors(idx)) {
+          if (n < tiles.length && tiles[n] != null) adjLetters.add(tiles[n]);
+        }
+      }
+      const entries = Object.entries(weights)
+        .filter(([k]) => !excludeFull.has(k))
+        .map(([k, w]) => [k, adjLetters.has(k) ? w * GL_CLUSTER_PENALTY : w]);
+      const total = entries.reduce((s, [, w]) => s + w, 0);
+      let r = Math.random() * total;
+      for (const [k, w] of entries) { if ((r -= w) < 0) return k; }
+      return entries[entries.length - 1][0];
+    }
+    function glRowColVowelsOk(tiles) {
+      for (let r = 0; r < GL_GRID_N; r++) {
+        let rowV = 0, colV = 0;
+        for (let c = 0; c < GL_GRID_N; c++) {
+          if (GL_VOWELS.has(tiles[r * GL_GRID_N + c])) rowV++;
+          if (GL_VOWELS.has(tiles[c * GL_GRID_N + r])) colV++;
+        }
+        if (rowV >= GL_ROW_COL_VOWEL_MAX || colV >= GL_ROW_COL_VOWEL_MAX) return false;
+      }
+      return true;
+    }
+    function glBuildGridOnce() {
+      const tiles = new Array(GL_GRID_N * GL_GRID_N).fill(null);
+      const counts = {};
+      const full = new Set();
+      for (let i = 0; i < GL_GRID_N * GL_GRID_N; i++) {
+        const letter = glPickWeighted(GL_LETTER_WEIGHTS, full, tiles, i);
+        tiles[i] = letter;
+        counts[letter] = (counts[letter] || 0) + 1;
+        const cap = GL_LETTER_CAPS[letter] ?? 25;
+        if (counts[letter] >= cap) full.add(letter);
+      }
+      return tiles;
+    }
+    function glGenerateGrid() {
+      for (let attempt = 0; attempt < 80; attempt++) {
+        const tiles = glBuildGridOnce();
+        const vowelCount = tiles.filter(t => GL_VOWELS.has(t)).length;
+        if (vowelCount < GL_VOWEL_FLOOR) continue;
+        if (!glRowColVowelsOk(tiles)) continue;
+        return tiles;
+      }
+      return glBuildGridOnce();
+    }
+    function glSolveGrid(tiles) {
+      const found = new Set();
+      if (!GL_DICT || !GL_PREFIX) return found;
+      const visited = new Array(tiles.length).fill(false);
+      function walk(idx, prefix) {
+        visited[idx] = true;
+        const next = prefix + glTileChars(tiles[idx]);
+        if (next.length >= 2 && !GL_PREFIX.has(next)) { visited[idx] = false; return; }
+        if (next.length >= 4 && GL_DICT.has(next)) found.add(next);
+        if (next.length < 15) {
+          for (const n of glNeighbors(idx)) if (!visited[n]) walk(n, next);
+        }
+        visited[idx] = false;
+      }
+      for (let i = 0; i < tiles.length; i++) walk(i, '');
+      return found;
+    }
+    function glGenerateSolvableGrid() {
+      for (let attempt = 0; attempt < 60; attempt++) {
+        const tiles = glGenerateGrid();
+        const solved = glSolveGrid(tiles);
+        if (solved.size >= GL_SOLVABILITY_MIN) {
+          console.log(`[grid-lock] board ready — ${solved.size} words, ${attempt + 1} reroll(s)`);
+          return { tiles, solutions: solved, attempts: attempt + 1 };
+        }
+      }
+      const tiles = glGenerateGrid();
+      const solutions = glSolveGrid(tiles);
+      console.warn(`[grid-lock] solvability floor not met — ${solutions.size} words after 60 attempts`);
+      return { tiles, solutions, attempts: 60 };
+    }
+    function glWordPath(word, tiles, lockedIdx) {
+      const locked = lockedIdx == null ? -1 : lockedIdx;
+      const visited = new Array(tiles.length).fill(false);
+      function dfs(idx, pos) {
+        if (idx === locked) return false;
+        if (pos >= word.length) return true;
+        const chars = glTileChars(tiles[idx]);
+        if (word.slice(pos, pos + chars.length) !== chars) return false;
+        visited[idx] = true;
+        const nextPos = pos + chars.length;
+        if (nextPos === word.length) { visited[idx] = false; return true; }
+        for (const n of glNeighbors(idx)) {
+          if (!visited[n] && dfs(n, nextPos)) { visited[idx] = false; return true; }
+        }
+        visited[idx] = false;
+        return false;
+      }
+      for (let i = 0; i < tiles.length; i++) {
+        if (i === locked) continue;
+        if (dfs(i, 0)) return true;
+      }
+      return false;
+    }
+    function glWordScore(word, tiles, lockedIdx) {
+      const locked = lockedIdx == null ? -1 : lockedIdx;
+      let result = 0;
+      const visited = new Array(tiles.length).fill(false);
+      const path = [];
+      function dfs(idx, pos) {
+        if (idx === locked) return false;
+        const chars = glTileChars(tiles[idx]);
+        if (word.slice(pos, pos + chars.length) !== chars) return false;
+        visited[idx] = true;
+        path.push(idx);
+        const nextPos = pos + chars.length;
+        if (nextPos === word.length) {
+          result = path.reduce((s, i) => s + GL_LETTER_POINTS[tiles[i]], 0);
+          visited[idx] = false; path.pop();
+          return true;
+        }
+        for (const n of glNeighbors(idx)) {
+          if (!visited[n] && dfs(n, nextPos)) { visited[idx] = false; path.pop(); return true; }
+        }
+        visited[idx] = false; path.pop();
+        return false;
+      }
+      for (let i = 0; i < tiles.length; i++) {
+        if (i === locked) continue;
+        if (dfs(i, 0)) return result;
+      }
+      return 0;
+    }
+    // Cancelled words: a word is cancelled if it appears as a valid entry
+    // on BOTH teams. Cancelled words score nothing, don't earn first-entry
+    // or longest-word bonuses. They DO still count toward the "most valid
+    // words" bonus (cancellation-blind per design).
+    function glCancelledSet(entries) {
+      const byTeam = [new Set(), new Set()];
+      for (const e of entries) {
+        if (!e.valid) continue;
+        byTeam[e.team].add(e.word);
+      }
+      const cancelled = new Set();
+      for (const w of byTeam[0]) if (byTeam[1].has(w)) cancelled.add(w);
+      return cancelled;
+    }
+
+    function glComputeBonuses(entries) {
+      const firstBonus = {};
+      const longestMultWords = { 0: new Set(), 1: new Set() };
+      const countBonus = {};
+      const cancelled = glCancelledSet(entries);
+
+      // First-entry: only among words that actually scored (not cancelled).
+      const firstByWord = new Map();
+      for (const e of entries) {
+        if (!e.valid) continue;
+        if (cancelled.has(e.word)) continue;
+        const prev = firstByWord.get(e.word);
+        if (!prev || e.timestamp < prev.timestamp) firstByWord.set(e.word, e);
+      }
+      for (const e of firstByWord.values()) firstBonus[e.player] = (firstBonus[e.player] || 0) + GL_FIRST_BONUS;
+
+      // Longest × 2: length computed ACROSS THE WHOLE ROUND (not per
+      // team), restricted to uncancelled scored words. If the longest
+      // scored word is 6 letters, only 6-letter uncancelled words on
+      // either team qualify — a team whose longest was 4 gets nothing.
+      let longestLen = 0;
+      const teamValidUncancelled = [[], []];
+      for (const e of entries) {
+        if (!e.valid) continue;
+        if (cancelled.has(e.word)) continue;
+        teamValidUncancelled[e.team].push(e);
+        if (e.word.length > longestLen) longestLen = e.word.length;
+      }
+      if (longestLen > 0) {
+        for (const team of [0, 1]) {
+          for (const e of teamValidUncancelled[team]) {
+            if (e.word.length === longestLen) longestMultWords[team].add(e.word);
+          }
+        }
+      }
+
+      // "Most valid words" bonus: cancellation-blind — every valid entry
+      // counts (a player can dominate submission-count even if every one
+      // of their words gets cancelled by the other team).
+      const perPlayer = {};
+      for (const e of entries) {
+        if (!e.valid) continue;
+        perPlayer[e.player] = (perPlayer[e.player] || 0) + 1;
+      }
+      let maxCount = 0;
+      for (const c of Object.values(perPlayer)) if (c > maxCount) maxCount = c;
+      if (maxCount > 0) {
+        // Tie split: bonus is divided evenly among all players tied for
+        // the most valid words (cross-team), floor of the division. Any
+        // remainder from the floor is discarded — solo winner: 100, two
+        // tied: 50/50, three tied: 33/33/33 (1 dropped).
+        const winners = Object.entries(perPlayer).filter(([, c]) => c === maxCount);
+        const share = Math.floor(GL_COUNT_BONUS / winners.length);
+        for (const [player] of winners) {
+          countBonus[player] = (countBonus[player] || 0) + share;
+        }
+      }
+      return { firstBonus, longestMultWords, countBonus, cancelled };
+    }
+
+    const gridLockState = {
+      active: false,
+      phase: null, // 'intro' | 'play' | 'reveal' | 'summary'
+      tiles: [],
+      solutions: new Set(),
+      lockedIdx: null,
+      lockHistory: [],
+      entries: [],                     // [{word, player, team, valid, points, timestamp}]
+      submittedByPlayer: {},           // player -> Set of already-submitted words (host-local only)
+      timeLeft: GL_ROUND_SECONDS,
+      roundEndsAt: null,               // wall-clock ms, host-authoritative; drives non-host countdown
+      timerHandle: null,
+      lockHandle: null,
+      introHandles: [],
+      onComplete: null,
+    };
+
+    function resetGridLockState() {
+      if (gridLockState.timerHandle) { clearInterval(gridLockState.timerHandle); gridLockState.timerHandle = null; }
+      if (gridLockState.lockHandle) { clearInterval(gridLockState.lockHandle); gridLockState.lockHandle = null; }
+      if (gridLockState.introHandles) gridLockState.introHandles.forEach(h => clearTimeout(h));
+      gridLockState.introHandles = [];
+      // Bump generation so any prior in-flight glRunReveal sees a mismatch
+      // at its next await boundary and bails out cleanly (prevents round-1
+      // stagger loop from writing stale rows into round-2 tracks).
+      gridLockState._revealGen = (gridLockState._revealGen || 0) + 1;
+      gridLockState.active = false;
+      gridLockState.phase = null;
+      gridLockState.tiles = [];
+      gridLockState.solutions = new Set();
+      gridLockState.lockedIdx = null;
+      gridLockState.lockHistory = [];
+      gridLockState.entries = [];
+      gridLockState.submittedByPlayer = {};
+      gridLockState._localRejects = [];
+      gridLockState.timeLeft = GL_ROUND_SECONDS;
+      gridLockState.roundEndsAt = null;
+      gridLockState._revealRan = false;
+      gridLockState._summaryRan = false;
+      gridLockState._revealTotals = null;
+      gridLockState._bonuses = null;
+      gridLockState.onComplete = null;
+    }
+
+    function glLocalPlayerName() {
+      if (isMultiplayer && myUid) {
+        for (const t of [0, 1]) {
+          const idx = (teamPlayerUids[t] || []).indexOf(myUid);
+          if (idx >= 0) return (teamPlayers[t] && teamPlayers[t][idx]) || `Player`;
+        }
+      }
+      return (teamPlayers[0] && teamPlayers[0][0]) || "You";
+    }
+    function glLocalPlayerTeam() {
+      if (isMultiplayer && myUid) {
+        if ((teamPlayerUids[1] || []).includes(myUid)) return 1;
+        return 0;
+      }
+      return 0;
+    }
+
+    function glFormatTime(sec) {
+      const m = Math.floor(sec / 60), s = sec % 60;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
+
+    function glRenderBoard() {
+      const grid = document.getElementById('grid-lock-board');
+      if (!grid) return;
+      grid.innerHTML = '';
+      gridLockState.tiles.forEach((tile, i) => {
+        const el = document.createElement('div');
+        el.className = 'gl-tile';
+        if (i === gridLockState.lockedIdx) el.classList.add('locked');
+        el.textContent = tile;
+        const pts = document.createElement('span');
+        pts.className = 'gl-pts';
+        pts.textContent = GL_LETTER_POINTS[tile];
+        el.appendChild(pts);
+        grid.appendChild(el);
+      });
+    }
+    function glUpdateLockDisplay() {
+      const tileEls = document.querySelectorAll('#grid-lock-board .gl-tile');
+      tileEls.forEach((el, i) => el.classList.toggle('locked', i === gridLockState.lockedIdx));
+    }
+    function glPickNextLockIdx() {
+      const used = new Set(gridLockState.lockHistory);
+      const candidates = [];
+      for (let i = 0; i < gridLockState.tiles.length; i++) if (!used.has(i)) candidates.push(i);
+      if (!candidates.length) return null;
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+    function glRotateLock() {
+      if (gridLockState.phase !== 'play') return;
+      const next = glPickNextLockIdx();
+      gridLockState.lockedIdx = next;
+      if (next != null) gridLockState.lockHistory.push(next);
+      glUpdateLockDisplay();
+      glSyncState();
+    }
+
+    function glRenderWordList() {
+      const listEl = document.getElementById('grid-lock-wordlist');
+      if (!listEl) return;
+      const myName = glLocalPlayerName();
+      const synced = gridLockState.entries.filter(e => e.player === myName);
+      const localRejects = (gridLockState._localRejects || []).filter(e => e.player === myName);
+      const mine = synced.concat(localRejects).sort((a, b) => a.timestamp - b.timestamp);
+      listEl.innerHTML = '';
+      let stickToBottom = true;
+      if (listEl.dataset.userScrolled === "1") stickToBottom = false;
+      mine.forEach(e => {
+        const row = document.createElement('div');
+        row.className = 'gl-wl-row ' + (e.valid ? 'ok' : 'bad');
+        const w = document.createElement('span');
+        w.className = 'gl-wl-word';
+        w.textContent = e.word;
+        const p = document.createElement('span');
+        p.className = 'gl-wl-pts';
+        p.textContent = e.valid ? `+${e.points}` : (e.reason || '✗');
+        row.appendChild(w);
+        row.appendChild(p);
+        listEl.appendChild(row);
+      });
+      if (stickToBottom) listEl.scrollTop = listEl.scrollHeight;
+      glUpdateHeader();
+    }
+    function glUpdateHeader() {
+      const myName = glLocalPlayerName();
+      const mine = gridLockState.entries.filter(e => e.player === myName && e.valid);
+      const count = mine.length;
+      const pts = mine.reduce((s, e) => s + (e.points || 0), 0);
+      const cEl = document.getElementById('gl-header-count');
+      const pEl = document.getElementById('gl-header-score');
+      if (cEl) cEl.textContent = count;
+      if (pEl) pEl.textContent = pts;
+    }
+    function glUpdateTimerDisplay() {
+      const el = document.getElementById('grid-lock-timer');
+      if (!el) return;
+      el.textContent = glFormatTime(gridLockState.timeLeft);
+      el.classList.toggle('warn', gridLockState.timeLeft <= 30 && gridLockState.timeLeft > 0);
+      el.classList.toggle('done', gridLockState.timeLeft === 0);
+    }
+
+    // ── Multiplayer sync (host-authoritative). ─────────────────────────
+    // Host writes gridLockState snapshot to Firestore on every meaningful
+    // mutation (board generation, lock rotation, new entry). Non-hosts
+    // reconcile via glApplySyncedState. Timer is driven by wall-clock
+    // roundEndsAt so all clients display a consistent countdown without
+    // per-second syncs.
+    function glSyncState() {
+      if (!isMultiplayer || !isHost) return;
+      const s = gridLockState;
+      const payload = {
+        phase: s.phase,
+        tiles: s.tiles,
+        lockedIdx: s.lockedIdx,
+        lockHistory: s.lockHistory,
+        entries: s.entries.map(e => ({ ...e })),
+        roundEndsAt: s.roundEndsAt || null,
+      };
+      syncState({
+        gridLockState: payload,
+        matchLog: matchLog.map(e => ({ ...e })),
+        gridLockPlayerStats: { ...gridLockPlayerStats },
+      });
+    }
+
+    function glApplySyncedState(payload) {
+      if (!payload) return;
+      const s = gridLockState;
+      const prevEntriesLen = (s.entries || []).length;
+      const prevTilesKey = (s.tiles || []).join('|');
+      const prevLocked = s.lockedIdx;
+
+      s.phase = payload.phase ?? s.phase;
+      s.tiles = payload.tiles ?? s.tiles;
+      s.lockedIdx = (payload.lockedIdx === undefined) ? s.lockedIdx : payload.lockedIdx;
+      s.lockHistory = payload.lockHistory ?? s.lockHistory;
+      s.entries = payload.entries ?? s.entries;
+      s.roundEndsAt = payload.roundEndsAt ?? s.roundEndsAt;
+      s.active = s.phase === 'intro' || s.phase === 'play' || s.phase === 'reveal';
+
+      const newTilesKey = (s.tiles || []).join('|');
+      if (newTilesKey !== prevTilesKey) glRenderBoard();
+      if (s.lockedIdx !== prevLocked) glUpdateLockDisplay();
+
+      // SFX for our own newly-appended entries (the host's validation result
+      // just arrived back). Non-host path: played here. Host path: glSubmitWord
+      // already played locally and the self-echo listener filter prevents
+      // this block from firing on host.
+      const myName = glLocalPlayerName();
+      if ((s.entries || []).length > prevEntriesLen) {
+        const newOnes = s.entries.slice(prevEntriesLen);
+        let myLatest = null;
+        for (const e of newOnes) { if (e.player === myName) myLatest = e; }
+        if (myLatest && !isHost) {
+          if (myLatest.valid) {
+            playSound(sfxCorrect);
+          } else {
+            playSound(sfxNeutralBeep);
+            const input = document.getElementById('guess');
+            if (input) {
+              input.classList.remove('input-shake');
+              void input.offsetWidth;
+              input.classList.add('input-shake');
+            }
+          }
+        }
+        glRenderWordList();
+      }
+    }
+
+    // Host-side submit validation (runs on host, whether the host submitted
+    // locally or the call came from a non-host's pendingAction).
+    function hostProcessGridLockSubmit(rawWord, uid) {
+      if (gridLockState.phase !== 'play') return;
+      if (!rawWord) return;
+      const word = String(rawWord).trim().toUpperCase().replace(/[^A-Z]/g, '');
+      if (!word) return;
+
+      // Resolve submitter's name + team from uid.
+      let player = null, team = 0;
+      for (const t of [0, 1]) {
+        const roster = teamPlayerUids[t] || [];
+        const idx = roster.indexOf(uid);
+        if (idx >= 0) { player = (teamPlayers[t] && teamPlayers[t][idx]) || 'Player'; team = t; break; }
+      }
+      if (!player) return; // unknown submitter
+
+      const entry = { word, player, team, valid: false, points: 0, timestamp: Date.now(), reason: null };
+      if (word.length < 4) { entry.reason = 'too short'; }
+      else if (!GL_DICT || !GL_DICT.has(word)) { entry.reason = 'not a word'; }
+      else {
+        const perPlayer = gridLockState.submittedByPlayer[player] || new Set();
+        if (perPlayer.has(word)) { entry.reason = 'duplicate'; }
+        else if (!glWordPath(word, gridLockState.tiles, gridLockState.lockedIdx)) {
+          entry.reason = 'no path';
+        } else {
+          entry.valid = true;
+          entry.points = glWordScore(word, gridLockState.tiles, gridLockState.lockedIdx);
+          perPlayer.add(word);
+          gridLockState.submittedByPlayer[player] = perPlayer;
+        }
+      }
+      gridLockState.entries.push(entry);
+      glRenderWordList();
+      glSyncState();
+    }
+
+    // Non-host countdown: drives local display from synced wall-clock
+    // roundEndsAt. Does not trigger round end (host-authoritative).
+    function glStartNonHostCountdown() {
+      if (gridLockState.timerHandle) clearInterval(gridLockState.timerHandle);
+      const tick = () => {
+        const end = gridLockState.roundEndsAt;
+        if (!end) return;
+        const remaining = Math.max(0, Math.ceil((end - Date.now()) / 1000));
+        gridLockState.timeLeft = remaining;
+        glUpdateTimerDisplay();
+      };
+      tick();
+      gridLockState.timerHandle = setInterval(tick, 250);
+    }
+
+    async function glSubmitWord(raw) {
+      if (gridLockState.phase !== 'play') return;
+      if (!raw) return;
+      const word = raw.trim().toUpperCase().replace(/[^A-Z]/g, '');
+      if (!word) return;
+
+      // Multiplayer non-host: pre-check locally to avoid Firestore round-trip
+      // latency on obvious rejects (length / dict / self-duplicate). Valid
+      // dict words still route to the host for authoritative path + scoring
+      // (lockedIdx may differ from what the non-host last saw).
+      if (isMultiplayer && !isHost) {
+        let localReason = null;
+        const myName = glLocalPlayerName();
+        const myTeam = glLocalPlayerTeam();
+        if (word.length < 4) localReason = 'too short';
+        else if (!GL_DICT || !GL_DICT.has(word)) localReason = 'not a word';
+        else {
+          const already = gridLockState.entries.some(e => e.player === myName && e.valid && e.word === word);
+          if (already) localReason = 'duplicate';
+        }
+        if (localReason) {
+          // Display in my private word list as a struck-through reject.
+          // gridLockState._localRejects is non-host-only; glRenderWordList
+          // appends these after host-synced entries.
+          if (!gridLockState._localRejects) gridLockState._localRejects = [];
+          gridLockState._localRejects.push({
+            word, player: myName, team: myTeam, valid: false, points: 0,
+            timestamp: Date.now(), reason: localReason, _local: true,
+          });
+          glRenderWordList();
+          playSound(sfxNeutralBeep);
+          const input = document.getElementById('guess');
+          if (input) {
+            input.classList.remove('input-shake');
+            void input.offsetWidth;
+            input.classList.add('input-shake');
+          }
+          return;
+        }
+        syncState({ pendingAction: { type: 'gridLockSubmit', word, uid: myUid } });
+        return;
+      }
+
+      // Local/host path: validate locally + play SFX immediately.
+      const myName = glLocalPlayerName();
+      const myTeam = glLocalPlayerTeam();
+      const entry = { word, player: myName, team: myTeam, valid: false, points: 0, timestamp: Date.now(), reason: null };
+
+      if (word.length < 4) { entry.reason = 'too short'; }
+      else if (!GL_DICT || !GL_DICT.has(word)) { entry.reason = 'not a word'; }
+      else {
+        const perPlayer = gridLockState.submittedByPlayer[myName] || new Set();
+        if (perPlayer.has(word)) { entry.reason = 'duplicate'; }
+        else if (!glWordPath(word, gridLockState.tiles, gridLockState.lockedIdx)) {
+          entry.reason = 'no path';
+        } else {
+          entry.valid = true;
+          entry.points = glWordScore(word, gridLockState.tiles, gridLockState.lockedIdx);
+          perPlayer.add(word);
+          gridLockState.submittedByPlayer[myName] = perPlayer;
+        }
+      }
+      gridLockState.entries.push(entry);
+      glRenderWordList();
+      const input = document.getElementById('guess');
+      if (entry.valid) {
+        playSound(sfxCorrect);
+      } else {
+        playSound(sfxNeutralBeep);
+        if (input) {
+          input.classList.remove('input-shake');
+          void input.offsetWidth;
+          input.classList.add('input-shake');
+        }
+      }
+      // Host broadcasts the new entry + any state change to all clients.
+      glSyncState();
+    }
+
+    function glStartTimer() {
+      if (gridLockState.timerHandle) clearInterval(gridLockState.timerHandle);
+      gridLockState.timeLeft = GL_ROUND_SECONDS;
+      // Host stamps wall-clock expiry so non-hosts can render a consistent
+      // countdown without per-second snapshots.
+      if (!isMultiplayer || isHost) {
+        gridLockState.roundEndsAt = Date.now() + GL_ROUND_SECONDS * 1000;
+      }
+      glUpdateTimerDisplay();
+      // Non-host: display-only countdown driven by roundEndsAt.
+      if (isMultiplayer && !isHost) {
+        glStartNonHostCountdown();
+        return;
+      }
+      gridLockState.timerHandle = setInterval(() => {
+        if (gridLockState.phase !== 'play') return;
+        gridLockState.timeLeft--;
+        glUpdateTimerDisplay();
+        const elapsed = GL_ROUND_SECONDS - gridLockState.timeLeft;
+        if (elapsed > 0 && elapsed % GL_LOCK_INTERVAL === 0 && gridLockState.timeLeft > 0) {
+          glRotateLock();
+        }
+        if (gridLockState.timeLeft <= 0) {
+          clearInterval(gridLockState.timerHandle);
+          gridLockState.timerHandle = null;
+          glEndRound();
+        }
+      }, 1000);
+    }
+
+    // ── Reveal (4-quadrant) + Summary (Round Summary Framework) ────────
+    // Called on every client when gridLockState.phase flips to 'reveal'.
+    // Host additionally drives the subsequent handleModuleComplete call.
+
+    // Build three separate ordered groups for the sequential reveal:
+    // cancelled first, then team-0 uncancelled, then team-1 uncancelled.
+    // Each group sorted by word length (asc) then alphabetical (asc).
+    // Cancelled: one row per unique word. Team groups: one row per valid
+    // entry (same-team duplicates each get their own row, consistent
+    // with same-team dupes scoring independently).
+    function _glBuildRevealGroups(entries, cancelled) {
+      const cancelledSeen = new Set();
+      const cancelledRows = [];
+      const teamRows = [[], []];
+      for (const e of entries) {
+        if (!e.valid) continue;
+        if (cancelled.has(e.word)) {
+          if (!cancelledSeen.has(e.word)) {
+            cancelledSeen.add(e.word);
+            cancelledRows.push({ kind: 'cancelled', word: e.word, team: -1, timestamp: e.timestamp, points: 0, player: null });
+          }
+        } else {
+          teamRows[e.team].push({ kind: 'scored', word: e.word, team: e.team, timestamp: e.timestamp, points: e.points || 0, player: e.player });
+        }
+      }
+      const sortFn = (a, b) => (a.word.length - b.word.length) || a.word.localeCompare(b.word);
+      cancelledRows.sort(sortFn);
+      teamRows[0].sort(sortFn);
+      teamRows[1].sort(sortFn);
+      return { cancelled: cancelledRows, team0: teamRows[0], team1: teamRows[1] };
+    }
+
+    // Auto-scroll helper: after a row is appended to a track, translateY
+    // the track so the newest row is visible at the viewport bottom edge
+    // (game-recap-style ticker). CSS transition on .gl-reveal-list-track
+    // animates the slide.
+    function _glAutoScrollTrack(listId) {
+      const listEl = document.getElementById(listId);
+      if (!listEl) return;
+      const track = listEl.querySelector('.gl-reveal-list-track');
+      if (!track) return;
+      const viewportH = listEl.clientHeight;
+      const trackH = track.scrollHeight;
+      if (trackH <= viewportH + 1) {
+        track.style.transform = 'translateY(0)';
+        return;
+      }
+      const offset = trackH - viewportH;
+      track.style.transform = `translateY(-${offset}px)`;
+    }
+
+    // Flash a word's path on the grid in the given team's color. Uses
+    // glWordPath-style DFS that reports the first valid path. Lock is
+    // cleared at reveal time so all paths resolve.
+    function _glFindPath(word, tiles) {
+      const visited = new Array(tiles.length).fill(false);
+      let found = null;
+      function dfs(idx, pos, path) {
+        if (found) return;
+        const chars = glTileChars(tiles[idx]);
+        if (word.slice(pos, pos + chars.length) !== chars) return;
+        visited[idx] = true; path.push(idx);
+        const nextPos = pos + chars.length;
+        if (nextPos === word.length) { found = path.slice(); visited[idx] = false; path.pop(); return; }
+        for (const n of glNeighbors(idx)) if (!visited[n]) dfs(n, nextPos, path);
+        visited[idx] = false; path.pop();
+      }
+      for (let i = 0; i < tiles.length && !found; i++) dfs(i, 0, []);
+      return found;
+    }
+    function glFlashPath(word, team) {
+      const path = _glFindPath(word, gridLockState.tiles);
+      if (!path) return;
+      const cls = team === 0 ? 'gl-flash-red'
+                : team === 1 ? 'gl-flash-blue'
+                : 'gl-flash-red'; // cancelled → neutral red flash (both teams contributed)
+      const grid = document.getElementById('grid-lock-board');
+      if (!grid) return;
+      path.forEach(idx => {
+        const tileEl = grid.children[idx];
+        if (!tileEl) return;
+        tileEl.classList.remove('gl-flash-red', 'gl-flash-blue');
+        void tileEl.offsetWidth;
+        tileEl.classList.add(cls);
+        setTimeout(() => tileEl.classList.remove(cls), 520);
+      });
+    }
+
+    // Show TIME'S UP overlay on module-canvas, hold, then fade out.
+    // Returns after the overlay is removed from DOM.
+    async function _glShowTimesUp(holdMs = 1500) {
+      const host = document.getElementById('module-canvas') || document.getElementById('game-root');
+      if (!host) return;
+      // Pre-warm the bold futura weight used in the card so the first
+      // frame doesn't flash in the serif fallback before the webfont
+      // resolves (matches the showRoundCompleteCard pattern).
+      if (document.fonts && document.fonts.load) {
+        try { await document.fonts.load('bold 4.2rem "futura-100"'); } catch (e) {}
+      }
+      host.querySelectorAll('.gl-times-up-overlay').forEach(n => n.remove());
+      const overlay = document.createElement('div');
+      overlay.className = 'gl-times-up-overlay';
+      overlay.innerHTML = `<div class="gl-times-up-card"><div class="gl-times-up-text">TIME'S UP</div></div>`;
+      host.appendChild(overlay);
+      await new Promise(r => setTimeout(r, holdMs / (gameSpeed || 1)));
+      overlay.classList.add('gl-times-up-out');
+      await new Promise(r => setTimeout(r, 360 / (gameSpeed || 1)));
+      if (overlay.parentElement) overlay.parentElement.removeChild(overlay);
+    }
+
+    // Slide play-mode columns out: left-col fades/slides left,
+    // right-col (grid) fades/slides down. Runs in parallel.
+    async function _glPlayExitAnimations() {
+      const left = document.querySelector('#grid-lock-container > .gl-left-col');
+      const right = document.querySelector('#grid-lock-container > .gl-right-col');
+      if (!left || !right) return;
+      left.classList.add('gl-play-exit');
+      right.classList.add('gl-play-exit');
+      await new Promise(r => setTimeout(r, 520 / (gameSpeed || 1)));
+    }
+
+    // Switch container to reveal mode + re-parent board. Called AFTER
+    // play-exit animations so the layout swap is invisible (both old
+    // columns are already transparent/off-canvas).
+    function glEnterRevealMode() {
+      const container = document.getElementById('grid-lock-container');
+      const pane = document.getElementById('gl-reveal-pane');
+      const holder = document.getElementById('gl-reveal-grid-holder');
+      const board = document.getElementById('grid-lock-board');
+      if (!container || !pane || !holder || !board) return;
+      // Reset any stale visibility / exit classes from a previous round.
+      pane.style.visibility = '';
+      [holder, pane.querySelector('#gl-reveal-cancelled'), pane.querySelector('#gl-reveal-red'), pane.querySelector('#gl-reveal-blue')].forEach(el => {
+        if (el) el.classList.remove('gl-exit-left', 'gl-exit-right');
+      });
+      if (container.classList.contains('gl-reveal-mode')) return;
+      // Move the board into the holder. Detach cover so it doesn't occlude.
+      const cover = document.getElementById('grid-lock-cover');
+      if (cover && cover.parentElement) cover.style.display = 'none';
+      holder.appendChild(board);
+      // Pre-hide every quadrant BEFORE the pane becomes visible so they
+      // never flash at final position. _glEnterQuadrants swaps each
+      // pre-enter class for its enter class to trigger the animation.
+      const red = document.getElementById('gl-reveal-red');
+      const blue = document.getElementById('gl-reveal-blue');
+      const cancelled = document.getElementById('gl-reveal-cancelled');
+      if (holder) holder.classList.add('gl-pre-enter-right');
+      if (cancelled) cancelled.classList.add('gl-pre-enter-right');
+      if (red) red.classList.add('gl-pre-enter-left');
+      if (blue) blue.classList.add('gl-pre-enter-left');
+      pane.style.display = 'grid';
+      container.classList.add('gl-reveal-mode');
+      // Team names header.
+      const redName = document.getElementById('gl-reveal-red-name');
+      const blueName = document.getElementById('gl-reveal-blue-name');
+      if (redName) redName.textContent = (teamNames && teamNames[0]) || 'Red';
+      if (blueName) blueName.textContent = (teamNames && teamNames[1]) || 'Blue';
+      // Phase indicator + input area: disable + "calculating" message.
+      if (typeof setInputAreaMode === "function") {
+        setInputAreaMode({
+          mode: 'disabled',
+          header: 'GRID LOCK',
+          subtext: 'Tallying up…',
+          inputPlaceholder: '',
+        });
+      }
+    }
+
+    // Play the quadrant entrance animations: grid + cancelled from right
+    // in parallel, then team quadrants from left. Each wave resolves
+    // before the next kicks off.
+    async function _glEnterQuadrants() {
+      const grid = document.getElementById('gl-reveal-grid-holder');
+      const cancelled = document.getElementById('gl-reveal-cancelled');
+      const red = document.getElementById('gl-reveal-red');
+      const blue = document.getElementById('gl-reveal-blue');
+      // Swap pre-enter (hidden + offset) for enter animation. Force a
+      // reflow between the removes and adds so the browser registers the
+      // class swap as an animation restart rather than just a style change.
+      const trigger = (el, dir) => {
+        if (!el) return;
+        el.classList.remove('gl-pre-enter-left', 'gl-pre-enter-right', 'gl-enter-left', 'gl-enter-right');
+        void el.offsetWidth;
+        el.classList.add(`gl-enter-${dir}`);
+      };
+      trigger(grid, 'right');
+      trigger(cancelled, 'right');
+      await new Promise(r => setTimeout(r, 520 / (gameSpeed || 1)));
+      trigger(red, 'left');
+      trigger(blue, 'left');
+      await new Promise(r => setTimeout(r, 520 / (gameSpeed || 1)));
+    }
+
+    async function glRunReveal() {
+      // Generation-based abort: bump the gen at entry and capture it locally.
+      // Any PRIOR in-flight glRunReveal invocation that survived a reset
+      // will see a gen mismatch at its next await boundary and exit without
+      // rendering stale rows into the freshly-cleared tracks.
+      const myGen = (gridLockState._revealGen || 0) + 1;
+      gridLockState._revealGen = myGen;
+      const stillAlive = () => gridLockState._revealGen === myGen && gridLockState.active;
+      if (gridLockState._revealRan) return;
+      gridLockState._revealRan = true;
+      const entries = gridLockState.entries || [];
+      if (entries.length === 0) {
+        console.warn('[grid-lock] glRunReveal — no entries; skipping reveal, going straight to summary');
+        gridLockState._bonuses = { firstBonus: {}, longestMultWords: { 0: new Set(), 1: new Set() }, countBonus: {} };
+        await _glShowTimesUp(1500);
+        if (!stillAlive()) return;
+        await _glPlayExitAnimations();
+        if (!stillAlive()) return;
+        await glShowSummary();
+        return;
+      }
+      const bonuses = glComputeBonuses(entries);
+      gridLockState._bonuses = bonuses;
+      // 1. TIME'S UP overlay on module-canvas (1.5s hold).
+      await _glShowTimesUp(1500);
+      if (!stillAlive()) return;
+
+      // 2. Play-mode exit: left-col slides left, right-col slides down.
+      await _glPlayExitAnimations();
+      if (!stillAlive()) return;
+
+      // 3. Swap to reveal mode (reparents board, hides play columns,
+      //    pre-hides quadrants so they don't flash at final position).
+      glEnterRevealMode();
+      gridLockState.lockedIdx = null;
+      glUpdateLockDisplay();
+
+      // 4. Brief beat before quadrants slide in (per spec — gives the
+      //    exit animation room to fully clear before new content arrives).
+      await new Promise(r => setTimeout(r, 500 / (gameSpeed || 1)));
+      if (!stillAlive()) return;
+
+      // 5. Quadrant entry: grid+cancelled from right, then teams from left.
+      await _glEnterQuadrants();
+      if (!stillAlive()) return;
+
+      // Ensure each list has a .gl-reveal-list-track child — if a prior
+      // round's teardown wiped it, create fresh so new rows have somewhere
+      // to land.
+      const trackFor = id => {
+        const list = document.getElementById(id);
+        if (!list) return null;
+        let track = list.querySelector('.gl-reveal-list-track');
+        if (!track) {
+          list.innerHTML = '';
+          track = document.createElement('div');
+          track.className = 'gl-reveal-list-track';
+          list.appendChild(track);
+        }
+        return track;
+      };
+      const redTrack = trackFor('gl-reveal-red-list');
+      const blueTrack = trackFor('gl-reveal-blue-list');
+      const cxTrack = trackFor('gl-reveal-cancelled-list');
+      [redTrack, blueTrack, cxTrack].forEach(t => {
+        if (!t) return;
+        t.innerHTML = '';
+        t.style.transform = 'translateY(0)';
+      });
+
+      const groups = _glBuildRevealGroups(entries, bonuses.cancelled);
+
+      // Precompute per-word running totals + "first entry" winners
+      // (earliest valid uncancelled submission per word). playerPoints
+      // + playerWordCounts drive the two ranking lists in the summary.
+      const runningTotals = [0, 0];
+      const playerPoints = {};
+      const playerWordCounts = {};
+      const playerTeamMap = {};
+      for (const e of entries) {
+        if (!e.valid) continue;
+        playerWordCounts[e.player] = (playerWordCounts[e.player] || 0) + 1;
+        playerTeamMap[e.player] = e.team;
+      }
+      const firstByWord = new Map();
+      for (const e of entries) {
+        if (!e.valid) continue;
+        if (bonuses.cancelled.has(e.word)) continue;
+        const prev = firstByWord.get(e.word);
+        if (!prev || e.timestamp < prev.timestamp) firstByWord.set(e.word, e);
+      }
+      const firstBadgeKey = new Set();
+      for (const e of firstByWord.values()) firstBadgeKey.add(`${e.word}|${e.timestamp}|${e.player}`);
+
+      // Stagger tuning: path flash is 0.5s, so a stagger >= 500ms means
+      // each path has time to fully fade before the next starts, which
+      // the user explicitly asked for ("time to display the word paths").
+      // Sequential reveal: cancelled → team 0 → team 1. Each group runs
+      // its stagger to completion (last path flash resolves) before the
+      // next group starts.
+      const STAGGER = 520;
+      const FLASH_MS = 520;
+      const GROUP_GAP = 600;
+      const revealGroup = async (rows, groupName) => {
+        const track = groupName === 'cancelled' ? cxTrack
+                    : groupName === 'team0' ? redTrack
+                    : blueTrack;
+        const listId = groupName === 'cancelled' ? 'gl-reveal-cancelled-list'
+                    : groupName === 'team0' ? 'gl-reveal-red-list'
+                    : 'gl-reveal-blue-list';
+        if (!track) return;
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          await new Promise(r => setTimeout(r, STAGGER / (gameSpeed || 1)));
+          if (!stillAlive()) return;
+          if (row.kind === 'cancelled') {
+            const rowEl = document.createElement('div');
+            rowEl.className = 'gl-reveal-row gl-cancelled';
+            rowEl.innerHTML = `<span class="gl-reveal-word">${row.word}</span>`;
+            track.appendChild(rowEl);
+            glFlashPath(row.word, 0); // neutral red flash for cancelled
+          } else {
+            const isLongest = bonuses.longestMultWords[row.team].has(row.word);
+            const wordPts = isLongest ? row.points * 2 : row.points;
+            const isFirst = firstBadgeKey.has(`${row.word}|${row.timestamp}|${row.player}`);
+            const firstBonus = isFirst ? GL_FIRST_BONUS : 0;
+            const rowTotal = wordPts + firstBonus;
+            runningTotals[row.team] += rowTotal;
+            playerPoints[row.player] = (playerPoints[row.player] || 0) + rowTotal;
+            const rowEl = document.createElement('div');
+            rowEl.className = 'gl-reveal-row';
+            let badgesHtml = '';
+            if (isLongest) badgesHtml += '<span class="gl-reveal-badge long">×2 LONG</span>';
+            if (isFirst)   badgesHtml += '<span class="gl-reveal-badge first">+50 FIRST</span>';
+            rowEl.innerHTML = `
+              <span class="gl-reveal-word">${row.word}<span class="gl-reveal-player">(${row.player})</span></span>
+              <span class="gl-reveal-badges">${badgesHtml}</span>
+              <span class="gl-reveal-pts">+${rowTotal}</span>
+            `;
+            track.appendChild(rowEl);
+            glFlashPath(row.word, row.team);
+          }
+          // Auto-scroll the track so the newest row stays visible.
+          requestAnimationFrame(() => _glAutoScrollTrack(listId));
+          if (typeof playTick === "function") playTick(Math.min(1, i / Math.max(1, rows.length - 1)), { volume: 0.28 });
+        }
+        // Let the last row's path flash finish before returning.
+        if (rows.length > 0) await new Promise(r => setTimeout(r, FLASH_MS / (gameSpeed || 1)));
+      };
+      await revealGroup(groups.cancelled, 'cancelled');
+      if (!stillAlive()) return;
+      if (groups.cancelled.length > 0 && (groups.team0.length > 0 || groups.team1.length > 0)) {
+        await new Promise(r => setTimeout(r, GROUP_GAP / (gameSpeed || 1)));
+        if (!stillAlive()) return;
+      }
+      await revealGroup(groups.team0, 'team0');
+      if (!stillAlive()) return;
+      if (groups.team0.length > 0 && groups.team1.length > 0) {
+        await new Promise(r => setTimeout(r, GROUP_GAP / (gameSpeed || 1)));
+        if (!stillAlive()) return;
+      }
+      await revealGroup(groups.team1, 'team1');
+      if (!stillAlive()) return;
+
+      // "Most valid words" bonus — appended as a final row per team.
+      if (bonuses.countBonus && Object.keys(bonuses.countBonus).length > 0) {
+        const playerTeam = {};
+        for (const e of entries) playerTeam[e.player] = e.team;
+        await new Promise(r => setTimeout(r, 500 / (gameSpeed || 1)));
+        if (!stillAlive()) return;
+        for (const [p, pts] of Object.entries(bonuses.countBonus)) {
+          const t = playerTeam[p];
+          if (t == null) continue;
+          runningTotals[t] += pts;
+          playerPoints[p] = (playerPoints[p] || 0) + pts;
+          const track = t === 0 ? redTrack : blueTrack;
+          const listId = t === 0 ? 'gl-reveal-red-list' : 'gl-reveal-blue-list';
+          if (track) {
+            const rowEl = document.createElement('div');
+            rowEl.className = 'gl-reveal-row';
+            rowEl.innerHTML = `<span class="gl-reveal-word">MOST WORDS<span class="gl-reveal-player">(${p})</span></span><span class="gl-reveal-badges"></span><span class="gl-reveal-pts">+${pts}</span>`;
+            track.appendChild(rowEl);
+            requestAnimationFrame(() => _glAutoScrollTrack(listId));
+          }
+          // Use a neutral chime for the MOST WORDS bonus row — the gem
+          // glint SFX is reserved for the round-multiplier reveal that
+          // happens later in the summary.
+          if (typeof playChime === "function") playChime(1.1, 0.5);
+        }
+      }
+      gridLockState._revealTotals = runningTotals.slice();
+      gridLockState._playerPoints = playerPoints;
+      gridLockState._playerWordCounts = playerWordCounts;
+      gridLockState._playerTeamMap = playerTeamMap;
+
+      // Activate overflow marquees on each list whose track overflows its
+      // clipped list viewport. Same vertical-loop pattern as the players
+      // list in the scoreboard — duplicate the track, measure offset, loop.
+      _glActivateListMarquees();
+
+      // 1-second hold after the last reveal before the summary slides in
+      // (game-speed scaled so the cadence stays consistent at 2×/3×).
+      await new Promise(r => setTimeout(r, 1000 / (gameSpeed || 1)));
+      if (!stillAlive()) return;
+      await glShowSummary();
+    }
+
+    // Measure each reveal-list viewport against its track. If the track
+    // overflows, duplicate its rows (for seamless loop) and drive the
+    // vertical marquee via the --gl-marquee-distance / --gl-marquee-dur
+    // CSS custom properties.
+    function _glActivateListMarquees() {
+      const ids = ['gl-reveal-red-list', 'gl-reveal-blue-list', 'gl-reveal-cancelled-list'];
+      ids.forEach(id => {
+        const listEl = document.getElementById(id);
+        if (!listEl) return;
+        const track = listEl.querySelector('.gl-reveal-list-track');
+        if (!track) return;
+        listEl.classList.remove('gl-marquee-active');
+        track.style.removeProperty('--gl-marquee-distance');
+        track.style.removeProperty('--gl-marquee-dur');
+        // Strip any prior duplicates (rows marked .gl-marquee-dupe).
+        track.querySelectorAll('.gl-marquee-dupe').forEach(n => n.remove());
+        const viewportH = listEl.clientHeight;
+        const trackH = track.scrollHeight;
+        if (trackH <= viewportH + 2) return; // no overflow
+        // Duplicate child rows so the loop wrap is seamless.
+        const originalChildren = Array.from(track.children);
+        originalChildren.forEach(child => {
+          const clone = child.cloneNode(true);
+          clone.classList.add('gl-marquee-dupe');
+          clone.style.animation = 'none';
+          clone.style.opacity = '1';
+          clone.style.transform = 'translateY(0)';
+          track.appendChild(clone);
+        });
+        // Distance = original track height (scroll exactly one copy then loop).
+        const distance = trackH;
+        // Speed: 40 px/sec feels readable. Min 8s cycle for short overflows.
+        const durSec = Math.max(8, distance / 40);
+        track.style.setProperty('--gl-marquee-distance', `${-distance}px`);
+        track.style.setProperty('--gl-marquee-dur', `${durSec}s`);
+        listEl.classList.add('gl-marquee-active');
+      });
+    }
+
+    // Build the WORDS FOUND list in the summary's right column. Every
+    // unique valid word from the round, alphabetical. Color-coded:
+    // cancelled (gray strike-through), or scored by that team (red/blue).
+    function _glPopulateWordsFound() {
+      const host = document.getElementById('gl-summary-words-found');
+      if (!host) return;
+      let track = host.querySelector('.gl-summary-words-found-track');
+      if (!track) {
+        track = document.createElement('div');
+        track.className = 'gl-summary-words-found-track';
+        host.appendChild(track);
+      }
+      track.innerHTML = '';
+      track.style.transform = '';
+      host.classList.remove('gl-marquee-active');
+      const bonuses = gridLockState._bonuses || glComputeBonuses(gridLockState.entries);
+      const cancelled = bonuses.cancelled;
+      const wordTeams = new Map(); // word → team (0 or 1, or null if cancelled)
+      for (const e of gridLockState.entries || []) {
+        if (!e.valid) continue;
+        if (cancelled.has(e.word)) { wordTeams.set(e.word, null); continue; }
+        if (!wordTeams.has(e.word)) wordTeams.set(e.word, e.team);
+      }
+      const sorted = [...wordTeams.keys()].sort((a, b) => a.localeCompare(b));
+      sorted.forEach(word => {
+        const team = wordTeams.get(word);
+        const row = document.createElement('div');
+        row.className = 'gl-found-row ' + (team === null ? 'cancelled' : (team === 0 ? 'team-red' : 'team-blue'));
+        row.textContent = word;
+        track.appendChild(row);
+      });
+    }
+
+    // WORDS FOUND marquee: if the track overflows its viewport, duplicate
+    // the content and drive a vertical translateY loop via CSS variables.
+    function _glActivateWordsFoundMarquee() {
+      const host = document.getElementById('gl-summary-words-found');
+      if (!host) return;
+      const track = host.querySelector('.gl-summary-words-found-track');
+      if (!track) return;
+      host.classList.remove('gl-marquee-active');
+      track.style.removeProperty('--gl-marquee-distance');
+      track.style.removeProperty('--gl-marquee-dur');
+      track.querySelectorAll('.gl-marquee-dupe').forEach(n => n.remove());
+      const viewportH = host.clientHeight;
+      const trackH = track.scrollHeight;
+      if (trackH <= viewportH + 2) return;
+      const originals = Array.from(track.children);
+      originals.forEach(c => {
+        const clone = c.cloneNode(true);
+        clone.classList.add('gl-marquee-dupe');
+        track.appendChild(clone);
+      });
+      const durSec = Math.max(10, trackH / 35);
+      track.style.setProperty('--gl-marquee-distance', `${-trackH}px`);
+      track.style.setProperty('--gl-marquee-dur', `${durSec}s`);
+      host.classList.add('gl-marquee-active');
+    }
+
+    async function glShowSummary() {
+      if (gridLockState._summaryRan) return;
+      gridLockState._summaryRan = true;
+      const myGen = gridLockState._revealGen;
+      const stillAlive = () => gridLockState._revealGen === myGen && gridLockState.active;
+      const totals = gridLockState._revealTotals || [0, 0];
+      // Subtitle is deferred — winner reveal happens during the summary
+      // countup, not up front. Card reads "FINALIZING SCORING" per user spec.
+      if (typeof showRoundCompleteCard === "function") {
+        await showRoundCompleteCard({ title: 'ROUND COMPLETE', subtitle: 'FINALIZING SCORING', holdMs: 1600, extraClass: 'rcc-gl' });
+      }
+      if (!stillAlive()) return;
+
+      // Exit the reveal quadrants in the opposite direction they entered:
+      // grid + cancelled slide out right, team quadrants slide out left.
+      // Runs in parallel so the pane is visually cleared in ~450ms.
+      const _grid = document.getElementById('gl-reveal-grid-holder');
+      const _cancelled = document.getElementById('gl-reveal-cancelled');
+      const _red = document.getElementById('gl-reveal-red');
+      const _blue = document.getElementById('gl-reveal-blue');
+      const addExit = (el, dir) => {
+        if (!el) return;
+        el.classList.remove('gl-enter-left', 'gl-enter-right', 'gl-pre-enter-left', 'gl-pre-enter-right', 'gl-exit-left', 'gl-exit-right');
+        void el.offsetWidth;
+        el.classList.add(`gl-exit-${dir}`);
+      };
+      addExit(_grid, 'right');
+      addExit(_cancelled, 'right');
+      addExit(_red, 'left');
+      addExit(_blue, 'left');
+      await new Promise(r => setTimeout(r, 470 / (gameSpeed || 1)));
+      if (!stillAlive()) return;
+      // Hide the pane outright — the summary panel slides in on top next.
+      const _pane = document.getElementById('gl-reveal-pane');
+      if (_pane) _pane.style.visibility = 'hidden';
+
+      // Slide summary panel in over the reveal pane.
+      const sum = document.getElementById('gl-summary');
+      const redNameEl = document.getElementById('gl-summary-red-name');
+      const blueNameEl = document.getElementById('gl-summary-blue-name');
+      const redScoreEl = document.getElementById('gl-summary-red-score');
+      const blueScoreEl = document.getElementById('gl-summary-blue-score');
+      if (redNameEl) redNameEl.textContent = (teamNames && teamNames[0]) || 'Red';
+      if (blueNameEl) blueNameEl.textContent = (teamNames && teamNames[1]) || 'Blue';
+      if (redScoreEl) redScoreEl.textContent = '0';
+      if (blueScoreEl) blueScoreEl.textContent = '0';
+
+      // Populate player ranking columns (words submitted + points scored).
+      const pTeam = gridLockState._playerTeamMap || {};
+      const teamCls = t => t === 0 ? 'team-red' : (t === 1 ? 'team-blue' : '');
+      const populateRank = (ulId, scoreMap) => {
+        const ul = document.getElementById(ulId);
+        if (!ul) return;
+        ul.innerHTML = '';
+        const entries = Object.entries(scoreMap || {}).sort((a, b) => b[1] - a[1]);
+        entries.slice(0, 6).forEach(([player, val]) => {
+          const li = document.createElement('li');
+          const t = pTeam[player];
+          li.innerHTML = `<span class="gl-rank-name ${teamCls(t)}">${player}</span><span class="gl-rank-val">${val}</span>`;
+          ul.appendChild(li);
+        });
+        if (entries.length === 0) {
+          ul.innerHTML = '<li style="color:#666;font-style:italic;">—</li>';
+        }
+      };
+      populateRank('gl-summary-words-rank', gridLockState._playerWordCounts);
+      populateRank('gl-summary-points-rank', gridLockState._playerPoints);
+
+      // WORDS FOUND column: every unique valid word across the round,
+      // alphabetical. Gray = cancelled. Red / blue = scored by that team.
+      _glPopulateWordsFound();
+
+      if (sum) { sum.style.display = 'flex'; sum.style.animation = 'none'; void sum.offsetWidth; sum.style.animation = ''; }
+      // Start marquee loop on WORDS FOUND if its final content overflows.
+      requestAnimationFrame(() => _glActivateWordsFoundMarquee());
+      await new Promise(r => setTimeout(r, 600 / (gameSpeed || 1)));
+      if (!stillAlive()) return;
+
+      // Parallel raw countups.
+      const rm = currentRoundMultiplier || 1;
+      const raw = totals;
+      await Promise.all([
+        redScoreEl ? animateCountUp(redScoreEl, 0, raw[0], { tick: true }) : Promise.resolve(),
+        blueScoreEl ? animateCountUp(blueScoreEl, 0, raw[1], { tick: true }) : Promise.resolve(),
+      ]);
+      if (!stillAlive()) return;
+
+      // Round multiplier: gem slam + pulse + post-mult countup per team.
+      let finalTotals = raw.slice();
+      if (rm > 1) {
+        finalTotals = [Math.round(raw[0] * rm), Math.round(raw[1] * rm)];
+        const gemMeta = (typeof getRoundMultiplierGem === "function") ? getRoundMultiplierGem(rm) : null;
+        async function runTeamMult(team) {
+          const scoreEl = team === 0 ? redScoreEl : blueScoreEl;
+          const teamHost = scoreEl && scoreEl.closest('.round-summary-team');
+          if (!scoreEl || !teamHost) return;
+          const gem = document.createElement('div');
+          // Match the CT / Scribble / H5 class pattern exactly —
+          // `rt-gem` brings in the `.rt-gem img { width: 100%; height: 100% }`
+          // rule so the gem PNG fits inside the 40×40 gem box instead of
+          // rendering at native pixel size and bleeding off the canvas.
+          gem.className = `round-summary-mult-gem rt-gem rt-tier-${gemMeta.tier}`;
+          gem.innerHTML =
+            `<img src="${gemMeta.img}" alt="${gemMeta.label}" />` +
+            `<div class="rt-gem-value">${gemMeta.label}</div>`;
+          teamHost.appendChild(gem);
+          await new Promise(r => requestAnimationFrame(r));
+          gem.classList.add('slam');
+          if (typeof playGlint === "function") playGlint(gemMeta.tier, 0.7);
+          scoreEl.classList.add('round-summary-score-pulse');
+          await animateCountUp(scoreEl, raw[team], finalTotals[team], { tick: true });
+          scoreEl.classList.remove('round-summary-score-pulse');
+          gem.classList.remove('slam');
+          void gem.offsetWidth;
+          gem.classList.add('fading');
+          gem.addEventListener('animationend', () => gem.remove(), { once: true });
+          setTimeout(() => { if (gem.isConnected) gem.remove(); }, 800);
+        }
+        // Sequential: red first, 350ms beat, then blue (matches the
+        // CT / Scribble / H5 summary cadence).
+        if (raw[0] > 0) {
+          await runTeamMult(0);
+          await new Promise(r => setTimeout(r, 350 / (gameSpeed || 1)));
+        }
+        if (raw[1] > 0) {
+          await runTeamMult(1);
+        }
+      }
+      if (typeof hidePhaseGem === "function") hidePhaseGem();
+
+      await new Promise(r => setTimeout(r, 1500 / (gameSpeed || 1)));
+
+      // Host: fold final totals into teamScores via handleModuleComplete.
+      // We already applied the round multiplier in this summary animation,
+      // so flag multiplierApplied:true to prevent double-multiply. Do NOT
+      // hide the summary panel here — it should stay visible through the
+      // round-result / Ready Up phase. resetModuleCanvas (fired by the
+      // next advanceRound) handles teardown.
+      if (!isMultiplayer || isHost) {
+        const cb = gridLockState.onComplete;
+        if (typeof restoreMainGameUI === "function") restoreMainGameUI();
+        if (cb) cb({ redScore: finalTotals[0], blueScore: finalTotals[1], multiplierApplied: true });
+      }
+    }
+
+    function glEndRound() {
+      // Host-authoritative: only host computes scoring and drives round end.
+      // Non-hosts follow via synced gridLockState.phase='reveal' → run
+      // glRunReveal locally → glShowSummary locally; handleModuleComplete
+      // is host-only and propagates via round-result phase.
+      if (isMultiplayer && !isHost) return;
+
+      // Aggregate per-player stats + emit matchLog entries before reveal
+      // animations play (one shot, on the host, using full entries +
+      // bonuses). Mirrors the scribble/CT pattern — host computes,
+      // syncs gridLockPlayerStats + matchLog, all clients render from it.
+      try { glAggregatePlayerStats(); } catch (e) { console.warn('[grid-lock] glAggregatePlayerStats failed', e); }
+
+      gridLockState.phase = 'reveal';
+      gridLockState.lockedIdx = null;
+      glUpdateLockDisplay();
+      glSyncState();
+      glRunReveal();
+    }
+
+    // Host-only: aggregate per-player Grid Lock stats from
+    // gridLockState.entries + bonuses, write into gridLockPlayerStats, and
+    // emit one matchLog entry per player who participated this round.
+    // Driven by glEndRound just before glRunReveal so the data lands in
+    // both the synced state and the recap stats tab.
+    function glAggregatePlayerStats() {
+      const entries = gridLockState.entries || [];
+      if (entries.length === 0) return;
+      const bonuses = glComputeBonuses(entries);
+      const cancelled = bonuses.cancelled;
+      const perPlayer = {}; // name -> { team, words, cancelled, totalLength, bonuses, points }
+      const ensure = (name, team) => {
+        if (!perPlayer[name]) perPlayer[name] = { team, words: 0, cancelled: 0, totalLength: 0, bonuses: 0, points: 0 };
+        return perPlayer[name];
+      };
+      // Base scoring per uncancelled valid entry (with longest×2 bonus where applicable).
+      for (const e of entries) {
+        if (!e.valid) continue;
+        const rec = ensure(e.player, e.team);
+        rec.totalLength += (e.word || '').length;
+        if (cancelled.has(e.word)) {
+          rec.cancelled += 1;
+        } else {
+          rec.words += 1;
+          const isLongest = bonuses.longestMultWords[e.team] && bonuses.longestMultWords[e.team].has(e.word);
+          const wordPts = isLongest ? (e.points || 0) * 2 : (e.points || 0);
+          const longestBonus = isLongest ? (e.points || 0) : 0; // the doubled portion
+          rec.points += wordPts;
+          rec.bonuses += longestBonus;
+        }
+      }
+      // First-to-enter bonus.
+      for (const [name, pts] of Object.entries(bonuses.firstBonus || {})) {
+        if (!perPlayer[name]) continue;
+        perPlayer[name].points += pts;
+        perPlayer[name].bonuses += pts;
+      }
+      // Most-valid-words bonus (cancellation-blind).
+      for (const [name, pts] of Object.entries(bonuses.countBonus || {})) {
+        if (!perPlayer[name]) continue;
+        perPlayer[name].points += pts;
+        perPlayer[name].bonuses += pts;
+      }
+      // Merge into running game-wide gridLockPlayerStats and emit matchLog.
+      for (const [name, rec] of Object.entries(perPlayer)) {
+        const prev = gridLockPlayerStats[name] || { words: 0, cancelled: 0, totalLength: 0, bonuses: 0, points: 0 };
+        gridLockPlayerStats[name] = {
+          words:       prev.words       + rec.words,
+          cancelled:   prev.cancelled   + rec.cancelled,
+          totalLength: prev.totalLength + rec.totalLength,
+          bonuses:     prev.bonuses     + rec.bonuses,
+          points:      prev.points      + rec.points,
+        };
+        // One matchLog entry per player so getStatsRoundTypes() surfaces
+        // a "Grid Lock" subtab. Stat-shaped (no real guess), reused by
+        // aggregatePlayerStats via the gridLockPlayerStats lookup.
+        matchLog.push({
+          player:    name,
+          team:      rec.team,
+          guess:     '',
+          outcome:   'gl_round',
+          points:    rec.points,
+          multiplier: null,
+          streak:    null,
+          streakBroken: 0,
+          isSteal:   false,
+          round:     roundNumber,
+          question:  '',
+          category:  'Grid Lock',
+          roundType: 'grid-lock',
+          timestamp: Date.now(),
+        });
+      }
+    }
+
+    function glStartPlay() {
+      gridLockState.phase = 'play';
+      const cover = document.getElementById('grid-lock-cover');
+      if (cover) cover.classList.add('gl-cover-off');
+      glStartTimer();
+      glSyncState();
+      if (typeof setInputAreaMode === "function") {
+        setInputAreaMode({
+          mode: 'guess',
+          header: 'GRID LOCK',
+          subtext: 'Trace words, avoid the lock',
+          inputPlaceholder: 'Enter a word…',
+        });
+      }
+      const input = document.getElementById('guess');
+      if (input) input.focus();
+    }
+
+    function glRunIntro() {
+      gridLockState.phase = 'intro';
+      const cover = document.getElementById('grid-lock-cover');
+      const countEl = document.getElementById('grid-lock-countdown');
+      if (cover) { cover.classList.remove('gl-cover-off'); cover.classList.add('gl-cover-shake'); }
+      if (countEl) countEl.textContent = '';
+      const push = (fn, ms) => { gridLockState.introHandles.push(setTimeout(fn, ms)); };
+      push(() => { if (cover) cover.classList.remove('gl-cover-shake'); }, 2000);
+      push(() => { if (countEl) { countEl.textContent = '3'; if (typeof playTick === "function") playTick(0, { volume: 0.5 }); } }, 2000);
+      push(() => { if (countEl) { countEl.textContent = '2'; if (typeof playTick === "function") playTick(0.33, { volume: 0.6 }); } }, 3000);
+      push(() => { if (countEl) { countEl.textContent = '1'; if (typeof playTick === "function") playTick(0.66, { volume: 0.7 }); } }, 4000);
+      push(() => {
+        if (countEl) { countEl.textContent = 'GO!'; if (typeof playTick === "function") playTick(1, { volume: 1.0 }); }
+        glStartPlay();
+      }, 5000);
+      push(() => { if (countEl) countEl.textContent = ''; }, 5700);
+    }
+
+    async function enterGridLockRound(onComplete) {
+      await loadGridLockDict();
+
+      // Non-host may already have received the host's gridLockState during
+      // the round-type-selected intro await. Preserve synced fields (tiles,
+      // phase, roundEndsAt) instead of clobbering, but ALWAYS scrub the
+      // round-specific local state so round 2+ doesn't inherit round 1's
+      // entries / _revealRan flag / reveal totals.
+      const nonHostLive = isMultiplayer && !isHost && gridLockState.active;
+      if (!nonHostLive) {
+        resetGridLockState();
+        gridLockState.active = true;
+      } else {
+        gridLockState.entries = [];
+        gridLockState._localRejects = [];
+        gridLockState._revealRan = false;
+        gridLockState._summaryRan = false;
+        gridLockState._revealTotals = null;
+        gridLockState._bonuses = null;
+        gridLockState._playerPoints = null;
+        gridLockState._playerWordCounts = null;
+        gridLockState._playerTeamMap = null;
+        gridLockState.submittedByPlayer = {};
+        if (gridLockState.timerHandle) { clearInterval(gridLockState.timerHandle); gridLockState.timerHandle = null; }
+        if (gridLockState.introHandles) gridLockState.introHandles.forEach(h => clearTimeout(h));
+        gridLockState.introHandles = [];
+      }
+      gridLockState.onComplete = onComplete;
+
+      // Defensive DOM cleanup: remove any stale TIME'S UP overlay + strip
+      // stale animation classes that could pin play-mode elements in
+      // their exit state (opacity: 0, off-screen) on round 2+.
+      document.querySelectorAll('.gl-times-up-overlay').forEach(n => n.remove());
+      const _glContainer = document.getElementById('grid-lock-container');
+      if (_glContainer) {
+        _glContainer.classList.remove('gl-reveal-mode');
+        const _lc = _glContainer.querySelector('.gl-left-col');
+        const _rc = _glContainer.querySelector('.gl-right-col');
+        if (_lc) _lc.classList.remove('gl-play-exit');
+        if (_rc) _rc.classList.remove('gl-play-exit');
+      }
+      const _glCover = document.getElementById('grid-lock-cover');
+      if (_glCover) {
+        _glCover.classList.remove('gl-cover-off', 'gl-cover-shake');
+        _glCover.style.display = '';
+      }
+      const _glPaneE = document.getElementById('gl-reveal-pane');
+      if (_glPaneE) {
+        _glPaneE.style.display = 'none';
+        _glPaneE.style.visibility = '';
+      }
+      const _glSumE = document.getElementById('gl-summary');
+      if (_glSumE) {
+        _glSumE.style.display = 'none';
+        _glSumE.classList.remove('gl-summary-out');
+      }
+      // Re-parent board if still inside reveal grid holder.
+      const _glBoardE = document.getElementById('grid-lock-board');
+      const _playWrapE = _glContainer && _glContainer.querySelector('.gl-right-col .gl-board-wrap');
+      if (_playWrapE && _glBoardE && _glBoardE.parentElement !== _playWrapE) {
+        _playWrapE.insertBefore(_glBoardE, _playWrapE.firstChild);
+      }
+
+      // Board generation is host-authoritative. Non-host receives tiles via
+      // glApplySyncedState once the host's syncState lands.
+      if (!isMultiplayer || isHost) {
+        const { tiles, solutions } = glGenerateSolvableGrid();
+        gridLockState.tiles = tiles;
+        gridLockState.solutions = solutions;
+      }
+
+      const container = document.getElementById("grid-lock-container");
+      if (container) {
+        container.style.display = "flex";
+        container.classList.remove("slide-in");
+        container.classList.add("offscreen");
+        void container.offsetWidth;
+        container.classList.remove("offscreen");
+        container.classList.add("slide-in");
+      }
+      glRenderBoard();
+      glRenderWordList();
+      glUpdateHeader();
+      glUpdateTimerDisplay();
+
+      if (typeof setPhaseText === "function") setPhaseText("gameplay", "GRID LOCK");
+      if (typeof setPhase === "function") setPhase("gameplay");
+      if (typeof setMusicMode === "function") setMusicMode('playlist');
+      if (typeof showInputArea === "function") showInputArea();
+      if (typeof setInputAreaMode === "function") {
+        setInputAreaMode({
+          mode: 'disabled',
+          header: 'GRID LOCK',
+          subtext: 'Get ready…',
+          inputPlaceholder: 'Starting…',
+        });
+      }
+
+      // Host: broadcast initial board + phase so non-hosts can render their
+      // own intro in parallel (reconcile treats gridLockState arrival as the
+      // trigger to mount the module-canvas container if it isn't already).
+      if (!isMultiplayer || isHost) {
+        gridLockState.phase = 'intro';
+        glSyncState();
+      }
+
+      glRunIntro();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
     // Face-off Round implementation
     // ─────────────────────────────────────────────────────────────────────
 
@@ -18531,6 +21100,115 @@ document.addEventListener('keydown', e => {
           el.remove();
           resolve();
         }, 7550);
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Grid Lock — picker logo + cinematic intro
+    // ─────────────────────────────────────────────────────────────────────
+    const _GLL_LETTER_POINTS = {
+      A:5,E:5,I:5,O:5,U:5,L:5,N:5,S:5,T:5,R:5,
+      D:10,G:10,B:10,C:10,M:10,P:10,
+      F:15,H:15,V:15,W:15,Y:15,K:15,
+      J:20,X:20,
+      Q:25,Z:25,
+    };
+    const _GLL_LOCK_SVG_INNER = '<g transform="translate(90 -25)"><path d="M289.82,247.98h-15.13v-72.49c0-64.82-52.54-117.36-117.36-117.36-32.41,0-61.75,13.13-82.99,34.38-21.24,21.24-34.38,50.58-34.38,82.99v72.49h-15.13c-13.72,0-24.84,11.12-24.84,24.84v202.35c0,13.72,11.12,24.84,24.84,24.84h264.98c13.72,0,24.84-11.12,24.84-24.84v-202.35c0-13.72-11.12-24.84-24.84-24.84ZM82.34,175.49c0-41.41,33.57-74.98,74.99-74.98,20.71,0,39.45,8.39,53.02,21.96,13.57,13.57,21.96,32.31,21.96,53.02v72.49H82.34v-72.49ZM170.49,372.87v37.76c0,3.63-1.47,6.92-3.85,9.31-2.38,2.38-5.67,3.85-9.3,3.85-7.27,0-13.16-5.89-13.16-13.16v-37.76c-8.17-4.6-13.69-13.36-13.69-23.41,0-14.83,12.02-26.85,26.85-26.85s26.85,12.02,26.85,26.85c0,10.04-5.52,18.8-13.69,23.41Z"/></g>';
+    const _GLL_UNLOCK_SVG_INNER = '<g transform="translate(90 -25)"><path d="M289.18,248.53H24.78c-13.69,0-24.78,11.09-24.78,24.78v201.9c0,13.69,11.1,24.78,24.78,24.78h264.4c13.69,0,24.78-11.1,24.78-24.78v-201.9c0-13.69-11.1-24.78-24.78-24.78ZM170.12,373.14v37.68c0,3.63-1.47,6.91-3.85,9.29-2.38,2.38-5.66,3.85-9.29,3.85-7.25,0-13.13-5.88-13.13-13.13v-37.68c-8.15-4.59-13.66-13.33-13.66-23.35,0-14.79,12-26.79,26.79-26.79s26.79,12,26.79,26.79c0,10.02-5.51,18.76-13.66,23.35Z"/><path d="M156.99,30.92c-32.34,0-61.63,13.11-82.8,34.28-21.2,21.2-34.31,50.49-34.31,82.82v100.5h42.29v-99c0-40.99,32.34-75.5,73.32-76.3,21.26-.42,40.53,8.03,54.41,21.89,13.53,13.53,21.91,32.25,21.91,52.91v22.98c0,11.68,9.47,21.14,21.14,21.14,5.84,0,11.12-2.36,14.95-6.19,3.83-3.83,6.19-9.11,6.19-14.95v-22.98c0-64.7-52.44-117.1-117.1-117.1Z"/><path d="M354.1,117.21c-4.9-1.91-10.42.53-12.32,5.43l-22.02,56.7c-1.9,4.9.53,10.42,5.43,12.32,1.13.44,2.3.65,3.44.65,3.82,0,7.42-2.31,8.88-6.08l22.02-56.7c1.9-4.9-.53-10.42-5.43-12.32Z"/><path d="M430.41,171.71c-2.12-4.81-7.75-6.99-12.56-4.88l-66.18,29.15c-4.81,2.12-7,7.74-4.88,12.56,1.57,3.56,5.06,5.69,8.72,5.69,1.28,0,2.59-.26,3.83-.81l66.18-29.15c4.81-2.12,7-7.74,4.88-12.56Z"/><path d="M415.61,253.53l-54.73-21.25c-4.9-1.91-10.42.53-12.32,5.43-1.9,4.9.53,10.42,5.43,12.32l54.73,21.26c1.13.44,2.3.65,3.44.65,3.82,0,7.42-2.31,8.88-6.08,1.9-4.9-.53-10.42-5.43-12.32Z"/></g>';
+
+    function _buildGlStackedLogoHtml(tileSize, gap, withCover) {
+      let rowsHtml = '';
+      ['GRID', 'LOCK'].forEach(word => {
+        let tilesHtml = '';
+        for (const letter of word) {
+          tilesHtml += `<div class="gll-tile">${letter}<span class="gll-pts">${_GLL_LETTER_POINTS[letter] || ''}</span></div>`;
+        }
+        rowsHtml += `<div class="gll-row">${tilesHtml}</div>`;
+      });
+      const coverHtml = withCover
+        ? `<div class="gll-cover">`
+        +   `<svg class="gll-cover-lock" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">${_GLL_LOCK_SVG_INNER}</svg>`
+        +   `<svg class="gll-cover-unlock" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">${_GLL_UNLOCK_SVG_INNER}</svg>`
+        + `</div>`
+        : '';
+      return `<div class="gll-logo" style="--gll-tile-size:${tileSize}px;--gll-gap:${gap}px;">${rowsHtml}${coverHtml}</div>`;
+    }
+
+    // Picker card logo: compact stacked tiles + tilted lock badge that
+    // crossfades between locked.svg and unlocked.svg on a 2.6s loop.
+    function _buildGlPickerArtHtml() {
+      let rowsHtml = '';
+      ['GRID', 'LOCK'].forEach(word => {
+        let tilesHtml = '';
+        for (const letter of word) {
+          tilesHtml += `<div class="gll-tile">${letter}<span class="gll-pts">${_GLL_LETTER_POINTS[letter] || ''}</span></div>`;
+        }
+        rowsHtml += `<div class="gll-row">${tilesHtml}</div>`;
+      });
+      const lockBadge =
+        `<div class="gll-picker-lock">`
+        + `<svg class="gll-pl-locked" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">${_GLL_LOCK_SVG_INNER}</svg>`
+        + `<svg class="gll-pl-unlocked" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">${_GLL_UNLOCK_SVG_INNER}</svg>`
+        + `</div>`;
+      return `<div class="gll-picker" style="--gll-tile-size:36px;--gll-gap:4px;">${rowsHtml}${lockBadge}</div>`;
+    }
+
+    // Cinematic: cover wiggle (1.5s struggle keyframes) → lock→unlock
+    // crossfade → cover lift/fade → sequential letter hop with subtitle
+    // fade-in. Mounts a full-canvas overlay; resolves after fade-out.
+    function _playGlCinematic() {
+      return new Promise((resolve) => {
+        const root = document.getElementById('module-canvas') || document.getElementById('game-root');
+        if (!root) { resolve(); return; }
+        const stale = document.getElementById('gl-cinematic');
+        if (stale) stale.remove();
+
+        const el = document.createElement('div');
+        el.id = 'gl-cinematic';
+        el.innerHTML =
+          _buildGlStackedLogoHtml(110, 12, true)
+          + `<div class="gll-subtitle">LINK WORDS AROUND THE LOCK</div>`;
+        root.appendChild(el);
+
+        const logo = el.querySelector('.gll-logo');
+        const cover = el.querySelector('.gll-cover');
+        const subtitle = el.querySelector('.gll-subtitle');
+
+        const finishAndFade = async () => {
+          await anim.wait(2100);
+          el.classList.add('glci-fade-out');
+          await anim.wait(460);
+          el.remove();
+          resolve();
+        };
+
+        const onWiggleEnd = (e) => {
+          if (e.animationName !== 'gll-struggle') return;
+          logo.removeEventListener('animationend', onWiggleEnd);
+          (async () => {
+            // (continues into unlock sequence below)
+            await anim.wait(280);
+            cover.classList.add('unlocked');
+            await anim.wait(620);
+            cover.classList.add('unlock-fade');
+            await anim.wait(300);
+            cover.classList.add('lift');
+            await anim.wait(540);
+            const tiles = logo.querySelectorAll('.gll-tile');
+            if (subtitle) subtitle.classList.add('show');
+            tiles.forEach((tile, i) => {
+              setTimeout(() => tile.classList.add('gll-hop'), i * 110);
+            });
+            finishAndFade();
+          })();
+        };
+        logo.addEventListener('animationend', onWiggleEnd);
+
+        // Fly the logo in from below the canvas, then start the wiggle.
+        requestAnimationFrame(() => {
+          el.classList.add('glci-flown-in');
+          setTimeout(() => logo.classList.add('gll-struggle'), 600);
+        });
       });
     }
 
@@ -20579,6 +23257,7 @@ document.addEventListener('keydown', e => {
       'survey':          'Poll Position',
       'secret-scribble': 'Secret Scribble',
       'common-thread':   'Common Thread',
+      'grid-lock':       'Grid Lock',
       'faceoff':         'Face-off',
     };
     let _roundStartRoundNumber = 0;
@@ -20620,6 +23299,13 @@ document.addEventListener('keydown', e => {
         input.value = "";
         if (!guess) return;
         submitFaceoffGuess(guess);
+        return;
+      }
+      // Grid Lock: route to local word-submit handler
+      if (gridLockState.active && gridLockState.phase === "play") {
+        input.value = "";
+        if (!guess) return;
+        glSubmitWord(guess);
         return;
       }
       input.value="";if(!guess||!currentQuestion)return;
@@ -21364,6 +24050,7 @@ document.addEventListener('keydown', e => {
       roundsMeta = [];
       scribblePlayerStats = {};
       commonThreadPlayerStats = {};
+      gridLockPlayerStats = {};
       playerIndex = [0, 0];
       lastRoundWinner = -1;
       _prevRoundTypePicks = [];
@@ -21492,6 +24179,7 @@ document.addEventListener('keydown', e => {
       resetFaceoffState();
       resetScribbleState();
       resetCommonThreadState();
+      resetGridLockState();
       const foc = document.getElementById('faceoff-container');
       if (foc) { foc.classList.remove('active'); foc.style.display = 'none'; }
       const rl = document.getElementById('round-label');
@@ -21647,6 +24335,7 @@ document.addEventListener('keydown', e => {
       roundsMeta = [];
       scribblePlayerStats = {};
       commonThreadPlayerStats = {};
+      gridLockPlayerStats = {};
       playerIndex = [0, 0];
       lastRoundWinner = -1;
 
@@ -21845,7 +24534,7 @@ document.addEventListener('keydown', e => {
       resetEvergreenRegions();
       gameSpeedSetting = 1;
       setGameSpeed(1);
-      teamScores=[0,0];usedQuestions=[];roundNumber=0;gameEnded=false;matchLog=[];roundsMeta=[];scribblePlayerStats={};commonThreadPlayerStats={};playerIndex=[0,0];startingTeam=0;_syncedAwards=null;_deferFaceoffScoreboard=false;
+      teamScores=[0,0];usedQuestions=[];roundNumber=0;gameEnded=false;matchLog=[];roundsMeta=[];scribblePlayerStats={};commonThreadPlayerStats={};gridLockPlayerStats={};playerIndex=[0,0];startingTeam=0;_syncedAwards=null;_deferFaceoffScoreboard=false;
       gameMode='rounds';maxRounds=0;lastRoundWinner=-1;
       resetFaceoffState();
       // Tear down face-off DOM if it was active and restore normal game elements
@@ -23273,6 +25962,8 @@ document.addEventListener('keydown', e => {
         scribblePlayerStats: null,
         commonThreadState: null,
         commonThreadPlayerStats: null,
+        gridLockPlayerStats: null,
+        gridLockState: null,
         selectedRoundType: null,
         awards: null,
         gameEnded: false,
@@ -23385,6 +26076,7 @@ document.addEventListener('keydown', e => {
       roundsMeta = [];
       scribblePlayerStats = {};
       commonThreadPlayerStats = {};
+      gridLockPlayerStats = {};
       // Use host-determined startingTeam so both clients agree
       startingTeam = _lobbyStartingTeam !== null ? _lobbyStartingTeam : Math.floor(Math.random() * 2);
       _lobbyStartingTeam = null;
@@ -23394,6 +26086,7 @@ document.addEventListener('keydown', e => {
       resetFaceoffState();
       resetScribbleState();
       resetCommonThreadState();
+      resetGridLockState();
       _prevRoundTypePicks = [];
 
       // Set scoreboard team labels

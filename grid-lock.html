@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Grid Lock — Prototype</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #0c0c0c;
+      color: #f0f0f0;
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+    }
+    .stage {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+    }
+    h1 {
+      color: #fba300;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin: 0 0 4px;
+      font-size: 2rem;
+    }
+    .sub {
+      color: #888;
+      margin: 0 0 24px;
+      font-size: 0.9rem;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .row { grid-template-columns: 1fr; }
+    }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 88px);
+      grid-template-rows: repeat(5, 88px);
+      gap: 8px;
+      background: #1a1a1a;
+      padding: 10px;
+      border-radius: 12px;
+    }
+    .tile {
+      position: relative;
+      background: linear-gradient(180deg, #f4e4bf 0%, #e4ce96 100%);
+      color: #1a1a1a;
+      border-radius: 8px;
+      box-shadow: 0 2px 0 #8a6f3d, inset 0 1px 0 rgba(255,255,255,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 2.2rem;
+      user-select: none;
+      cursor: default;
+    }
+    .tile .pts {
+      position: absolute;
+      bottom: 4px;
+      right: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #5a4420;
+    }
+    .tile.locked {
+      filter: grayscale(1);
+      opacity: 0.35;
+      transition: opacity 0.3s ease, filter 0.3s ease;
+    }
+
+    .timer {
+      font-variant-numeric: tabular-nums;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #f0f0f0;
+      margin: 0 0 10px;
+      letter-spacing: 0.05em;
+    }
+    .timer.warn { color: #ef9a3a; }
+    .timer.done { color: #ef5350; }
+
+    /* Controls */
+    .controls {
+      background: #161616;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .controls-top {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    input.word-in {
+      flex: 1;
+      background: #0c0c0c;
+      border: 1px solid #333;
+      color: #f0f0f0;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    input.word-in:focus { outline: 1px solid #fba300; }
+    button {
+      background: #fba300;
+      color: #1a1a1a;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    button.ghost {
+      background: #2a2a2a;
+      color: #ccc;
+    }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .feedback {
+      min-height: 1.2rem;
+      font-size: 0.9rem;
+    }
+    .feedback.ok    { color: #4caf50; }
+    .feedback.bad   { color: #ef5350; }
+    .feedback.muted { color: #777; }
+
+    .wordlist {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 280px;
+      overflow-y: auto;
+      border-top: 1px solid #222;
+      padding-top: 10px;
+    }
+    .wordlist li {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 0.95rem;
+      border-bottom: 1px dotted #222;
+    }
+    .wordlist .w { letter-spacing: 0.08em; }
+    .wordlist .p { color: #fba300; font-weight: 700; }
+
+    .totals {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1rem;
+      padding-top: 8px;
+      border-top: 1px solid #333;
+    }
+    .totals .score { color: #fba300; font-weight: 700; font-size: 1.3rem; }
+
+    .meta {
+      font-size: 0.78rem;
+      color: #666;
+      margin-top: 6px;
+    }
+
+    .loading {
+      color: #fba300;
+      padding: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <h1>Grid Lock</h1>
+    <p class="sub">Prototype — weighted random + solvability floor + per-letter caps. Type words, Enter to submit.</p>
+
+    <div id="loading" class="loading">Loading dictionary…</div>
+
+    <div id="app" class="row" style="display:none;">
+      <div>
+        <div id="timer" class="timer">3:00</div>
+        <div id="grid" class="grid"></div>
+        <div class="meta" id="grid-meta"></div>
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button id="reroll-btn" class="ghost">Reroll Grid</button>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="controls-top">
+          <input id="word-in" class="word-in" type="text" placeholder="Enter a word…" autocomplete="off" spellcheck="false" />
+          <button id="submit-btn">Submit</button>
+        </div>
+        <div id="feedback" class="feedback muted">4-letter minimum. Boggle adjacency, no tile reuse.</div>
+        <ul id="wordlist" class="wordlist"></ul>
+        <div class="totals">
+          <span>Words: <span id="word-count">0</span></span>
+          <span>Score: <span id="score" class="score">0</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Letter config ----------
+    // Point values (user-confirmed). "Qu" is a single tile worth 20 but expands to "qu" for path/dictionary.
+    const LETTER_POINTS = {
+      A:2, E:2, I:2, O:2, U:2, L:2, N:2, S:2, T:2, R:2,
+      D:5, G:5,
+      B:3, C:3, M:3, P:3,
+      F:10, H:10, V:10, W:10, Y:10, K:10,
+      J:15, X:15,
+      Qu:20, Z:20,
+    };
+
+    // Weighted distribution (Scrabble-ish tile counts — tuned for word-game balance).
+    const LETTER_WEIGHTS = {
+      A:9, B:2, C:2, D:4, E:12, F:2, G:3, H:2, I:9, J:1,
+      K:1, L:4, M:2, N:6, O:8, P:2, Qu:1, R:6, S:4, T:6,
+      U:4, V:2, W:2, X:1, Y:2, Z:1,
+    };
+
+    // Per-letter caps on a single board (rare letters kept rare, common letters softly capped).
+    const LETTER_CAPS = {
+      J:1, X:1, Z:1, Qu:1, K:2, V:2, W:2, Y:2, F:2, H:2,
+      E:4, A:4, I:4, O:4, U:3,
+      N:4, R:4, S:4, T:4, L:3,
+      // Everything else defaults to 25 (effectively uncapped).
+    };
+
+    // Anti-clustering: letters already on an adjacent cell get their weight multiplied by this.
+    const CLUSTER_PENALTY = 0.5;
+
+    // Vowel floor — at least this many vowels on the 25-tile grid.
+    const VOWEL_FLOOR = 7;
+    // Reject a board if any row or column has this many or more vowels.
+    const ROW_COL_VOWEL_MAX = 4;
+    const VOWELS = new Set(['A','E','I','O','U']);
+
+    // Solvability floor — require at least this many unique 4+ letter valid words.
+    const SOLVABILITY_MIN = 150;
+
+    const GRID_N = 5;
+
+    // ---------- Dictionary ----------
+    let DICT = null;
+    let PREFIX = null; // all prefixes of length >= 2 that start some dict word (length >= 4)
+
+    async function loadDict() {
+      const res = await fetch('dictionary.txt');
+      const text = await res.text();
+      const set = new Set();
+      const pref = new Set();
+      for (const raw of text.split(/\r?\n/)) {
+        const w = raw.trim().toUpperCase();
+        if (w.length >= 4) {
+          set.add(w);
+          for (let i = 2; i <= w.length; i++) pref.add(w.slice(0, i));
+        }
+      }
+      DICT = set;
+      PREFIX = pref;
+    }
+
+    // ---------- Grid generation ----------
+    function pickWeighted(weights, excludeFull, tiles, idx) {
+      // tiles = partial placement so far; idx = cell being filled.
+      // Adjacent already-placed letters get their weight scaled down (anti-clustering).
+      const adjLetters = new Set();
+      if (tiles && idx != null) {
+        for (const n of neighbors(idx)) {
+          if (n < tiles.length && tiles[n] != null) adjLetters.add(tiles[n]);
+        }
+      }
+      const entries = Object.entries(weights)
+        .filter(([k]) => !excludeFull.has(k))
+        .map(([k, w]) => [k, adjLetters.has(k) ? w * CLUSTER_PENALTY : w]);
+      const total = entries.reduce((s, [, w]) => s + w, 0);
+      let r = Math.random() * total;
+      for (const [k, w] of entries) {
+        if ((r -= w) < 0) return k;
+      }
+      return entries[entries.length - 1][0];
+    }
+
+    function rowColVowelsOk(tiles) {
+      for (let r = 0; r < GRID_N; r++) {
+        let rowV = 0, colV = 0;
+        for (let c = 0; c < GRID_N; c++) {
+          if (VOWELS.has(tiles[r * GRID_N + c])) rowV++;
+          if (VOWELS.has(tiles[c * GRID_N + r])) colV++;
+        }
+        if (rowV >= ROW_COL_VOWEL_MAX || colV >= ROW_COL_VOWEL_MAX) return false;
+      }
+      return true;
+    }
+
+    function buildGridOnce() {
+      const tiles = new Array(GRID_N * GRID_N).fill(null);
+      const counts = {};
+      const full = new Set();
+      for (let i = 0; i < GRID_N * GRID_N; i++) {
+        const letter = pickWeighted(LETTER_WEIGHTS, full, tiles, i);
+        tiles[i] = letter;
+        counts[letter] = (counts[letter] || 0) + 1;
+        const cap = LETTER_CAPS[letter] ?? 25;
+        if (counts[letter] >= cap) full.add(letter);
+      }
+      return tiles;
+    }
+
+    function generateGrid() {
+      for (let attempt = 0; attempt < 80; attempt++) {
+        const tiles = buildGridOnce();
+        const vowelCount = tiles.filter(t => VOWELS.has(t)).length;
+        if (vowelCount < VOWEL_FLOOR) continue;
+        if (!rowColVowelsOk(tiles)) continue;
+        return tiles;
+      }
+      // Fallback — drop row/col check rather than hang.
+      return buildGridOnce();
+    }
+
+    function generateSolvableGrid() {
+      for (let attempt = 0; attempt < 60; attempt++) {
+        const tiles = generateGrid();
+        const solved = solveGrid(tiles);
+        if (solved.size >= SOLVABILITY_MIN) {
+          console.log(`[grid-lock] board ready — ${solved.size} words, ${attempt + 1} reroll(s)`);
+          return { tiles, solutions: solved, attempts: attempt + 1 };
+        }
+      }
+      const tiles = generateGrid();
+      const solutions = solveGrid(tiles);
+      console.warn(`[grid-lock] solvability floor not met — ${solutions.size} words after 60 attempts`);
+      return { tiles, solutions, attempts: 60 };
+    }
+
+    // ---------- Boggle path validation + full solver ----------
+    function neighbors(idx) {
+      const r = Math.floor(idx / GRID_N), c = idx % GRID_N;
+      const out = [];
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < GRID_N && nc >= 0 && nc < GRID_N) {
+            out.push(nr * GRID_N + nc);
+          }
+        }
+      }
+      return out;
+    }
+
+    // Expand a tile letter ("A" / "Qu") to lowercase chars it contributes.
+    function tileChars(tile) {
+      return tile === 'Qu' ? 'QU' : tile;
+    }
+
+    // Does `word` (uppercase) exist on the grid under Boggle rules? Locked tiles are skipped.
+    function wordPath(word, tiles, lockedIdx) {
+      const locked = lockedIdx == null ? -1 : lockedIdx;
+      const visited = new Array(tiles.length).fill(false);
+      function dfs(idx, pos) {
+        if (idx === locked) return false;
+        if (pos >= word.length) return true;
+        const chars = tileChars(tiles[idx]);
+        if (word.slice(pos, pos + chars.length) !== chars) return false;
+        visited[idx] = true;
+        const nextPos = pos + chars.length;
+        if (nextPos === word.length) { visited[idx] = false; return true; }
+        for (const n of neighbors(idx)) {
+          if (!visited[n] && dfs(n, nextPos)) { visited[idx] = false; return true; }
+        }
+        visited[idx] = false;
+        return false;
+      }
+      for (let i = 0; i < tiles.length; i++) {
+        if (i === locked) continue;
+        if (dfs(i, 0)) return true;
+      }
+      return false;
+    }
+
+    // Word score — walks the first valid path, skipping the locked tile.
+    function wordScore(word, tiles, lockedIdx) {
+      const locked = lockedIdx == null ? -1 : lockedIdx;
+      let result = 0;
+      const visited = new Array(tiles.length).fill(false);
+      const path = [];
+      function dfs(idx, pos) {
+        if (idx === locked) return false;
+        const chars = tileChars(tiles[idx]);
+        if (word.slice(pos, pos + chars.length) !== chars) return false;
+        visited[idx] = true;
+        path.push(idx);
+        const nextPos = pos + chars.length;
+        if (nextPos === word.length) {
+          result = path.reduce((s, i) => s + LETTER_POINTS[tiles[i]], 0);
+          visited[idx] = false; path.pop();
+          return true;
+        }
+        for (const n of neighbors(idx)) {
+          if (!visited[n] && dfs(n, nextPos)) { visited[idx] = false; path.pop(); return true; }
+        }
+        visited[idx] = false; path.pop();
+        return false;
+      }
+      for (let i = 0; i < tiles.length; i++) {
+        if (i === locked) continue;
+        if (dfs(i, 0)) return result;
+      }
+      return 0;
+    }
+
+    // Full-board solver: enumerate every valid dictionary word reachable on the grid.
+    function solveGrid(tiles) {
+      const found = new Set();
+      const visited = new Array(tiles.length).fill(false);
+      function walk(idx, prefix) {
+        visited[idx] = true;
+        const next = prefix + tileChars(tiles[idx]);
+        // Prefix prune: once we have 2+ chars, bail if no dict word starts with this.
+        if (next.length >= 2 && !PREFIX.has(next)) { visited[idx] = false; return; }
+        if (next.length >= 4 && DICT.has(next)) found.add(next);
+        if (next.length < 15) {
+          for (const n of neighbors(idx)) {
+            if (!visited[n]) walk(n, next);
+          }
+        }
+        visited[idx] = false;
+      }
+      for (let i = 0; i < tiles.length; i++) walk(i, '');
+      return found;
+    }
+
+    // ---------- UI ----------
+    const ROUND_SECONDS = 180;
+    const LOCK_INTERVAL = 30; // lock rotates every 30s throughout the round
+    let state = {
+      tiles: [],
+      solutions: new Set(),
+      submitted: new Map(), // word -> points
+      entries: [],             // [{ word, player, team, valid, points, timestamp }] — full log, one per submission attempt
+      lockedIdx: null,         // currently locked tile index (or null)
+      lockHistory: [],         // indices already used this round — excluded from future picks
+      timeLeft: ROUND_SECONDS,
+      timerHandle: null,
+      ended: false,
+    };
+
+    // Pure bonus computation over an entry log. Caller supplies entries; returns
+    // { firstEntryBonus: {player -> +pts}, longestBonus: {team -> multiplier=2 words set}, countBonus: {player -> +pts} }.
+    // Kept standalone so the real multiplayer integration can call it over a Firestore-shaped log.
+    function computeGridLockBonuses(entries) {
+      const firstBonus = {};     // player -> points
+      const longestMultWords = { 0: new Set(), 1: new Set() }; // team -> words getting x2
+      const countBonus = {};     // player -> points
+      const FIRST_BONUS = 50;
+      const COUNT_BONUS = 100;
+
+      // First-scorer: per unique word, earliest VALID entry earns +50.
+      const firstByWord = new Map();
+      for (const e of entries) {
+        if (!e.valid) continue;
+        const prev = firstByWord.get(e.word);
+        if (!prev || e.timestamp < prev.timestamp) firstByWord.set(e.word, e);
+      }
+      for (const e of firstByWord.values()) firstBonus[e.player] = (firstBonus[e.player] || 0) + FIRST_BONUS;
+
+      // Longest per team: find each team's longest valid word length, all words at that length get x2.
+      const longestLen = [0, 0];
+      const teamValid = [[], []];
+      for (const e of entries) {
+        if (!e.valid) continue;
+        teamValid[e.team].push(e);
+        if (e.word.length > longestLen[e.team]) longestLen[e.team] = e.word.length;
+      }
+      for (const team of [0, 1]) {
+        for (const e of teamValid[team]) {
+          if (e.word.length === longestLen[team] && longestLen[team] > 0) longestMultWords[team].add(e.word);
+        }
+      }
+
+      // Count bonus: individual with highest total submission count (valid OR invalid — "every word entered").
+      const perPlayer = {};
+      for (const e of entries) perPlayer[e.player] = (perPlayer[e.player] || 0) + 1;
+      let maxCount = 0;
+      for (const c of Object.values(perPlayer)) if (c > maxCount) maxCount = c;
+      if (maxCount > 0) {
+        for (const [player, c] of Object.entries(perPlayer)) {
+          if (c === maxCount) countBonus[player] = (countBonus[player] || 0) + COUNT_BONUS;
+        }
+      }
+
+      return { firstBonus, longestMultWords, countBonus };
+    }
+
+    function pickNextLockIdx() {
+      const used = new Set(state.lockHistory);
+      const candidates = [];
+      for (let i = 0; i < state.tiles.length; i++) if (!used.has(i)) candidates.push(i);
+      if (!candidates.length) return null;
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    function updateLockDisplay() {
+      const tileEls = document.querySelectorAll('#grid .tile');
+      tileEls.forEach((el, i) => el.classList.toggle('locked', i === state.lockedIdx));
+    }
+
+    function rotateLock() {
+      if (state.ended) return;
+      const next = pickNextLockIdx();
+      state.lockedIdx = next;
+      if (next != null) state.lockHistory.push(next);
+      updateLockDisplay();
+    }
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60), s = sec % 60;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
+
+    function updateTimerDisplay() {
+      const el = document.getElementById('timer');
+      el.textContent = formatTime(state.timeLeft);
+      el.classList.toggle('warn', state.timeLeft <= 30 && state.timeLeft > 0);
+      el.classList.toggle('done', state.timeLeft === 0);
+    }
+
+    function endRound() {
+      state.ended = true;
+      state.lockedIdx = null;
+      updateLockDisplay();
+      document.getElementById('word-in').disabled = true;
+      document.getElementById('submit-btn').disabled = true;
+      setFeedback(`Time's up! Final score: ${[...state.submitted.values()].reduce((s, p) => s + p, 0)}`, 'muted');
+    }
+
+    function startTimer() {
+      if (state.timerHandle) clearInterval(state.timerHandle);
+      state.timeLeft = ROUND_SECONDS;
+      state.ended = false;
+      updateTimerDisplay();
+      state.timerHandle = setInterval(() => {
+        state.timeLeft--;
+        updateTimerDisplay();
+        // Lock rotation at each LOCK_INTERVAL boundary (counted from start, not end).
+        const elapsed = ROUND_SECONDS - state.timeLeft;
+        if (elapsed > 0 && elapsed % LOCK_INTERVAL === 0 && state.timeLeft > 0) {
+          rotateLock();
+        }
+        if (state.timeLeft <= 0) {
+          clearInterval(state.timerHandle);
+          state.timerHandle = null;
+          endRound();
+        }
+      }, 1000);
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      state.tiles.forEach(tile => {
+        const el = document.createElement('div');
+        el.className = 'tile';
+        el.textContent = tile;
+        const pts = document.createElement('span');
+        pts.className = 'pts';
+        pts.textContent = LETTER_POINTS[tile];
+        el.appendChild(pts);
+        grid.appendChild(el);
+      });
+      const meta = document.getElementById('grid-meta');
+      meta.textContent = `Solver found ${state.solutions.size} valid words on this board.`;
+    }
+
+    function renderWords() {
+      const ul = document.getElementById('wordlist');
+      ul.innerHTML = '';
+      const entries = [...state.submitted.entries()].reverse();
+      for (const [w, p] of entries) {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="w">${w}</span><span class="p">+${p}</span>`;
+        ul.appendChild(li);
+      }
+      document.getElementById('word-count').textContent = state.submitted.size;
+      let total = 0;
+      for (const p of state.submitted.values()) total += p;
+      document.getElementById('score').textContent = total;
+    }
+
+    function setFeedback(msg, kind) {
+      const el = document.getElementById('feedback');
+      el.textContent = msg;
+      el.className = 'feedback ' + (kind || 'muted');
+    }
+
+    function submitWord() {
+      if (state.ended) return;
+      const input = document.getElementById('word-in');
+      const raw = input.value.trim().toUpperCase();
+      input.value = '';
+      if (!raw) return;
+      const timestamp = Date.now();
+      const logEntry = { word: raw, player: 'Proto', team: 0, valid: false, points: 0, timestamp };
+      if (raw.length < 4) { state.entries.push(logEntry); return setFeedback(`"${raw}" — too short (4-letter minimum).`, 'bad'); }
+      if (state.submitted.has(raw)) { state.entries.push(logEntry); return setFeedback(`"${raw}" — already submitted.`, 'bad'); }
+      if (!DICT.has(raw)) { state.entries.push(logEntry); return setFeedback(`"${raw}" — not in dictionary.`, 'bad'); }
+      if (!wordPath(raw, state.tiles, state.lockedIdx)) { state.entries.push(logEntry); return setFeedback(`"${raw}" — not traceable (check locked tile).`, 'bad'); }
+      const pts = wordScore(raw, state.tiles, state.lockedIdx);
+      state.submitted.set(raw, pts);
+      logEntry.valid = true;
+      logEntry.points = pts;
+      state.entries.push(logEntry);
+      renderWords();
+      setFeedback(`"${raw}" — +${pts} points.`, 'ok');
+    }
+
+    function reroll() {
+      const { tiles, solutions } = generateSolvableGrid();
+      state.tiles = tiles;
+      state.solutions = solutions;
+      state.submitted = new Map();
+      state.entries = [];
+      state.lockedIdx = null;
+      state.lockHistory = [];
+      renderGrid();
+      renderWords();
+      document.getElementById('word-in').disabled = false;
+      document.getElementById('submit-btn').disabled = false;
+      setFeedback('New grid. 4-letter minimum. Boggle adjacency, no tile reuse.', 'muted');
+      startTimer();
+    }
+
+    // ---------- Bootstrap ----------
+    (async () => {
+      try {
+        await loadDict();
+      } catch (e) {
+        document.getElementById('loading').textContent =
+          'Failed to load dictionary.txt — place it alongside grid-lock.html.';
+        return;
+      }
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('app').style.display = '';
+      reroll();
+      document.getElementById('submit-btn').addEventListener('click', submitWord);
+      document.getElementById('reroll-btn').addEventListener('click', reroll);
+      document.getElementById('word-in').addEventListener('keydown', e => {
+        if (e.key === 'Enter') submitWord();
+      });
+      document.getElementById('word-in').focus();
+    })();
+  </script>
+</body>
+</html>

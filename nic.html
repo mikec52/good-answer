@@ -18,6 +18,14 @@
     color: #fff;
   }
 
+  #scale-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+  }
+
   #game-root {
     position: relative;
     width: 1280px;
@@ -28,16 +36,6 @@
     flex-direction: column;
   }
 
-  /* --- Scalable canvas --- */
-  #scale-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100vw;
-    height: 100vh;
-  }
-
-  /* --- SVG blob background (matches feud.html) --- */
   #bg-blobs {
     position: absolute;
     inset: 0;
@@ -47,7 +45,7 @@
     pointer-events: none;
   }
 
-  /* --- Top bar --- */
+  /* --- Top bar: module label + scores --- */
   #top-bar {
     position: relative;
     z-index: 10;
@@ -58,21 +56,18 @@
     background: rgba(17,17,17,0.85);
     border-bottom: 1px solid #333;
   }
-
   #top-bar .module-label {
     font-family: 'dazzle-unicase', sans-serif;
     font-size: 1.1rem;
     color: #fba300;
     letter-spacing: 0.08em;
   }
-
   #top-bar .scores {
     display: flex;
-    gap: 24px;
+    gap: 18px;
     font-size: 0.9rem;
     letter-spacing: 0.06em;
   }
-
   .score-pill {
     display: flex;
     align-items: center;
@@ -82,9 +77,54 @@
     padding: 4px 14px;
   }
   .score-pill .team-name { opacity: 0.7; }
-  .score-pill .team-pts  { font-size: 1.1rem; font-weight: 700; }
+  .score-pill .team-pts  { font-size: 1.1rem; font-weight: 700; font-family: 'video', monospace; }
   .score-pill.red  .team-pts { color: #ff5555; }
   .score-pill.blue .team-pts { color: #4c8cff; }
+
+  /* --- Question meta strip (counter + timer) --- */
+  #meta-strip {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 60px 0;
+  }
+  #q-counter {
+    font-size: 0.8rem;
+    letter-spacing: 0.14em;
+    color: #888;
+    text-transform: uppercase;
+  }
+  #q-counter b { color: #fba300; font-weight: 700; }
+  #timer-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #timer-bar {
+    width: 220px;
+    height: 8px;
+    background: #1a1a1a;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #333;
+  }
+  #timer-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #4caf50, #fba300);
+    transition: width 0.25s linear;
+  }
+  #timer-fill.warning { background: #ff5555; }
+  #timer-text {
+    font-family: 'video', monospace;
+    font-size: 1.1rem;
+    color: #fff;
+    width: 38px;
+    text-align: right;
+  }
+  #timer-text.warning { color: #ff5555; }
 
   /* --- Main stage --- */
   #stage {
@@ -94,145 +134,173 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 32px;
-    padding: 24px 60px;
+    justify-content: flex-start;
+    gap: 18px;
+    padding: 14px 60px 4px;
   }
 
   /* --- Question card --- */
   #question-card {
     width: 100%;
-    max-width: 820px;
+    max-width: 900px;
     background: #1a1a1a;
     border-radius: 16px;
-    padding: 32px 40px;
+    padding: 22px 32px;
     text-align: center;
   }
-
   #question-category {
     font-size: 0.75rem;
     letter-spacing: 0.14em;
     color: #fba300;
     text-transform: uppercase;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
-
   #question-text {
-    font-size: 1.6rem;
-    line-height: 1.4;
+    font-size: 1.5rem;
+    line-height: 1.35;
     color: #fff;
   }
 
-  /* --- Answer reveal area --- */
+  /* --- Answer reveal banner --- */
   #answer-reveal {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    min-height: 80px;
-  }
-
-  #answer-label {
-    font-size: 0.75rem;
-    letter-spacing: 0.12em;
-    color: #888;
-    text-transform: uppercase;
-  }
-
-  #answer-value {
-    font-family: 'video', monospace;
-    font-size: 4rem;
-    color: #fba300;
-    letter-spacing: 0.04em;
+    align-items: baseline;
+    gap: 14px;
+    min-height: 48px;
     opacity: 0;
     transition: opacity 0.4s ease;
   }
-  #answer-value.visible { opacity: 1; }
+  #answer-reveal.visible { opacity: 1; }
+  #answer-label {
+    font-size: 0.8rem;
+    letter-spacing: 0.14em;
+    color: #888;
+    text-transform: uppercase;
+  }
+  #answer-value {
+    font-family: 'video', monospace;
+    font-size: 2.6rem;
+    color: #fba300;
+    letter-spacing: 0.04em;
+  }
 
   /* --- Player guess rows --- */
   #guess-rows {
     width: 100%;
-    max-width: 820px;
+    max-width: 900px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
 
   .guess-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 32px 1fr 200px 60px 130px 110px;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
     background: #1a1a1a;
     border-radius: 10px;
-    padding: 12px 20px;
+    padding: 10px 18px;
     border: 2px solid transparent;
-    transition: border-color 0.3s ease, background 0.3s ease;
+    transition: border-color 0.25s ease, background 0.25s ease, opacity 0.25s ease;
   }
-  .guess-row.active  { border-color: #fba300; }
-  .guess-row.correct { background: #1b3a1b; border-color: #4caf50; }
-  .guess-row.over    { background: #3a1a1a; border-color: #ff5555; opacity: 0.6; }
+  .guess-row.locked  { border-color: #fba300; }
+  .guess-row.dim     { opacity: 0.55; }
+
+  .guess-row .order-badge {
+    font-family: 'video', monospace;
+    font-size: 1rem;
+    color: #fba300;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .guess-row.locked .order-badge { opacity: 1; }
 
   .guess-row .player-name {
-    flex: 1;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     letter-spacing: 0.06em;
   }
   .guess-row.red  .player-name { color: #ff5555; }
   .guess-row.blue .player-name { color: #4c8cff; }
 
+  .guess-row .guess-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   .guess-row input.guess-input {
-    width: 180px;
+    width: 100%;
     background: #111;
     border: 1px solid #444;
     border-radius: 6px;
-    padding: 8px 12px;
+    padding: 8px 10px;
     color: #fff;
     font-family: 'video', monospace;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     text-align: center;
     outline: none;
     transition: border-color 0.2s;
   }
   .guess-row input.guess-input:focus { border-color: #fba300; }
   .guess-row input.guess-input:disabled { background: #1a1a1a; color: #666; }
-
   .guess-row .guess-locked {
-    width: 180px;
     font-family: 'video', monospace;
-    font-size: 1.6rem;
-    text-align: center;
+    font-size: 1.5rem;
     color: #fff;
     display: none;
   }
-  .guess-row .guess-locked.visible { display: block; }
+  .guess-row.locked .guess-input { display: none; }
+  .guess-row.locked .guess-locked { display: block; }
+
+  .guess-row .speed-mult {
+    font-family: 'video', monospace;
+    font-size: 0.95rem;
+    color: #fba300;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .guess-row.locked .speed-mult { opacity: 1; }
 
   .guess-row .diff-label {
-    width: 80px;
-    text-align: right;
-    font-size: 0.85rem;
     font-family: 'video', monospace;
+    font-size: 0.85rem;
     color: #888;
+    text-align: right;
     opacity: 0;
     transition: opacity 0.3s ease;
   }
   .guess-row .diff-label.visible { opacity: 1; }
-  .guess-row.correct .diff-label { color: #4caf50; }
-  .guess-row.over    .diff-label { color: #ff5555; }
+  .guess-row .diff-label.exact   { color: #fba300; font-weight: 700; }
 
-  .guess-row .submit-btn {
+  .guess-row .points-cell {
+    font-family: 'video', monospace;
+    font-size: 1.1rem;
+    color: #fff;
+    text-align: right;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .guess-row .points-cell.visible { opacity: 1; }
+  .guess-row .points-cell.positive { color: #4caf50; }
+  .guess-row .points-cell.zero     { color: #888; }
+  .guess-row .points-cell.negative { color: #ff5555; }
+
+  .guess-row .lock-btn {
     background: #fba300;
     color: #111;
     border: none;
     border-radius: 6px;
-    padding: 8px 18px;
+    padding: 8px 0;
     font-family: 'futura-100', sans-serif;
     font-size: 0.85rem;
     letter-spacing: 0.06em;
     cursor: pointer;
     transition: opacity 0.2s;
   }
-  .guess-row .submit-btn:hover { opacity: 0.85; }
-  .guess-row .submit-btn:disabled { opacity: 0.35; cursor: default; }
+  .guess-row .lock-btn:hover { opacity: 0.85; }
+  .guess-row.locked .lock-btn { display: none; }
 
   /* --- Bottom controls --- */
   #bottom-bar {
@@ -241,12 +309,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 20px;
-    padding: 16px 24px;
+    gap: 16px;
+    padding: 14px 24px;
     background: rgba(17,17,17,0.85);
     border-top: 1px solid #333;
   }
-
   .ctrl-btn {
     background: #222;
     color: #fff;
@@ -262,23 +329,45 @@
   .ctrl-btn:hover { background: #2e2e2e; border-color: #666; }
   .ctrl-btn.primary { background: #fba300; color: #111; border-color: #fba300; }
   .ctrl-btn.primary:hover { background: #e09500; }
-  .ctrl-btn:disabled { opacity: 0.35; cursor: default; }
+  .ctrl-btn:disabled { opacity: 0.35; cursor: default; pointer-events: none; }
 
-  /* --- Perspective toggle (dev) --- */
-  #perspective-toggle {
+  /* --- Round-complete card --- */
+  #round-complete {
     position: absolute;
-    bottom: 10px;
-    right: 16px;
-    z-index: 20;
-    font-size: 0.7rem;
-    color: #555;
-    cursor: pointer;
-    letter-spacing: 0.08em;
-    user-select: none;
+    inset: 0;
+    z-index: 50;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.7);
   }
-  #perspective-toggle:hover { color: #888; }
+  #round-complete.visible { display: flex; }
+  #round-complete .rc-card {
+    background: #1a1a1a;
+    border: 2px solid #fba300;
+    border-radius: 16px;
+    padding: 36px 48px;
+    text-align: center;
+    min-width: 460px;
+  }
+  #round-complete .rc-title {
+    font-family: 'dazzle-unicase', sans-serif;
+    color: #fba300;
+    font-size: 1.6rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 18px;
+  }
+  #round-complete .rc-totals {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 22px;
+    font-family: 'video', monospace;
+    font-size: 1.6rem;
+  }
+  #round-complete .rc-red  { color: #ff5555; }
+  #round-complete .rc-blue { color: #4c8cff; }
 
-  /* --- Version tag --- */
   #version-tag {
     position: absolute;
     top: 6px;
@@ -295,9 +384,8 @@
 <div id="scale-wrapper">
 <div id="game-root">
 
-  <span id="version-tag">NIC prototype</span>
+  <span id="version-tag">NIC prototype v2</span>
 
-  <!-- Background blobs (simplified) -->
   <svg id="bg-blobs" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <filter id="blob-blur"><feGaussianBlur stdDeviation="60"/></filter>
@@ -309,89 +397,179 @@
     </g>
   </svg>
 
-  <!-- Top bar: module label + running scores -->
   <div id="top-bar">
     <span class="module-label">Number Is Correct</span>
     <div class="scores">
       <div class="score-pill red">
-        <span class="team-name" id="red-name">Red Team</span>
-        <span class="team-pts"  id="red-score">0</span>
+        <span class="team-name">Red</span>
+        <span class="team-pts" id="red-score">0</span>
       </div>
       <div class="score-pill blue">
-        <span class="team-name" id="blue-name">Blue Team</span>
-        <span class="team-pts"  id="blue-score">0</span>
+        <span class="team-name">Blue</span>
+        <span class="team-pts" id="blue-score">0</span>
       </div>
     </div>
   </div>
 
-  <!-- Main stage -->
+  <div id="meta-strip">
+    <div id="q-counter">Question <b id="q-num">—</b> of <b id="q-total">5</b></div>
+    <div id="timer-wrap">
+      <div id="timer-bar"><div id="timer-fill"></div></div>
+      <div id="timer-text">30</div>
+    </div>
+  </div>
+
   <div id="stage">
-
-    <!-- Question -->
     <div id="question-card">
-      <div id="question-category">General Knowledge</div>
-      <div id="question-text">How many hot dogs are consumed in the United States each year (in billions)?</div>
+      <div id="question-category">—</div>
+      <div id="question-text">Press <b>Start Round</b> to begin.</div>
     </div>
 
-    <!-- Answer reveal (hidden until shown) -->
     <div id="answer-reveal">
-      <div id="answer-label">The answer is</div>
-      <div id="answer-value">20</div>
+      <span id="answer-label">Correct answer:</span>
+      <span id="answer-value">—</span>
     </div>
 
-    <!-- One row per player/team -->
-    <div id="guess-rows">
-      <!-- Rows injected by JS -->
-    </div>
-
+    <div id="guess-rows"></div>
   </div>
 
-  <!-- Bottom controls -->
   <div id="bottom-bar">
-    <button class="ctrl-btn" onclick="resetRound()">New Question</button>
-    <button class="ctrl-btn primary" id="reveal-btn" onclick="revealAnswer()">Reveal Answer</button>
+    <button class="ctrl-btn primary" id="start-btn" onclick="startRound()">Start Round</button>
+    <button class="ctrl-btn" id="reveal-btn" onclick="forceReveal()" disabled>Reveal Now</button>
+    <button class="ctrl-btn" id="next-btn" onclick="nextQuestion()" disabled>Next Question</button>
   </div>
 
-  <div id="perspective-toggle" onclick="cyclePerspective()">[ perspective: HOST ]</div>
+  <div id="round-complete">
+    <div class="rc-card">
+      <div class="rc-title">Round Complete</div>
+      <div class="rc-totals">
+        <div class="rc-red"><span id="rc-red">0</span></div>
+        <div class="rc-blue"><span id="rc-blue">0</span></div>
+      </div>
+      <button class="ctrl-btn primary" onclick="resetRound()">New Round</button>
+    </div>
+  </div>
 
 </div>
 </div>
 
 <script>
-// ─── Prototype state ───────────────────────────────────────────────────────
+// ─── Configuration ─────────────────────────────────────────────────────────
+const QUESTIONS_PER_ROUND = 5;
+const QUESTION_TIME_MS    = 30000;
+
+// Scoring bands: highest matched first wins. pct is |diff|/answer.
+// "exact" is checked separately (pct === 0 still gets 1000, not 300).
+const SCORE_BANDS = [
+  { maxPct: 0.10, pts: 150 },
+  { maxPct: 0.20, pts: 125 },
+  { maxPct: 0.30, pts: 100 },
+  { maxPct: 0.35, pts:  75 },
+  { maxPct: 0.50, pts:  50 },
+  { maxPct: 0.75, pts:   0 },
+  { maxPct: Infinity, pts: -50 },
+];
+const EXACT_PTS = 500;
+
+// Speed multipliers indexed by lock order (0-based).
+// Anyone past index 2 gets 1x.
+const SPEED_MULT = [2, 1.75, 1.5];
+function speedMultFor(orderIdx) {
+  return SPEED_MULT[orderIdx] ?? 1;
+}
+
+// ─── Sample roster + question bank ────────────────────────────────────────
 const PLAYERS = [
-  { name: 'Alice',   team: 'red',  color: '#ff5555' },
-  { name: 'Bob',     team: 'red',  color: '#ff5555' },
-  { name: 'Carol',   team: 'blue', color: '#4c8cff' },
-  { name: 'Dave',    team: 'blue', color: '#4c8cff' },
+  { name: 'Alice', team: 'red'  },
+  { name: 'Bob',   team: 'red'  },
+  { name: 'Carol', team: 'blue' },
+  { name: 'Dave',  team: 'blue' },
 ];
 
-// placeholder question bank — replace with real NIC question set
 const QUESTIONS = [
   { text: 'How many hot dogs are consumed in the United States each year (in billions)?', category: 'Food & Drink', answer: 20 },
-  { text: 'In what year was the first iPhone released?', category: 'Technology', answer: 2007 },
-  { text: 'How many bones are in the adult human body?', category: 'Science', answer: 206 },
-  { text: 'What is the height of the Eiffel Tower in meters?', category: 'Geography', answer: 330 },
-  { text: 'How many keys does a standard piano have?', category: 'Music', answer: 88 },
+  { text: 'In what year was the first iPhone released?',                                  category: 'Technology',   answer: 2007 },
+  { text: 'How many bones are in the adult human body?',                                  category: 'Science',      answer: 206 },
+  { text: 'What is the height of the Eiffel Tower in meters?',                            category: 'Geography',    answer: 330 },
+  { text: 'How many keys does a standard piano have?',                                    category: 'Music',        answer: 88 },
+  { text: 'How many countries are members of the United Nations?',                        category: 'Geography',    answer: 193 },
+  { text: 'How many minutes long is the average feature film?',                           category: 'Movies',       answer: 110 },
+  { text: 'How many stars are on the U.S. flag?',                                         category: 'History',      answer: 50 },
 ];
 
-let currentQ   = null;
-let revealed   = false;
-let perspective = 'host'; // host | red | blue | guesser
+// ─── Round state ──────────────────────────────────────────────────────────
+let roundQuestions = [];   // shuffled QUESTIONS_PER_ROUND
+let qIdx           = -1;
+let phase          = 'idle'; // idle | guess | reveal | done
+let lockOrder      = [];   // [{ playerIdx, guess, lockedAtMs }]
+let timerEndsAt    = 0;
+let timerInterval  = null;
+let teamTotals     = { red: 0, blue: 0 };
 
-// ─── Scalable canvas ──────────────────────────────────────────────────────
+// ─── Canvas scaler ────────────────────────────────────────────────────────
 function scaleCanvas() {
   const root = document.getElementById('game-root');
-  const scaleX = window.innerWidth  / 1280;
-  const scaleY = window.innerHeight / 720;
-  const scale  = Math.min(scaleX, scaleY);
-  root.style.transform       = `scale(${scale})`;
+  const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+  root.style.transform = `scale(${scale})`;
   root.style.transformOrigin = 'center center';
 }
 window.addEventListener('resize', scaleCanvas);
 scaleCanvas();
 
-// ─── Build guess rows ─────────────────────────────────────────────────────
+// ─── Round lifecycle ──────────────────────────────────────────────────────
+function startRound() {
+  teamTotals = { red: 0, blue: 0 };
+  updateScoreDisplay();
+  document.getElementById('round-complete').classList.remove('visible');
+  roundQuestions = shuffle([...QUESTIONS]).slice(0, QUESTIONS_PER_ROUND);
+  qIdx = -1;
+  document.getElementById('q-total').textContent = QUESTIONS_PER_ROUND;
+  document.getElementById('start-btn').disabled = true;
+  nextQuestion();
+}
+
+function nextQuestion() {
+  qIdx++;
+  if (qIdx >= roundQuestions.length) { finishRound(); return; }
+
+  const q = roundQuestions[qIdx];
+  phase = 'guess';
+  lockOrder = [];
+
+  document.getElementById('q-num').textContent = qIdx + 1;
+  document.getElementById('question-category').textContent = q.category;
+  document.getElementById('question-text').textContent = q.text;
+  document.getElementById('answer-value').textContent = q.answer.toLocaleString();
+  document.getElementById('answer-reveal').classList.remove('visible');
+  document.getElementById('reveal-btn').disabled = false;
+  document.getElementById('next-btn').disabled = true;
+
+  buildRows();
+  startTimer();
+}
+
+function finishRound() {
+  phase = 'done';
+  stopTimer();
+  document.getElementById('rc-red').textContent  = teamTotals.red.toLocaleString();
+  document.getElementById('rc-blue').textContent = teamTotals.blue.toLocaleString();
+  document.getElementById('round-complete').classList.add('visible');
+  document.getElementById('reveal-btn').disabled = true;
+  document.getElementById('next-btn').disabled = true;
+}
+
+function resetRound() {
+  document.getElementById('round-complete').classList.remove('visible');
+  document.getElementById('start-btn').disabled = false;
+  document.getElementById('q-num').textContent = '—';
+  document.getElementById('question-text').textContent = 'Press Start Round to begin.';
+  document.getElementById('question-category').textContent = '—';
+  document.getElementById('guess-rows').innerHTML = '';
+  setTimerDisplay(QUESTION_TIME_MS);
+  phase = 'idle';
+}
+
+// ─── Per-question rows ────────────────────────────────────────────────────
 function buildRows() {
   const container = document.getElementById('guess-rows');
   container.innerHTML = '';
@@ -400,102 +578,174 @@ function buildRows() {
     row.className = `guess-row ${p.team}`;
     row.dataset.idx = i;
     row.innerHTML = `
-      <span class="player-name">${p.name}</span>
-      <input class="guess-input" type="number" min="0" placeholder="your guess"
-             onkeydown="handleKey(event, ${i})" />
-      <div class="guess-locked"></div>
+      <div class="order-badge"></div>
+      <div class="player-name">${p.name}</div>
+      <div class="guess-cell">
+        <input class="guess-input" type="number" placeholder="guess"
+               onkeydown="handleKey(event, ${i})" />
+        <div class="guess-locked"></div>
+      </div>
+      <div class="speed-mult"></div>
       <div class="diff-label"></div>
-      <button class="submit-btn" onclick="lockGuess(${i})">Lock In</button>
+      <button class="lock-btn" onclick="lockGuess(${i})">Lock In</button>
     `;
     container.appendChild(row);
   });
+  // Auto-focus the first input for prototype convenience
+  container.querySelector('input.guess-input')?.focus();
 }
 
-// ─── Input handling ────────────────────────────────────────────────────────
+// ─── Lock-in flow ─────────────────────────────────────────────────────────
 function handleKey(e, idx) {
   if (e.key === 'Enter') lockGuess(idx);
 }
 
 function lockGuess(idx) {
-  const row   = document.querySelector(`.guess-row[data-idx="${idx}"]`);
+  if (phase !== 'guess') return;
+  if (lockOrder.some(l => l.playerIdx === idx)) return;
+
+  const row = document.querySelector(`.guess-row[data-idx="${idx}"]`);
   const input = row.querySelector('.guess-input');
-  const val   = input.value.trim();
-  if (!val || isNaN(+val)) return;
+  const raw = input.value.trim();
+  if (raw === '' || isNaN(+raw)) return;
 
-  const locked = row.querySelector('.guess-locked');
-  const btn    = row.querySelector('.submit-btn');
+  const guess = Number(raw);
+  const orderIdx = lockOrder.length;
+  lockOrder.push({ playerIdx: idx, guess, lockedAtMs: Date.now() });
 
-  input.disabled   = true;
-  btn.disabled     = true;
-  locked.textContent = Number(val).toLocaleString();
-  locked.classList.add('visible');
-  input.style.display = 'none';
-  row.classList.add('active');
-  row.dataset.guess = val;
+  row.classList.add('locked');
+  row.querySelector('.guess-locked').textContent = guess.toLocaleString();
+  row.querySelector('.order-badge').textContent = ordinal(orderIdx + 1);
+  const mult = speedMultFor(orderIdx);
+  row.querySelector('.speed-mult').textContent = mult === 1 ? '1×' : `${mult}×`;
+
+  // Move focus to next un-locked input for fast prototype play
+  const nextInput = document.querySelector('.guess-row:not(.locked) input.guess-input');
+  nextInput?.focus();
+
+  if (lockOrder.length >= PLAYERS.length) {
+    revealAnswer();
+  }
 }
 
-// ─── Reveal ────────────────────────────────────────────────────────────────
-function revealAnswer() {
-  if (!currentQ || revealed) return;
-  revealed = true;
-
-  const answerEl = document.getElementById('answer-value');
-  answerEl.classList.add('visible');
-  document.getElementById('reveal-btn').disabled = true;
-
-  const answer = currentQ.answer;
-
-  document.querySelectorAll('.guess-row').forEach(row => {
-    const rawGuess = row.dataset.guess;
-    if (rawGuess === undefined) return;
-
-    const guess = +rawGuess;
-    const diff  = answer - guess;
-    const diffEl = row.querySelector('.diff-label');
-
-    if (guess > answer) {
-      row.classList.add('over');
-      diffEl.textContent = `▲ ${(guess - answer).toLocaleString()} over`;
-    } else if (diff === 0) {
-      row.classList.remove('active');
-      row.classList.add('correct');
-      diffEl.textContent = 'Exact!';
-    } else {
-      row.classList.remove('active');
-      row.classList.add('correct');
-      diffEl.textContent = `+${diff.toLocaleString()} away`;
+// ─── Timer ────────────────────────────────────────────────────────────────
+function startTimer() {
+  stopTimer();
+  timerEndsAt = Date.now() + QUESTION_TIME_MS;
+  setTimerDisplay(QUESTION_TIME_MS);
+  timerInterval = setInterval(() => {
+    const left = Math.max(0, timerEndsAt - Date.now());
+    setTimerDisplay(left);
+    if (left <= 0) {
+      stopTimer();
+      revealAnswer();
     }
+  }, 100);
+}
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function setTimerDisplay(ms) {
+  const secs = Math.ceil(ms / 1000);
+  const pct = Math.max(0, Math.min(1, ms / QUESTION_TIME_MS));
+  const fill = document.getElementById('timer-fill');
+  const text = document.getElementById('timer-text');
+  fill.style.width = `${pct * 100}%`;
+  text.textContent = secs;
+  const warning = ms <= 5000;
+  fill.classList.toggle('warning', warning);
+  text.classList.toggle('warning', warning);
+}
+
+// ─── Reveal + scoring ─────────────────────────────────────────────────────
+function forceReveal() {
+  if (phase === 'guess') revealAnswer();
+}
+
+function revealAnswer() {
+  if (phase !== 'guess') return;
+  phase = 'reveal';
+  stopTimer();
+
+  const q = roundQuestions[qIdx];
+  document.getElementById('answer-reveal').classList.add('visible');
+  document.getElementById('reveal-btn').disabled = true;
+  document.getElementById('next-btn').disabled = false;
+
+  // Score every locked player
+  lockOrder.forEach((entry, orderIdx) => {
+    const { playerIdx, guess } = entry;
+    const player = PLAYERS[playerIdx];
+    const { basePts, label } = scoreGuess(guess, q.answer);
+    const mult = speedMultFor(orderIdx);
+    const final = Math.round(basePts * mult);
+
+    teamTotals[player.team] += final;
+
+    const row = document.querySelector(`.guess-row[data-idx="${playerIdx}"]`);
+    const diffEl = row.querySelector('.diff-label');
+    const ptsEl  = row.querySelector('.points-cell') || (() => {
+      const el = document.createElement('div');
+      el.className = 'points-cell';
+      row.appendChild(el);
+      return el;
+    })();
+
+    diffEl.textContent = label;
     diffEl.classList.add('visible');
+    if (basePts === EXACT_PTS) diffEl.classList.add('exact');
+
+    ptsEl.textContent = (final >= 0 ? '+' : '') + final.toLocaleString();
+    ptsEl.classList.add('visible');
+    ptsEl.classList.add(final > 0 ? 'positive' : final < 0 ? 'negative' : 'zero');
   });
+
+  // Dim un-locked rows + show 0 explicitly
+  document.querySelectorAll('.guess-row').forEach(row => {
+    if (!row.classList.contains('locked')) {
+      row.classList.add('dim');
+      const diffEl = row.querySelector('.diff-label');
+      diffEl.textContent = 'no guess';
+      diffEl.classList.add('visible');
+    }
+  });
+
+  updateScoreDisplay();
 }
 
-// ─── Reset ─────────────────────────────────────────────────────────────────
-function resetRound() {
-  revealed = false;
-  currentQ = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
-
-  document.getElementById('question-text').textContent     = currentQ.text;
-  document.getElementById('question-category').textContent = currentQ.category;
-
-  const answerEl = document.getElementById('answer-value');
-  answerEl.textContent = currentQ.answer.toLocaleString();
-  answerEl.classList.remove('visible');
-
-  document.getElementById('reveal-btn').disabled = false;
-  buildRows();
+// Returns { basePts, label } for a guess relative to the answer.
+function scoreGuess(guess, answer) {
+  const diff = guess - answer;
+  if (diff === 0) return { basePts: EXACT_PTS, label: 'EXACT!' };
+  const pct = Math.abs(diff) / Math.abs(answer);
+  const band = SCORE_BANDS.find(b => pct <= b.maxPct);
+  const direction = diff > 0 ? '▲' : '▼';
+  const pctLabel = (pct * 100).toFixed(pct < 0.1 ? 1 : 0) + '%';
+  return { basePts: band.pts, label: `${direction} ${pctLabel} off` };
 }
 
-// ─── Perspective toggle (dev helper) ──────────────────────────────────────
-const PERSPECTIVES = ['host', 'red', 'blue', 'guesser'];
-function cyclePerspective() {
-  const idx = PERSPECTIVES.indexOf(perspective);
-  perspective = PERSPECTIVES[(idx + 1) % PERSPECTIVES.length];
-  document.getElementById('perspective-toggle').textContent =
-    `[ perspective: ${perspective.toUpperCase()} ]`;
-  // TODO: hide/show appropriate controls per perspective
+// ─── Helpers ──────────────────────────────────────────────────────────────
+function updateScoreDisplay() {
+  document.getElementById('red-score').textContent  = teamTotals.red.toLocaleString();
+  document.getElementById('blue-score').textContent = teamTotals.blue.toLocaleString();
 }
 
-// ─── Init ──────────────────────────────────────────────────────────────────
+function ordinal(n) {
+  const s = ['th','st','nd','rd'], v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────
 resetRound();
 </script>
 </body>

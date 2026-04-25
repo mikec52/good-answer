@@ -5,6 +5,7 @@ Family Feud-inspired game with original features and styling. Working title: **G
 - Main game file: `feud.html`
 - Question bank: `master_question_bank.json` (active file, includes variants — see below)
 - Pre-variants backup: `question_bank_pre-variants.json`
+- Number Is Correct question bank: `numberquestions.json` (numeric questions for NIC module — `{question, category, subCategory, answer, factCheck}`)
 - Award definitions: `awards.json` (name, id, compute key — see "Victory Awards" section)
 - Tooltip definitions: `tooltips.csv` (id, class, flavor, description — see "Tooltip System" section)
 - Sound files alongside feud.html: `ding.mp3` (correct answer reveal), `newstrike.wav` (incorrect answer), `goodanswer.mp3` (top answer reveal, 300ms delayed, baseVolume 0.35), `negativebeep.wav` (failed steal attempt), `opentheme.mp3`, `endtheme.mp3`, `analogbuttonclick.mp3`, `flick.wav` (tick SFX + board-wrapper slide), `phonetype.wav` (typewriter keystroke SFX + tile-cover hover), `balbg.mp3` (background music, looping), `roundend.wav` (round winner determined), `decreaseblip.mp3` (streak/mult decrease), `neutralbeep.wav` (duplicate answer rejection), `chime.wav` (badge bounce SFX), `zoop.wav` (speed stepper SFX), `slit.wav` (fly-in/out whoosh — cat-row entry/exit, dialog open/close), `tap1.wav` (button click — setup nav, menu, confirm), `tap2.wav` (element landing — input area fly in/out), `tvon.wav` (CRT power-on), `powerdown.wav` (CRT power-off)
@@ -213,7 +214,7 @@ Planned features grouped by rough workload tier. Each entry has tags for feasibi
 - ~~**Rebrand Fast Money → Lightning Round**~~ → shipped as **Face-off Round** (see CLAUDE.md "Face-off Round" section). Two 1v1 battles with simultaneous input from random player pairs, 60s timer each, 2x multiplier on totals, always runs at the end of every game. Follow-up work: styling pass, voting-based player selection, polished transitions, Cloud Functions migration for fair same-answer race ordering.
 - **Turn timer** ✅ 🟡 — Per-turn countdown with visual indicator. Host-authoritative: host writes expiry timestamp, all clients display. On expiry, auto-strike or auto-submit. Touches `submitGuess` flow.
 - **Quests** ✅ 🟡 — Randomized per-round goals with small progress overlay (e.g. "First to 3 top-3 answers → 300pts bonus"). Needs: quest definition JSON (like `awards.json`), progress hooks in `submitGuess`, overlay UI, completion rewards. Moderate because it touches the gameplay loop.
-- **Minigame: Number is Correct** ✅ 🟡 — Price-is-Right style numeric question. Closest without going over wins. Simpler than Circle of Prizes: single question screen, one guess per player/team, reveal animation. Open question: numeric question bank source (new pool or tagged subset of existing).
+- ~~**Minigame: Number is Correct**~~ → shipped as the **Number Is Correct (NIC)** module (see "Number Is Correct — Module Overview" section). Five questions per round, 30s timer each, all players submit simultaneously, exposed-as-locked guesses with speed-bonus multipliers (1st 2×, 2nd 1.75×, 3rd 1.5×). Followup polish on the to-do list for the next session.
 - **4-player mode** ⚠️ 🟡 — Each player is their own "team." Strikes pass control to next player, scoring becomes per-player. Current team-based structures (`teamScores[2]`, `teamTurn`, `teamPlayerUids[2][]`) need to generalize. Tradeoff: generalize the data model (cleaner, bigger upfront lift) or branch on a `mode` flag (faster, accumulates debt). Lean toward generalize.
 - **Prizes (items system)** ⚠️ 🟡 — **Captains shipped (unblocked)** (first-player-to-join = captain, per agreement). Then: prize pool JSON, end-of-round award flow (winner picks first, loser gets leftover), 3-slot team inventory, use/discard actions gated to captain, steal-a-prize right on steal-round wins. Effect types (bonus points, clear strikes, streak/mult boosts) each need a gameplay hook. Inventory system is contained; effects are the spread.
 - **Animated host + dog characters** ⚠️ 🟡 — Asset pipeline is the unknown. Start screen already has placeholder dog frame-swap. Need: reaction triggers (correct, strike, steal, round end, victory), frame sets per reaction, positioning. Friction: asset generation via Replicate-trained models for consistent sprite frames. Workload is mostly asset creation + hook wiring.
@@ -235,7 +236,7 @@ Planned features grouped by rough workload tier. Each entry has tags for feasibi
 2. ~~Lightning Round~~ → ✅ shipped as Face-off Round; styling iteration next
 3. ~~Captains feature~~ → ✅ shipped. Prizes now unblocked.
 4. Prizes — first major gameplay expansion (unblocked)
-5. Minigames (Number is Correct before Circle of Prizes — smaller build, lower risk)
+5. ~~Number is Correct~~ → ✅ shipped. Circle of Prizes is the next minigame.
 6. Everything else as appetite dictates
 
 ---
@@ -596,10 +597,12 @@ Defined near the top of the script block. Each module entry:
 
 ```js
 ROUND_MODULES = {
-  'high-five':       { label, colorClass, minPlayersPerTeam, enter(onComplete), reset() },
-  'poll-position':   { label, colorClass, minPlayersPerTeam, enter(onComplete), reset() },
-  'secret-scribble': { label, colorClass, minPlayersPerTeam: 2, enter(onComplete), reset() },
-  'common-thread':   { label, colorClass, minPlayersPerTeam: 2, enter(onComplete), reset() },
+  'high-five':         { label, colorClass, minPlayersPerTeam, enter(onComplete), reset() },
+  'poll-position':     { label, colorClass, minPlayersPerTeam, enter(onComplete), reset() },
+  'secret-scribble':   { label, colorClass, minPlayersPerTeam: 2, enter(onComplete), reset() },
+  'common-thread':     { label, colorClass, minPlayersPerTeam: 2, enter(onComplete), reset() },
+  'grid-lock':         { label, colorClass, minPlayersPerTeam: 1, enter(onComplete), reset() },
+  'number-is-correct': { label, colorClass, minPlayersPerTeam: 1, enter(onComplete), reset() },
 };
 ```
 
@@ -610,8 +613,8 @@ ROUND_MODULES = {
 - **Poll Position** — survey ranked question (the now-deprecated "Survey" round type spun off into its own module). Shares H5's summary classes since the format is identical (ranked answer list, one winning team).
 - **Secret Scribble** — Pictionary-style drawing minigame. See "Secret Scribble — Module Overview".
 - **Common Thread** — Codenames-style clue/guess round. See "Common Thread — Module Overview".
-
-**Next on the roadmap:** **Number is Correct** (NIC) — Price-is-Right-style numeric guessing. Not yet built.
+- **Grid Lock** — Boggle-style 5×5 word-tracing race. See "Grid Lock — Module".
+- **Number Is Correct (NIC)** — Price-is-Right-style numeric guessing with speed bonuses. See "Number Is Correct — Module Overview".
 
 ### Module Visual Identity — Animated Logos
 
@@ -1263,6 +1266,117 @@ Each `case 'gridlock-<phase>':` handler must be idempotent — "bring the client
 - [ ] `lobbyStartGame` Firestore reset clears `gridLockState` + `pendingAction`.
 - [ ] Picker card art + tooltip for the Grid Lock round type.
 - [ ] Cinematic animation (TBD, not yet prototyped — similar treatment to other modules).
+
+---
+
+## Number Is Correct — Module Overview
+
+Price-Is-Right-style numeric guessing module. All players guess simultaneously each question; a 30s timer runs per question; locks are exposed to other players the moment they happen, so going fast is risky (your guess is visible to others, who can ±1 it) but rewards a speed multiplier. Five questions per round. `minPlayersPerTeam: 1` — works in 1v1 and beyond. Module key: `'number-is-correct'`. Color: `--mod-nic: #c06000` (orange-amber).
+
+Original prototype: [nic.html](nic.html) (standalone). Now integrated as `ROUND_MODULES['number-is-correct']` in `feud.html`.
+
+### Round structure
+
+- **5 questions per round** (`NIC_QUESTIONS_PER_ROUND`). Host picks via `nicHostPickQuestions(n)` from `NIC_QUESTION_BANK` (loaded once at page load from `numberquestions.json`). `_usedQuestionIdxs` Set persists across NIC rounds in a game session so questions don't repeat; pool resets if exhausted.
+- **30s timer per question** (`NIC_QUESTION_TIME_MS`). Host writes `timerEndsAt` as a wall-clock ms timestamp; all clients run a 200ms-tick display interval reading the synced expiry. Only the host calls `nicHostRevealQuestion` on expiry (authoritative).
+- **Auto-reveal** when all roster players have locked OR timer hits 0.
+- **Reveal hold:** ~4.5s (`NIC_REVEAL_HOLD_MS`) with each player's row showing diff label + signed final points. Then auto-advance (~600ms `between` beat → next question or `done`).
+- **Round end:** `nicHostFinishRound` syncs `phase: 'done'` and triggers `nicShowSummary`. Both host and non-host run the summary locally; only host calls `onComplete` (handleModuleComplete) at the end.
+
+### Scoring
+
+Halved from the prototype's first pass (April 25 session). Per-question scoring is `band × speedMult`:
+
+| Closeness               | Base pts |
+|-------------------------|---------:|
+| Exact (`diff === 0`)    |      500 |
+| Within 10%              |      150 |
+| Within 20%              |      125 |
+| Within 30%              |      100 |
+| Within 35%              |       75 |
+| Within 50%              |       50 |
+| Within 75%              |        0 |
+| Over 75% off            |      −50 |
+
+Speed multiplier: 1st lock ×2, 2nd ×1.75, 3rd ×1.5, 4th+ ×1. Speed mult applies even to the −50 penalty (so a 1st-place lock that's >75% off = −100). Pct denominator is `|diff| / |answer|`; answer = 0 not currently in the bank.
+
+### State (`nicState`)
+
+```js
+nicState = {
+  active, phase,            // 'guess' | 'reveal' | 'between' | 'done'
+  qIdx, questions,          // [{question, category, answer}] picked at round start
+  roster,                   // flat [{uid, name, team}], interleaved (red0, blue0, red1, blue1, ...)
+  locks,                    // [{uid, name, team, guess, lockedAtMs, orderIdx, basePts?, mult?, finalPts?, label?}]
+  timerEndsAt,              // wall-clock ms; only host advances it
+  scoresByUid, teamTotals,  // round-cumulative
+  _usedQuestionIdxs,        // Set, persists across NIC rounds in a game
+  _localActiveIdx,          // local mode only — index into roster of next-to-lock
+  _timerHandle,             // host-side authoritative interval
+  _displayTimerHandle,      // all-clients display tick
+  _betweenTimer, _summaryRan,
+  onComplete,
+}
+```
+
+Roster is deterministic across clients (sorted by uid in multiplayer; arbitrary but stable in local). Built by `nicGetRoster()`.
+
+### Multiplayer flow (host-authoritative)
+
+- **Host:** `enterNicRound` picks 5 questions → `nicHostStartQuestion(0)` → `nicSyncState` writes `nicState` payload + `matchLog` + `nicPlayerStats` to Firestore.
+- **Non-host enter:** dispatched from the round-type-selected reconcile handler. Uses a `nonHostLive` race-guard mirroring the GL pattern — if a `nicState` snapshot already arrived during the cinematic + `loadNicQuestions` await, preserve those synced fields and only clear local-only handles. Without the guard, Q1's snapshot was being wiped by `resetNicState()` and the non-host saw a dead clock + non-responsive input until Q2's fresh sync repopulated.
+- **Submit:** `submitGuess` early-branches to `submitNicGuess` when `nicState.active && nicState.phase === 'guess'`. Host calls `hostProcessNicGuess(uid, guess)` directly. Non-host writes `pendingAction: { type: 'nicGuess', uid, guess, clientTs }` and disables input optimistically; host's processor validates the sender is in the roster, appends to `nicState.locks`, syncs.
+- **Reveal:** host computes per-player `basePts` + `mult` + `finalPts`, updates `scoresByUid` + `teamTotals`, emits one matchLog entry per locked player (`outcome: 'nic_question'`, `roundType: 'number-is-correct'`, `category: 'Number Is Correct'`), accumulates `nicPlayerStats`, syncs.
+- **Reconcile (`nicApplySyncedState`):** mirrors host's nicState into local fields, drives `nicRender` + display timer + `nicUpdateInputArea` based on phase / qIdx / locks-length deltas. Triggers `nicShowSummary` on phase transition into `'done'` (guarded by `_summaryRan` against re-entry).
+
+### Input-area gating
+
+`updateRoleUI` and `updateTurn` both early-return when `nicState.active` is true (matches `gridLockState.active` pattern) — without this, every reconcile snapshot re-disables input for non-active-turn clients, breaking simultaneous-play. NIC's `nicUpdateInputArea` is the single owner of the input-area state per phase / per player:
+
+- **Active player, not yet locked:** `mode: 'guess'`, header `NUMBER IS CORRECT`, subtext `MAKE YOUR GUESS` (multiplayer) / `[NAME] — MAKE YOUR GUESS` (local cycles through roster slots), input enabled, focus-hinted.
+- **Locked player:** `mode: 'disabled'`, header `LOCKED IN`, subtext `[guess] · WAITING…`, team-colored.
+- **Reveal / between phase:** `mode: 'disabled'`, subtext `REVEALING…`.
+
+### DOM (in `#module-canvas`)
+
+- **`#nic-container`** — outer wrapper, `position: absolute; inset: 0`, `display: none` until `.visible` class. Contains `.nic-stage` (built lazily by `nicRender`): `.nic-meta` (Q-counter + timer bar), `.nic-question-card`, `.nic-answer-reveal`, `.nic-rows` (one per roster player).
+- **`#nic-summary`** — separate panel sibling of `#nic-container`. Applies `.round-summary` (frosted-glass framing) + module-specific layout. `position: absolute; top: 0; left: 0; right: 0` (NOT `inset: 0`) so it sizes to its body content + 350px max-height instead of stretching the canvas. Two columns: PLAYER POINTS rank (cumulative scoresByUid sorted desc, 6 max) on left; per-question recap (Q1–Q5 with answer text) on right. Each column wraps its content in a `.nic-summary-track` for the auto-marquee.
+
+### Round Summary Framework integration
+
+`nicShowSummary` follows the canonical sequence:
+1. `showRoundCompleteCard({title: 'ROUND COMPLETE', subtitle: 'TALLYING SCORES', holdMs: 1600, extraClass: 'rcc-nic'})`
+2. Hide `.nic-stage` opacity; slide `#nic-summary` in with `nic-summary-in` keyframe
+3. Populate rank + qlist tracks; on next rAF, auto-arm marquee on either column whose `track.scrollHeight > col.clientHeight` (sets `--nic-marquee-distance` + `--nic-marquee-dur`, adds `.nic-marquee-active`)
+4. 600ms beat → parallel raw countups (red+blue)
+5. If `currentRoundMultiplier > 1`: sequential per-team `runTeamMult` gem-slam + `playGlint` + post-mult countup + 350ms beat between
+6. `hidePhaseGem()` → 1500ms hold
+7. Host calls `onComplete({redScore, blueScore, multiplierApplied: true})` → `handleModuleComplete`. Non-host's `onComplete` is null — falls through.
+
+Exit animation (`#nic-summary.nic-summary-out`) is wired into `advanceRound` (host) and the `round-type-select` handler in `handlePhaseTransition` (non-host) alongside the other module summaries' slide-outs.
+
+### Stats subtab integration
+
+`_STATS_COLS_NUMBER_IS_CORRECT`: Player, Points, Answered, Exact, 1st Locks, Avg % Off. Wired into `_getStatsCols`, `aggregatePlayerStats` (per-player init + 'Number Is Correct' filter + Overall fold), `_statsSortVal` (avg-pct with `-1` sentinel), `_statsCell` (em-dash for non-participants).
+
+`nicPlayerStats[name]` accumulates host-side: `{ locked, exactCount, firstLockCount, sumPctOff, points }`. Synced via `nicSyncState`'s payload alongside `matchLog`. Reset in 4 local sites + the `lobbyStartGame` Firestore reset block (`nicState: null, nicPlayerStats: null`).
+
+### Lessons / pitfalls (resolved during integration)
+
+- **Q1 dead-clock race**: `enterNicRound` initially called `resetNicState()` unconditionally, wiping any nicState snapshot that landed during the await window. Fix: `nonHostLive` guard + explicit catch-up branch (`if (nicState.qIdx >= 0) nicRender + display timer + input area`). Same race-guard pattern as `enterGridLockRound`.
+- **`updateRoleUI` / `updateTurn` clobbering input on simultaneous-play**: NIC uses `mode: 'guess'` for active players (so the input is enabled), but feud's role-gating logic doesn't treat 'guess' mode as module-owned and re-disables input for any client whose `myUid !== getActivePlayerUid()`. Fix: early-return in both functions on `nicState.active`. Mirrors GL.
+- **Host's summary disappearing mid-display**: `resetNicState` initially hid `#nic-summary` at the bottom; `handleModuleComplete` calls `mod.reset()` → `resetNicState` right after `nicShowSummary` resolves on host, immediately wiping the panel. Fix: don't touch `#nic-summary` in `resetNicState` — let the `advanceRound` exit-animation block handle teardown (matches GL's intent — see comment in `glShowSummary`'s tail).
+- **Non-host's summary not sliding out at next round**: my Pass 4 edit added the `_nicSum` slide-out block to the wrong location (the face-off-entry choreography in the reconcile handler) instead of `advanceRound`'s real exit block. Added to both: `advanceRound` for host, the `round-type-select` case in `handlePhaseTransition` for non-host.
+- **Non-host clicks not registering on round-type picker**: `resetModuleCanvas` handled every module's container EXCEPT `#nic-container`, which stayed `display: block` (with `position: absolute; inset: 0`) over the canvas after the round ended. Host was masked because `handleModuleComplete → mod.reset() → resetNicState` removes the `visible` class on host; non-host never executes that path (cb is host-only). Fix: added `#nic-container` hide + `resetNicState()` to `resetModuleCanvas` so both clients converge on the same teardown.
+
+### Followup polish for the next session
+
+- **Inline SVG warning during round-type picker render**: `<svg attribute height: "auto">` thrown by browsers when `pickerArea.innerHTML` parses the CT inline registry SVG (`width="100%" height="auto"`). Pre-existing (not introduced by NIC), browsers tolerate it as a non-fatal warning but it spams the console. Fix: replace `height="auto"` with an explicit length on the CT registry SVG (line ~15097 in feud.html). Same audit pass should catch any other modules using `height="auto"` on inline SVG.
+- **Cosmetic / layout polish on the in-round NIC stage**: rows are utilitarian (no animation on lock-in, no countup on score reveal, no team-totals display in the stage). Defer to a focused styling pass.
+- **Stronger active-player cue in local mode**: the input subtext changes silently as `_localActiveIdx` advances. A bigger visual prompt (highlight the active row, brief flash, etc.) would make the pass-the-keyboard handoff clearer.
+- **Reveal-screen scoring animations**: countup per row, color-fade on diff label, etc. Currently the reveal is a static snap.
+- **NIC-specific awards**: under "Newer-module awards + existing-awards cleanup" — e.g. "Pinpoint" most exacts, "Tortoise" never-first-but-best-Avg-%, "Hare" most 1st locks, etc.
+- **Round Summary panel rhythm pass**: the body's `max-height: 350px` + auto-marquee is functional but not yet visually tuned. Marquee timing can probably be slowed; padding around rank/qlist columns can be tightened.
 
 ---
 

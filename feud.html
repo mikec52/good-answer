@@ -50,6 +50,7 @@
       --mod-scribble:     #c000c0;
       --mod-commonthread: #00c000;
       --mod-gridlock:     #c0c000;
+      --mod-nic:          #c06000;
       --mod-faceoff:      #222222;
 
       /* Game speed — set by JS via setGameSpeed(). 1 = normal, 2 = double speed.
@@ -3652,6 +3653,7 @@
     .mod-scribble     { --mod-color: var(--mod-scribble); }
     .mod-commonthread { --mod-color: var(--mod-commonthread); }
     .mod-gridlock     { --mod-color: var(--mod-gridlock); }
+    .mod-nic          { --mod-color: var(--mod-nic); }
     .mod-faceoff      { --mod-color: var(--mod-faceoff); }
     /* Category row — wraps button + optional badge.
        Fixed 80px height so the row occupies a known slot regardless of
@@ -6043,7 +6045,7 @@
     #scribble-summary {
       align-items: center; gap: 0;
       width: 96%; max-width: 980px;
-      border-radius: 0 0 10px 10px;
+      /* border-radius inherited from .round-summary (0 0 10px 10px) */
       overflow: visible;
       padding: 14px 0 12px;
     }
@@ -6317,9 +6319,12 @@
       background: rgba(26, 26, 26, 0.75);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-radius: 10px;
+      /* Flat top corners + 10px bleed under the scoreboard's bottom edge so
+         every module's summary panel tucks consistently. Per-module CSS
+         shouldn't redeclare these — keep cross-module styling in one place. */
+      border-radius: 0 0 10px 10px;
       padding: 14px 14px 12px;
-      margin-top: -5px;
+      margin-top: -10px;
       /* No internal fly-in animation — the host container slides down
          around the summary as one unit (see ctShowSummary and friends). */
     }
@@ -8560,6 +8565,315 @@
       100%      { opacity: 0; }
     }
     .rt-card-title.rt-card-logo .gll-picker { margin: 0 auto; }
+
+    /* ─── Number Is Correct (NIC) — logo + cinematic ─── */
+    .nic-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 0.95;
+      font-family: 'dazzle-unicase', sans-serif;
+      letter-spacing: 0.04em;
+      color: var(--mod-nic);
+      text-shadow: 0 2px 0 rgba(0,0,0,0.35);
+    }
+    .nic-logo-row {
+      font-size: var(--nic-logo-size, 2.2rem);
+      white-space: nowrap;
+    }
+    .nic-logo-bot {
+      font-size: calc(var(--nic-logo-size, 2.2rem) * 1.5);
+      letter-spacing: 0.08em;
+    }
+    /* Picker-card variant: scale to fit card */
+    .nic-picker { --nic-logo-size: 1.7rem; }
+    /* Phase-indicator variant: smaller, fits the 140px band */
+    #phase-indicator .ph-module-logo .nic-logo { --nic-logo-size: 1.4rem; }
+
+    #nic-cinematic {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 60;
+      pointer-events: none;
+      transition: opacity 460ms ease-out;
+    }
+    #nic-cinematic.nicci-fade-out { opacity: 0; }
+    #nic-cinematic .nic-logo { --nic-logo-size: 4rem; }
+    #nic-cinematic:not(.nicci-flown-in) .nic-logo { transform: translateY(720px); }
+    #nic-cinematic.nicci-flown-in .nic-logo {
+      animation: nicci-fly-in 0.6s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes nicci-fly-in {
+      0%   { transform: translateY(720px); }
+      100% { transform: translateY(0); }
+    }
+    #nic-cinematic .nic-subtitle {
+      position: absolute;
+      bottom: 28%;
+      font-family: 'futura-100', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.18em;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      opacity: 0;
+      transition: opacity 0.4s ease 0.2s;
+    }
+    #nic-cinematic .nic-subtitle.show { opacity: 1; }
+
+    /* In-round NIC UI (Pass 2 utilitarian — Pass 4 will polish) */
+    #nic-container {
+      position: absolute;
+      inset: 0;
+      display: none;
+      color: #fff;
+      font-family: 'futura-100', sans-serif;
+    }
+    #nic-container.visible { display: block; }
+    .nic-stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px 22px;
+      box-sizing: border-box;
+    }
+    .nic-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      color: #999;
+    }
+    .nic-q-counter b { color: var(--mod-nic, #c06000); font-weight: 700; }
+    .nic-timer-wrap { display: flex; align-items: center; gap: 10px; }
+    .nic-timer-bar {
+      width: 220px; height: 8px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .nic-timer-fill {
+      height: 100%; width: 100%;
+      background: linear-gradient(90deg, #4caf50, var(--mod-nic, #c06000));
+      transition: width 0.25s linear;
+    }
+    .nic-timer-fill.warning { background: var(--red-text, #ff5555); }
+    .nic-timer-text {
+      font-family: 'video', monospace;
+      font-size: 1rem;
+      width: 36px; text-align: right;
+      color: #fff;
+    }
+    .nic-timer-text.warning { color: var(--red-text, #ff5555); }
+    .nic-question-card {
+      background: rgba(26,26,26,0.85);
+      border-radius: 12px;
+      padding: 14px 22px;
+      text-align: center;
+    }
+    .nic-q-cat {
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      color: var(--mod-nic, #c06000);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .nic-q-text {
+      font-size: 1.25rem;
+      line-height: 1.3;
+    }
+    .nic-answer-reveal {
+      text-align: center;
+      font-size: 0.95rem;
+      letter-spacing: 0.1em;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .nic-answer-reveal.visible { opacity: 1; }
+    .nic-answer-label { color: #888; }
+    .nic-answer-value {
+      font-family: 'video', monospace;
+      font-size: 1.6rem;
+      color: var(--mod-nic, #c06000);
+      margin-left: 8px;
+    }
+    .nic-rows {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow: hidden;
+    }
+    .nic-row {
+      display: grid;
+      grid-template-columns: minmax(120px, 1fr) 130px 36px 48px minmax(120px, 1fr) 90px;
+      align-items: center;
+      gap: 10px;
+      background: rgba(26,26,26,0.85);
+      border-radius: 8px;
+      padding: 8px 14px;
+      border: 2px solid transparent;
+      font-size: 0.95rem;
+      transition: border-color 0.2s ease;
+    }
+    .nic-row.active  { border-color: var(--mod-nic, #c06000); }
+    .nic-row.locked  { border-color: rgba(192,96,0,0.4); }
+    .nic-row.red  .nic-row-name { color: var(--red-text, #ff5555); }
+    .nic-row.blue .nic-row-name { color: var(--blue-text, #4c8cff); }
+    .nic-row-name {
+      letter-spacing: 0.05em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .nic-row-guess {
+      font-family: 'video', monospace;
+      font-size: 1.2rem;
+      text-align: center;
+      color: #fff;
+    }
+    .nic-row-guess.waiting { color: #555; }
+    .nic-row-order, .nic-row-mult {
+      font-family: 'video', monospace;
+      text-align: center;
+      color: var(--mod-nic, #c06000);
+      font-size: 0.95rem;
+    }
+    .nic-row-diff {
+      font-family: 'video', monospace;
+      font-size: 0.85rem;
+      color: #aaa;
+      text-align: right;
+    }
+    .nic-row-diff.exact { color: var(--mod-nic, #c06000); font-weight: 700; }
+    .nic-row-pts {
+      font-family: 'video', monospace;
+      font-size: 1.05rem;
+      text-align: right;
+    }
+    .nic-row-pts.pos  { color: #4caf50; }
+    .nic-row-pts.neg  { color: var(--red-text, #ff5555); }
+    .nic-row-pts.zero { color: #888; }
+
+    /* ── NIC summary panel (Pass 4) ──
+       NOTE: positioned with top:0 (not inset:0) so the panel sizes to its
+       content + max-height-capped body instead of stretching to the full
+       module-canvas height. The base .round-summary class supplies bg,
+       border-radius, padding, and margin-top — this rule only handles
+       layout / animation. */
+    #nic-summary.round-summary {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      animation: nic-summary-in 0.45s ease both;
+    }
+    #nic-summary.nic-summary-out { animation: nic-summary-out 0.45s ease both !important; }
+    @keyframes nic-summary-in  { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes nic-summary-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-100%); opacity: 0; } }
+
+    .nic-summary-body {
+      max-height: 350px;
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 10px;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .nic-summary-left, .nic-summary-right {
+      background: #111;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 0;
+      overflow: hidden;
+    }
+    /* Marquee track: lives inside .nic-summary-rank / .nic-summary-qlist.
+       JS adds .nic-marquee-active to the parent column when the track's
+       scrollHeight exceeds its container, then the boomerang animation
+       cycles top → bottom → top. When content fits, distance is 0px so
+       no visible motion. */
+    .nic-summary-track {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .nic-marquee-active .nic-summary-track {
+      animation: nic-list-marquee var(--nic-marquee-dur, 14s) ease-in-out infinite;
+    }
+    @keyframes nic-list-marquee {
+      0%, 12%   { transform: translateY(0); }
+      50%       { transform: translateY(var(--nic-marquee-distance, 0px)); }
+      88%, 100% { transform: translateY(0); }
+    }
+    .nic-summary-rank-head, .nic-summary-q-head {
+      font-family: 'dazzle-unicase', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      color: var(--mod-nic, #c06000);
+      text-align: center;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .nic-summary-rank {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .nic-summary-rank-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 4px 6px;
+      font-size: 0.92rem;
+    }
+    .nic-summary-rank .nic-rank-name.team-red  { color: var(--red-text, #ff5555); }
+    .nic-summary-rank .nic-rank-name.team-blue { color: var(--blue-text, #4c8cff); }
+    .nic-summary-rank .nic-rank-val {
+      font-family: 'video', monospace;
+      color: #fff;
+    }
+    .nic-summary-qlist {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .nic-summary-qrow {
+      display: grid;
+      grid-template-columns: 30px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 4px 6px;
+      font-size: 0.85rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .nic-summary-qrow .nic-q-num {
+      font-family: 'video', monospace;
+      color: var(--mod-nic, #c06000);
+    }
+    .nic-summary-qrow .nic-q-snippet {
+      color: #ccc;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .nic-summary-qrow .nic-q-answer {
+      font-family: 'video', monospace;
+      color: #fff;
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
@@ -8704,7 +9018,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.23</div>
+  <div id="version-tag">v0.24</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -9320,6 +9634,40 @@
                     <div class="round-summary-team-name round-summary-team-blue" id="gl-summary-blue-name">Blue</div>
                     <div class="round-summary-team-score" id="gl-summary-blue-score">0</div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- NIC (Number Is Correct) container.
+                 nicRender() builds the stage on first call. -->
+            <div id="nic-container"></div>
+
+            <!-- NIC summary panel (Round Summary Framework). Slides in over
+                 the in-round stage at end-of-round. -->
+            <div id="nic-summary" class="round-summary" style="display:none;">
+              <div class="round-summary-title">ROUND SUMMARY</div>
+              <div class="nic-summary-body">
+                <div class="nic-summary-left">
+                  <div class="nic-summary-rank-head">PLAYER POINTS</div>
+                  <div class="nic-summary-rank" id="nic-summary-rank">
+                    <div class="nic-summary-track" id="nic-summary-rank-track"></div>
+                  </div>
+                </div>
+                <div class="nic-summary-right">
+                  <div class="nic-summary-q-head">QUESTIONS</div>
+                  <div class="nic-summary-qlist" id="nic-summary-qlist">
+                    <div class="nic-summary-track" id="nic-summary-qlist-track"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="round-summary-totals">
+                <div class="round-summary-team">
+                  <div class="round-summary-team-name round-summary-team-red" id="nic-summary-red-name">Red</div>
+                  <div class="round-summary-team-score" id="nic-summary-red-score">0</div>
+                </div>
+                <div class="round-summary-team">
+                  <div class="round-summary-team-name round-summary-team-blue" id="nic-summary-blue-name">Blue</div>
+                  <div class="round-summary-team-score" id="nic-summary-blue-score">0</div>
                 </div>
               </div>
             </div>
@@ -10607,6 +10955,7 @@
           const sp = scribblePlayerStats[name] || { drAtt: 0, drSucc: 0, guessOpp: 0, guessSucc: 0 };
           const cp = commonThreadPlayerStats[name] || { cluesGiven: 0, cluesLanded: 0, cardsFlipped: 0, ownTeamHits: 0, opponentHits: 0, penaltyHits: 0, pointsContributed: 0, bestSingle: 0, giverFlips: 0, giverOwnFlips: 0 };
           const gp = gridLockPlayerStats[name] || { words: 0, cancelled: 0, totalLength: 0, bonuses: 0, points: 0 };
+          const np = nicPlayerStats[name] || { locked: 0, exactCount: 0, firstLockCount: 0, sumPctOff: 0, points: 0 };
           stats[name] = {
             player: name, team: tIdx,
             points: 0, correct: 0, wrong: 0, best: 0,
@@ -10622,6 +10971,10 @@
             glWords: gp.words || 0, glCancelled: gp.cancelled || 0,
             glTotalLength: gp.totalLength || 0, glBonuses: gp.bonuses || 0,
             glPoints: gp.points || 0,
+            nicLocked: np.locked || 0, nicExact: np.exactCount || 0,
+            nicFirstLocks: np.firstLockCount || 0,
+            nicSumPctOff: np.sumPctOff || 0,
+            nicPoints: np.points || 0,
           };
         });
       });
@@ -10656,14 +11009,19 @@
           row.points = s.glPoints || 0;
           const touchedGl = (s.glWords || 0) + (s.glCancelled || 0);
           if (touchedGl > 0) row.participated = Math.max(row.participated, 1);
+        } else if (filter === 'Number Is Correct') {
+          row.points = s.nicPoints || 0;
+          if ((s.nicLocked || 0) > 0) row.participated = Math.max(row.participated, 1);
         } else if (filter === 'Overall') {
           row.points += s.ctPointsContributed || 0;
           row.points += s.glPoints || 0;
+          row.points += s.nicPoints || 0;
           row.best = Math.max(row.best, s.ctBestSingle || 0);
           const touchedCt = (s.cluesGiven || 0) + (s.cardsFlipped || 0);
           if (touchedCt > 0) row.participated = Math.max(row.participated, 1);
           const touchedGl = (s.glWords || 0) + (s.glCancelled || 0);
           if (touchedGl > 0) row.participated = Math.max(row.participated, 1);
+          if ((s.nicLocked || 0) > 0) row.participated = Math.max(row.participated, 1);
         }
         return row;
       });
@@ -10712,11 +11070,20 @@
       { key: 'glAvgLength', label: 'Avg Length', cls: 'sort-num' },
       { key: 'glBonuses', label: 'Bonuses', cls: 'sort-num' },
     ];
+    const _STATS_COLS_NUMBER_IS_CORRECT = [
+      { key: 'player', label: 'Player', cls: 'sort-player' },
+      { key: 'points', label: 'Points', cls: 'sort-num' },
+      { key: 'nicLocked', label: 'Answered', cls: 'sort-num' },
+      { key: 'nicExact', label: 'Exact', cls: 'sort-num' },
+      { key: 'nicFirstLocks', label: '1st Locks', cls: 'sort-num' },
+      { key: 'nicAvgPctOff', label: 'Avg % Off', cls: 'sort-num' },
+    ];
     function _getStatsCols(subtab) {
       if (subtab === 'Overall') return _STATS_COLS_OVERALL;
       if (subtab === 'Secret Scribble') return _STATS_COLS_SCRIBBLE;
       if (subtab === 'Common Thread') return _STATS_COLS_COMMON_THREAD;
       if (subtab === 'Grid Lock') return _STATS_COLS_GRID_LOCK;
+      if (subtab === 'Number Is Correct') return _STATS_COLS_NUMBER_IS_CORRECT;
       return _STATS_COLS_FEUD;
     }
 
@@ -10776,6 +11143,10 @@
         const total = (row.glWords || 0) + (row.glCancelled || 0);
         return total > 0 ? (row.glTotalLength || 0) / total : -1;
       }
+      if (key === 'nicAvgPctOff') {
+        const n = row.nicLocked || 0;
+        return n > 0 ? (row.nicSumPctOff || 0) / n : -1;
+      }
       return row[key] != null ? row[key] : 0;
     }
 
@@ -10830,6 +11201,21 @@
       if (key === 'glBonuses') {
         const touched = (row.glWords || 0) + (row.glCancelled || 0);
         return `<td>${touched > 0 ? (row.glBonuses || 0) : _DASH_CELL}</td>`;
+      }
+      if (key === 'nicLocked') {
+        return `<td>${(row.nicLocked || 0) > 0 ? row.nicLocked : _DASH_CELL}</td>`;
+      }
+      if (key === 'nicExact') {
+        return `<td>${(row.nicLocked || 0) > 0 ? (row.nicExact || 0) : _DASH_CELL}</td>`;
+      }
+      if (key === 'nicFirstLocks') {
+        return `<td>${(row.nicLocked || 0) > 0 ? (row.nicFirstLocks || 0) : _DASH_CELL}</td>`;
+      }
+      if (key === 'nicAvgPctOff') {
+        const n = row.nicLocked || 0;
+        if (!n) return `<td>${_DASH_CELL}</td>`;
+        const avg = (row.nicSumPctOff || 0) / n;
+        return `<td>${(avg * 100).toFixed(avg < 0.1 ? 1 : 0)}%</td>`;
       }
       return `<td>${_DASH_CELL}</td>`;
     }
@@ -11966,7 +12352,7 @@ document.addEventListener('keydown', e => {
     //   • Normal gem drop rates
     //   • 3-digit numeric lobby code
     //   • Music volume left at whatever the user set
-    const TEST_MODE = true;
+    const TEST_MODE = false;
 
     let roundNumber = 0;
     let gameEnded = false;
@@ -11994,6 +12380,14 @@ document.addEventListener('keydown', e => {
     //   bonuses       — bonus points earned (first-to-enter, longest, most-words)
     //   points        — total round points contributed (base + bonuses, post-cancellation)
     let gridLockPlayerStats = {};
+    // Per-player Number Is Correct counters, persists across all NIC rounds in
+    // a game. Keyed by player display name. Fields:
+    //   locked        — questions this player locked an answer for
+    //   exactCount    — guesses that hit the answer exactly (NIC_EXACT_PTS band)
+    //   firstLockCount — questions where this player was first to lock
+    //   sumPctOff     — sum of |diff|/answer across locked questions (for avg %)
+    //   points        — total NIC points contributed (post-speed-mult, signed)
+    let nicPlayerStats = {};
     let _roundStartScores = [0, 0]; // snapshot at round start for delta computation
     let teamNames = ["Red Team", "Blue Team"];
     let startingTeam = 0;
@@ -12138,6 +12532,13 @@ document.addEventListener('keydown', e => {
             }
           } else if (action.type === 'gridLockSubmit') {
             hostProcessGridLockSubmit(action.word, action.uid);
+          } else if (action.type === 'nicGuess') {
+            // Validate sender is in the current NIC roster.
+            if (nicState.active
+                && nicState.phase === 'guess'
+                && nicState.roster.some(p => p.uid === action.uid)) {
+              hostProcessNicGuess(action.uid, action.guess);
+            }
           } else if (action.type === 'ctGuess') {
             // Validate sender is on the current team and NOT the clue giver.
             const t = commonThreadState.currentTeam;
@@ -12264,6 +12665,16 @@ document.addEventListener('keydown', e => {
         }
       }
 
+      // Receive Number Is Correct state from host. Gated on selectedRoundType
+      // so a stale nicState carried in Firestore during a non-NIC round
+      // doesn't trigger phantom reveals on non-host.
+      if (!isHost && data.nicState && data.selectedRoundType === 'number-is-correct') {
+        const nicp = data.nicState.phase;
+        if (nicp === 'guess' || nicp === 'reveal' || nicp === 'between' || nicp === 'done') {
+          nicApplySyncedState(data.nicState);
+        }
+      }
+
       // Receive common-thread state from host (non-host applies + re-renders).
       // Only apply when the module is live — stale snapshots after round-end
       // would re-trigger ctUpdateInputArea and clobber headers/input-row for
@@ -12382,6 +12793,11 @@ document.addEventListener('keydown', e => {
         gridLockPlayerStats = { ...data.gridLockPlayerStats };
       }
 
+      // ── Number Is Correct per-player counters (host-authoritative) ──
+      if (data.nicPlayerStats) {
+        nicPlayerStats = { ...data.nicPlayerStats };
+      }
+
       // ── Rounds meta (per-round summary recap) ──
       // Only adopt incoming if it's at least as long as local — guards the
       // host against a stale non-host-triggered reconcile shrinking its array
@@ -12488,6 +12904,20 @@ document.addEventListener('keydown', e => {
               _glSum.classList.remove("gl-summary-out");
             });
           }
+          const _nicSum = document.getElementById("nic-summary");
+          const _nicSumExiting = _nicSum && _nicSum.style.display !== "none";
+          let _nicSumPromise = null;
+          if (_nicSumExiting) {
+            _nicSum.classList.remove("nic-summary-out");
+            void _nicSum.offsetWidth;
+            _nicSum.classList.add("nic-summary-out");
+            _nicSumPromise = new Promise(r =>
+              setTimeout(r, 470 / (gameSpeed || 1))
+            ).then(() => {
+              _nicSum.style.display = "none";
+              _nicSum.classList.remove("nic-summary-out");
+            });
+          }
           (async () => {
             await Promise.all([
               (async () => {
@@ -12498,6 +12928,7 @@ document.addEventListener('keydown', e => {
               _ssExiting ? anim.done(_ss) : Promise.resolve(),
               _ctcPromise,
               _glSumPromise,
+              _nicSumPromise,
             ]);
             resetModuleCanvas();
             initRoundState();
@@ -12805,6 +13236,17 @@ document.addEventListener('keydown', e => {
               _glSumPromise = new Promise(r => setTimeout(r, 470 / (gameSpeed || 1)))
                 .then(() => { _glSum.style.display = "none"; _glSum.classList.remove("gl-summary-out"); });
             }
+            // NIC summary slide-up if the prior round was Number Is Correct.
+            const _nicSum = document.getElementById("nic-summary");
+            const _nicSumExiting = _nicSum && _nicSum.style.display !== "none";
+            let _nicSumPromise = null;
+            if (_nicSumExiting) {
+              _nicSum.classList.remove("nic-summary-out");
+              void _nicSum.offsetWidth;
+              _nicSum.classList.add("nic-summary-out");
+              _nicSumPromise = new Promise(r => setTimeout(r, 470 / (gameSpeed || 1)))
+                .then(() => { _nicSum.style.display = "none"; _nicSum.classList.remove("nic-summary-out"); });
+            }
             (async () => {
               await Promise.all([
                 (async () => {
@@ -12816,6 +13258,7 @@ document.addEventListener('keydown', e => {
                 _ctcPromise,
                 _h5Promise,
                 _glSumPromise,
+                _nicSumPromise,
               ]);
               // 2s buffer so non-host isn't racing the round-type picker.
               // Skip on round 1 — nothing is exiting at game start.
@@ -12847,6 +13290,11 @@ document.addEventListener('keydown', e => {
             (async () => {
               await _rtsIntroPromise;
               enterGridLockRound(handleModuleComplete);
+            })();
+          } else if (data.selectedRoundType === 'number-is-correct') {
+            (async () => {
+              await _rtsIntroPromise;
+              enterNicRound(handleModuleComplete);
             })();
           } else {
             setMusicMode('playlist');
@@ -13239,6 +13687,9 @@ document.addEventListener('keydown', e => {
       // Grid Lock is all-players-simultaneous — every player types into their
       // own word list. Don't gate input by teamTurn/playerIndex.
       if (gridLockState.active && !inRoundResultEarly) return;
+      // Number Is Correct is also all-players-simultaneous — every player
+      // submits their own guess. nicUpdateInputArea owns the input state.
+      if (nicState.active && !inRoundResultEarly) return;
       const isActive = (activeUid === myUid);
       const guessInput = document.getElementById('guess');
       const inputArea = document.getElementById('input-area');
@@ -13959,13 +14410,14 @@ document.addEventListener('keydown', e => {
     // picker logo on a module-colored background instead of phase text.
     // CSS hides all .ph-span:not(.ph-module-logo), so existing setPhase /
     // setPhaseText calls still run as harmless fallbacks if this is cleared.
-    const _MOD_CLASSES = ['mod-highfive', 'mod-pollposition', 'mod-scribble', 'mod-commonthread', 'mod-gridlock', 'mod-faceoff'];
+    const _MOD_CLASSES = ['mod-highfive', 'mod-pollposition', 'mod-scribble', 'mod-commonthread', 'mod-gridlock', 'mod-nic', 'mod-faceoff'];
     const _MOD_KEY_TO_CLASS = {
       'high-five': 'mod-highfive',
       'survey': 'mod-pollposition',
       'secret-scribble': 'mod-scribble',
       'common-thread': 'mod-commonthread',
       'grid-lock': 'mod-gridlock',
+      'number-is-correct': 'mod-nic',
       'faceoff': 'mod-faceoff',
     };
     function _getModuleLogoHtml(moduleKey) {
@@ -14256,6 +14708,20 @@ document.addEventListener('keydown', e => {
       if (typeof resetGridLockState === "function") resetGridLockState();
       document.querySelectorAll('.gl-times-up-overlay').forEach(n => n.remove());
 
+      // NIC (Number Is Correct) container. Without this, non-host's
+      // #nic-container stays display:block (with absolute inset:0) over
+      // the canvas after the round ends — host's handleModuleComplete
+      // runs mod.reset() locally to clean it up, but non-host never
+      // executes that path (cb is host-only). Result: round-type picker
+      // renders underneath an invisible-but-pointer-event-capturing div
+      // and clicks don't register. Mirror the GL pattern.
+      const nicEl = document.getElementById("nic-container");
+      if (nicEl) {
+        nicEl.classList.remove("visible");
+        nicEl.innerHTML = "";
+      }
+      if (typeof resetNicState === "function") resetNicState();
+
       // Common Thread container
       const ctEl = document.getElementById("common-thread-container");
       if (ctEl) {
@@ -14532,6 +14998,18 @@ document.addEventListener('keydown', e => {
           .then(() => { glSummaryExit.style.display = "none"; glSummaryExit.classList.remove("gl-summary-out"); });
       }
 
+      // NIC summary — same pattern: slide up out of the canvas if still visible.
+      const nicSummaryExit = document.getElementById("nic-summary");
+      const nicSummaryExiting = nicSummaryExit && nicSummaryExit.style.display !== "none";
+      let nicSummaryExitPromise = null;
+      if (nicSummaryExiting) {
+        nicSummaryExit.classList.remove("nic-summary-out");
+        void nicSummaryExit.offsetWidth;
+        nicSummaryExit.classList.add("nic-summary-out");
+        nicSummaryExitPromise = new Promise(r => setTimeout(r, 470 / (gameSpeed || 1)))
+          .then(() => { nicSummaryExit.style.display = "none"; nicSummaryExit.classList.remove("nic-summary-out"); });
+      }
+
       await Promise.all([
         // Content-tv tv-off (collapses in place, replaces old slide-out-left).
         // Input-area stays put — it's the persistent home base.
@@ -14544,6 +15022,7 @@ document.addEventListener('keydown', e => {
         ctContainerExitPromise,
         h5SummaryExitPromise,
         glSummaryExitPromise,
+        nicSummaryExitPromise,
       ]);
 
       // 2-second breathing buffer before the next phase kicks off. Gives
@@ -14939,6 +15418,8 @@ document.addEventListener('keydown', e => {
           enterCommonThreadRound(handleModuleComplete);
         } else if (moduleKey === 'grid-lock') {
           enterGridLockRound(handleModuleComplete);
+        } else if (moduleKey === 'number-is-correct') {
+          enterNicRound(handleModuleComplete);
         }
       })();
     }
@@ -15114,6 +15595,17 @@ document.addEventListener('keydown', e => {
         enter(onComplete) { enterGridLockRound(onComplete); },
         reset() { resetGridLockState(); },
       },
+      'number-is-correct': {
+        label: 'Number Is Correct',
+        description: 'Guess the number. Lock in fast for a speed bonus, but expose your answer.',
+        colorClass: 'mod-nic',
+        minPlayersPerTeam: 1,
+        intro: { title: 'NUMBER IS\nCORRECT', subtitle: 'How close can you get?', accent: '#c06000' },
+        artHtml: () => _buildNicPickerArtHtml(),
+        cinematic: () => _playNicCinematic(),
+        enter(onComplete) { enterNicRound(onComplete); },
+        reset() { resetNicState(); },
+      },
     };
 
     // Called by non-feud modules when they finish. Folds scores into the
@@ -15177,6 +15669,11 @@ document.addEventListener('keydown', e => {
           // that re-triggers glRunReveal on non-host at the start of
           // the next round. See CLAUDE.md "stale grid-lock sync" note.
           syncState({ gridLockState: null });
+        }
+        if (completedRoundType === 'number-is-correct') {
+          // Same rationale as gridLockState: clear so the next round's
+          // snapshots don't re-fire NIC handlers on non-host.
+          syncState({ nicState: null });
         }
       }
 
@@ -21263,6 +21760,780 @@ document.addEventListener('keydown', e => {
       });
     }
 
+    // ─── Number Is Correct (NIC) module ────────────────────────────────
+    // Pass 1: registry + picker art + cinematic + stub round that folds
+    // straight back through handleModuleComplete with placeholder scores.
+    // Pass 2 will add the real per-question round loop.
+
+    let NIC_QUESTION_BANK = null;
+    let NIC_BANK_LOADING = null;
+    function loadNicQuestions() {
+      if (NIC_QUESTION_BANK) return Promise.resolve();
+      if (NIC_BANK_LOADING) return NIC_BANK_LOADING;
+      NIC_BANK_LOADING = fetch('numberquestions.json')
+        .then(r => r.ok ? r.json() : [])
+        .then(arr => { NIC_QUESTION_BANK = Array.isArray(arr) ? arr : []; })
+        .catch(() => { NIC_QUESTION_BANK = []; });
+      return NIC_BANK_LOADING;
+    }
+    // Kick off the load early so the bank is ready by the time NIC enters.
+    loadNicQuestions();
+
+    // ── NIC scoring constants ──
+    // Halved from the prototype's first pass per spec (April 25 session).
+    const NIC_QUESTIONS_PER_ROUND = 5;
+    const NIC_QUESTION_TIME_MS    = 30000;
+    const NIC_REVEAL_HOLD_MS      = 4500;
+    const NIC_BETWEEN_QUESTION_MS = 600;
+    const NIC_EXACT_PTS = 500;
+    const NIC_SCORE_BANDS = [
+      { maxPct: 0.10, pts: 150 },
+      { maxPct: 0.20, pts: 125 },
+      { maxPct: 0.30, pts: 100 },
+      { maxPct: 0.35, pts:  75 },
+      { maxPct: 0.50, pts:  50 },
+      { maxPct: 0.75, pts:   0 },
+      { maxPct: Infinity, pts: -50 },
+    ];
+    const NIC_SPEED_MULT = [2, 1.75, 1.5];   // 1st / 2nd / 3rd; rest = 1x
+    function nicSpeedMult(orderIdx) { return NIC_SPEED_MULT[orderIdx] ?? 1; }
+
+    const nicState = {
+      active: false,
+      phase: null,             // 'guess' | 'reveal' | 'between' | 'done'
+      qIdx: -1,
+      questions: [],           // [{ question, category, answer }]  picked at round start
+      roster: [],              // [{ uid, name, team }]  flat, interleaved
+      locks: [],               // [{ uid, name, team, guess, lockedAtMs, orderIdx, basePts?, mult?, finalPts?, label? }]
+      timerEndsAt: 0,
+      scoresByUid: {},         // running per-player totals (round-local)
+      teamTotals: [0, 0],
+      _usedQuestionIdxs: new Set(),  // persists across rounds in a single game
+      _localActiveIdx: 0,      // local mode: index into roster of next-to-lock
+      _timerHandle: null,      // host-side authoritative timer
+      _displayTimerHandle: null, // all-clients display tick
+      _betweenTimer: null,
+      onComplete: null,
+    };
+
+    function resetNicState() {
+      nicState.active = false;
+      nicState.phase = null;
+      nicState.qIdx = -1;
+      nicState.questions = [];
+      nicState.roster = [];
+      nicState.locks = [];
+      nicState.timerEndsAt = 0;
+      nicState.scoresByUid = {};
+      nicState.teamTotals = [0, 0];
+      nicState._localActiveIdx = 0;
+      if (nicState._timerHandle)        { clearInterval(nicState._timerHandle); nicState._timerHandle = null; }
+      if (nicState._displayTimerHandle) { clearInterval(nicState._displayTimerHandle); nicState._displayTimerHandle = null; }
+      if (nicState._betweenTimer)       { clearTimeout(nicState._betweenTimer); nicState._betweenTimer = null; }
+      nicState.onComplete = null;
+      nicState._summaryRan = false;
+      const el = document.getElementById('nic-container');
+      if (el) el.classList.remove('visible');
+      // NOTE: do NOT hide #nic-summary here — handleModuleComplete fires
+      // mod.reset() right after nicShowSummary completes on host, which
+      // would wipe the panel mid-display. The summary is intentionally
+      // kept visible through the round-result / Ready Up phase; the
+      // advanceRound exit-animation block (search _nicSum) handles teardown.
+      // Mirrors the comment in glShowSummary's tail.
+    }
+
+    // Shared logo HTML — used by picker card, phase indicator, and cinematic.
+    function _buildNicLogoHtml(extraClass) {
+      return `<div class="nic-logo ${extraClass || ''}">`
+           + `<div class="nic-logo-row nic-logo-top">NUMBER IS</div>`
+           + `<div class="nic-logo-row nic-logo-bot">CORRECT</div>`
+           + `</div>`;
+    }
+    function _buildNicPickerArtHtml() {
+      return _buildNicLogoHtml('nic-picker');
+    }
+
+    // Cinematic: fly logo up from below the canvas, hold with subtitle,
+    // fade out. Mirrors the pattern of _playGlCinematic / _playCtCinematic.
+    function _playNicCinematic() {
+      return new Promise((resolve) => {
+        const root = document.getElementById('module-canvas') || document.getElementById('game-root');
+        if (!root) { resolve(); return; }
+        const stale = document.getElementById('nic-cinematic');
+        if (stale) stale.remove();
+
+        const el = document.createElement('div');
+        el.id = 'nic-cinematic';
+        el.innerHTML = _buildNicLogoHtml() + `<div class="nic-subtitle">HOW CLOSE CAN YOU GET?</div>`;
+        root.appendChild(el);
+        const subtitle = el.querySelector('.nic-subtitle');
+
+        requestAnimationFrame(() => el.classList.add('nicci-flown-in'));
+        (async () => {
+          await anim.wait(700);     // logo fly-in completes
+          if (subtitle) subtitle.classList.add('show');
+          await anim.wait(1700);    // hold
+          el.classList.add('nicci-fade-out');
+          await anim.wait(460);
+          el.remove();
+          resolve();
+        })();
+      });
+    }
+
+    // ── Roster: flat interleaved [{uid, name, team}] ──
+    // Multiplayer uses canonical teamPlayerUids + teamPlayers (sorted by uid).
+    // Local mode fabricates per-team uids so the rest of the loop can be
+    // uid-keyed regardless of mode.
+    function nicGetRoster() {
+      const out = [];
+      const useMulti = isMultiplayer && (teamPlayerUids[0] || []).length + (teamPlayerUids[1] || []).length > 0;
+      if (useMulti) {
+        const r = teamPlayerUids[0] || [], rN = teamPlayers[0] || [];
+        const b = teamPlayerUids[1] || [], bN = teamPlayers[1] || [];
+        const max = Math.max(r.length, b.length);
+        for (let i = 0; i < max; i++) {
+          if (r[i]) out.push({ uid: r[i], name: rN[i] || 'Player', team: 0 });
+          if (b[i]) out.push({ uid: b[i], name: bN[i] || 'Player', team: 1 });
+        }
+      } else {
+        const r = teamPlayers[0] || [], b = teamPlayers[1] || [];
+        const max = Math.max(r.length, b.length);
+        for (let i = 0; i < max; i++) {
+          if (r[i]) out.push({ uid: `local-r${i}`, name: r[i], team: 0 });
+          if (b[i]) out.push({ uid: `local-b${i}`, name: b[i], team: 1 });
+        }
+      }
+      return out;
+    }
+
+    // ── Scoring (matches nic.html prototype after /2 rebalance) ──
+    function nicScoreGuess(guess, answer) {
+      const diff = guess - answer;
+      if (diff === 0) return { basePts: NIC_EXACT_PTS, label: 'EXACT!' };
+      const denom = Math.abs(answer) || 1;
+      const pct = Math.abs(diff) / denom;
+      const band = NIC_SCORE_BANDS.find(b => pct <= b.maxPct);
+      const arrow = diff > 0 ? '▲' : '▼';
+      const pctLabel = (pct * 100).toFixed(pct < 0.1 ? 1 : 0) + '%';
+      return { basePts: band.pts, label: `${arrow} ${pctLabel} off` };
+    }
+
+    // ── Round entry ──
+    async function enterNicRound(onComplete) {
+      await loadNicQuestions();
+
+      // Race guard: a host's first nicState snapshot for Q1 may arrive on
+      // the non-host BEFORE this function runs (cinematic + loadNicQuestions
+      // await). nicApplySyncedState populates state in that window. If we
+      // unconditionally resetNicState() here, we wipe Q1 — the user sees a
+      // dead clock + non-responsive input until Q2's fresh sync repopulates.
+      // Mirrors the gridLockState.active guard in enterGridLockRound.
+      const nonHostLive = isMultiplayer && !isHost && nicState.active;
+      if (!nonHostLive) {
+        resetNicState();
+      } else {
+        // Preserve synced fields; clear only local-only handles + flags.
+        if (nicState._timerHandle)        { clearInterval(nicState._timerHandle); nicState._timerHandle = null; }
+        if (nicState._displayTimerHandle) { clearInterval(nicState._displayTimerHandle); nicState._displayTimerHandle = null; }
+        if (nicState._betweenTimer)       { clearTimeout(nicState._betweenTimer); nicState._betweenTimer = null; }
+        nicState._summaryRan = false;
+      }
+      nicState.active = true;
+      nicState.onComplete = onComplete;
+      // Roster is deterministic across clients (sorted by uid). Only build
+      // locally if we don't already have one from the host's sync.
+      if (!nicState.roster.length) nicState.roster = nicGetRoster();
+
+      // Show + clear the module-canvas container; build per-question scaffold lazily
+      const container = document.getElementById('nic-container');
+      if (container) container.classList.add('visible');
+
+      if (typeof setPhaseText === 'function') setPhaseText('gameplay', 'NUMBER IS CORRECT');
+      if (typeof setPhase === 'function') setPhase('gameplay');
+      if (typeof setMusicMode === 'function') setMusicMode('playlist');
+      if (typeof showInputArea === 'function') showInputArea();
+
+      // Host (or local) picks the round's 5 questions, then kicks off Q1.
+      if (!isMultiplayer || isHost) {
+        nicState.questions = nicHostPickQuestions(NIC_QUESTIONS_PER_ROUND);
+        nicHostStartQuestion(0);
+      } else {
+        // Non-host: catch up to whatever state we already mirrored from the
+        // host. If Q1's snapshot arrived first, render it now and start the
+        // display timer locally (the snapshot's nicApplySyncedState call
+        // happened before we wiped/preserved state, so handles are fresh).
+        if (nicState.qIdx >= 0 && nicState.questions.length) {
+          nicRender();
+          if (nicState.phase === 'guess') nicStartDisplayTimer();
+          nicUpdateInputArea();
+        }
+      }
+    }
+
+    // Pick `n` questions from NIC_QUESTION_BANK avoiding repeats within
+    // this game session. Resets the used-set if we'd run out.
+    function nicHostPickQuestions(n) {
+      const bank = NIC_QUESTION_BANK || [];
+      if (!bank.length) return [];
+      let pool = bank.map((q, i) => i).filter(i => !nicState._usedQuestionIdxs.has(i));
+      if (pool.length < n) {
+        nicState._usedQuestionIdxs.clear();
+        pool = bank.map((q, i) => i);
+      }
+      // Shuffle pool and take n
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      const picks = pool.slice(0, n).map(i => {
+        nicState._usedQuestionIdxs.add(i);
+        const q = bank[i];
+        return { question: q.question, category: q.category, answer: q.answer };
+      });
+      return picks;
+    }
+
+    // Host-only: start question N
+    function nicHostStartQuestion(idx) {
+      nicState.qIdx = idx;
+      nicState.phase = 'guess';
+      nicState.locks = [];
+      nicState.timerEndsAt = Date.now() + NIC_QUESTION_TIME_MS;
+      nicState._localActiveIdx = 0;
+
+      // Host-authoritative timer — only host fires the reveal on expiry.
+      if (nicState._timerHandle) clearInterval(nicState._timerHandle);
+      nicState._timerHandle = setInterval(() => {
+        if (Date.now() >= nicState.timerEndsAt && nicState.phase === 'guess') {
+          clearInterval(nicState._timerHandle);
+          nicState._timerHandle = null;
+          nicHostRevealQuestion();
+        }
+      }, 200);
+
+      nicSyncState();   // no-op in local mode; Pass 3 wires Firestore write
+      nicRender();
+      nicStartDisplayTimer();
+      nicUpdateInputArea();
+    }
+
+    // Host-only: a player's lock has come in (or local-mode submit landed).
+    function hostProcessNicGuess(uid, guess) {
+      if (!nicState.active || nicState.phase !== 'guess') return;
+      if (nicState.locks.some(l => l.uid === uid)) return;
+      const player = nicState.roster.find(p => p.uid === uid);
+      if (!player) return;
+      const orderIdx = nicState.locks.length;
+      nicState.locks.push({
+        uid: player.uid,
+        name: player.name,
+        team: player.team,
+        guess: Number(guess),
+        lockedAtMs: Date.now(),
+        orderIdx,
+      });
+
+      // Local mode: advance to the next un-locked roster slot for the next prompt
+      if (!isMultiplayer) {
+        const lockedUids = new Set(nicState.locks.map(l => l.uid));
+        const nextIdx = nicState.roster.findIndex(p => !lockedUids.has(p.uid));
+        nicState._localActiveIdx = nextIdx === -1 ? nicState.roster.length : nextIdx;
+      }
+
+      nicSyncState();
+      nicRender();
+      nicUpdateInputArea();
+
+      // Auto-reveal once everyone in the roster has locked
+      if (nicState.locks.length >= nicState.roster.length) {
+        if (nicState._timerHandle) { clearInterval(nicState._timerHandle); nicState._timerHandle = null; }
+        nicHostRevealQuestion();
+      }
+    }
+
+    // Host-only: lock in scores for this question, sync, schedule the
+    // advance to the next question (or round end).
+    function nicHostRevealQuestion() {
+      if (!nicState.active || nicState.phase === 'reveal') return;
+      nicState.phase = 'reveal';
+      if (nicState._timerHandle) { clearInterval(nicState._timerHandle); nicState._timerHandle = null; }
+
+      const q = nicState.questions[nicState.qIdx];
+      if (q) {
+        nicState.locks.forEach(lock => {
+          const { basePts, label } = nicScoreGuess(lock.guess, q.answer);
+          const mult = nicSpeedMult(lock.orderIdx);
+          const finalPts = Math.round(basePts * mult);
+          lock.basePts = basePts;
+          lock.mult = mult;
+          lock.finalPts = finalPts;
+          lock.label = label;
+          nicState.scoresByUid[lock.uid] = (nicState.scoresByUid[lock.uid] || 0) + finalPts;
+          nicState.teamTotals[lock.team] += finalPts;
+
+          // Per-player stats accumulation (name-keyed, persists across NIC
+          // rounds in this game). Host-only — non-host receives via sync.
+          const ps = (nicPlayerStats[lock.name] = nicPlayerStats[lock.name] || {
+            locked: 0, exactCount: 0, firstLockCount: 0, sumPctOff: 0, points: 0,
+          });
+          ps.locked++;
+          ps.points += finalPts;
+          if (basePts === NIC_EXACT_PTS) ps.exactCount++;
+          if (lock.orderIdx === 0) ps.firstLockCount++;
+          const denom = Math.abs(q.answer) || 1;
+          ps.sumPctOff += Math.abs(lock.guess - q.answer) / denom;
+
+          // matchLog entry — drives Stats subtab + getStatsRoundTypes().
+          // category 'Number Is Correct' so all NIC entries fold into the
+          // Stats subtab regardless of the per-question topic. roundType
+          // raw key matches ROUND_TYPE_LABELS for label normalization.
+          if (typeof matchLog !== 'undefined' && Array.isArray(matchLog)) {
+            matchLog.push({
+              player: lock.name,
+              team: lock.team,
+              guess: String(lock.guess),
+              outcome: 'nic_question',
+              points: finalPts,
+              multiplier: mult,
+              round: roundNumber,
+              question: q.question,
+              category: 'Number Is Correct',
+              roundType: 'number-is-correct',
+              timestamp: lock.lockedAtMs || Date.now(),
+            });
+          }
+        });
+      }
+
+      nicSyncState();
+      nicRender();
+      nicUpdateInputArea();
+
+      if (nicState._betweenTimer) clearTimeout(nicState._betweenTimer);
+      nicState._betweenTimer = setTimeout(() => {
+        nicHostAdvanceQuestion();
+      }, NIC_REVEAL_HOLD_MS);
+    }
+
+    function nicHostAdvanceQuestion() {
+      if (nicState._betweenTimer) { clearTimeout(nicState._betweenTimer); nicState._betweenTimer = null; }
+      const next = nicState.qIdx + 1;
+      if (next >= nicState.questions.length) {
+        nicHostFinishRound();
+      } else {
+        // Brief between-questions beat so the reveal isn't snap-cut
+        nicState.phase = 'between';
+        nicSyncState();
+        setTimeout(() => nicHostStartQuestion(next), NIC_BETWEEN_QUESTION_MS);
+      }
+    }
+
+    function nicHostFinishRound() {
+      nicState.phase = 'done';
+      if (nicState._timerHandle) { clearInterval(nicState._timerHandle); nicState._timerHandle = null; }
+      if (nicState._displayTimerHandle) { clearInterval(nicState._displayTimerHandle); nicState._displayTimerHandle = null; }
+      // Sync phase='done' so non-host triggers nicShowSummary too. Host
+      // calls nicShowSummary directly (phase change won't trigger reconcile
+      // for self because of self-echo guard).
+      nicSyncState();
+      nicShowSummary();
+    }
+
+    // ── Round Summary Framework ─────────────────────────────────────────
+    // Runs on both host + non-host (driven by phase='done'). Host calls
+    // onComplete at the end; non-host's onComplete is a no-op (gated below).
+    async function nicShowSummary() {
+      if (nicState._summaryRan) return;
+      nicState._summaryRan = true;
+
+      // Round Complete card
+      if (typeof showRoundCompleteCard === "function") {
+        await showRoundCompleteCard({
+          title: 'ROUND COMPLETE',
+          subtitle: 'TALLYING SCORES',
+          holdMs: 1600,
+          extraClass: 'rcc-nic',
+        });
+      }
+
+      // Hide the in-round stage so the summary slides in over a clean canvas
+      const stageEl = document.querySelector('#nic-container .nic-stage');
+      if (stageEl) stageEl.style.opacity = '0';
+
+      const sum = document.getElementById('nic-summary');
+      const redNameEl = document.getElementById('nic-summary-red-name');
+      const blueNameEl = document.getElementById('nic-summary-blue-name');
+      const redScoreEl = document.getElementById('nic-summary-red-score');
+      const blueScoreEl = document.getElementById('nic-summary-blue-score');
+      if (redNameEl) redNameEl.textContent = (teamNames && teamNames[0]) || 'Red';
+      if (blueNameEl) blueNameEl.textContent = (teamNames && teamNames[1]) || 'Blue';
+      if (redScoreEl) redScoreEl.textContent = '0';
+      if (blueScoreEl) blueScoreEl.textContent = '0';
+
+      // Player rank: cumulative scoresByUid sorted desc.
+      // Populated into the inner .nic-summary-track so the marquee can scroll
+      // it when content overflows the column's max-height.
+      const rankCol = document.getElementById('nic-summary-rank');
+      const rankTrack = document.getElementById('nic-summary-rank-track');
+      if (rankCol) rankCol.classList.remove('nic-marquee-active');
+      if (rankTrack) {
+        const rosterByUid = new Map(nicState.roster.map(p => [p.uid, p]));
+        const entries = Object.entries(nicState.scoresByUid)
+          .map(([uid, pts]) => ({ uid, pts, info: rosterByUid.get(uid) }))
+          .filter(e => e.info)
+          .sort((a, b) => b.pts - a.pts);
+        rankTrack.innerHTML = entries.map(e => {
+          const teamCls = e.info.team === 0 ? 'team-red' : 'team-blue';
+          const sign = e.pts >= 0 ? '+' : '';
+          return `<div class="nic-summary-rank-row"><span class="nic-rank-name ${teamCls}">${escapeHtml(e.info.name)}</span><span class="nic-rank-val">${sign}${e.pts.toLocaleString()}</span></div>`;
+        }).join('') || '<div style="color:#666;font-style:italic;">—</div>';
+      }
+
+      // Per-question recap: question text + answer
+      const qListCol = document.getElementById('nic-summary-qlist');
+      const qListTrack = document.getElementById('nic-summary-qlist-track');
+      if (qListCol) qListCol.classList.remove('nic-marquee-active');
+      if (qListTrack) {
+        qListTrack.innerHTML = nicState.questions.map((q, i) => {
+          const snippet = (q.question || '').length > 80 ? q.question.slice(0, 77) + '…' : (q.question || '');
+          return `<div class="nic-summary-qrow">`
+               + `<span class="nic-q-num">Q${i + 1}</span>`
+               + `<span class="nic-q-snippet">${escapeHtml(snippet)}</span>`
+               + `<span class="nic-q-answer">${(q.answer ?? '').toLocaleString()}</span>`
+               + `</div>`;
+        }).join('');
+      }
+
+      if (sum) {
+        sum.style.display = 'flex';
+        sum.style.animation = 'none';
+        void sum.offsetWidth;
+        sum.style.animation = '';
+      }
+
+      // Activate vertical marquee on either column whose track overflows.
+      // Defer one frame so layout has flushed before measurement.
+      requestAnimationFrame(() => {
+        const armMarquee = (colEl, trackEl) => {
+          if (!colEl || !trackEl) return;
+          const overflow = trackEl.scrollHeight - colEl.clientHeight;
+          if (overflow > 4) {
+            // Slower for longer overflow so the scroll feels readable. ~3s
+            // per row of overflow, capped between 10–24s.
+            const dur = Math.max(10, Math.min(24, 8 + overflow / 12));
+            colEl.style.setProperty('--nic-marquee-distance', `${-overflow}px`);
+            colEl.style.setProperty('--nic-marquee-dur', `${dur}s`);
+            colEl.classList.add('nic-marquee-active');
+          }
+        };
+        armMarquee(rankCol, rankTrack);
+        armMarquee(qListCol, qListTrack);
+      });
+
+      await new Promise(r => setTimeout(r, 600 / (gameSpeed || 1)));
+
+      // Parallel raw countups
+      const raw = [nicState.teamTotals[0] || 0, nicState.teamTotals[1] || 0];
+      await Promise.all([
+        redScoreEl ? animateCountUp(redScoreEl, 0, raw[0], { tick: true }) : Promise.resolve(),
+        blueScoreEl ? animateCountUp(blueScoreEl, 0, raw[1], { tick: true }) : Promise.resolve(),
+      ]);
+
+      // Round multiplier: gem slam + post-mult countup per team (sequential)
+      let finalTotals = raw.slice();
+      const rm = currentRoundMultiplier || 1;
+      if (rm > 1) {
+        finalTotals = [Math.round(raw[0] * rm), Math.round(raw[1] * rm)];
+        const gemMeta = (typeof getRoundMultiplierGem === "function") ? getRoundMultiplierGem(rm) : null;
+        async function runTeamMult(team) {
+          const scoreEl = team === 0 ? redScoreEl : blueScoreEl;
+          const teamHost = scoreEl && scoreEl.closest('.round-summary-team');
+          if (!scoreEl || !teamHost || !gemMeta) return;
+          const gem = document.createElement('div');
+          gem.className = `round-summary-mult-gem rt-gem rt-tier-${gemMeta.tier}`;
+          gem.innerHTML = `<img src="${gemMeta.img}" alt="${gemMeta.label}" /><div class="rt-gem-value">${gemMeta.label}</div>`;
+          teamHost.appendChild(gem);
+          await new Promise(r => requestAnimationFrame(r));
+          gem.classList.add('slam');
+          if (typeof playGlint === "function") playGlint(gemMeta.tier, 0.7);
+          scoreEl.classList.add('round-summary-score-pulse');
+          await animateCountUp(scoreEl, raw[team], finalTotals[team], { tick: true });
+          scoreEl.classList.remove('round-summary-score-pulse');
+          gem.classList.remove('slam');
+          void gem.offsetWidth;
+          gem.classList.add('fading');
+          gem.addEventListener('animationend', () => gem.remove(), { once: true });
+          setTimeout(() => { if (gem.isConnected) gem.remove(); }, 800);
+        }
+        if (raw[0] !== 0) { await runTeamMult(0); await new Promise(r => setTimeout(r, 350 / (gameSpeed || 1))); }
+        if (raw[1] !== 0) { await runTeamMult(1); }
+      }
+      if (typeof hidePhaseGem === "function") hidePhaseGem();
+
+      await new Promise(r => setTimeout(r, 1500 / (gameSpeed || 1)));
+
+      // Host folds finals into teamScores via handleModuleComplete. Multiplier
+      // already applied above, so flag multiplierApplied:true to prevent
+      // double-multiply. Non-host's onComplete is null — fall through.
+      if (!isMultiplayer || isHost) {
+        const cb = nicState.onComplete;
+        nicState.onComplete = null;
+        if (typeof restoreMainGameUI === "function") restoreMainGameUI();
+        if (cb) cb({ redScore: finalTotals[0], blueScore: finalTotals[1], multiplierApplied: true });
+      }
+    }
+
+    // ── Submit branch (called from submitGuess) ──
+    function submitNicGuess(rawValue) {
+      if (!nicState.active || nicState.phase !== 'guess') return;
+      const num = Number(String(rawValue).trim());
+      if (!Number.isFinite(num)) return;
+
+      // Determine whose lock this is.
+      let actingUid;
+      if (isMultiplayer) {
+        actingUid = myUid;
+      } else {
+        const slot = nicState.roster[nicState._localActiveIdx];
+        if (!slot) return;
+        actingUid = slot.uid;
+      }
+
+      // Already-locked guard (e.g. host re-clicks Submit)
+      if (nicState.locks.some(l => l.uid === actingUid)) return;
+
+      if (!isMultiplayer || isHost) {
+        hostProcessNicGuess(actingUid, num);
+      } else {
+        // Non-host: route to host via pendingAction. Host's processor below
+        // appends the lock and re-syncs nicState back to all clients.
+        syncState({ pendingAction: { type: 'nicGuess', uid: myUid, guess: num, clientTs: Date.now() } });
+        // Optimistic local input-area update so the player gets immediate
+        // "LOCKED IN" feedback. The authoritative state arrives on the
+        // host's next nicState snapshot.
+        const guessInput = document.getElementById('guess');
+        if (guessInput) guessInput.disabled = true;
+      }
+    }
+
+    // ── Display layer ──
+    // Build / refresh the in-canvas NIC stage (question card, timer, rows).
+    function nicRender() {
+      const root = document.getElementById('nic-container');
+      if (!root) return;
+      root.classList.add('visible');
+
+      // Build scaffold once per round; per-question updates patch in place.
+      if (!root.querySelector('.nic-stage')) {
+        root.innerHTML =
+          `<div class="nic-stage">`
+          +   `<div class="nic-meta">`
+          +     `<div class="nic-q-counter">QUESTION <b id="nic-q-num">—</b> OF <b id="nic-q-total">${NIC_QUESTIONS_PER_ROUND}</b></div>`
+          +     `<div class="nic-timer-wrap"><div class="nic-timer-bar"><div class="nic-timer-fill" id="nic-timer-fill"></div></div><div class="nic-timer-text" id="nic-timer-text">30</div></div>`
+          +   `</div>`
+          +   `<div class="nic-question-card">`
+          +     `<div class="nic-q-cat" id="nic-q-cat">—</div>`
+          +     `<div class="nic-q-text" id="nic-q-text">—</div>`
+          +   `</div>`
+          +   `<div class="nic-answer-reveal" id="nic-answer-reveal"><span class="nic-answer-label">ANSWER:</span> <span class="nic-answer-value" id="nic-answer-value">—</span></div>`
+          +   `<div class="nic-rows" id="nic-rows"></div>`
+          + `</div>`;
+      }
+
+      const q = nicState.questions[nicState.qIdx];
+      if (q) {
+        document.getElementById('nic-q-num').textContent = String(nicState.qIdx + 1);
+        document.getElementById('nic-q-cat').textContent = q.category || '';
+        document.getElementById('nic-q-text').textContent = q.question || '';
+        document.getElementById('nic-answer-value').textContent = (q.answer ?? '').toLocaleString();
+      }
+
+      const showAnswer = nicState.phase === 'reveal' || nicState.phase === 'between';
+      document.getElementById('nic-answer-reveal').classList.toggle('visible', showAnswer);
+
+      nicRenderRows();
+    }
+
+    function nicRenderRows() {
+      const host = document.getElementById('nic-rows');
+      if (!host) return;
+      const lockByUid = new Map(nicState.locks.map(l => [l.uid, l]));
+      const showScores = nicState.phase === 'reveal' || nicState.phase === 'between';
+      const myEffectiveUid = isMultiplayer ? myUid : (nicState.roster[nicState._localActiveIdx]?.uid);
+
+      host.innerHTML = nicState.roster.map(p => {
+        const lock = lockByUid.get(p.uid);
+        const teamCls = p.team === 0 ? 'red' : 'blue';
+        const isActive = !lock && p.uid === myEffectiveUid && nicState.phase === 'guess';
+        const orderBadge = lock ? `<span class="nic-row-order">${nicOrdinal(lock.orderIdx + 1)}</span>` : '';
+        const multBadge  = lock ? `<span class="nic-row-mult">${lock.mult ? (lock.mult === 1 ? '1×' : lock.mult + '×') : (nicSpeedMult(lock.orderIdx) === 1 ? '1×' : nicSpeedMult(lock.orderIdx) + '×')}</span>` : '';
+        const guessCell  = lock ? `<span class="nic-row-guess">${Number(lock.guess).toLocaleString()}</span>` : `<span class="nic-row-guess waiting">${isActive ? '…' : ''}</span>`;
+        const diffCell   = (showScores && lock) ? `<span class="nic-row-diff ${lock.basePts === NIC_EXACT_PTS ? 'exact' : ''}">${lock.label || ''}</span>` : '';
+        const ptsCell    = (showScores && lock) ? `<span class="nic-row-pts ${lock.finalPts > 0 ? 'pos' : lock.finalPts < 0 ? 'neg' : 'zero'}">${(lock.finalPts >= 0 ? '+' : '') + (lock.finalPts ?? 0).toLocaleString()}</span>` : (showScores ? `<span class="nic-row-pts zero">no guess</span>` : '');
+        return `<div class="nic-row ${teamCls} ${lock ? 'locked' : ''} ${isActive ? 'active' : ''}">`
+          + `<span class="nic-row-name">${escapeHtml(p.name)}</span>`
+          + guessCell
+          + orderBadge
+          + multBadge
+          + diffCell
+          + ptsCell
+          + `</div>`;
+      }).join('');
+    }
+
+    function nicOrdinal(n) {
+      const s = ['th','st','nd','rd'], v = n % 100;
+      return n + (s[(v - 20) % 10] || s[v] || s[0]);
+    }
+
+    // ── Display-only timer tick (separate from host's authoritative interval) ──
+    function nicStartDisplayTimer() {
+      if (nicState._displayTimerHandle) clearInterval(nicState._displayTimerHandle);
+      const tick = () => {
+        if (nicState.phase !== 'guess') return;
+        const left = Math.max(0, nicState.timerEndsAt - Date.now());
+        const fill = document.getElementById('nic-timer-fill');
+        const text = document.getElementById('nic-timer-text');
+        if (!fill || !text) return;
+        const pct = Math.max(0, Math.min(1, left / NIC_QUESTION_TIME_MS));
+        fill.style.width = (pct * 100) + '%';
+        text.textContent = String(Math.ceil(left / 1000));
+        const warn = left <= 5000;
+        fill.classList.toggle('warning', warn);
+        text.classList.toggle('warning', warn);
+      };
+      tick();
+      nicState._displayTimerHandle = setInterval(tick, 200);
+    }
+
+    // ── Input-area state per phase / per active player ──
+    function nicUpdateInputArea() {
+      if (typeof setInputAreaMode !== 'function') return;
+      const myEffectiveUid = isMultiplayer ? myUid : (nicState.roster[nicState._localActiveIdx]?.uid);
+      const myLock = nicState.locks.find(l => l.uid === myEffectiveUid);
+      const slot = nicState.roster.find(p => p.uid === myEffectiveUid);
+
+      if (nicState.phase === 'reveal' || nicState.phase === 'between') {
+        setInputAreaMode({
+          mode: 'disabled',
+          header: 'NUMBER IS CORRECT',
+          subtext: 'REVEALING…',
+        });
+        return;
+      }
+      if (nicState.phase !== 'guess') {
+        setInputAreaMode({
+          mode: 'disabled',
+          header: 'NUMBER IS CORRECT',
+          subtext: '',
+        });
+        return;
+      }
+
+      if (myLock) {
+        setInputAreaMode({
+          mode: 'disabled',
+          header: 'LOCKED IN',
+          subtext: `${Number(myLock.guess).toLocaleString()} · WAITING…`,
+          teamColor: slot ? slot.team : undefined,
+        });
+        return;
+      }
+
+      // Active player input
+      const subtext = isMultiplayer ? 'MAKE YOUR GUESS' : `${slot ? slot.name.toUpperCase() + ' — ' : ''}MAKE YOUR GUESS`;
+      setInputAreaMode({
+        mode: 'guess',
+        header: 'NUMBER IS CORRECT',
+        subtext,
+        inputPlaceholder: 'enter a number',
+        teamColor: slot ? slot.team : undefined,
+      });
+      // Hint focus to the input field
+      const guessInput = document.getElementById('guess');
+      if (guessInput) {
+        guessInput.disabled = false;
+        guessInput.value = '';
+        try { guessInput.focus(); } catch(_) {}
+      }
+    }
+
+    // ── Multiplayer sync (host → all clients) ──
+    function nicSyncState() {
+      if (!isMultiplayer || !isHost) return;
+      const s = nicState;
+      const payload = {
+        active: s.active,
+        phase: s.phase,
+        qIdx: s.qIdx,
+        questions: (s.questions || []).map(q => ({ ...q })),
+        roster: (s.roster || []).map(p => ({ ...p })),
+        locks: (s.locks || []).map(l => ({ ...l })),
+        timerEndsAt: s.timerEndsAt || null,
+        scoresByUid: { ...s.scoresByUid },
+        teamTotals: [s.teamTotals[0] || 0, s.teamTotals[1] || 0],
+      };
+      syncState({
+        nicState: payload,
+        matchLog: matchLog.map(e => ({ ...e })),
+        nicPlayerStats: { ...nicPlayerStats },
+      });
+    }
+
+    // ── Non-host hydration ──
+    // Mirror host's nicState locally, then drive UI updates based on the
+    // phase / question delta. Idempotent: if the same snapshot arrives
+    // twice we just re-render.
+    function nicApplySyncedState(payload) {
+      if (!payload) return;
+      const s = nicState;
+      const prevPhase = s.phase;
+      const prevQIdx  = s.qIdx;
+      const prevLocksLen = (s.locks || []).length;
+
+      s.active       = !!payload.active;
+      s.phase        = payload.phase || null;
+      s.qIdx         = (payload.qIdx ?? -1);
+      s.questions    = Array.isArray(payload.questions) ? payload.questions.slice() : [];
+      // Prefer host's canonical roster; fall back to local if missing.
+      s.roster       = (Array.isArray(payload.roster) && payload.roster.length)
+                         ? payload.roster.slice()
+                         : (s.roster.length ? s.roster : nicGetRoster());
+      s.locks        = Array.isArray(payload.locks) ? payload.locks.slice() : [];
+      s.timerEndsAt  = payload.timerEndsAt || 0;
+      s.scoresByUid  = payload.scoresByUid ? { ...payload.scoresByUid } : {};
+      s.teamTotals   = Array.isArray(payload.teamTotals)
+                         ? [payload.teamTotals[0] || 0, payload.teamTotals[1] || 0]
+                         : [0, 0];
+
+      const container = document.getElementById('nic-container');
+      if (container) container.classList.add('visible');
+
+      // (Re)render scaffold + per-question content
+      nicRender();
+
+      // Drive display timer based on current phase
+      if (s.phase === 'guess') {
+        nicStartDisplayTimer();
+      } else if (s._displayTimerHandle) {
+        clearInterval(s._displayTimerHandle);
+        s._displayTimerHandle = null;
+      }
+
+      // Refresh input-area when phase changes, on a new question, or after
+      // any new lock lands (could be ours echoing back from the host).
+      if (s.phase !== prevPhase || s.qIdx !== prevQIdx || s.locks.length !== prevLocksLen) {
+        nicUpdateInputArea();
+      }
+
+      // Phase transition into 'done' → run the summary on this client.
+      // _summaryRan guards against echo / re-entry.
+      if (s.phase === 'done' && prevPhase !== 'done' && !s._summaryRan) {
+        nicShowSummary();
+      }
+    }
+
     function playModuleIntro(moduleKey) {
       const mod = ROUND_MODULES[moduleKey];
       const cfg = mod && mod.intro;
@@ -23106,6 +24377,9 @@ document.addEventListener('keydown', e => {
     function updateTurn() {
       // Face-off is a neutral round — don't apply team turn colors/text
       if (faceoffState.active) return;
+      // Number Is Correct: all players guess simultaneously. nicUpdateInputArea
+      // owns the input-area; team-turn UI doesn't apply.
+      if (nicState.active) return;
       const isRed = teamTurn === 0;
       const teamName = isRed ? teamNames[0] : teamNames[1];
       const teamClass = isRed ? "team-red" : "team-blue";
@@ -23309,6 +24583,7 @@ document.addEventListener('keydown', e => {
       'secret-scribble': 'Secret Scribble',
       'common-thread':   'Common Thread',
       'grid-lock':       'Grid Lock',
+      'number-is-correct': 'Number Is Correct',
       'faceoff':         'Face-off',
     };
     let _roundStartRoundNumber = 0;
@@ -23357,6 +24632,13 @@ document.addEventListener('keydown', e => {
         input.value = "";
         if (!guess) return;
         glSubmitWord(guess);
+        return;
+      }
+      // Number Is Correct: route numeric guess to NIC handler
+      if (nicState.active && nicState.phase === "guess") {
+        input.value = "";
+        if (!guess) return;
+        submitNicGuess(guess);
         return;
       }
       input.value="";if(!guess||!currentQuestion)return;
@@ -24102,6 +25384,7 @@ document.addEventListener('keydown', e => {
       scribblePlayerStats = {};
       commonThreadPlayerStats = {};
       gridLockPlayerStats = {};
+      nicPlayerStats = {};
       playerIndex = [0, 0];
       lastRoundWinner = -1;
       _prevRoundTypePicks = [];
@@ -24387,6 +25670,7 @@ document.addEventListener('keydown', e => {
       scribblePlayerStats = {};
       commonThreadPlayerStats = {};
       gridLockPlayerStats = {};
+      nicPlayerStats = {};
       playerIndex = [0, 0];
       lastRoundWinner = -1;
 
@@ -24585,7 +25869,7 @@ document.addEventListener('keydown', e => {
       resetEvergreenRegions();
       gameSpeedSetting = 1;
       setGameSpeed(1);
-      teamScores=[0,0];usedQuestions=[];roundNumber=0;gameEnded=false;matchLog=[];roundsMeta=[];scribblePlayerStats={};commonThreadPlayerStats={};gridLockPlayerStats={};playerIndex=[0,0];startingTeam=0;_syncedAwards=null;_deferFaceoffScoreboard=false;
+      teamScores=[0,0];usedQuestions=[];roundNumber=0;gameEnded=false;matchLog=[];roundsMeta=[];scribblePlayerStats={};commonThreadPlayerStats={};gridLockPlayerStats={};nicPlayerStats={};playerIndex=[0,0];startingTeam=0;_syncedAwards=null;_deferFaceoffScoreboard=false;
       gameMode='rounds';maxRounds=0;lastRoundWinner=-1;
       resetFaceoffState();
       // Tear down face-off DOM if it was active and restore normal game elements
@@ -26015,6 +27299,8 @@ document.addEventListener('keydown', e => {
         commonThreadPlayerStats: null,
         gridLockPlayerStats: null,
         gridLockState: null,
+        nicState: null,
+        nicPlayerStats: null,
         selectedRoundType: null,
         awards: null,
         gameEnded: false,
@@ -26128,6 +27414,7 @@ document.addEventListener('keydown', e => {
       scribblePlayerStats = {};
       commonThreadPlayerStats = {};
       gridLockPlayerStats = {};
+      nicPlayerStats = {};
       // Use host-determined startingTeam so both clients agree
       startingTeam = _lobbyStartingTeam !== null ? _lobbyStartingTeam : Math.floor(Math.random() * 2);
       _lobbyStartingTeam = null;

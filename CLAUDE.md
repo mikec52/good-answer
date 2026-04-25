@@ -319,6 +319,25 @@ Between rounds, all players see a "Ready Up" button. First click starts a 10-sec
 5. **Debug logging cleanup** — diagnostic `console.log` statements in `category-select` transition, `play-again` transition, and `host syncing category-select` should be removed once multiplayer flows are stable.
 6. **Face-off UI polish** — cover plate clipping, countdown animation timing on non-host, turn-header/turn-subtext styling consistency, neutral color refinements. Functional but needs visual iteration.
 
+### What Was Fixed (April 25 session)
+
+- **`.dome-button` primary action button shipped.** Replaced `.btn .action-btn` (input-area) and `make3dBtn` output (victory panel). See "Primary Button — `.dome-button`" section below for the full spec. Input-area buttons dropped both `btn` and `action-btn` classes; the 13 JS selectors that targeted `#turn-body .action-btn` / `inputRow.querySelector('button.action-btn')` were updated to `.dome-button`. Victory-panel buttons themed `--dome-color: #fba300` with a brighter shade ramp override on `.victory-actions .dome-button`.
+- **Non-host submit flicker (gray → red flash → gray).** Root cause: host writes `pendingAction: null` *before* processing the guess (defensive ack to prevent duplicate processing — feud.html:12744). That gives the non-host two snapshots: an "ack" snapshot with no real state change, then the actual result. The ack snapshot's `updateRoleUI` ran with the user still active and `_scoringInProgress=false` → re-enabled the button for one frame. Fix: non-host `submitGuess` sets `_scoringInProgress = true` alongside disabling the button. Reconcile clears the flag only when a "real result" lands (`strikesChanged`, `playerIndexChanged`, `teamTurnChanged`, `stealChanged`, `activePlayerUid` changed, or `phase` changed) AND no tile-reveal animation already kicked off (the tile-reveal block's `flipTile.then()` owns the flag's lifecycle for correct-answer flow).
+- **`setInputAreaMode('guess')` no longer auto-enables in MP.** The 'guess' branch unconditionally setting `gi.disabled = false` + `sb.disabled = false` was the underlying cause of the post-submit flicker (any reconcile-driven `updateTurn → setInputAreaMode` re-enabled the button before `updateRoleUI` re-disabled). Now gated on `!isMultiplayer`. `restoreCanonicalInputRow` also defaults the freshly-rebuilt `<input>` + `<button>` to `disabled = true` in MP so a rebuild can't paint an enabled button for a frame.
+- **NIC + Face-off + Grid Lock now own their input enable/disable state.** Side effect of the above: modules whose `updateRoleUI` early-returns (NIC, face-off, grid-lock — gameplay isn't gated by `teamTurn`) must explicitly set `guessInput.disabled = false` AND `submitBtn.disabled = false` in their own role-UI function. `nicUpdateInputArea`'s active-player branch and `updateFaceoffRoleUI`'s `canInput` branch updated. Symptom prior to fix: NIC active player's button looked inactive (Enter key still worked) and face-off active player's input was fully unselectable.
+- **Removed redundant explicit re-enables in reconcile's `flipTile.then()`** — `guessInput.disabled = false` + `submitBtn.disabled = false` immediately followed by `updateRoleUI(activeUid)` was a single-frame race when the turn had moved. `updateRoleUI` is now the sole authority.
+- **End-of-final-round button label** — "Ready for Face-off" was wrapping to two lines in the dome button. Reverted to standard "Ready Up" in MP regardless of whether face-off is pending. Local mode still uses "Face-off Round" / "Next Round" since those buttons fit fine.
+- **Phase-indicator round-glow removed.** `.round-glow` CSS rule deleted, `box-shadow` dropped from `#phase-indicator` transition. The class is still toggled in JS as an idempotency marker for round-result SFX/blob effects but has no visual styles attached. Drawing the user's eye is now the responsibility of the input-area + round summary panel.
+- **Walking-dog mascot removed from start screen.** `#start-mascot-sprite` HTML element, CSS rule, and the entire walk-loop IIFE (frame ticker, `_stopMascot` / `_resetMascot` globals) deleted. Mascot fade/hide/restart logic stripped from `_dismissStartScreen`, `_dismissStartScreenFinal`, and `backToStartScreen`. `dog_walk_sheet.png` is unused but still on disk. The mode-select dog (`#mode-mascot`, `dog_lookup_sheet.png`) is a separate sprite, untouched.
+- **Victory panel tab-into-bug.** Pressing Tab 3-6 times surfaced the (off-screen) Game Recap panel because `transform: translateY(100%)` doesn't remove descendants from the focus order. Fixed with the `inert` HTML attribute, toggled in lockstep with the `.active` class — `inert` is the canonical "block focus + clicks + AT" attribute and unlike `visibility: hidden` it can't be overridden by descendant CSS (`.victory-tab-panel.active { visibility: visible }` was the override that exposed the active tab panel). Defense-in-depth `:not(.active) *` `visibility: hidden !important` rule added for browsers without `inert` support. Vote-selected button highlight (`.vote-selected { outline + box-shadow }`) also removed — vote tally text below the buttons is the indicator now.
+- **App-feel suppressions (TEST_MODE-gated).** `#game-root.app-feel { user-select: none }` + `*:focus { outline: none !important }` (with inputs/textareas opting back in for typing). `contextmenu` listener on `#game-root` calls `preventDefault`. The class is added by JS only when `!TEST_MODE` so dev sessions retain native highlight + DevTools right-click.
+- **Browser autofill suppression on canvas inputs.** One-time sweep at script load + `focusin` delegate apply `autocomplete="off"` `autocorrect="off"` `autocapitalize="off"` `spellcheck="false"` to every text/number input inside `#game-root`. Catches dynamically-created inputs (lobby modals, `setInputAreaMode` rebuilds, CT clue input). Stays on in both TEST_MODE and production — useful in both. Specific motivator: lobby code field had Chrome's autofill dropdown obscuring the input.
+- **Poll Position cinematic subtitle restyled** as an LED dot-matrix panel — same recipe as the start-screen "ANSWER" stage. Bitcount Single font on a `#222` matrix (radial-gradient dot pairs at `7px 7px` background-size), thin metal frame, glossy top highlight overlay. `white-space: nowrap` + `width: max-content` so the `<br>` is the only line break (Bitcount's wider glyphs were forcing additional auto-wrap). Exit animation re-timed `6.90s → 6.10s` so the subtitle slides down at the same moment the prism logo's CRT power-off triggers. Position lifted 50px (`top: 426px → 376px`) to sit closer to the prisms.
+- **`#input-area` height bumped 300px → 350px.** Dome button was cramped at the previous height.
+- **Grid Lock summary `.gl-summary-body` `min-height: 0 → 300px`.** The right-column word list collapsed too tightly when only 1-2 players scored.
+- **H5 / Poll Position summary not exiting on non-host face-off entry.** The face-off entry block in reconcile awaited exit animations for `_ctc`, `_glSum`, `_nicSum` but didn't call `hideH5Summary()`. Symptom: ranked-question summary panel stayed visible above the face-off layout. Fix: added `const _h5SumPromise = hideH5Summary()` to the entry's `Promise.all`, mirroring the round-type-select transition's call.
+- **Submit-button flicker MutationObserver added under TEST_MODE.** Logs every change to `#turn-body .dome-button`'s `disabled` attribute with a stack trace. Window-global `_refreshFlickerWatch()` re-anchors to a fresh button after rebuilds. Useful for diagnosing future flicker-class bugs; kept in place because it's TEST_MODE-only and zero-cost in production.
+
 ### What Was Fixed (April 24 session)
 
 - **End-of-game role-aware SFX** — added `winchime.wav` (winners) and `sadtrombone.wav` (losers) as `sfxWinChime` / `sfxSadTrombone`. Played inside `runTallyAnimation`'s winner-slam setTimeout; local role determined from `teamPlayerUids` vs `myUid` (defaults to won=true in local mode).
@@ -366,6 +385,8 @@ A single master switch at the top of the main `<script>` block (near `let devMod
 - **Round-multiplier gem density inflated** — `rollRoundMultiplier()` uses the test-mode weights (3x=5%, 2.5x=10%, 2x=20%, 1.5x=40%, 1x=25%) instead of production rates. Makes gem-related UI easy to observe mid-session.
 - **Lobby game code** = single character from `"123"` (so you can type join codes in ~1 key). Production uses 3 random digits from `0-9`.
 - **Music volume slider jumps to 0 on first start-screen click** via `_applyTestModeFirstClick()`. Dev mode (`activateDevMode()`) still mutes unconditionally regardless of `TEST_MODE`, since it's a strict solo-dev entry.
+- **App-feel suppressions disabled.** `#game-root.app-feel` class (text-selection block + native focus-outline kill) is NOT added, and the `contextmenu` listener is NOT wired. Result: native highlight + DevTools right-click are available for inspecting elements during dev. Production (`TEST_MODE === false`) gets the suppressions for an app-like feel.
+- **Submit-button flicker MutationObserver armed.** `_watchSubmitBtnFlicker()` logs every `disabled` change on `#turn-body .dome-button` with a stack trace. `window._refreshFlickerWatch()` re-anchors after rebuilds. Useful for diagnosing flicker-class bugs.
 
 **Ship workflow — flip `TEST_MODE` off for the ship, then back on after.**
 
@@ -1900,7 +1921,7 @@ Contains a single child: `#content-tv`, a 300×300px "TV screen" container with 
 - **`#question-box`** — `position: absolute; inset: 0` fills the full 300×300 of content-tv, behind cat-label (`z-index: 1`). `padding-top: 60px` pushes content below the 50px cat-label. `display: grid; grid-template-rows: 85% 15%`: row 1 = `#question` (centered text), row 2 = `#questionActions` (flex row with `justify-content: space-between` — "Advanced question options" left, "Answer History" right). `transform: translateZ(20px)` pushes content forward within the 3D perspective. `#category` element has been removed.
 
 ### Zone 2: Input (`#sq-zone-input`)
-- `#input-area` — full width, locked height (`min-height: 250px; max-height: 250px`), flex column. `#turn-header` is hidden (redundant with phase indicator). `#turn-input-box` fills parent height (`flex: 1`), `#turn-body` uses `justify-content: space-between` to pin the input row at the bottom. `#turn-subtext` has a fixed `height: 2.5rem` with `flex-shrink: 0` so font-size changes from `fitByCharCount` don't shift the input field. Buttons use `.input-btn` 3D prism class (see "3D Input-Area Buttons").
+- `#input-area` — full width, locked height (`min-height: 350px; max-height: 350px`), flex column. `#turn-header` is hidden (redundant with phase indicator). `#turn-input-box` fills parent height (`flex: 1`), `#turn-body` uses `justify-content: space-between` to pin the input row at the bottom. `#turn-subtext` has a fixed `height: 2.5rem` with `flex-shrink: 0` so font-size changes from `fitByCharCount` don't shift the input field. Buttons use the `.dome-button` class (see "Primary Button — `.dome-button`").
 
 ### Board Wrapper
 - 70% width, centered via `margin: 0 auto`
@@ -2203,26 +2224,60 @@ Setup step 1 uses inline SVG buttons (`.rounds-svg`) for round count selection (
 
 ---
 
-## 3D Input-Area Buttons (`.input-btn`)
+## Primary Button — `.dome-button`
 
-Buttons inside `#input-area` (Submit, Reveal All, Next Round, game-over actions) use a 4-face rotating prism matching the category select `.btn-3d` pattern but with `#111` faces.
+Plastic game-show dome button. The canonical primary-action button class for input-area + victory-panel buttons. Replaced both the prior `.input-btn` 3D prism (input-area Submit / Ready Up / Next Round) and the legacy `.btn .action-btn` look (victory-panel vote / Play Again / Return to Lobby / Exit to Menu).
 
-- **`make3dBtn(text, onclick, extraClass)`** — JS helper that returns button HTML with 4 `<span>` children. Optional `extraClass` for size variants.
-- **Structure**: same `btn3d-tilt` keyframes as `.btn-3d`. Height: 38px, `translateZ(19px)` (half height). Width: 98%. Faces: `rgba(17,17,17,0.9)`, border `#333`, opacity 0.95.
-- **Hover**: `setup3dBtns()` targets both `.btn-3d` and `.input-btn` with a `_has3dHover` guard to prevent duplicate listeners. Must be called after any innerHTML update that creates `.input-btn` elements.
-- **Size variants**: `.input-btn-sm` (1rem font, white background — used for Reveal All), `.input-btn-xs` (0.9rem — Conclude Final Round), `.input-btn-fm` (1.2rem — Fast Money Round).
-- **Stagger**: sibling `.input-btn` elements get staggered `animation-delay` (0s / -1.6s / -3.2s).
-- **Not applied to**: score edit +/- buttons, fast money buttons, setup buttons — these remain flat `.btn` class.
+### Anatomy
+
+- `::before` (z-index `-2`) — black plastic frame ring + bottom drop-shadow.
+- `::after` (z-index `-1`) — colored cap (radial-gradient highlight + body + shade) with a `0 var(--_lift) 0 var(--_deep)` shadow that creates the visible "lift" beneath the dome.
+- Raw text node — the label, sits above both pseudo-layers via the negative z-indexes (the original Claude Design paste assumed a wrapper element; ours doesn't have one, so pseudo-elements are pulled behind instead).
+- `isolation: isolate` on the host element scopes the negative z-indexes so other page content can't paint over the cap.
+
+### Tunable CSS variables
+
+Set on the element (or any ancestor) via inline `style="..."` or a scoped CSS rule.
+
+- `--dome-color` — primary cap color (default `#d62020` / game-show red).
+- `--dome-size` — overall scale factor (default `1`). Drives `--_w` (260px) + `--_h` (76px) + font size.
+- `--dome-label` — label color (default `#fff`).
+- `--_deep` / `--_darker` / `--_light` / `--_glow` — derived shade ramp, computed via `color-mix` from `--dome-color`. Override per-instance for a punchier look (the victory-panel scope does this with mix percentages of 95/80/75/60).
+- `--_lift` — drives the cap's offset within the frame and its bottom drop-shadow. `4px` resting → `6px` on hover (cap rises, shadow grows) → `0px` on press (cap drops flush, shadow collapses).
+- `--_label-rest` (default `10px`) — baseline bottom-padding for the centered label. Increase to raise the label inside the dome at rest.
+- `--_label-hover-boost` (default `2`) — multiplier on `--_lift` in the bottom-padding calc, decoupling label movement from cap geometry. The label travels with the cap on hover/press without affecting the cap's position.
+
+### Press/hover behavior
+
+- Hover: `--_lift: 6px` — cap rises 2px (top inset shrinks, bottom inset grows), label rises in lockstep via the padding calc, `filter: brightness(1.05)`.
+- Press: `--_lift: 0px` — cap drops 4px into the frame, drop-shadow collapses; the standard `:active` rule is the only state that the legacy `.action-btn:active { transform: scale(0.97) }` would have collided with, so input-area buttons drop the `action-btn` class entirely (see below). Victory-panel buttons never had `.action-btn`.
+
+### Where it's used
+
+- **Input-area** — Submit (canonical row), Ready Up / Next Round / module-action (action row), Common Thread Submit Clue. All carry only `class="dome-button"` (plus a role class like `ready-up` / `next-round` / `module-action` for selectors).
+- **Victory panel** — Play Again, Return to Lobby, Exit to Menu. Themed orange via `style="--dome-color: #fba300"` with the brighter shade ramp override on `.victory-actions .dome-button`. Vote-target classes (`vote-btn-playagain` / `vote-btn-lobby` / `vote-btn-exit`) preserved as JS hooks; the previous `.vote-selected` border highlight was removed (the vote tally text below the buttons is the sole indicator).
+- Fluid full-width sizing via `#input-area .dome-button { --_w: 100%; width: 100% }` and `.victory-actions .dome-button { --_w: 100%; width: 100% }` overrides — the default 260px cap doesn't apply in either scope.
+
+### Single-source-of-truth contract for `disabled`
+
+`setInputAreaMode({mode:'guess'})` no longer touches `disabled` in multiplayer. In MP, `updateRoleUI` is the sole authority on the input + submit-button disabled state — gates on `isActive` AND `_scoringInProgress`. In local mode (single device), `updateRoleUI` early-returns, so `setInputAreaMode 'guess'` continues to set `disabled = false` (gated on `!isMultiplayer`).
+
+This was driven by the non-host submit flicker — see "Non-host submit flicker" under "What Was Fixed". Side effect: any module that bypasses `updateRoleUI` (NIC, face-off, grid-lock — these all early-return because their gameplay isn't gated by `teamTurn` / `playerIndex`) MUST explicitly set `guessInput.disabled = false` and `submitBtn.disabled = false` in their own role-UI function whenever the input should be active. NIC's `nicUpdateInputArea` and `updateFaceoffRoleUI` both follow this pattern.
+
+### Defensive disable inside `restoreCanonicalInputRow`
+
+When `setInputAreaMode` rebuilds the input-row's innerHTML (e.g. coming out of Common Thread's compose-clue markup), the freshly-rebuilt button has no `disabled` attribute → defaults to enabled. In MP, the rebuild path now defaults the new `<input>` and `<button>` to `disabled = true` so `updateRoleUI`'s subsequent call is the single transition that enables (when appropriate) — no enable→disable race.
 
 ---
 
 ## Round-End Sequence
 
-When a round winner is determined (`setPhase("round-result")`), three simultaneous effects fire:
+When a round winner is determined (`setPhase("round-result")`), two simultaneous effects fire:
 
-1. **Phase indicator glow** — `.round-glow` class adds `box-shadow: 0 0 30px rgba(255,255,255,0.6), 0 0 60px rgba(255,255,255,0.3)`. Uses CSS `transition: box-shadow 0.4s ease` (not keyframe animation) to avoid conflicting with the slide-in/slide-out `animation` property. Removed when phase transitions away from `round-result`.
-2. **Round-end SFX** — `roundend.wav` plays via `playSound()`.
-3. **Purple blob crossfade** — `--bg-blob-base` set to `#513f6d` (default purple, neutral between red/blue team colors). Restored to team color by `updateBlobColor()` via `updateTurn()` at the start of `advanceRound()`.
+1. **Round-end SFX** — `roundend.wav` plays via `playSound()`.
+2. **Silver/black blob crossfade** — `--bg-blob-base` set to `#111` (neutral between red/blue team colors). Restored to team color by `updateBlobColor()` via `updateTurn()` at the start of `advanceRound()`.
+
+The phase-indicator round-glow effect was removed — drawing the user's eye is now the responsibility of the input-area + round summary panel (which slide in / count up / pop the round-mult gem at round end). The `.round-glow` class is still toggled in JS but has no CSS attached; it serves only as the idempotency marker for the SFX/blob effects so `renderRoundResult` doesn't double-fire on repeat snapshots.
 
 ---
 

@@ -150,6 +150,23 @@
       transition: --bg-blob-base 1.5s ease, background 1.5s ease;
       opacity: 0; /* hidden until fonts load — see document.fonts.ready */
     }
+    /* App-feel suppressions: text selection + native focus outlines killed
+       across the canvas so the game reads less like a web page. Scoped under
+       .app-feel so they only apply outside TEST_MODE — during development we
+       want native highlight + focus rings for inspecting elements. The class
+       is added by JS at script load when TEST_MODE is false. Inputs
+       (#guess etc.) opt back in below so typing/cut/copy/paste work. */
+    #game-root.app-feel {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    #game-root.app-feel *:focus,
+    #game-root.app-feel *:focus-visible { outline: none !important; }
+    #game-root.app-feel input,
+    #game-root.app-feel textarea {
+      user-select: text;
+      -webkit-user-select: text;
+    }
 
     /* CSS-only animated blob background — replaces SVG blobs.
        Uses pseudo-elements with animated radial gradients so that
@@ -468,14 +485,6 @@
       z-index: 3;
     }
 
-    #start-mascot-sprite {
-      position: absolute;
-      bottom: 60px;
-      width: 180px;
-      height: 180px;
-      pointer-events: none;
-      background: url('dog_walk_sheet.png') 0 0 / 900% 100%;
-    }
     #start-screen h1 {
       font-size: 2rem;
       font-family: "Bitcount Single";
@@ -1916,14 +1925,11 @@
     }
     #phase-indicator.team-red  { background: color-mix(in srgb, var(--red-bg)  90%, black); }
     #phase-indicator.team-blue { background: color-mix(in srgb, var(--blue-bg) 90%, black); }
-    /* Round-result glow — transition-based to avoid conflicting with
-       the slide-in/slide-out animation property on #phase-indicator */
     #phase-indicator {
-      transition: background 0.3s ease, box-shadow 0.4s ease;
+      transition: background 0.3s ease;
     }
-    #phase-indicator.round-glow {
-      box-shadow: 0 0 30px rgba(255,255,255,0.6), 0 0 60px rgba(255,255,255,0.3);
-    }
+    /* .round-glow class still gets toggled in JS as an idempotency marker
+       for round-result SFX / blob reset; no visual styles attached. */
     /* Module mode — stamped on container during module play. Consumes
        --mod-color (set by the parallel .mod-* class). Hides all phase-text
        spans; shows the .ph-module-logo span with the module's picker logo. */
@@ -3260,22 +3266,67 @@
     .ppci-subhead {
       position: absolute;
       left: 50%;
-      top: 426px;
+      top: 376px;
       transform: translateX(-50%);
-      font-family: "futura-pt-bold", sans-serif;
-      font-weight: 700;
+      font-family: "Bitcount Single", monospace;
+      font-weight: 350;
       text-transform: uppercase;
       color: #fff;
-      font-size: 2rem;
-      letter-spacing: normal;
+      font-size: 2.4rem;
+      letter-spacing: 0.04em;
       text-align: center;
-      line-height: 1.2;
+      line-height: 1.05;
       opacity: 0;
+      padding: 19px 28px 14px;
+      /* Let the <br> be the only line break — auto-wrap was splitting
+         "Top answers are" across more than two lines. With nowrap, the
+         panel sizes to whichever explicit line is longer. */
+      white-space: nowrap;
+      width: max-content;
+      /* LED dot-matrix field — same recipe as #start-logo .fx-ledmatrix */
+      background-color: #222;
+      background-image:
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.06) 0 1.2px, transparent 1.6px),
+        radial-gradient(circle at 50% 50%, rgba(0,0,0,0.55) 0 2px, transparent 2.4px);
+      background-size: 7px 7px, 7px 7px;
+      background-position: 0 0, 0 0;
+      background-repeat: repeat, repeat;
+      /* Thin metal frame around the panel — matches .stage.answer */
+      border: 3px solid #5a5a5a;
+      border-radius: 4px;
+      box-shadow:
+        inset 0 2px 0 rgba(255,255,255,0.22),
+        inset 0 -2px 2px rgba(0,0,0,0.45),
+        inset 2px 0 2px rgba(0,0,0,0.25),
+        inset -2px 0 2px rgba(0,0,0,0.25),
+        0 0 0 1px #1a1a1a,
+        0 4px 10px rgba(0,0,0,0.55);
+      text-shadow:
+        0 0 2px rgba(0,0,0,0.6),
+        0 0 8px rgba(0,0,0,0.35);
     }
+    /* Glossy top-to-bottom highlight overlay — matches .stage.answer::before */
+    .ppci-subhead::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.18) 0%,
+        rgba(255,255,255,0.04) 18%,
+        rgba(0,0,0,0) 40%,
+        rgba(0,0,0,0) 60%,
+        rgba(0,0,0,0.18) 100%);
+      border-radius: 2px;
+      z-index: 1;
+    }
+    /* Keep the text painted above the gloss overlay */
+    .ppci-subhead { isolation: isolate; }
     .ppci-canvas.playing .ppci-subhead {
       animation:
         ppci-subhead-in  0.80s ease-out 1.70s both,
-        ppci-subhead-out 0.65s cubic-bezier(0.5, 0, 0.85, 0.4) 6.90s forwards;
+        ppci-subhead-out 0.65s cubic-bezier(0.5, 0, 0.85, 0.4) 6.10s forwards;
     }
     @keyframes ppci-subhead-in {
       from { opacity: 0; transform: translate(-50%, -10px); }
@@ -3996,6 +4047,23 @@
       pointer-events: none;
       overflow: hidden;
     }
+    /* Hide from rendering + focus order until the .active class is on.
+       The panel sits in the DOM full-time (it animates in via transform
+       from translateY(100%)), but without this rule its buttons remain
+       in the tab order even while off-screen.
+
+       The `inert` attribute (toggled in lockstep with .active in JS) is
+       the canonical interaction-blocker. The visibility/!important rule
+       below is a defense-in-depth backstop: descendants like
+       .victory-tab-panel.active explicitly set visibility: visible, which
+       on a non-inert-supporting browser would otherwise let the active
+       tab panel still render + receive focus while the parent backdrop
+       is hidden. !important on the descendant universal selector forces
+       the cascade to win over those overrides. */
+    .victory-backdrop:not(.active),
+    .victory-backdrop:not(.active) * {
+      visibility: hidden !important;
+    }
     /* backdrop stays pointer-events:none always — clicks pass through to game elements behind it */
     .victory-panel {
       pointer-events: all;
@@ -4540,9 +4608,16 @@
       gap: 10px;
       margin-top: 10px;
     }
-    .victory-actions .action-btn {
+    .victory-actions .dome-button {
+      --_w: 100%;
       width: 100%;
       min-width: 0;
+      /* Brighter orange shade ramp — keeps the cap from going muddy in the
+         deep/darker stops while preserving the glossy highlight. */
+      --_deep:   color-mix(in oklab, var(--dome-color) 95%, #000);
+      --_darker: color-mix(in oklab, var(--dome-color) 80%, #000);
+      --_light:  color-mix(in oklab, var(--dome-color) 75%, #fff 25%);
+      --_glow:   color-mix(in oklab, var(--dome-color) 60%, #fff 40%);
     }
     /* Toggle arrow for dismiss/restore */
     .victory-toggle-arrow {
@@ -4562,12 +4637,9 @@
       font-family: "futura-100", sans-serif;
     }
     .victory-toggle-arrow:hover { opacity: 1; }
-    /* Vote-selected highlight on action buttons */
-    .victory-actions .action-btn.vote-selected {
-      outline: 2px solid rgba(255,255,255,0.8);
-      outline-offset: 2px;
-      box-shadow: 0 0 12px rgba(255,255,255,0.3);
-    }
+    /* Vote-selected class still gets toggled by JS but no longer paints a
+       border highlight — the vote tally text below the buttons is the
+       sole indicator of who's voted for what. */
     /* Vote status text below buttons */
     .victory-vote-status {
       grid-column: 1 / -1;
@@ -6956,7 +7028,7 @@
     }
 
     /* Input — evergreen neutral background; no team color on the container */
-    #input-area { width: 100%; border-radius: 10px 10px 0 0; border: 3px solid #333; border-bottom: none; overflow: hidden; box-sizing: border-box; font-family: "futura-100"; text-transform: uppercase; min-height: 300px; max-height: 300px; display: flex; flex-direction: column; background: #222; padding-bottom: 5px; margin-bottom: -2px; position: relative; z-index: 2; }
+    #input-area { width: 100%; border-radius: 10px 10px 0 0; border: 3px solid #333; border-bottom: none; overflow: hidden; box-sizing: border-box; font-family: "futura-100"; text-transform: uppercase; min-height: 350px; max-height: 350px; display: flex; flex-direction: column; background: #222; padding-bottom: 5px; margin-bottom: -2px; position: relative; z-index: 2; }
     #input-area.hidden { display: none; }
     #player-inventory { flex: 0 0 45px; height: 45px; margin-top: auto; border-radius: 50px; margin-left: 15px; margin-right: 15px; margin-bottom: 0; background: rgba(0,0,0,0.35); box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: flex-start; font-family: "futura-100"; font-size: 0.8rem; color: #cfcfcf; letter-spacing: 2px; }
     input[type="text"] { padding: 8px; font-size: 1rem; }
@@ -7129,6 +7201,170 @@
       width: 98%;
       box-sizing: border-box;
     }
+
+    /* =========================================================================
+       .dome-button — Plastic game-show dome (used for input-area primary actions)
+       Layered alongside legacy .btn.action-btn classes; later in the cascade so
+       its visual rules win. Source-color knob is --dome-color.
+
+       This block is the original Claude Design paste, modified only for:
+         - font-family swapped to futura-100
+         - ::before / ::after z-index pulled negative so raw button text
+           (no wrapper element) renders above the cap. The original assumed
+           text was wrapped in a child element; ours isn't.
+         - :active rule overrides legacy .action-btn:active's transform:scale(0.97)
+           which was shrinking the whole button assembly on press.
+         - #input-area scope override for full-width fluid sizing.
+       ========================================================================= */
+    .dome-button {
+      /* ---------- theme ---------- */
+      --dome-color: #d62020;
+      --dome-size: 1;
+      --dome-label: #fff;
+
+      /* derived shades — keep these tied to --dome-color so swaps are atomic */
+      --_deep:   color-mix(in oklab, var(--dome-color) 35%, #000);
+      --_darker: color-mix(in oklab, var(--dome-color) 60%, #000);
+      --_light:  color-mix(in oklab, var(--dome-color) 75%, #fff 25%);
+      --_glow:   color-mix(in oklab, var(--dome-color) 60%, #fff 40%);
+
+      /* size-scaled metrics */
+      --_w: calc(260px * var(--dome-size));
+      --_h: calc(76px  * var(--dome-size));
+      --_lift: 4px;
+
+      /* Label-only position knobs (decoupled from the cap geometry).
+         --_label-rest: bottom-padding constant. Increase to raise the text
+                        at rest. Each +2px shifts text up ~1px (it's centered
+                        via place-items, so padding shifts = half movement).
+         --_label-hover-boost: multiplier on --_lift in the bottom padding.
+                               Higher values = text rises more on hover, with
+                               no effect on the cap. */
+      --_label-rest: 10px;
+      --_label-hover-boost: 2;
+
+      /* ---------- reset button chrome ---------- */
+      appearance: none;
+      border: 0;
+      margin: 0;
+      background: transparent;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+
+      /* ---------- frame & label ---------- */
+      position: relative;
+      width: var(--_w);
+      height: var(--_h);
+      flex-shrink: 0;
+      isolation: isolate;
+      display: grid;
+      place-items: center;
+      padding: 0 14px calc(var(--_label-rest) + var(--_lift) * var(--_label-hover-boost));
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: calc(18px * var(--dome-size));
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--dome-label);
+      text-shadow:
+        0 -1px 0 rgba(0,0,0,0.5),
+        0 1px 1px color-mix(in oklab, var(--_light) 50%, transparent);
+      line-height: 1;
+      transition: color .12s ease-out, padding .12s ease-out, filter .12s ease-out;
+    }
+
+    /* z-stack: ::before = base ring (back), ::after = cap (middle), text = label (front).
+       Negative z-indexes (with isolation: isolate above) push the layers BEHIND the
+       raw text node, since we don't have a wrapping element to target via > *. */
+    .dome-button > * { position: relative; z-index: 2; }
+
+    .dome-button::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #1d1d1d 0%, #0a0a0a 50%, #1d1d1d 100%);
+      box-shadow:
+        0 4px 0 #000,
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        inset 0 -2px 6px rgba(0,0,0,0.7);
+      z-index: -2;
+    }
+
+    .dome-button::after {
+      content: "";
+      position: absolute;
+      inset: calc(8px - var(--_lift)) 14px calc(14px + var(--_lift));
+      border-radius: 999px;
+      background:
+        radial-gradient(ellipse at 35% 25%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 35%),
+        radial-gradient(ellipse at 50% 110%,
+          var(--_deep)   0%,
+          var(--_darker) 30%,
+          var(--dome-color) 60%,
+          var(--_light)  90%);
+      box-shadow:
+        0 var(--_lift) 0 var(--_deep),
+        0 calc(var(--_lift) + 4px) 12px rgba(0,0,0,0.55),
+        inset 0 -8px 14px color-mix(in oklab, var(--_deep) 70%, transparent),
+        inset 0 6px 8px color-mix(in oklab, var(--_glow) 35%, transparent);
+      transition: inset .12s ease-out, box-shadow .12s ease-out;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* ---------- hover ---------- */
+    .dome-button:hover:not(.inactive):not(:disabled):not(.disabled) {
+      --_lift: 6px;
+      filter: brightness(1.05);
+    }
+
+    /* ---------- pressed ---------- */
+    .dome-button:active:not(.inactive):not(:disabled):not(.disabled) {
+      --_lift: 0px;
+    }
+    .dome-button:active:not(.inactive):not(:disabled):not(.disabled)::after {
+      box-shadow:
+        inset 0 -2px 6px rgba(0,0,0,0.4),
+        0 1px 0 rgba(0,0,0,0.5);
+    }
+
+    /* ---------- focus ---------- */
+    .dome-button:focus-visible {
+      outline: 2px solid color-mix(in oklab, var(--dome-color) 70%, #fff 30%);
+      outline-offset: 4px;
+      border-radius: 999px;
+    }
+
+    /* ---------- inactive (between turns) + :disabled share visuals ---------- */
+    .dome-button.inactive,
+    .dome-button.disabled,
+    .dome-button:disabled {
+      --_deep:   #1a1a1a;
+      --_darker: #2a2a2a;
+      --dome-color: #4a4a4a;
+      --_light:  #6a6a6a;
+      --_glow:   #888;
+      --dome-label: rgba(255,255,255,0.4);
+      cursor: not-allowed;
+      filter: saturate(0.15);
+    }
+    .dome-button.inactive::after,
+    .dome-button.disabled::after,
+    .dome-button:disabled::after {
+      box-shadow:
+        0 var(--_lift) 0 #1a1a1a,
+        0 calc(var(--_lift) + 4px) 8px rgba(0,0,0,0.4),
+        inset 0 -6px 10px rgba(0,0,0,0.5),
+        inset 0 4px 6px rgba(255,255,255,0.06);
+    }
+    .dome-button.inactive,
+    .dome-button.disabled {
+      text-shadow: 0 -1px 0 rgba(0,0,0,0.5);
+    }
+
+    /* Input-area scope: full-width fluid sizing overrides the default 260px cap. */
+    #input-area .dome-button { --_w: 100%; width: 100%; }
 
     /* Message */
 
@@ -8231,7 +8467,7 @@
       grid-template-columns: 1fr 1fr;
       gap: 14px;
       padding: 6px 6px 4px;
-      min-height: 0;
+      min-height: 300px;
     }
     .gl-summary-left-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
     .gl-summary-right-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
@@ -8275,7 +8511,7 @@
     }
     .gl-summary-words-found-track .gl-found-row .gl-reveal-word { flex: 0 0 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .gl-summary-words-found-track .gl-found-row .gl-reveal-badges { display: flex; gap: 3px; align-items: center; flex-shrink: 0; margin-left: 6px; }
-    .gl-summary-words-found-track .gl-found-row .gl-reveal-pts { font-weight: 700; color: #fba300; min-width: 32px; text-align: right; font-variant-numeric: tabular-nums; flex-shrink: 0; margin-left: auto; }
+    .gl-summary-words-found-track .gl-found-row .gl-reveal-pts {color: #fba300; min-width: 32px; text-align: right; font-variant-numeric: tabular-nums; flex-shrink: 0; margin-left: auto; }
     .gl-summary-words-found-track .gl-found-row.team-red  { color: var(--red-text); }
     .gl-summary-words-found-track .gl-found-row.team-blue { color: var(--blue-text); }
     .gl-summary-words-found-track .gl-found-row.cancelled { color: #666; }
@@ -8899,7 +9135,7 @@
   <div id="game-root">
 
   <canvas id="victory-canvas-back" width="1280" height="720"></canvas>
-  <div id="victory-backdrop" class="victory-backdrop">
+  <div id="victory-backdrop" class="victory-backdrop" inert>
     <div class="victory-panel">
       <div class="victory-title">Game Recap</div>
 
@@ -9018,7 +9254,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.24</div>
+  <div id="version-tag">v0.25</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -9040,7 +9276,6 @@
       </div>
       <h1>Click anywhere to start</h1>
     </div>
-    <div id="start-mascot-sprite"></div>
     <div class="copyright">© Buffano Games</div>
   </div>
 
@@ -9241,7 +9476,7 @@
               <div id="turn-body">
                 <div class="turn-input-row">
                   <input type="text" id="guess" placeholder="Enter your guess" onkeydown="if(event.key==='Enter'&&!_scoringInProgress)submitGuess()" data-tip="guess-input" />
-                  <button class="btn action-btn" onclick="submitGuess()" data-tip="submit-guess">Submit</button>
+                  <button class="dome-button" onclick="submitGuess()" data-tip="submit-guess">Submit</button>
                 </div>
               </div>
             </div>
@@ -11378,19 +11613,21 @@
       arrow.onclick = (e) => { e.stopPropagation(); toggleVictoryPanel(); };
       panel.appendChild(arrow);
 
-      // Action buttons — multiplayer uses vote system, local is instant
+      // Action buttons — multiplayer uses vote system, local is instant.
+      // Dome buttons themed in the gold/amber accent we use across UI.
       const actionsEl = backdrop.querySelector('.victory-actions');
+      const domeStyle = 'style="--dome-color: #fba300;"';
       if (isMultiplayer) {
         actionsEl.innerHTML =
-          make3dBtn('Play Again', 'votePlayAgain()', 'vote-btn-playagain') +
-          make3dBtn('Return to Lobby', 'voteReturnToLobby()', 'vote-btn-lobby') +
-          make3dBtn('Exit to Menu', 'exitToMainMenu()', 'vote-btn-exit') +
+          `<button class="dome-button vote-btn-playagain" ${domeStyle} onclick="votePlayAgain()">Play Again</button>` +
+          `<button class="dome-button vote-btn-lobby" ${domeStyle} onclick="voteReturnToLobby()">Return to Lobby</button>` +
+          `<button class="dome-button vote-btn-exit" ${domeStyle} onclick="exitToMainMenu()">Exit to Menu</button>` +
           '<div class="victory-vote-status" id="victory-vote-status"></div>';
       } else {
         actionsEl.innerHTML =
-          make3dBtn('Play Again', 'localPlayAgain()', '') +
-          make3dBtn('Return to Lobby', 'localReturnToLobby()', '') +
-          make3dBtn('Exit to Menu', 'exitToMainMenu()', '') +
+          `<button class="dome-button" ${domeStyle} onclick="localPlayAgain()">Play Again</button>` +
+          `<button class="dome-button" ${domeStyle} onclick="localReturnToLobby()">Return to Lobby</button>` +
+          `<button class="dome-button" ${domeStyle} onclick="exitToMainMenu()">Exit to Menu</button>` +
           '<div class="victory-vote-status" id="victory-vote-status"></div>';
       }
       panel.classList.remove('victory-dismissed');
@@ -11400,9 +11637,18 @@
       backdrop.style.display = '';
       VICTORY._stopped = false;
 
-      // Trigger fly-in on next frame so the transition runs
+      // Trigger fly-in on next frame so the transition runs.
+      // Drop `inert` in lockstep with .active so the panel + buttons
+      // are interactive while shown. inert is the canonical "block all
+      // focus / clicks / AT" attribute and unlike visibility: hidden it
+      // can't be overridden by descendant CSS (e.g. .victory-tab-panel.active
+      // explicitly sets visibility: visible, which previously let users
+      // tab into the active tab panel even with the backdrop hidden).
       requestAnimationFrame(() => {
-        if (!VICTORY._stopped) backdrop.classList.add('active');
+        if (!VICTORY._stopped) {
+          backdrop.classList.add('active');
+          backdrop.removeAttribute('inert');
+        }
       });
 
       // Reset particle state
@@ -11464,12 +11710,18 @@
       const backdrop = document.getElementById('victory-backdrop');
       if (!backdrop || !backdrop.classList.contains('active')) {
         // Already hidden — clean up immediately
-        if (backdrop) backdrop.style.display = 'none';
+        if (backdrop) {
+          backdrop.style.display = 'none';
+          backdrop.setAttribute('inert', '');
+        }
         return Promise.resolve();
       }
 
-      // Remove 'active' to trigger the CSS transition (translateY(0) → translateY(100%))
+      // Remove 'active' to trigger the CSS transition (translateY(0) → translateY(100%)).
+      // Re-arm `inert` in lockstep so the panel becomes non-interactive immediately,
+      // even before the slide-out transition completes.
       backdrop.classList.remove('active');
+      backdrop.setAttribute('inert', '');
       return new Promise(resolve => {
         const panel = backdrop.querySelector('.victory-panel');
         if (!panel) { backdrop.style.display = 'none'; resolve(); return; }
@@ -11502,6 +11754,7 @@
       const backdrop = document.getElementById('victory-backdrop');
       if (backdrop) {
         backdrop.classList.remove('active');
+        backdrop.setAttribute('inert', '');
         backdrop.style.display = 'none';
       }
     }
@@ -12354,6 +12607,36 @@ document.addEventListener('keydown', e => {
     //   • Music volume left at whatever the user set
     const TEST_MODE = false;
 
+    // Submit-button flicker debug — logs every change to the submit button's
+    // `disabled` attribute with a stack trace. TEST_MODE only. Use to find
+    // the culprit re-enabling the button between non-host submit and the
+    // host's response snapshot.
+    function _watchSubmitBtnFlicker() {
+      if (!TEST_MODE) return;
+      // Re-anchor each call: the inputRow gets rebuilt sometimes, swapping
+      // the underlying button element out from under us.
+      if (window._submitBtnFlickerObs) {
+        try { window._submitBtnFlickerObs.disconnect(); } catch(_) {}
+      }
+      const btn = document.querySelector('#turn-body .dome-button');
+      if (!btn) { setTimeout(_watchSubmitBtnFlicker, 500); return; }
+      const obs = new MutationObserver((muts) => {
+        muts.forEach(m => {
+          if (m.attributeName === 'disabled') {
+            const stack = new Error().stack.split('\n').slice(2, 7).join('\n');
+            console.log('[btn flicker] disabled →', btn.disabled, '\n' + stack);
+          }
+        });
+      });
+      obs.observe(btn, { attributes: true, attributeFilter: ['disabled'] });
+      window._submitBtnFlickerObs = obs;
+      window._refreshFlickerWatch = _watchSubmitBtnFlicker;
+      console.log('[btn flicker] watcher armed on', btn);
+    }
+    // Arm once the DOM is ready; the function self-retries until the
+    // submit button exists.
+    setTimeout(_watchSubmitBtnFlicker, 1000);
+
     let roundNumber = 0;
     let gameEnded = false;
     let matchLog = [];  // persists across rounds, cleared on resetGame()
@@ -12918,6 +13201,12 @@ document.addEventListener('keydown', e => {
               _nicSum.classList.remove("nic-summary-out");
             });
           }
+          // H5/Poll Position summary slide-up if the prior round was a ranked
+          // question. Mirrors the round-type-select transition's call at the
+          // top of advanceRound; without it the H5 summary lingers above the
+          // face-off layout on non-host. hideH5Summary returns a promise (or
+          // null if the summary wasn't visible).
+          const _h5SumPromise = hideH5Summary();
           (async () => {
             await Promise.all([
               (async () => {
@@ -12929,6 +13218,7 @@ document.addEventListener('keydown', e => {
               _ctcPromise,
               _glSumPromise,
               _nicSumPromise,
+              _h5SumPromise,
             ]);
             resetModuleCanvas();
             initRoundState();
@@ -13031,6 +13321,7 @@ document.addEventListener('keydown', e => {
       }
 
       // Revealed answers (tile animations + SFX)
+      let _tileRevealAnimStarted = false;
       if (data.revealed && prev?.revealed) {
         data.revealed.forEach((r, i) => {
           if (r && !prev.revealed[i]) {
@@ -13042,16 +13333,19 @@ document.addEventListener('keydown', e => {
               playCorrect(i === 0);
               // Set scoring guard so non-host input is blocked during animation
               _scoringInProgress = true;
+              _tileRevealAnimStarted = true;
               const guessInput = document.getElementById("guess");
-              const submitBtn = document.querySelector('#turn-body .action-btn');
+              const submitBtn = document.querySelector('#turn-body .dome-button');
               if (guessInput) guessInput.disabled = true;
               if (submitBtn) submitBtn.disabled = true;
               flipTile(i, 'correct', lastResult.points, lastResult.mult).then(() => {
                 _scoringInProgress = false;
                 deactivateSpeedBoost();
-                if (guessInput) guessInput.disabled = false;
-                if (submitBtn) submitBtn.disabled = false;
-                // Re-apply role UI in case this client's turn was gated
+                // updateRoleUI is the sole authority for the disabled
+                // state — it gates on isActive + _scoringInProgress.
+                // Setting disabled=false explicitly above this caused a
+                // single-frame red flicker when the turn had moved to
+                // another player.
                 const activeUid = data.activePlayerUid || getActivePlayerUid();
                 if (activeUid) updateRoleUI(activeUid);
               });
@@ -13095,6 +13389,23 @@ document.addEventListener('keydown', e => {
         handlePhaseTransition(data);
       }
 
+      // Clear non-host's optimistic scoring guard once the real result
+      // snapshot lands. The guard was set in submitGuess to keep the button
+      // disabled across the host's pendingAction-clear snapshot. Skip if a
+      // tile-reveal animation already kicked off (its flipTile.then() owns
+      // the flag's lifecycle for correct-answer flow). For wrong-answer
+      // flow (no tile reveal), strikes/playerIndex move and we clear here
+      // so updateRoleUI below can apply the correct disabled state.
+      if (!isHost && _scoringInProgress && !_tileRevealAnimStarted) {
+        const realResultLanded = strikesChanged
+          || (data.activePlayerUid && data.activePlayerUid !== prev?.activePlayerUid)
+          || teamTurnChanged
+          || playerIndexChanged
+          || stealChanged
+          || (data.phase && data.phase !== prev?.phase);
+        if (realResultLanded) _scoringInProgress = false;
+      }
+
       // Active player role UI — LAST, after all state and phase updates
       if (data.activePlayerUid) {
         updateRoleUI(data.activePlayerUid);
@@ -13115,7 +13426,7 @@ document.addEventListener('keydown', e => {
           // setInputAreaMode tag the button with it) — a looser selector
           // accidentally matches the hidden submit button.
           if (_readyPlayersMap[myUid]) {
-            const readyBtn = document.querySelector('#turn-body .action-btn.ready-up');
+            const readyBtn = document.querySelector('#turn-body .dome-button.ready-up');
             if (readyBtn) readyBtn.disabled = true;
           }
           updateReadyStatus();
@@ -13718,7 +14029,7 @@ document.addEventListener('keydown', e => {
       // But NOT during round-result phase — all players need Ready Up / Reveal All
       const inRoundResult = document.getElementById('phase-indicator')?.dataset.phase === 'round-result';
       if (!inRoundResult && !moduleOwnsInput) {
-        const submitBtns = inputArea?.querySelectorAll('.action-btn');
+        const submitBtns = inputArea?.querySelectorAll('.dome-button');
         if (submitBtns) {
           submitBtns.forEach(btn => {
             btn.disabled = _scoringInProgress ? true : !isActive;
@@ -14187,7 +14498,7 @@ document.addEventListener('keydown', e => {
       if (!inputRow) {
         inputRow = document.createElement('div');
         inputRow.className = 'turn-input-row';
-        inputRow.innerHTML = `<input type="text" id="guess" placeholder="${inputPlaceholder}" onkeydown="if(event.key==='Enter'&&!_scoringInProgress)submitGuess()" data-tip="guess-input" /><button class="btn action-btn" onclick="submitGuess()" data-tip="submit-guess">Submit</button>`;
+        inputRow.innerHTML = `<input type="text" id="guess" placeholder="${inputPlaceholder}" onkeydown="if(event.key==='Enter'&&!_scoringInProgress)submitGuess()" data-tip="guess-input" /><button class="dome-button" onclick="submitGuess()" data-tip="submit-guess">Submit</button>`;
         turnBody.appendChild(inputRow);
       }
       if (!actionRow) {
@@ -14198,14 +14509,25 @@ document.addEventListener('keydown', e => {
       }
 
       const guessInput = document.getElementById('guess');
-      const submitBtn = inputRow.querySelector('button.action-btn');
+      const submitBtn = inputRow.querySelector('button.dome-button');
 
       // If the input-row was previously overridden (e.g. compose-clue rebuilt
       // it with column layout + custom markup), restore canonical form before
       // applying guess/disabled modes.
       const restoreCanonicalInputRow = () => {
         if (!inputRow.querySelector('#guess')) {
-          inputRow.innerHTML = `<input type="text" id="guess" placeholder="${inputPlaceholder}" onkeydown="if(event.key==='Enter'&&!_scoringInProgress)submitGuess()" data-tip="guess-input" /><button class="btn action-btn" onclick="submitGuess()" data-tip="submit-guess">Submit</button>`;
+          inputRow.innerHTML = `<input type="text" id="guess" placeholder="${inputPlaceholder}" onkeydown="if(event.key==='Enter'&&!_scoringInProgress)submitGuess()" data-tip="guess-input" /><button class="dome-button" onclick="submitGuess()" data-tip="submit-guess">Submit</button>`;
+          // In multiplayer, default the freshly-rebuilt input/button to disabled
+          // so updateRoleUI is the sole authority for enabling them. A new
+          // <button> with no disabled attribute paints in the active style
+          // for one frame between this rebuild and the updateRoleUI call,
+          // causing the gray→red→gray flicker on non-host submits.
+          if (isMultiplayer) {
+            const newGi = inputRow.querySelector('#guess');
+            const newSb = inputRow.querySelector('button.dome-button');
+            if (newGi) newGi.disabled = true;
+            if (newSb) newSb.disabled = true;
+          }
         }
         inputRow.style.flexDirection = '';
         inputRow.style.gap = '';
@@ -14237,9 +14559,23 @@ document.addEventListener('keydown', e => {
           actionRow.style.display = 'none';
           {
             const gi = document.getElementById('guess');
-            const sb = inputRow.querySelector('button.action-btn');
-            if (gi) { gi.disabled = false; gi.value = ''; gi.placeholder = inputPlaceholder; }
-            if (sb) { sb.disabled = false; sb.style.display = ''; }
+            const sb = inputRow.querySelector('button.dome-button');
+            // Local mode: setInputAreaMode is the sole authority for the
+            // disabled state (no updateRoleUI runs in single-device play).
+            // Multiplayer: updateRoleUI runs immediately after this from
+            // updateTurn() and will set the correct disabled state based
+            // on isActive + _scoringInProgress. Touching disabled here
+            // would briefly enable the button between non-host's submit
+            // and the reconcile, causing a single-frame red flicker.
+            if (gi) {
+              gi.value = '';
+              gi.placeholder = inputPlaceholder;
+              if (!isMultiplayer) gi.disabled = false;
+            }
+            if (sb) {
+              sb.style.display = '';
+              if (!isMultiplayer) sb.disabled = false;
+            }
           }
           break;
         case 'disabled':
@@ -14248,7 +14584,7 @@ document.addEventListener('keydown', e => {
           actionRow.style.display = 'none';
           {
             const gi = document.getElementById('guess');
-            const sb = inputRow.querySelector('button.action-btn');
+            const sb = inputRow.querySelector('button.dome-button');
             if (gi) { gi.disabled = true; gi.value = ''; gi.placeholder = inputPlaceholder; }
             if (sb) { sb.disabled = true; }
           }
@@ -14271,7 +14607,7 @@ document.addEventListener('keydown', e => {
             inputRow.innerHTML = `
               <input type="text" id="ct-clue-word" placeholder="One-word clue" autocomplete="off"
                      onkeydown="if(event.key==='Enter')ctSubmitClueFromInput()" style="width:100%;" />
-              <button class="btn action-btn" onclick="ctSubmitClueFromInput()" style="width:100%;">Submit Clue</button>
+              <button class="dome-button" onclick="ctSubmitClueFromInput()" style="width:100%;">Submit Clue</button>
             `;
             inputRow.style.flexDirection = 'column';
             inputRow.style.gap = '6px';
@@ -14338,10 +14674,10 @@ document.addEventListener('keydown', e => {
               // extraCls passed as BOTH class and data-tip so the ready-up
               // selector works AND the tooltip lookup still hits (e.g.
               // `next-round` in tooltips.csv).
-              actionRow.innerHTML = make3dBtn(buttonText || 'Continue', onclickStr, extraCls, extraCls);
+              actionRow.innerHTML = `<button class="dome-button ${extraCls}" onclick="${onclickStr}" data-tip="${extraCls}">${buttonText || 'Continue'}</button>`;
             } else {
               // Fallback for arbitrary callbacks
-              actionRow.innerHTML = `<button class="btn action-btn" id="input-action-btn" style="width:100%;">${buttonText || 'Continue'}</button>`;
+              actionRow.innerHTML = `<button class="dome-button" id="input-action-btn" style="width:100%;">${buttonText || 'Continue'}</button>`;
               const btn = document.getElementById('input-action-btn');
               if (btn && onButtonClick) btn.onclick = onButtonClick;
             }
@@ -22450,13 +22786,17 @@ document.addEventListener('keydown', e => {
         inputPlaceholder: 'enter a number',
         teamColor: slot ? slot.team : undefined,
       });
-      // Hint focus to the input field
+      // Explicitly enable input + submit. updateRoleUI early-returns for NIC,
+      // so this function owns the disabled state. setInputAreaMode 'guess' no
+      // longer auto-enables in MP (to avoid the feud non-host submit flicker).
       const guessInput = document.getElementById('guess');
+      const submitBtn = document.querySelector('#turn-body .dome-button');
       if (guessInput) {
         guessInput.disabled = false;
         guessInput.value = '';
         try { guessInput.focus(); } catch(_) {}
       }
+      if (submitBtn) submitBtn.disabled = false;
     }
 
     // ── Multiplayer sync (host → all clients) ──
@@ -22907,7 +23247,7 @@ document.addEventListener('keydown', e => {
       renderFaceoffBoard(1);
       // Disable input during countdown
       const guessInput = document.getElementById('guess');
-      const submitBtn = document.querySelector('#turn-body .action-btn');
+      const submitBtn = document.querySelector('#turn-body .dome-button');
       if (guessInput) guessInput.disabled = true;
       if (submitBtn) submitBtn.disabled = true;
       // Run 5-second countdown, then reveal + start timer
@@ -23051,8 +23391,17 @@ document.addEventListener('keydown', e => {
         inputPlaceholder: placeholder,
       });
       if (canInput) {
+        // Explicitly enable input + submit. updateRoleUI early-returns for
+        // face-off, so this function owns the disabled state. setInputAreaMode
+        // 'guess' no longer auto-enables in MP (to avoid the feud non-host
+        // submit flicker). Same pattern as nicUpdateInputArea.
         const guessInput = document.getElementById('guess');
-        if (guessInput) setTimeout(() => guessInput.focus(), 100);
+        const submitBtn = document.querySelector('#turn-body .dome-button');
+        if (guessInput) {
+          guessInput.disabled = false;
+          setTimeout(() => guessInput.focus(), 100);
+        }
+        if (submitBtn) submitBtn.disabled = false;
       }
     }
 
@@ -24657,9 +25006,14 @@ document.addEventListener('keydown', e => {
           return;
         }
         syncState({ pendingAction: { type: 'guess', guess, uid: myUid } });
-        // Disable input while waiting for host to process
+        // Disable input + set scoring guard. The guard keeps the button
+        // disabled across the host's pendingAction-clear snapshot (which
+        // arrives before the actual guess result and would otherwise let
+        // updateRoleUI re-enable the button for a frame). Cleared in
+        // reconcile when the real result snapshot lands.
+        _scoringInProgress = true;
         if (input) input.disabled = true;
-        const submitBtn = document.querySelector('#turn-body .action-btn');
+        const submitBtn = document.querySelector('#turn-body .dome-button');
         if (submitBtn) submitBtn.disabled = true;
         return;
       }
@@ -24684,7 +25038,7 @@ document.addEventListener('keydown', e => {
         const stealingTeam=teamTurn;
         // Advance turn order — steal counts as a turn for the stealing player
         playerIndex[teamTurn]=(playerIndex[teamTurn]+1)%teamPlayers[teamTurn].length;
-        const submitBtn=document.querySelector('#turn-body .action-btn');
+        const submitBtn=document.querySelector('#turn-body .dome-button');
         const guessInput=document.getElementById("guess");
         if(submitBtn) submitBtn.disabled=true;
         if(guessInput) guessInput.disabled=true;
@@ -24779,7 +25133,7 @@ document.addEventListener('keydown', e => {
         logGuess({ player: individualPlayer, team: teamTurn, guess, outcome: 'wrong', streak: 0, streakBroken: brokeStreak });}playerIndex[teamTurn]=(playerIndex[teamTurn]+1)%teamPlayers[teamTurn].length;
       if(found){
         const guessInput=document.getElementById("guess");
-        const submitBtn=document.querySelector('#turn-body .action-btn');
+        const submitBtn=document.querySelector('#turn-body .dome-button');
         _scoringInProgress = true;
         if(guessInput) guessInput.disabled=true;
         if(submitBtn) submitBtn.disabled=true;
@@ -25041,8 +25395,11 @@ document.addEventListener('keydown', e => {
       }
 
       const faceoffPending = isLastRound && !faceoffState.completed;
+      // Keep the standard "Ready Up" label even when face-off is pending —
+      // the longer "Ready for Face-off" wraps to two lines and never sits
+      // well in the dome button. A separate face-off cue can come later.
       const buttonText = isMultiplayer
-        ? (faceoffPending ? 'Ready for Face-off' : 'Ready Up')
+        ? 'Ready Up'
         : (faceoffPending ? 'Face-off Round' : 'Next Round');
       const onButtonClick = isMultiplayer ? readyUp : advanceRound;
 
@@ -25100,7 +25457,7 @@ document.addEventListener('keydown', e => {
       // button as a direct child of #turn-body; the module path (scribble,
       // etc.) puts it inside .turn-action-row. Both tag the button with
       // class .ready-up — target that explicitly.
-      const readyBtn = document.querySelector('#turn-body .action-btn.ready-up');
+      const readyBtn = document.querySelector('#turn-body .dome-button.ready-up');
       if (readyBtn) readyBtn.disabled = true;
 
       // Build Firestore update with dot-notation to merge into readyPlayers map
@@ -25127,7 +25484,7 @@ document.addEventListener('keydown', e => {
       // its "Ready Up" label once the current player has readied. Players
       // who haven't readied yet keep the clickable "Ready Up" label so
       // they know what to do.
-      const readyBtn = document.querySelector('#turn-body .action-btn.ready-up');
+      const readyBtn = document.querySelector('#turn-body .dome-button.ready-up');
       if (!readyBtn || !readyBtn.disabled) return;
 
       const allUids = [...teamPlayerUids[0], ...teamPlayerUids[1]];
@@ -25245,7 +25602,7 @@ document.addEventListener('keydown', e => {
 
     function updatePostGameVoteUI() {
       // Highlight the voted button
-      document.querySelectorAll('.victory-actions .action-btn').forEach(btn => {
+      document.querySelectorAll('.victory-actions .dome-button').forEach(btn => {
         btn.classList.remove('vote-selected');
       });
       if (_myPostGameVote === 'playAgain') {
@@ -26565,7 +26922,6 @@ document.addEventListener('keydown', e => {
       const logo = document.getElementById('start-logo');
       const h1 = startScreen.querySelector('h1');
       const copyright = startScreen.querySelector('.copyright');
-      const mascot = document.getElementById('start-mascot-sprite');
       const modeMascot = document.getElementById('mode-mascot');
 
       // Hide mode select
@@ -26585,13 +26941,6 @@ document.addEventListener('keydown', e => {
       // Restore h1 + copyright
       if (h1) { h1.classList.remove('start-fade-out'); h1.style.visibility = ''; h1.style.opacity = ''; }
       if (copyright) { copyright.classList.remove('start-fade-out'); copyright.style.visibility = ''; copyright.style.opacity = ''; }
-
-      // Restore mascot — reset to start position and restart walk
-      if (mascot) {
-        mascot.classList.remove('start-fade-out');
-        mascot.style.display = '';
-      }
-      if (window._resetMascot) _resetMascot();
 
       // Restore start screen interactivity
       startScreen.style.pointerEvents = '';
@@ -27490,88 +27839,7 @@ document.addEventListener('keydown', e => {
         gameRoot.style.setProperty('--bg-blob-base', BG_BLOB_DEFAULT);
       };
 
-      // ── Mascot walk loop (left→right→left, off-screen to off-screen) ──
-      (function() {
-        const sprite = document.getElementById('start-mascot-sprite');
-        const WALK_SHEET = 'dog_walk_sheet.png';
-        const TOTAL_FRAMES = 9;
-        const FRAME_MS = 45;
-        const WALK_SPEED = 10.5;
-        const SPRITE_W = 180;
-        const CANVAS_W = 1280;
-
-        // Preload walk sheet
-        const img = new Image();
-        img.src = WALK_SHEET;
-        const ready = img.decode().catch(() => {});
-
-        let frame = 0;
-        let xPos = -SPRITE_W;    // start off-screen left
-        let goingRight = true;
-        let _mascotTimer = null;
-        let _mascotStopped = false;
-
-        function applyFrame() {
-          const pct = (frame / (TOTAL_FRAMES - 1)) * 100;
-          sprite.style.backgroundPosition = pct + '% 0';
-        }
-
-        function tick() {
-          if (_mascotStopped) return;
-          frame = (frame + 1) % TOTAL_FRAMES;
-          applyFrame();
-
-          xPos += goingRight ? WALK_SPEED : -WALK_SPEED;
-          sprite.style.left = xPos + 'px';
-          // scaleX(-1) = facing right (sprite sheet faces left by default)
-          sprite.style.transform = goingRight ? 'scaleX(-1)' : '';
-
-          // Off-screen? Pause 1s then reverse direction
-          if (goingRight && xPos >= CANVAS_W) {
-            clearInterval(_mascotTimer);
-            setTimeout(() => {
-              if (_mascotStopped) return;
-              goingRight = false;
-              _mascotTimer = setInterval(tick, FRAME_MS);
-            }, 1000);
-          } else if (!goingRight && xPos <= -SPRITE_W) {
-            clearInterval(_mascotTimer);
-            setTimeout(() => {
-              if (_mascotStopped) return;
-              goingRight = true;
-              _mascotTimer = setInterval(tick, FRAME_MS);
-            }, 1000);
-          }
-        }
-
-        sprite.style.left = xPos + 'px';
-        sprite.style.transform = 'scaleX(-1)';
-        ready.then(() => {
-          if (!_mascotStopped) {
-            applyFrame();
-            _mascotTimer = setInterval(tick, FRAME_MS);
-          }
-        });
-
-        window._stopMascot = function() {
-          _mascotStopped = true;
-          clearInterval(_mascotTimer);
-        };
-
-        window._resetMascot = function() {
-          _mascotStopped = false;
-          clearInterval(_mascotTimer);
-          xPos = -SPRITE_W;
-          goingRight = true;
-          frame = 0;
-          sprite.style.left = xPos + 'px';
-          sprite.style.transform = 'scaleX(-1)';
-          applyFrame();
-          _mascotTimer = setInterval(tick, FRAME_MS);
-        };
-      })();
-
-      // Phase 1: Logo slides to top + shrinks, h1/copyright fade, dog stays.
+      // Phase 1: Logo slides to top + shrinks, h1/copyright fade.
       // Mode select fades in on top. Start screen stays visible as backdrop.
       window._dismissStartScreen = function() {
         const logo      = document.getElementById('start-logo');
@@ -27579,19 +27847,15 @@ document.addEventListener('keydown', e => {
         const copyright = startScreen.querySelector('.copyright');
         const modeSelect = document.getElementById('mode-select');
 
-        // Fade out h1, copyright, and mascot
+        // Fade out h1 and copyright
         if (h1) h1.classList.add('start-fade-out');
         if (copyright) copyright.classList.add('start-fade-out');
-        const mascot = document.getElementById('start-mascot-sprite');
-        if (mascot) mascot.classList.add('start-fade-out');
         // Explicit hide after fade (hidden-tab fallback for throttled animations)
         // Use visibility:hidden (not display:none) to preserve flex layout — avoids
         // reflowing #start-content which would shift the logo's transform base position.
         setTimeout(() => {
           if (h1) { h1.style.visibility = 'hidden'; h1.style.opacity = '0'; }
           if (copyright) { copyright.style.visibility = 'hidden'; copyright.style.opacity = '0'; }
-          if (mascot) { mascot.style.display = 'none'; }
-          if (window._stopMascot) window._stopMascot();
         }, 1000);
 
         // Logo slides to top center + shrinks 50% (CSS transition)
@@ -27612,9 +27876,8 @@ document.addEventListener('keydown', e => {
       };
 
       // Phase 2: Final dismissal when a mode is selected.
-      // Fades out start screen (logo, dog, CRT) behind mode-select.
+      // Fades out start screen (logo, CRT) behind mode-select.
       window._dismissStartScreenFinal = function() {
-        if (window._stopMascot) window._stopMascot();
         startScreen.classList.add('dismissing');
         const hide = () => { startScreen.style.display = 'none'; };
         startScreen.addEventListener('animationend', function(e) {
@@ -27643,6 +27906,38 @@ document.addEventListener('keydown', e => {
     // ── Font-ready gate — prevent FOUT ───────────────────────
     document.fonts.ready.then(() => {
       document.getElementById('game-root').style.opacity = '1';
+    });
+
+    // ── App-feel suppressions (text selection + focus outlines + right-click
+    // menu) — only outside TEST_MODE. During development we want native
+    // highlight + DevTools right-click access; production builds get the
+    // app-like feel. Autofill suppression below stays on in both modes
+    // since it's not a dev-friction concern.
+    if (!TEST_MODE) {
+      document.getElementById('game-root')?.classList.add('app-feel');
+      document.getElementById('game-root')?.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+      });
+    }
+
+    // ── App-feel: suppress browser autocomplete / autocorrect / spellcheck
+    // on every text input inside the canvas. The lobby code field was the
+    // worst offender (autocomplete dropdown obscured the input). Initial
+    // sweep + focusin delegate catches inputs that are created dynamically
+    // via innerHTML (e.g. setInputAreaMode rebuilds, lobby modal innerHTML).
+    function _suppressAutofill(el) {
+      if (!el || el._noAutofill) return;
+      el._noAutofill = true;
+      el.setAttribute('autocomplete', 'off');
+      el.setAttribute('autocorrect', 'off');
+      el.setAttribute('autocapitalize', 'off');
+      el.setAttribute('spellcheck', 'false');
+    }
+    document.querySelectorAll(
+      '#game-root input[type="text"], #game-root input[type="number"], #game-root input:not([type])'
+    ).forEach(_suppressAutofill);
+    document.getElementById('game-root')?.addEventListener('focusin', (e) => {
+      if (e.target?.tagName === 'INPUT') _suppressAutofill(e.target);
     });
 
     // ── Gem PNG preload ───────────────────────────────────────

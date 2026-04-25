@@ -7907,7 +7907,7 @@
       font-family: "Bitcount Single", monospace;
       font-variant-numeric: tabular-nums;
       font-size: 1.8rem;
-      font-weight: 700;
+      font-weight: 400;
       color: #f0f0f0;
       letter-spacing: 0.05em;
     }
@@ -7977,7 +7977,7 @@
     }
     .gl-countdown {
       font-family: "Bitcount Single", monospace;
-      font-weight: 700;
+      font-weight: 400;
       font-size: 5rem;
       color: #fba300;
       text-shadow: 0 0 20px rgba(251,163,0,0.6);
@@ -8143,7 +8143,7 @@
     .gl-summary-rank-list li .gl-rank-name { color: #f0f0f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .gl-summary-rank-list li .gl-rank-name.team-red  { color: var(--red-text); }
     .gl-summary-rank-list li .gl-rank-name.team-blue { color: var(--blue-text); }
-    .gl-summary-rank-list li .gl-rank-val { color: #fba300; font-variant-numeric: tabular-nums; font-weight: 700; min-width: 38px; text-align: right; }
+    .gl-summary-rank-list li .gl-rank-val { color: #fba300; font-variant-numeric: tabular-nums; font-weight: 350; min-width: 38px; text-align: right; }
 
     /* Reveal mode grid shrink. The live #grid-lock-board is re-parented
        into #gl-reveal-grid-holder. Fixed 200×200 — tiles stay 1:1 via
@@ -8263,10 +8263,18 @@
     .gl-summary-words-found-track .gl-found-row {
       padding: 1px 2px;
       border-bottom: 1px dotted #222;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: flex-start;
     }
+    .gl-summary-words-found-track .gl-found-row .gl-reveal-word { flex: 0 0 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .gl-summary-words-found-track .gl-found-row .gl-reveal-badges { display: flex; gap: 3px; align-items: center; flex-shrink: 0; margin-left: 6px; }
+    .gl-summary-words-found-track .gl-found-row .gl-reveal-pts { font-weight: 700; color: #fba300; min-width: 32px; text-align: right; font-variant-numeric: tabular-nums; flex-shrink: 0; margin-left: auto; }
     .gl-summary-words-found-track .gl-found-row.team-red  { color: var(--red-text); }
     .gl-summary-words-found-track .gl-found-row.team-blue { color: var(--blue-text); }
-    .gl-summary-words-found-track .gl-found-row.cancelled { color: #666; text-decoration: line-through; }
+    .gl-summary-words-found-track .gl-found-row.cancelled { color: #666; }
+    .gl-summary-words-found-track .gl-found-row.cancelled .gl-reveal-word { text-decoration: line-through; }
 
     /* TIME'S UP: rounded black card centered on module-canvas (no dimmed
        backdrop — the card alone reads as the "time up" beat). */
@@ -10622,9 +10630,10 @@
         if (!s) continue;
         s.participated++;
         if (e.outcome === 'correct' || e.outcome === 'steal_success') {
-          s.points += e.points || 0;
+          const pts = (e.points || 0) * (e.roundType === 'faceoff' ? 2 : 1);
+          s.points += pts;
           s.correct++;
-          if ((e.points || 0) > s.best) s.best = e.points;
+          if (pts > s.best) s.best = pts;
           const afterStreak = (e.streak || 0) + 1;
           if (afterStreak > s.maxStreak) s.maxStreak = afterStreak;
           if ((e.multiplier && e.multiplier > 1) || (e.streak || 0) >= 1) s.multiplied++;
@@ -11957,7 +11966,7 @@ document.addEventListener('keydown', e => {
     //   • Normal gem drop rates
     //   • 3-digit numeric lobby code
     //   • Music volume left at whatever the user set
-    const TEST_MODE = false;
+    const TEST_MODE = true;
 
     let roundNumber = 0;
     let gameEnded = false;
@@ -12465,6 +12474,20 @@ document.addEventListener('keydown', e => {
               setTimeout(r, 520 / (gameSpeed || 1))
             );
           }
+          const _glSum = document.getElementById("gl-summary");
+          const _glSumExiting = _glSum && _glSum.style.display !== "none";
+          let _glSumPromise = null;
+          if (_glSumExiting) {
+            _glSum.classList.remove("gl-summary-out");
+            void _glSum.offsetWidth;
+            _glSum.classList.add("gl-summary-out");
+            _glSumPromise = new Promise(r =>
+              setTimeout(r, 470 / (gameSpeed || 1))
+            ).then(() => {
+              _glSum.style.display = "none";
+              _glSum.classList.remove("gl-summary-out");
+            });
+          }
           (async () => {
             await Promise.all([
               (async () => {
@@ -12474,6 +12497,7 @@ document.addEventListener('keydown', e => {
               })(),
               _ssExiting ? anim.done(_ss) : Promise.resolve(),
               _ctcPromise,
+              _glSumPromise,
             ]);
             resetModuleCanvas();
             initRoundState();
@@ -19892,18 +19916,45 @@ document.addEventListener('keydown', e => {
       host.classList.remove('gl-marquee-active');
       const bonuses = gridLockState._bonuses || glComputeBonuses(gridLockState.entries);
       const cancelled = bonuses.cancelled;
-      const wordTeams = new Map(); // word → team (0 or 1, or null if cancelled)
+      // First-entry bonus key: matches reveal-phase logic so badges/scoring
+      // line up between the reveal stagger and the summary list.
+      const firstByWord = new Map();
       for (const e of gridLockState.entries || []) {
         if (!e.valid) continue;
-        if (cancelled.has(e.word)) { wordTeams.set(e.word, null); continue; }
-        if (!wordTeams.has(e.word)) wordTeams.set(e.word, e.team);
+        if (cancelled.has(e.word)) continue;
+        const prev = firstByWord.get(e.word);
+        if (!prev || e.timestamp < prev.timestamp) firstByWord.set(e.word, e);
       }
-      const sorted = [...wordTeams.keys()].sort((a, b) => a.localeCompare(b));
-      sorted.forEach(word => {
-        const team = wordTeams.get(word);
+      const firstKey = new Set();
+      for (const e of firstByWord.values()) firstKey.add(`${e.word}|${e.timestamp}|${e.player}`);
+      // Every valid entry gets a row. Sort alphabetical by word, then by
+      // timestamp so multi-instance words group together in submit order.
+      const rows = (gridLockState.entries || [])
+        .filter(e => e.valid)
+        .slice()
+        .sort((a, b) => a.word.localeCompare(b.word) || (a.timestamp - b.timestamp));
+      rows.forEach(e => {
         const row = document.createElement('div');
-        row.className = 'gl-found-row ' + (team === null ? 'cancelled' : (team === 0 ? 'team-red' : 'team-blue'));
-        row.textContent = word;
+        const isCancelled = cancelled.has(e.word);
+        const teamCls = isCancelled ? 'cancelled' : (e.team === 0 ? 'team-red' : 'team-blue');
+        row.className = 'gl-found-row ' + teamCls;
+        if (isCancelled) {
+          row.innerHTML = `<span class="gl-reveal-word">${e.word}<span class="gl-reveal-player">(${e.player})</span></span>`;
+        } else {
+          const isLongest = bonuses.longestMultWords[e.team].has(e.word);
+          const wordPts = isLongest ? (e.points || 0) * 2 : (e.points || 0);
+          const isFirst = firstKey.has(`${e.word}|${e.timestamp}|${e.player}`);
+          const firstBonus = isFirst ? GL_FIRST_BONUS : 0;
+          const total = wordPts + firstBonus;
+          let badgesHtml = '';
+          if (isLongest) badgesHtml += '<span class="gl-reveal-badge long">×2 LONG</span>';
+          if (isFirst)   badgesHtml += '<span class="gl-reveal-badge first">+50 FIRST</span>';
+          row.innerHTML = `
+            <span class="gl-reveal-word">${e.word}<span class="gl-reveal-player">(${e.player})</span></span>
+            <span class="gl-reveal-badges">${badgesHtml}</span>
+            <span class="gl-reveal-pts">+${total}</span>
+          `;
+        }
         track.appendChild(row);
       });
     }

@@ -206,6 +206,7 @@ Planned features grouped by rough workload tier. Each entry has tags for feasibi
 - **Randomize turn order at game start** ✅ 🟢 — Currently `transitionFromLobbyToGame` sorts team arrays by UID for determinism. Replace with host-generated random permutation synced to Firestore. Keeps determinism across clients.
 - **Separate turn order for category selection** ✅ 🟢 — Add `categoryPlayerIndex` parallel to `playerIndex`, advanced independently. Small touch to `pickCategory()` and `advanceRound()`. Bonus: unlocks minigame-specific turn orders later.
 - **Pixel art for awards (lower priority)** ✅ 🟢 — Content addition only. Wire `<img>` tags into victory dialog award list items after assets exist.
+- **Newer-module awards + existing-awards cleanup** ✅ 🟡 — Add per-module award definitions for Secret Scribble, Common Thread, Grid Lock (e.g. Grid Lock: "Wordsmith" most valid words, "Scrabble hand" longest word, "Canceller" most cross-team cancellations). Audit existing awards for ones that no longer fit the multi-module shape and prune/rewrite. Touches `awards.json`, `awardComputers` in `feud.html`, and `tooltips.csv` (per-award flavor + description).
 
 ### Moderate 🟡
 
@@ -1069,15 +1070,19 @@ Boggle-style 5×5 word-forming minigame. All players play simultaneously for the
   - Comprehensive class cleanup in `resetModuleCanvas` + `enterGridLockRound`: strips `.gl-play-exit`, `.gl-cover-off`, `.gl-cover-shake`, `.gl-pre-enter-*`, `.gl-enter-*`, `.gl-exit-*`, `.gl-summary-out`, `.gl-flash-red/-blue`, plus inline transforms on tracks. Re-parents board to play-mode wrap if still in reveal grid holder.
 - `#module-canvas` flipped from `overflow-y: clip` to `overflow: visible` (both axes). Scoreboard `z-index: 2` covers any module bleed above except border-radius corner gaps. Benefits every module's summary panel, not just grid-lock.
 
-**Outstanding (next session):**
-1. **Stats integration** — emit `roundType: 'grid-lock'` entries into `matchLog` from `hostProcessGridLockSubmit` + `glEndRound`. Add `_STATS_COLS_GRID_LOCK` (Words / Cancelled / Avg Length / Bonuses / Points) to Game Recap Stats tab; wire into `_getStatsCols` + `aggregatePlayerStats` + `_statsSortVal` + `_statsCell`. Follows the scribble stats pattern exactly — see CLAUDE.md "To-do: Common Thread scoring tracking" for the template (same shape, different columns). Highest-value remaining work.
-2. **Round-type picker card art** — currently uses a plain `GRID / LOCK` text stand-in (`_buildGlPickerArtHtml` equivalent missing). Needs Grid Lock card visual matching the vocabulary of other module cards (High Five "5"+hand, Scribble urban-sprite loop, CT thread).
-3. **Real cinematic** (optional polish) — replaces default `playModuleIntro` splash with Grid Lock-themed animation. Current splash works fine; nice-to-have.
-4. **Victory awards** (optional) — add Grid Lock-specific awards to `awards.json` + `awardComputers` ("Wordsmith" most valid count, "Scrabble hand" longest word, "Canceller" most cross-team cancellations caused, etc.).
-5. **Diagnostic logs** — temporary `console.log` entries in `enterGridLockRound`, `glEndRound`, and the reveal-trigger reconcile path (logs "[grid-lock] reconcile triggering glRunReveal" / "[grid-lock] IGNORED stale reveal snapshot"). Remove once the module proves stable across more sessions.
+- **Stats integration** ✅ Done. Host-only `glAggregatePlayerStats()` runs in `glEndRound` before reveal: walks `gridLockState.entries` + `glComputeBonuses` output to build per-player counters, merges into `gridLockPlayerStats` ({ words, cancelled, totalLength, bonuses, points }), and emits one matchLog entry per player with `roundType: 'grid-lock'`, `outcome: 'gl_round'`, `category: 'Grid Lock'`. Bonus accounting: `longest×2` doubled-portion treated as a bonus delta; firstBonus + countBonus added to both points and bonuses; cancelled words contribute to `totalLength` (so avg length is across all valid attempts) but not to `words`. State synced via `glSyncState` payload (`matchLog` + `gridLockPlayerStats`); reconcile pulls `gridLockPlayerStats` on non-host. `_STATS_COLS_GRID_LOCK` (Player, Points, Words, Cancelled, Avg Length, Bonuses) wired into `_getStatsCols('Grid Lock')` + `aggregatePlayerStats` (per-row glPoints/glWords/glCancelled/glTotalLength/glBonuses; Overall fold adds glPoints to row.points and bumps participated). Avg-length sort `(totalLength)/(words+cancelled)` with `-1` sentinel; em-dash for non-participants. `'grid-lock' → 'Grid Lock'` added to `ROUND_TYPE_LABELS`. Reset sites updated (5): lobbyStartGame Firestore reset, local resetGame, play-again, init line, final reset.
+
+**Done this session:**
+- **Round-type picker card art** ✅ — `_buildGlPickerArtHtml` ships the stacked GRID/LOCK tile rows + tilted lock badge crossfade.
+- **Cinematic intro** ✅ — `_playGlCinematic` flies in from below, wiggles, unlocks, hops tiles, holds subtitle 1.5s, fades out. Mounted on `#module-canvas` like the other module cinematics.
+- **Diagnostic logs** ✅ removed — temporary `console.log` entries in `enterGridLockRound`, `glEndRound`, and the reveal-trigger reconcile path are gone.
+
+**Folded into broader buckets:**
+- General polish (board sizing inside module canvas, summary panel rhythm) → Pre-Blaze Cleanup Refactor Step 6 (screen-by-screen polish pass).
+- Grid Lock-specific victory awards → "Newer-module awards + existing-awards cleanup" feature roadmap entry.
 
 ### Branch state
-Branch `main-gridlock` (off `main`). All Grid Lock work is on this branch. NOT yet merged to `main` and NOT shipped — `#version-tag` still reads `v0.22`. Pick up next session by continuing on this branch; merge to `main` when stats + picker card land.
+Branch `main-gridlock` (off `main`). All Grid Lock work landed on this branch and merged into `main` for shipping. Stats integration landed (matchLog + Game Recap subtab). Picker card art and cinematic shipped this session.
 
 ### Round structure
 
@@ -1254,7 +1259,7 @@ Each `case 'gridlock-<phase>':` handler must be idempotent — "bring the client
 - [ ] Intro cinematic (cover plate + shake + 3-2-1-GO + cover slide-off).
 - [ ] Reveal screen (three-column, shortest-first stagger).
 - [ ] Summary screen applying Round Summary Framework + deferred point announcement.
-- [ ] Stats tab: `_STATS_COLS_GRID_LOCK` with Words, Cancelled, Avg Length, Bonuses, Points. Add to `_getStatsCols` + `aggregatePlayerStats` + `_statsSortVal` + `_statsCell`. Emit `roundType: 'grid-lock'` in matchLog entries.
+- [x] Stats tab: `_STATS_COLS_GRID_LOCK` with Words, Cancelled, Avg Length, Bonuses, Points. Add to `_getStatsCols` + `aggregatePlayerStats` + `_statsSortVal` + `_statsCell`. Emit `roundType: 'grid-lock'` in matchLog entries.
 - [ ] `lobbyStartGame` Firestore reset clears `gridLockState` + `pendingAction`.
 - [ ] Picker card art + tooltip for the Grid Lock round type.
 - [ ] Cinematic animation (TBD, not yet prototyped — similar treatment to other modules).

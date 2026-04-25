@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Grid Lock — Logo & Cinematic Prototypes</title>
+<link rel="stylesheet" href="https://use.typekit.net/lps4irc.css">
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #1a1a1a;
+    color: #ddd;
+    font-family: "futura-pt", sans-serif;
+  }
+
+  section {
+    padding: 28px 32px;
+    border-bottom: 1px solid #333;
+  }
+  section:last-of-type { border-bottom: none; }
+
+  h2 {
+    font-weight: 400;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #fba300;
+    margin: 0 0 4px 0;
+  }
+  .note { font-size: 0.82rem; color: #888; margin: 0 0 20px 0; }
+
+  .replay-btn {
+    background: #fba300;
+    color: #111;
+    border: none;
+    padding: 8px 18px;
+    font-family: "futura-pt-bold", sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+  .replay-btn:hover { filter: brightness(1.1); }
+
+  /* =======================================================================
+     CINEMATIC STAGE — sized to mimic #module-canvas (~930px wide, 16:9-ish)
+     ======================================================================= */
+  .cinematic-stage {
+    position: relative;
+    width: 930px;
+    aspect-ratio: 930 / 500;
+    background: #111;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  /* =======================================================================
+     PICKER CARD — sized to mimic .rt-card on the round-type picker
+     ======================================================================= */
+  .picker-card {
+    width: 220px;
+    height: 280px;
+    background: #1f1f1f;
+    border: 2px solid #333;
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 8px;
+    box-sizing: border-box;
+  }
+  .picker-card .gl-picker-art {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* =======================================================================
+     GRID LOCK stacked-tile logo — shared styling for cinematic + picker
+     ======================================================================= */
+  .gl-logo {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gl-gap, 10px);
+    transform-origin: 50% 50%;
+    animation: gl-struggle 1.5s ease-in-out 1 forwards;
+  }
+
+  @keyframes gl-struggle {
+    /* Attempt 1 — sharp, frustrated */
+    0%   { transform: rotate(0deg)   translateX(0)   scale(1); }
+    4%   { transform: rotate(-2.5deg) translateX(-3px) scale(1.012); }
+    9%   { transform: rotate(2.5deg)  translateX(3px)  scale(1.012); }
+    14%  { transform: rotate(-1.4deg) translateX(-1px) scale(1.006); }
+    18%  { transform: rotate(0deg)   translateX(0)   scale(1); }
+
+    /* pause */
+    30%  { transform: rotate(0deg)   translateX(0)   scale(1); }
+
+    /* Attempt 2 — even harder */
+    34%  { transform: rotate(3.2deg)  translateX(4px)  scale(1.018); }
+    39%  { transform: rotate(-3.2deg) translateX(-4px) scale(1.018); }
+    44%  { transform: rotate(1.6deg)  translateX(2px)  scale(1.008); }
+    48%  { transform: rotate(0deg)   translateX(0)   scale(1); }
+
+    /* pause */
+    60%  { transform: rotate(0deg)   translateX(0)   scale(1); }
+
+    /* Attempt 3 — last desperate yank */
+    64%  { transform: rotate(-3.8deg) translateX(-5px) scale(1.022); }
+    69%  { transform: rotate(3.8deg)  translateX(5px)  scale(1.022); }
+    74%  { transform: rotate(-1.8deg) translateX(-2px) scale(1.01); }
+    78%  { transform: rotate(0deg)   translateX(0)   scale(1); }
+
+    100% { transform: rotate(0deg)   translateX(0)   scale(1); }
+  }
+
+  /* Lock / unlock crossfade — both stacked, opacity-driven */
+  .gl-cover-lock,
+  .gl-cover-unlock {
+    position: absolute;
+    width: 45%;
+    height: auto;
+    color: #fff;
+    fill: currentColor;
+    filter: drop-shadow(0 calc(var(--gl-tile-size, 100px) * 0.02) calc(var(--gl-tile-size, 100px) * 0.04) rgba(0,0,0,0.35));
+    transition: opacity 80ms linear;
+  }
+  .gl-cover-unlock { opacity: 0; }
+  .gl-cover.unlocked .gl-cover-lock { opacity: 0; }
+  .gl-cover.unlocked .gl-cover-unlock { opacity: 1; }
+
+  /* Fade out the unlock graphic before the cover lifts */
+  .gl-cover.unlock-fade .gl-cover-unlock {
+    opacity: 0;
+    transition: opacity 280ms ease-out;
+  }
+
+  /* Cover lifts up and fades to reveal the tiles beneath */
+  .gl-cover {
+    transition: transform 720ms cubic-bezier(.4,0,.2,1), opacity 380ms ease-in 360ms;
+  }
+  .gl-cover.lift {
+    transform: translateY(-185%);
+    opacity: 0;
+  }
+  .gl-cover {
+    position: absolute;
+    inset: 0;
+    border-radius: calc(var(--gl-tile-size, 100px) * 0.14);
+    background:
+      linear-gradient(180deg,
+        #e6e600 0%,
+        #d4d400 22%,
+        #c0c000 55%,
+        #a8a800 100%);
+    box-shadow:
+      inset 0 calc(var(--gl-tile-size, 100px) * 0.05) 0 rgba(255,255,255,0.55),
+      inset 0 calc(var(--gl-tile-size, 100px) * -0.06) 0 rgba(0,0,0,0.18),
+      0 calc(var(--gl-tile-size, 100px) * 0.04) 0 #6b6b00,
+      0 calc(var(--gl-tile-size, 100px) * 0.06) calc(var(--gl-tile-size, 100px) * 0.08) rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .gl-cover::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse 50% 30% at 30% 18%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0) 80%);
+    pointer-events: none;
+  }
+  .gl-logo-row {
+    display: flex;
+    gap: var(--gl-gap, 10px);
+  }
+  .gl-tile {
+    position: relative;
+    width: var(--gl-tile-size, 100px);
+    height: var(--gl-tile-size, 100px);
+    background: linear-gradient(180deg, #f4e4bf 0%, #e4ce96 100%);
+    color: #1a1a1a;
+    border-radius: calc(var(--gl-tile-size, 100px) * 0.09);
+    box-shadow:
+      0 calc(var(--gl-tile-size, 100px) * 0.025) 0 #8a6f3d,
+      inset 0 1px 0 rgba(255,255,255,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "futura-pt-bold", "futura-pt", sans-serif;
+    font-weight: 700;
+    font-size: calc(var(--gl-tile-size, 100px) * 0.55);
+    line-height: 1;
+    user-select: none;
+  }
+  .gl-tile.gl-hop {
+    animation: gl-letter-hop 0.55s cubic-bezier(.4,0,.2,1) both;
+    transform-origin: 50% 100%;
+  }
+  @keyframes gl-letter-hop {
+    0%   { transform: translateY(0)     rotate(0); }
+    25%  { transform: translateY(-22%)  rotate(-3deg); }
+    45%  { transform: translateY(-26%)  rotate(2.5deg); }
+    70%  { transform: translateY(-10%)  rotate(-1deg); }
+    100% { transform: translateY(0)     rotate(0); }
+  }
+
+  .gl-subtitle {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 12%;
+    text-align: center;
+    color: #fba300;
+    font-family: "futura-pt-bold", "futura-pt", sans-serif;
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: 6px;
+    opacity: 0;
+    transition: opacity 600ms ease-in;
+  }
+  .gl-subtitle.show { opacity: 1; }
+
+  .gl-tile .gl-pts {
+    position: absolute;
+    bottom: calc(var(--gl-tile-size, 100px) * 0.06);
+    right: calc(var(--gl-tile-size, 100px) * 0.09);
+    font-size: calc(var(--gl-tile-size, 100px) * 0.18);
+    font-weight: 600;
+    color: #5a4420;
+    line-height: 1;
+  }
+
+  .cinematic-stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Picker logo — stacked tiles + tilted lock badge looping crossfade */
+  .gl-picker {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gl-gap, 5px);
+  }
+  .gl-picker-lock {
+    position: absolute;
+    width: calc(var(--gl-tile-size, 40px) * 1.1);
+    height: calc(var(--gl-tile-size, 40px) * 1.1);
+    top: calc(var(--gl-tile-size, 40px) * -0.55);
+    right: calc(var(--gl-tile-size, 40px) * -0.55);
+    transform: rotate(18deg);
+    pointer-events: none;
+  }
+  .gl-picker-lock svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    color: #fff;
+    fill: currentColor;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.45));
+  }
+  .gl-picker-lock .gl-pl-locked   { animation: gl-pl-fade-locked   2.6s ease-in-out infinite; }
+  .gl-picker-lock .gl-pl-unlocked { animation: gl-pl-fade-unlocked 2.6s ease-in-out infinite; }
+
+  @keyframes gl-pl-fade-locked {
+    0%, 40%   { opacity: 1; }
+    50%, 90%  { opacity: 0; }
+    100%      { opacity: 1; }
+  }
+  @keyframes gl-pl-fade-unlocked {
+    0%, 40%   { opacity: 0; }
+    50%, 90%  { opacity: 1; }
+    100%      { opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<section>
+  <h2>Cinematic Intro</h2>
+  <p class="note">Full-canvas reveal that plays before the round begins. Sequenced animation, then fade out.</p>
+  <button class="replay-btn" onclick="playCinematic()">Replay Cinematic</button>
+  <div class="cinematic-stage" id="gl-cinematic-stage">
+    <!-- cinematic content goes here -->
+  </div>
+</section>
+
+<section>
+  <h2>Picker Card Logo</h2>
+  <p class="note">Compact looping animation shown inside the round-type picker card.</p>
+  <div class="picker-card">
+    <div class="gl-picker-art" id="gl-picker-art">
+      <!-- looping picker logo goes here -->
+    </div>
+  </div>
+</section>
+
+<script>
+  const LETTER_POINTS = {
+    A:1,E:1,I:1,L:1,N:1,O:1,R:1,S:1,T:1,U:1,
+    D:2,G:2,
+    B:3,C:3,M:3,P:3,
+    F:4,H:4,V:4,W:4,Y:4,
+    K:5,
+    J:8,X:8,
+    Q:10,Z:10,
+  };
+
+  function buildStackedLogo(tileSize, gap) {
+    const wrap = document.createElement('div');
+    wrap.className = 'gl-logo';
+    wrap.style.setProperty('--gl-tile-size', tileSize + 'px');
+    wrap.style.setProperty('--gl-gap', gap + 'px');
+    ['GRID', 'LOCK'].forEach(word => {
+      const row = document.createElement('div');
+      row.className = 'gl-logo-row';
+      [...word].forEach(letter => {
+        const tile = document.createElement('div');
+        tile.className = 'gl-tile';
+        tile.textContent = letter;
+        const pts = document.createElement('span');
+        pts.className = 'gl-pts';
+        pts.textContent = LETTER_POINTS[letter];
+        tile.appendChild(pts);
+        row.appendChild(tile);
+      });
+      wrap.appendChild(row);
+    });
+
+    const cover = document.createElement('div');
+    cover.className = 'gl-cover';
+    cover.innerHTML = `
+      <svg class="gl-cover-lock" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(90 -25)">
+          <path d="M289.82,247.98h-15.13v-72.49c0-64.82-52.54-117.36-117.36-117.36-32.41,0-61.75,13.13-82.99,34.38-21.24,21.24-34.38,50.58-34.38,82.99v72.49h-15.13c-13.72,0-24.84,11.12-24.84,24.84v202.35c0,13.72,11.12,24.84,24.84,24.84h264.98c13.72,0,24.84-11.12,24.84-24.84v-202.35c0-13.72-11.12-24.84-24.84-24.84ZM82.34,175.49c0-41.41,33.57-74.98,74.99-74.98,20.71,0,39.45,8.39,53.02,21.96,13.57,13.57,21.96,32.31,21.96,53.02v72.49H82.34v-72.49ZM170.49,372.87v37.76c0,3.63-1.47,6.92-3.85,9.31-2.38,2.38-5.67,3.85-9.3,3.85-7.27,0-13.16-5.89-13.16-13.16v-37.76c-8.17-4.6-13.69-13.36-13.69-23.41,0-14.83,12.02-26.85,26.85-26.85s26.85,12.02,26.85,26.85c0,10.04-5.52,18.8-13.69,23.41Z"/>
+        </g>
+      </svg>
+      <svg class="gl-cover-unlock" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(90 -25)">
+          <path d="M289.18,248.53H24.78c-13.69,0-24.78,11.09-24.78,24.78v201.9c0,13.69,11.1,24.78,24.78,24.78h264.4c13.69,0,24.78-11.1,24.78-24.78v-201.9c0-13.69-11.1-24.78-24.78-24.78ZM170.12,373.14v37.68c0,3.63-1.47,6.91-3.85,9.29-2.38,2.38-5.66,3.85-9.29,3.85-7.25,0-13.13-5.88-13.13-13.13v-37.68c-8.15-4.59-13.66-13.33-13.66-23.35,0-14.79,12-26.79,26.79-26.79s26.79,12,26.79,26.79c0,10.02-5.51,18.76-13.66,23.35Z"/>
+          <path d="M156.99,30.92c-32.34,0-61.63,13.11-82.8,34.28-21.2,21.2-34.31,50.49-34.31,82.82v100.5h42.29v-99c0-40.99,32.34-75.5,73.32-76.3,21.26-.42,40.53,8.03,54.41,21.89,13.53,13.53,21.91,32.25,21.91,52.91v22.98c0,11.68,9.47,21.14,21.14,21.14,5.84,0,11.12-2.36,14.95-6.19,3.83-3.83,6.19-9.11,6.19-14.95v-22.98c0-64.7-52.44-117.1-117.1-117.1Z"/>
+          <path d="M354.1,117.21c-4.9-1.91-10.42.53-12.32,5.43l-22.02,56.7c-1.9,4.9.53,10.42,5.43,12.32,1.13.44,2.3.65,3.44.65,3.82,0,7.42-2.31,8.88-6.08l22.02-56.7c1.9-4.9-.53-10.42-5.43-12.32Z"/>
+          <path d="M430.41,171.71c-2.12-4.81-7.75-6.99-12.56-4.88l-66.18,29.15c-4.81,2.12-7,7.74-4.88,12.56,1.57,3.56,5.06,5.69,8.72,5.69,1.28,0,2.59-.26,3.83-.81l66.18-29.15c4.81-2.12,7-7.74,4.88-12.56Z"/>
+          <path d="M415.61,253.53l-54.73-21.25c-4.9-1.91-10.42.53-12.32,5.32-1.9,4.9.53,10.42,5.43,12.32l54.73,21.26c1.13.44,2.3.65,3.44.65,3.82,0,7.42-2.31,8.88-6.08,1.9-4.9-.53-10.42-5.43-12.32Z"/>
+        </g>
+      </svg>`;
+    wrap.appendChild(cover);
+
+    return wrap;
+  }
+
+  function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  async function runRevealSequence(stage) {
+    const logo = stage.querySelector('.gl-logo');
+    const cover = stage.querySelector('.gl-cover');
+    if (!logo || !cover) return;
+
+    // Wait for the wiggle animation to finish (CSS-driven, 1.5s).
+    await new Promise(resolve => {
+      const onEnd = (e) => {
+        if (e.animationName === 'gl-struggle') {
+          logo.removeEventListener('animationend', onEnd);
+          resolve();
+        }
+      };
+      logo.addEventListener('animationend', onEnd);
+    });
+
+    // Brief pause after the last failed wiggle.
+    await wait(280);
+
+    // Snap-crossfade lock → unlock (80ms transition each, simultaneous so
+    // both shapes overlap throughout — never a blank frame).
+    cover.classList.add('unlocked');
+
+    // Hold on the unlocked icon.
+    await wait(620);
+
+    // Fade unlocked icon out.
+    cover.classList.add('unlock-fade');
+    await wait(300);
+
+    // Slide cover up and fade away to reveal the GRID/LOCK tiles.
+    cover.classList.add('lift');
+    await wait(540);
+
+    // Sequential lift-and-drop across G-R-I-D-L-O-C-K, subtitle fades in
+    // alongside the first hop.
+    const tiles = logo.querySelectorAll('.gl-tile');
+    const subtitle = stage.querySelector('.gl-subtitle');
+    if (subtitle) subtitle.classList.add('show');
+    tiles.forEach((tile, i) => {
+      setTimeout(() => tile.classList.add('gl-hop'), i * 110);
+    });
+  }
+
+  function playCinematic() {
+    const stage = document.getElementById('gl-cinematic-stage');
+    stage.innerHTML = '';
+    stage.appendChild(buildStackedLogo(110, 12));
+    const subtitle = document.createElement('div');
+    subtitle.className = 'gl-subtitle';
+    subtitle.textContent = 'LINK WORDS AROUND THE LOCK';
+    stage.appendChild(subtitle);
+    runRevealSequence(stage);
+  }
+
+  const LOCK_SVG_INNER = `<g transform="translate(90 -25)"><path d="M289.82,247.98h-15.13v-72.49c0-64.82-52.54-117.36-117.36-117.36-32.41,0-61.75,13.13-82.99,34.38-21.24,21.24-34.38,50.58-34.38,82.99v72.49h-15.13c-13.72,0-24.84,11.12-24.84,24.84v202.35c0,13.72,11.12,24.84,24.84,24.84h264.98c13.72,0,24.84-11.12,24.84-24.84v-202.35c0-13.72-11.12-24.84-24.84-24.84ZM82.34,175.49c0-41.41,33.57-74.98,74.99-74.98,20.71,0,39.45,8.39,53.02,21.96,13.57,13.57,21.96,32.31,21.96,53.02v72.49H82.34v-72.49ZM170.49,372.87v37.76c0,3.63-1.47,6.92-3.85,9.31-2.38,2.38-5.67,3.85-9.3,3.85-7.27,0-13.16-5.89-13.16-13.16v-37.76c-8.17-4.6-13.69-13.36-13.69-23.41,0-14.83,12.02-26.85,26.85-26.85s26.85,12.02,26.85,26.85c0,10.04-5.52,18.8-13.69,23.41Z"/></g>`;
+  const UNLOCK_SVG_INNER = `<g transform="translate(90 -25)"><path d="M289.18,248.53H24.78c-13.69,0-24.78,11.09-24.78,24.78v201.9c0,13.69,11.1,24.78,24.78,24.78h264.4c13.69,0,24.78-11.1,24.78-24.78v-201.9c0-13.69-11.1-24.78-24.78-24.78ZM170.12,373.14v37.68c0,3.63-1.47,6.91-3.85,9.29-2.38,2.38-5.66,3.85-9.29,3.85-7.25,0-13.13-5.88-13.13-13.13v-37.68c-8.15-4.59-13.66-13.33-13.66-23.35,0-14.79,12-26.79,26.79-26.79s26.79,12,26.79,26.79c0,10.02-5.51,18.76-13.66,23.35Z"/><path d="M156.99,30.92c-32.34,0-61.63,13.11-82.8,34.28-21.2,21.2-34.31,50.49-34.31,82.82v100.5h42.29v-99c0-40.99,32.34-75.5,73.32-76.3,21.26-.42,40.53,8.03,54.41,21.89,13.53,13.53,21.91,32.25,21.91,52.91v22.98c0,11.68,9.47,21.14,21.14,21.14,5.84,0,11.12-2.36,14.95-6.19,3.83-3.83,6.19-9.11,6.19-14.95v-22.98c0-64.7-52.44-117.1-117.1-117.1Z"/><path d="M354.1,117.21c-4.9-1.91-10.42.53-12.32,5.43l-22.02,56.7c-1.9,4.9.53,10.42,5.43,12.32,1.13.44,2.3.65,3.44.65,3.82,0,7.42-2.31,8.88-6.08l22.02-56.7c1.9-4.9-.53-10.42-5.43-12.32Z"/><path d="M430.41,171.71c-2.12-4.81-7.75-6.99-12.56-4.88l-66.18,29.15c-4.81,2.12-7,7.74-4.88,12.56,1.57,3.56,5.06,5.69,8.72,5.69,1.28,0,2.59-.26,3.83-.81l66.18-29.15c4.81-2.12,7-7.74,4.88-12.56Z"/><path d="M415.61,253.53l-54.73-21.25c-4.9-1.91-10.42.53-12.32,5.43-1.9,4.9.53,10.42,5.43,12.32l54.73,21.26c1.13.44,2.3.65,3.44.65,3.82,0,7.42-2.31,8.88-6.08,1.9-4.9-.53-10.42-5.43-12.32Z"/></g>`;
+
+  function buildPickerLogo(tileSize, gap) {
+    const wrap = document.createElement('div');
+    wrap.className = 'gl-picker';
+    wrap.style.setProperty('--gl-tile-size', tileSize + 'px');
+    wrap.style.setProperty('--gl-gap', gap + 'px');
+    ['GRID', 'LOCK'].forEach(word => {
+      const row = document.createElement('div');
+      row.className = 'gl-logo-row';
+      [...word].forEach(letter => {
+        const tile = document.createElement('div');
+        tile.className = 'gl-tile';
+        tile.textContent = letter;
+        const pts = document.createElement('span');
+        pts.className = 'gl-pts';
+        pts.textContent = LETTER_POINTS[letter];
+        tile.appendChild(pts);
+        row.appendChild(tile);
+      });
+      wrap.appendChild(row);
+    });
+    const lockBadge = document.createElement('div');
+    lockBadge.className = 'gl-picker-lock';
+    lockBadge.innerHTML = `
+      <svg class="gl-pl-locked" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">${LOCK_SVG_INNER}</svg>
+      <svg class="gl-pl-unlocked" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">${UNLOCK_SVG_INNER}</svg>`;
+    wrap.appendChild(lockBadge);
+    return wrap;
+  }
+
+  function renderPicker() {
+    const host = document.getElementById('gl-picker-art');
+    host.innerHTML = '';
+    host.appendChild(buildPickerLogo(40, 5));
+  }
+
+  // Initial render
+  playCinematic();
+  renderPicker();
+</script>
+
+</body>
+</html>

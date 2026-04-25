@@ -49,6 +49,7 @@
       --mod-pollposition: #00c0c0;
       --mod-scribble:     #c000c0;
       --mod-commonthread: #00c000;
+      --mod-gridlock:     #c0c000;
       --mod-faceoff:      #222222;
 
       /* Game speed — set by JS via setGameSpeed(). 1 = normal, 2 = double speed.
@@ -3650,6 +3651,7 @@
     .mod-pollposition { --mod-color: var(--mod-pollposition); }
     .mod-scribble     { --mod-color: var(--mod-scribble); }
     .mod-commonthread { --mod-color: var(--mod-commonthread); }
+    .mod-gridlock     { --mod-color: var(--mod-gridlock); }
     .mod-faceoff      { --mod-color: var(--mod-faceoff); }
     /* Category row — wraps button + optional badge.
        Fixed 80px height so the row occupies a known slot regardless of
@@ -8350,15 +8352,206 @@
        transition matches the game recap results-marquee feel. */
     .gl-reveal-list-track { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
 
-    .rt-gl-art {
-      font-family: "Bitcount Single", monospace;
-      font-weight: 700;
-      font-size: 2.2rem;
-      color: #fba300;
-      text-align: center;
-      line-height: 1;
-      letter-spacing: 0.08em;
+    /* ── Grid Lock — picker logo + cinematic intro ──────────────────── */
+    /* gll- prefix avoids collision with the in-game .gl-tile / .gl-cover
+       gameplay rules above. */
+    .gll-logo {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: var(--gll-gap, 10px);
+      transform-origin: 50% 50%;
     }
+    .gll-logo.gll-struggle { animation: gll-struggle 1.5s ease-in-out 1 forwards; }
+    @keyframes gll-struggle {
+      0%   { transform: rotate(0deg)   translateX(0)   scale(1); }
+      4%   { transform: rotate(-2.5deg) translateX(-3px) scale(1.012); }
+      9%   { transform: rotate(2.5deg)  translateX(3px)  scale(1.012); }
+      14%  { transform: rotate(-1.4deg) translateX(-1px) scale(1.006); }
+      18%  { transform: rotate(0deg)   translateX(0)   scale(1); }
+      30%  { transform: rotate(0deg)   translateX(0)   scale(1); }
+      34%  { transform: rotate(3.2deg)  translateX(4px)  scale(1.018); }
+      39%  { transform: rotate(-3.2deg) translateX(-4px) scale(1.018); }
+      44%  { transform: rotate(1.6deg)  translateX(2px)  scale(1.008); }
+      48%  { transform: rotate(0deg)   translateX(0)   scale(1); }
+      60%  { transform: rotate(0deg)   translateX(0)   scale(1); }
+      64%  { transform: rotate(-3.8deg) translateX(-5px) scale(1.022); }
+      69%  { transform: rotate(3.8deg)  translateX(5px)  scale(1.022); }
+      74%  { transform: rotate(-1.8deg) translateX(-2px) scale(1.01); }
+      78%  { transform: rotate(0deg)   translateX(0)   scale(1); }
+      100% { transform: rotate(0deg)   translateX(0)   scale(1); }
+    }
+    .gll-row { display: flex; gap: var(--gll-gap, 10px); }
+    .gll-tile {
+      position: relative;
+      width: var(--gll-tile-size, 100px);
+      height: var(--gll-tile-size, 100px);
+      background: linear-gradient(180deg, #f4e4bf 0%, #e4ce96 100%);
+      color: #1a1a1a;
+      border-radius: calc(var(--gll-tile-size, 100px) * 0.09);
+      box-shadow:
+        0 calc(var(--gll-tile-size, 100px) * 0.025) 0 #8a6f3d,
+        inset 0 1px 0 rgba(255,255,255,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: calc(var(--gll-tile-size, 100px) * 0.55);
+      line-height: 1;
+      user-select: none;
+    }
+    .gll-tile.gll-hop {
+      animation: gll-letter-hop 0.55s cubic-bezier(.4,0,.2,1) both;
+      transform-origin: 50% 100%;
+    }
+    @keyframes gll-letter-hop {
+      0%   { transform: translateY(0)     rotate(0); }
+      25%  { transform: translateY(-22%)  rotate(-3deg); }
+      45%  { transform: translateY(-26%)  rotate(2.5deg); }
+      70%  { transform: translateY(-10%)  rotate(-1deg); }
+      100% { transform: translateY(0)     rotate(0); }
+    }
+    .gll-tile .gll-pts {
+      position: absolute;
+      bottom: calc(var(--gll-tile-size, 100px) * 0.06);
+      right: calc(var(--gll-tile-size, 100px) * 0.09);
+      font-size: calc(var(--gll-tile-size, 100px) * 0.18);
+      font-weight: 600;
+      color: #5a4420;
+      line-height: 1;
+    }
+
+    /* Cinematic plastic cover — wiggles, crossfades lock→unlock, lifts away */
+    .gll-cover {
+      position: absolute;
+      inset: 0;
+      border-radius: calc(var(--gll-tile-size, 100px) * 0.14);
+      background:
+        linear-gradient(180deg, #e6e600 0%, #d4d400 22%, #c0c000 55%, #a8a800 100%);
+      box-shadow:
+        inset 0 calc(var(--gll-tile-size, 100px) * 0.05) 0 rgba(255,255,255,0.55),
+        inset 0 calc(var(--gll-tile-size, 100px) * -0.06) 0 rgba(0,0,0,0.18),
+        0 calc(var(--gll-tile-size, 100px) * 0.04) 0 #6b6b00,
+        0 calc(var(--gll-tile-size, 100px) * 0.06) calc(var(--gll-tile-size, 100px) * 0.08) rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: transform 720ms cubic-bezier(.4,0,.2,1), opacity 380ms ease-in 360ms;
+    }
+    .gll-cover::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(ellipse 50% 30% at 30% 18%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0) 80%);
+      pointer-events: none;
+    }
+    .gll-cover.lift { transform: translateY(-185%); opacity: 0; }
+    .gll-cover-lock,
+    .gll-cover-unlock {
+      position: absolute;
+      width: 45%;
+      height: auto;
+      color: #fff;
+      fill: currentColor;
+      filter: drop-shadow(0 calc(var(--gll-tile-size, 100px) * 0.02) calc(var(--gll-tile-size, 100px) * 0.04) rgba(0,0,0,0.35));
+      transition: opacity 80ms linear;
+    }
+    .gll-cover-unlock { opacity: 0; }
+    .gll-cover.unlocked .gll-cover-lock { opacity: 0; }
+    .gll-cover.unlocked .gll-cover-unlock { opacity: 1; }
+    .gll-cover.unlock-fade .gll-cover-unlock {
+      opacity: 0;
+      transition: opacity 280ms ease-out;
+    }
+
+    /* Cinematic subtitle, fades in alongside the letter hop */
+    .gll-subtitle {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 12%;
+      text-align: center;
+      color: #fba300;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.4rem;
+      letter-spacing: 6px;
+      opacity: 0;
+      transition: opacity 600ms ease-in;
+    }
+    .gll-subtitle.show { opacity: 1; }
+
+    /* Cinematic full-canvas overlay */
+    #gl-cinematic {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 60;
+      pointer-events: none;
+      transition: opacity 460ms ease-out;
+    }
+    #gl-cinematic.glci-fade-out { opacity: 0; }
+    #gl-cinematic:not(.glci-flown-in) .gll-logo { transform: translateY(720px); }
+    #gl-cinematic.glci-flown-in .gll-logo {
+      animation: glci-fly-in 0.6s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    #gl-cinematic.glci-flown-in .gll-logo.gll-struggle {
+      animation: gll-struggle 1.5s ease-in-out 1 forwards;
+    }
+    @keyframes glci-fly-in {
+      0%   { transform: translateY(720px); }
+      100% { transform: translateY(0); }
+    }
+    /* Phase-indicator picker logo: center the intrinsically-sized picker
+       inside the .ph-module-logo span instead of stretching it to 100%. */
+    #phase-indicator .ph-module-logo .gll-picker {
+      width: auto;
+      margin: 0 auto;
+    }
+
+    /* Picker card logo — stacked tiles + tilted lock badge crossfade */
+    .gll-picker {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: var(--gll-gap, 4px);
+    }
+    .gll-picker-lock {
+      position: absolute;
+      width: calc(var(--gll-tile-size, 36px) * 1.1);
+      height: calc(var(--gll-tile-size, 36px) * 1.1);
+      top: calc(var(--gll-tile-size, 36px) * -0.55);
+      right: calc(var(--gll-tile-size, 36px) * -0.55);
+      transform: rotate(18deg);
+      pointer-events: none;
+    }
+    .gll-picker-lock svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      color: #fff;
+      fill: currentColor;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.45));
+    }
+    .gll-picker-lock .gll-pl-locked   { animation: gll-pl-fade-locked   2.6s ease-in-out infinite; }
+    .gll-picker-lock .gll-pl-unlocked { animation: gll-pl-fade-unlocked 2.6s ease-in-out infinite; }
+    @keyframes gll-pl-fade-locked {
+      0%, 40%   { opacity: 1; }
+      50%, 90%  { opacity: 0; }
+      100%      { opacity: 1; }
+    }
+    @keyframes gll-pl-fade-unlocked {
+      0%, 40%   { opacity: 0; }
+      50%, 90%  { opacity: 1; }
+      100%      { opacity: 0; }
+    }
+    .rt-card-title.rt-card-logo .gll-picker { margin: 0 auto; }
   </style>
 </head>
 <body>
@@ -8503,7 +8696,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.22</div>
+  <div id="version-tag">v0.23</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -10405,6 +10598,7 @@
           if (!name) return;
           const sp = scribblePlayerStats[name] || { drAtt: 0, drSucc: 0, guessOpp: 0, guessSucc: 0 };
           const cp = commonThreadPlayerStats[name] || { cluesGiven: 0, cluesLanded: 0, cardsFlipped: 0, ownTeamHits: 0, opponentHits: 0, penaltyHits: 0, pointsContributed: 0, bestSingle: 0, giverFlips: 0, giverOwnFlips: 0 };
+          const gp = gridLockPlayerStats[name] || { words: 0, cancelled: 0, totalLength: 0, bonuses: 0, points: 0 };
           stats[name] = {
             player: name, team: tIdx,
             points: 0, correct: 0, wrong: 0, best: 0,
@@ -10417,6 +10611,9 @@
             ctPointsContributed: cp.pointsContributed || 0,
             ctBestSingle: cp.bestSingle || 0,
             giverFlips: cp.giverFlips || 0, giverOwnFlips: cp.giverOwnFlips || 0,
+            glWords: gp.words || 0, glCancelled: gp.cancelled || 0,
+            glTotalLength: gp.totalLength || 0, glBonuses: gp.bonuses || 0,
+            glPoints: gp.points || 0,
           };
         });
       });
@@ -10446,11 +10643,18 @@
           row.best = Math.max(row.best, s.ctBestSingle || 0);
           const touchedCt = (s.cluesGiven || 0) + (s.cardsFlipped || 0);
           if (touchedCt > 0) row.participated = Math.max(row.participated, 1);
+        } else if (filter === 'Grid Lock') {
+          row.points = s.glPoints || 0;
+          const touchedGl = (s.glWords || 0) + (s.glCancelled || 0);
+          if (touchedGl > 0) row.participated = Math.max(row.participated, 1);
         } else if (filter === 'Overall') {
           row.points += s.ctPointsContributed || 0;
+          row.points += s.glPoints || 0;
           row.best = Math.max(row.best, s.ctBestSingle || 0);
           const touchedCt = (s.cluesGiven || 0) + (s.cardsFlipped || 0);
           if (touchedCt > 0) row.participated = Math.max(row.participated, 1);
+          const touchedGl = (s.glWords || 0) + (s.glCancelled || 0);
+          if (touchedGl > 0) row.participated = Math.max(row.participated, 1);
         }
         return row;
       });
@@ -10491,10 +10695,19 @@
       { key: 'ownTeamPct', label: 'Own-Team %', cls: 'sort-num' },
       { key: 'penaltyHits', label: 'Penalties Hit', cls: 'sort-num' },
     ];
+    const _STATS_COLS_GRID_LOCK = [
+      { key: 'player', label: 'Player', cls: 'sort-player' },
+      { key: 'points', label: 'Points', cls: 'sort-num' },
+      { key: 'glWords', label: 'Words', cls: 'sort-num' },
+      { key: 'glCancelled', label: 'Cancelled', cls: 'sort-num' },
+      { key: 'glAvgLength', label: 'Avg Length', cls: 'sort-num' },
+      { key: 'glBonuses', label: 'Bonuses', cls: 'sort-num' },
+    ];
     function _getStatsCols(subtab) {
       if (subtab === 'Overall') return _STATS_COLS_OVERALL;
       if (subtab === 'Secret Scribble') return _STATS_COLS_SCRIBBLE;
       if (subtab === 'Common Thread') return _STATS_COLS_COMMON_THREAD;
+      if (subtab === 'Grid Lock') return _STATS_COLS_GRID_LOCK;
       return _STATS_COLS_FEUD;
     }
 
@@ -10550,6 +10763,10 @@
       if (key === 'ownTeamPct') {
         return (row.cardsFlipped || 0) > 0 ? row.ownTeamHits / row.cardsFlipped : -1;
       }
+      if (key === 'glAvgLength') {
+        const total = (row.glWords || 0) + (row.glCancelled || 0);
+        return total > 0 ? (row.glTotalLength || 0) / total : -1;
+      }
       return row[key] != null ? row[key] : 0;
     }
 
@@ -10588,6 +10805,22 @@
       }
       if (key === 'penaltyHits') {
         return `<td>${(row.cardsFlipped || 0) > 0 ? row.penaltyHits : _DASH_CELL}</td>`;
+      }
+      if (key === 'glWords') {
+        const touched = (row.glWords || 0) + (row.glCancelled || 0);
+        return `<td>${touched > 0 ? (row.glWords || 0) : _DASH_CELL}</td>`;
+      }
+      if (key === 'glCancelled') {
+        const touched = (row.glWords || 0) + (row.glCancelled || 0);
+        return `<td>${touched > 0 ? (row.glCancelled || 0) : _DASH_CELL}</td>`;
+      }
+      if (key === 'glAvgLength') {
+        const total = (row.glWords || 0) + (row.glCancelled || 0);
+        return `<td>${total > 0 ? ((row.glTotalLength || 0) / total).toFixed(1) : _DASH_CELL}</td>`;
+      }
+      if (key === 'glBonuses') {
+        const touched = (row.glWords || 0) + (row.glCancelled || 0);
+        return `<td>${touched > 0 ? (row.glBonuses || 0) : _DASH_CELL}</td>`;
       }
       return `<td>${_DASH_CELL}</td>`;
     }
@@ -11724,7 +11957,7 @@ document.addEventListener('keydown', e => {
     //   • Normal gem drop rates
     //   • 3-digit numeric lobby code
     //   • Music volume left at whatever the user set
-    const TEST_MODE = true;
+    const TEST_MODE = false;
 
     let roundNumber = 0;
     let gameEnded = false;
@@ -11744,6 +11977,14 @@ document.addEventListener('keydown', e => {
     //   opponentHits  — cards flipped that were the opposing team's color
     //   penaltyHits   — penalty cards flipped
     let commonThreadPlayerStats = {};
+    // Per-player Grid Lock counters, persists across all GL rounds in a game.
+    // Keyed by player display name. Fields:
+    //   words         — valid (uncancelled) scored words submitted
+    //   cancelled     — words submitted that were cancelled by opposing team
+    //   totalLength   — sum of letter counts across valid+cancelled (for avg-length)
+    //   bonuses       — bonus points earned (first-to-enter, longest, most-words)
+    //   points        — total round points contributed (base + bonuses, post-cancellation)
+    let gridLockPlayerStats = {};
     let _roundStartScores = [0, 0]; // snapshot at round start for delta computation
     let teamNames = ["Red Team", "Blue Team"];
     let startingTeam = 0;
@@ -12009,12 +12250,9 @@ document.addEventListener('keydown', e => {
           // Reveal transition: kick off local reveal animation when host
           // flips phase → 'reveal'. Guarded by _revealRan inside glRunReveal.
           if (glp === 'reveal' && prevPhase !== 'reveal') {
-            console.log('[grid-lock] reconcile triggering glRunReveal — glp=reveal prevPhase=' + prevPhase + ' selectedRoundType=' + data.selectedRoundType + ' entries=' + ((data.gridLockState.entries || []).length));
             glRunReveal();
           }
         }
-      } else if (!isHost && data.gridLockState && data.gridLockState.phase === 'reveal' && data.selectedRoundType !== 'grid-lock') {
-        console.log('[grid-lock] IGNORED stale reveal snapshot — selectedRoundType=' + data.selectedRoundType);
       }
 
       // Receive common-thread state from host (non-host applies + re-renders).
@@ -12128,6 +12366,11 @@ document.addEventListener('keydown', e => {
       // ── Common Thread per-player counters (host-authoritative) ──
       if (data.commonThreadPlayerStats) {
         commonThreadPlayerStats = { ...data.commonThreadPlayerStats };
+      }
+
+      // ── Grid Lock per-player counters (host-authoritative) ──
+      if (data.gridLockPlayerStats) {
+        gridLockPlayerStats = { ...data.gridLockPlayerStats };
       }
 
       // ── Rounds meta (per-round summary recap) ──
@@ -13692,12 +13935,13 @@ document.addEventListener('keydown', e => {
     // picker logo on a module-colored background instead of phase text.
     // CSS hides all .ph-span:not(.ph-module-logo), so existing setPhase /
     // setPhaseText calls still run as harmless fallbacks if this is cleared.
-    const _MOD_CLASSES = ['mod-highfive', 'mod-pollposition', 'mod-scribble', 'mod-commonthread', 'mod-faceoff'];
+    const _MOD_CLASSES = ['mod-highfive', 'mod-pollposition', 'mod-scribble', 'mod-commonthread', 'mod-gridlock', 'mod-faceoff'];
     const _MOD_KEY_TO_CLASS = {
       'high-five': 'mod-highfive',
       'survey': 'mod-pollposition',
       'secret-scribble': 'mod-scribble',
       'common-thread': 'mod-commonthread',
+      'grid-lock': 'mod-gridlock',
       'faceoff': 'mod-faceoff',
     };
     function _getModuleLogoHtml(moduleKey) {
@@ -14841,7 +15085,8 @@ document.addEventListener('keydown', e => {
         colorClass: 'mod-gridlock',
         minPlayersPerTeam: 1,
         intro: { title: 'GRID\nLOCK', subtitle: 'Trace words around the lock', accent: '#fba300' },
-        artHtml: '<div class="rt-gl-art">GRID<br>LOCK</div>',
+        artHtml: () => _buildGlPickerArtHtml(),
+        cinematic: () => _playGlCinematic(),
         enter(onComplete) { enterGridLockRound(onComplete); },
         reset() { resetGridLockState(); },
       },
@@ -18535,12 +18780,11 @@ document.addEventListener('keydown', e => {
     // ─────────────────────────────────────────────────────────────────────
 
     const GL_LETTER_POINTS = {
-      A:2, E:2, I:2, O:2, U:2, L:2, N:2, S:2, T:2, R:2,
-      D:5, G:5,
-      B:3, C:3, M:3, P:3,
-      F:10, H:10, V:10, W:10, Y:10, K:10,
-      J:15, X:15,
-      Qu:20, Z:20,
+      A:5, E:5, I:5, O:5, U:5, L:5, N:5, S:5, T:5, R:5,
+      D:10, G:10, B:10, C:10, M:10, P:10,
+      F:15, H:15, V:15, W:15, Y:15, K:15,
+      J:20, X:20,
+      Qu:25, Z:25,
     };
     const GL_LETTER_WEIGHTS = {
       A:9, B:2, C:2, D:4, E:12, F:2, G:3, H:2, I:9, J:1,
@@ -18979,7 +19223,11 @@ document.addEventListener('keydown', e => {
         entries: s.entries.map(e => ({ ...e })),
         roundEndsAt: s.roundEndsAt || null,
       };
-      syncState({ gridLockState: payload });
+      syncState({
+        gridLockState: payload,
+        matchLog: matchLog.map(e => ({ ...e })),
+        gridLockPlayerStats: { ...gridLockPlayerStats },
+      });
     }
 
     function glApplySyncedState(payload) {
@@ -19391,9 +19639,15 @@ document.addEventListener('keydown', e => {
       const stillAlive = () => gridLockState._revealGen === myGen && gridLockState.active;
       if (gridLockState._revealRan) return;
       gridLockState._revealRan = true;
-      const entries = gridLockState.entries;
-      if (!entries || entries.length === 0) {
-        console.warn('[grid-lock] glRunReveal skipped — no entries to reveal');
+      const entries = gridLockState.entries || [];
+      if (entries.length === 0) {
+        console.warn('[grid-lock] glRunReveal — no entries; skipping reveal, going straight to summary');
+        gridLockState._bonuses = { firstBonus: {}, longestMultWords: { 0: new Set(), 1: new Set() }, countBonus: {} };
+        await _glShowTimesUp(1500);
+        if (!stillAlive()) return;
+        await _glPlayExitAnimations();
+        if (!stillAlive()) return;
+        await glShowSummary();
         return;
       }
       const bonuses = glComputeBonuses(entries);
@@ -19826,17 +20080,98 @@ document.addEventListener('keydown', e => {
     }
 
     function glEndRound() {
-      console.log('[grid-lock] glEndRound isHost=' + isHost + ' phase=' + gridLockState.phase + ' timeLeft=' + gridLockState.timeLeft + ' entries=' + gridLockState.entries.length);
       // Host-authoritative: only host computes scoring and drives round end.
       // Non-hosts follow via synced gridLockState.phase='reveal' → run
       // glRunReveal locally → glShowSummary locally; handleModuleComplete
       // is host-only and propagates via round-result phase.
       if (isMultiplayer && !isHost) return;
+
+      // Aggregate per-player stats + emit matchLog entries before reveal
+      // animations play (one shot, on the host, using full entries +
+      // bonuses). Mirrors the scribble/CT pattern — host computes,
+      // syncs gridLockPlayerStats + matchLog, all clients render from it.
+      try { glAggregatePlayerStats(); } catch (e) { console.warn('[grid-lock] glAggregatePlayerStats failed', e); }
+
       gridLockState.phase = 'reveal';
       gridLockState.lockedIdx = null;
       glUpdateLockDisplay();
       glSyncState();
       glRunReveal();
+    }
+
+    // Host-only: aggregate per-player Grid Lock stats from
+    // gridLockState.entries + bonuses, write into gridLockPlayerStats, and
+    // emit one matchLog entry per player who participated this round.
+    // Driven by glEndRound just before glRunReveal so the data lands in
+    // both the synced state and the recap stats tab.
+    function glAggregatePlayerStats() {
+      const entries = gridLockState.entries || [];
+      if (entries.length === 0) return;
+      const bonuses = glComputeBonuses(entries);
+      const cancelled = bonuses.cancelled;
+      const perPlayer = {}; // name -> { team, words, cancelled, totalLength, bonuses, points }
+      const ensure = (name, team) => {
+        if (!perPlayer[name]) perPlayer[name] = { team, words: 0, cancelled: 0, totalLength: 0, bonuses: 0, points: 0 };
+        return perPlayer[name];
+      };
+      // Base scoring per uncancelled valid entry (with longest×2 bonus where applicable).
+      for (const e of entries) {
+        if (!e.valid) continue;
+        const rec = ensure(e.player, e.team);
+        rec.totalLength += (e.word || '').length;
+        if (cancelled.has(e.word)) {
+          rec.cancelled += 1;
+        } else {
+          rec.words += 1;
+          const isLongest = bonuses.longestMultWords[e.team] && bonuses.longestMultWords[e.team].has(e.word);
+          const wordPts = isLongest ? (e.points || 0) * 2 : (e.points || 0);
+          const longestBonus = isLongest ? (e.points || 0) : 0; // the doubled portion
+          rec.points += wordPts;
+          rec.bonuses += longestBonus;
+        }
+      }
+      // First-to-enter bonus.
+      for (const [name, pts] of Object.entries(bonuses.firstBonus || {})) {
+        if (!perPlayer[name]) continue;
+        perPlayer[name].points += pts;
+        perPlayer[name].bonuses += pts;
+      }
+      // Most-valid-words bonus (cancellation-blind).
+      for (const [name, pts] of Object.entries(bonuses.countBonus || {})) {
+        if (!perPlayer[name]) continue;
+        perPlayer[name].points += pts;
+        perPlayer[name].bonuses += pts;
+      }
+      // Merge into running game-wide gridLockPlayerStats and emit matchLog.
+      for (const [name, rec] of Object.entries(perPlayer)) {
+        const prev = gridLockPlayerStats[name] || { words: 0, cancelled: 0, totalLength: 0, bonuses: 0, points: 0 };
+        gridLockPlayerStats[name] = {
+          words:       prev.words       + rec.words,
+          cancelled:   prev.cancelled   + rec.cancelled,
+          totalLength: prev.totalLength + rec.totalLength,
+          bonuses:     prev.bonuses     + rec.bonuses,
+          points:      prev.points      + rec.points,
+        };
+        // One matchLog entry per player so getStatsRoundTypes() surfaces
+        // a "Grid Lock" subtab. Stat-shaped (no real guess), reused by
+        // aggregatePlayerStats via the gridLockPlayerStats lookup.
+        matchLog.push({
+          player:    name,
+          team:      rec.team,
+          guess:     '',
+          outcome:   'gl_round',
+          points:    rec.points,
+          multiplier: null,
+          streak:    null,
+          streakBroken: 0,
+          isSteal:   false,
+          round:     roundNumber,
+          question:  '',
+          category:  'Grid Lock',
+          roundType: 'grid-lock',
+          timestamp: Date.now(),
+        });
+      }
     }
 
     function glStartPlay() {
@@ -19903,7 +20238,6 @@ document.addEventListener('keydown', e => {
         gridLockState.introHandles = [];
       }
       gridLockState.onComplete = onComplete;
-      console.log('[grid-lock] enterGridLockRound isHost=' + isHost + ' nonHostLive=' + nonHostLive + ' phase=' + gridLockState.phase + ' entries=' + gridLockState.entries.length);
 
       // Defensive DOM cleanup: remove any stale TIME'S UP overlay + strip
       // stale animation classes that could pin play-mode elements in
@@ -20766,6 +21100,115 @@ document.addEventListener('keydown', e => {
           el.remove();
           resolve();
         }, 7550);
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Grid Lock — picker logo + cinematic intro
+    // ─────────────────────────────────────────────────────────────────────
+    const _GLL_LETTER_POINTS = {
+      A:5,E:5,I:5,O:5,U:5,L:5,N:5,S:5,T:5,R:5,
+      D:10,G:10,B:10,C:10,M:10,P:10,
+      F:15,H:15,V:15,W:15,Y:15,K:15,
+      J:20,X:20,
+      Q:25,Z:25,
+    };
+    const _GLL_LOCK_SVG_INNER = '<g transform="translate(90 -25)"><path d="M289.82,247.98h-15.13v-72.49c0-64.82-52.54-117.36-117.36-117.36-32.41,0-61.75,13.13-82.99,34.38-21.24,21.24-34.38,50.58-34.38,82.99v72.49h-15.13c-13.72,0-24.84,11.12-24.84,24.84v202.35c0,13.72,11.12,24.84,24.84,24.84h264.98c13.72,0,24.84-11.12,24.84-24.84v-202.35c0-13.72-11.12-24.84-24.84-24.84ZM82.34,175.49c0-41.41,33.57-74.98,74.99-74.98,20.71,0,39.45,8.39,53.02,21.96,13.57,13.57,21.96,32.31,21.96,53.02v72.49H82.34v-72.49ZM170.49,372.87v37.76c0,3.63-1.47,6.92-3.85,9.31-2.38,2.38-5.67,3.85-9.3,3.85-7.27,0-13.16-5.89-13.16-13.16v-37.76c-8.17-4.6-13.69-13.36-13.69-23.41,0-14.83,12.02-26.85,26.85-26.85s26.85,12.02,26.85,26.85c0,10.04-5.52,18.8-13.69,23.41Z"/></g>';
+    const _GLL_UNLOCK_SVG_INNER = '<g transform="translate(90 -25)"><path d="M289.18,248.53H24.78c-13.69,0-24.78,11.09-24.78,24.78v201.9c0,13.69,11.1,24.78,24.78,24.78h264.4c13.69,0,24.78-11.1,24.78-24.78v-201.9c0-13.69-11.1-24.78-24.78-24.78ZM170.12,373.14v37.68c0,3.63-1.47,6.91-3.85,9.29-2.38,2.38-5.66,3.85-9.29,3.85-7.25,0-13.13-5.88-13.13-13.13v-37.68c-8.15-4.59-13.66-13.33-13.66-23.35,0-14.79,12-26.79,26.79-26.79s26.79,12,26.79,26.79c0,10.02-5.51,18.76-13.66,23.35Z"/><path d="M156.99,30.92c-32.34,0-61.63,13.11-82.8,34.28-21.2,21.2-34.31,50.49-34.31,82.82v100.5h42.29v-99c0-40.99,32.34-75.5,73.32-76.3,21.26-.42,40.53,8.03,54.41,21.89,13.53,13.53,21.91,32.25,21.91,52.91v22.98c0,11.68,9.47,21.14,21.14,21.14,5.84,0,11.12-2.36,14.95-6.19,3.83-3.83,6.19-9.11,6.19-14.95v-22.98c0-64.7-52.44-117.1-117.1-117.1Z"/><path d="M354.1,117.21c-4.9-1.91-10.42.53-12.32,5.43l-22.02,56.7c-1.9,4.9.53,10.42,5.43,12.32,1.13.44,2.3.65,3.44.65,3.82,0,7.42-2.31,8.88-6.08l22.02-56.7c1.9-4.9-.53-10.42-5.43-12.32Z"/><path d="M430.41,171.71c-2.12-4.81-7.75-6.99-12.56-4.88l-66.18,29.15c-4.81,2.12-7,7.74-4.88,12.56,1.57,3.56,5.06,5.69,8.72,5.69,1.28,0,2.59-.26,3.83-.81l66.18-29.15c4.81-2.12,7-7.74,4.88-12.56Z"/><path d="M415.61,253.53l-54.73-21.25c-4.9-1.91-10.42.53-12.32,5.43-1.9,4.9.53,10.42,5.43,12.32l54.73,21.26c1.13.44,2.3.65,3.44.65,3.82,0,7.42-2.31,8.88-6.08,1.9-4.9-.53-10.42-5.43-12.32Z"/></g>';
+
+    function _buildGlStackedLogoHtml(tileSize, gap, withCover) {
+      let rowsHtml = '';
+      ['GRID', 'LOCK'].forEach(word => {
+        let tilesHtml = '';
+        for (const letter of word) {
+          tilesHtml += `<div class="gll-tile">${letter}<span class="gll-pts">${_GLL_LETTER_POINTS[letter] || ''}</span></div>`;
+        }
+        rowsHtml += `<div class="gll-row">${tilesHtml}</div>`;
+      });
+      const coverHtml = withCover
+        ? `<div class="gll-cover">`
+        +   `<svg class="gll-cover-lock" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">${_GLL_LOCK_SVG_INNER}</svg>`
+        +   `<svg class="gll-cover-unlock" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">${_GLL_UNLOCK_SVG_INNER}</svg>`
+        + `</div>`
+        : '';
+      return `<div class="gll-logo" style="--gll-tile-size:${tileSize}px;--gll-gap:${gap}px;">${rowsHtml}${coverHtml}</div>`;
+    }
+
+    // Picker card logo: compact stacked tiles + tilted lock badge that
+    // crossfades between locked.svg and unlocked.svg on a 2.6s loop.
+    function _buildGlPickerArtHtml() {
+      let rowsHtml = '';
+      ['GRID', 'LOCK'].forEach(word => {
+        let tilesHtml = '';
+        for (const letter of word) {
+          tilesHtml += `<div class="gll-tile">${letter}<span class="gll-pts">${_GLL_LETTER_POINTS[letter] || ''}</span></div>`;
+        }
+        rowsHtml += `<div class="gll-row">${tilesHtml}</div>`;
+      });
+      const lockBadge =
+        `<div class="gll-picker-lock">`
+        + `<svg class="gll-pl-locked" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">${_GLL_LOCK_SVG_INNER}</svg>`
+        + `<svg class="gll-pl-unlocked" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">${_GLL_UNLOCK_SVG_INNER}</svg>`
+        + `</div>`;
+      return `<div class="gll-picker" style="--gll-tile-size:36px;--gll-gap:4px;">${rowsHtml}${lockBadge}</div>`;
+    }
+
+    // Cinematic: cover wiggle (1.5s struggle keyframes) → lock→unlock
+    // crossfade → cover lift/fade → sequential letter hop with subtitle
+    // fade-in. Mounts a full-canvas overlay; resolves after fade-out.
+    function _playGlCinematic() {
+      return new Promise((resolve) => {
+        const root = document.getElementById('module-canvas') || document.getElementById('game-root');
+        if (!root) { resolve(); return; }
+        const stale = document.getElementById('gl-cinematic');
+        if (stale) stale.remove();
+
+        const el = document.createElement('div');
+        el.id = 'gl-cinematic';
+        el.innerHTML =
+          _buildGlStackedLogoHtml(110, 12, true)
+          + `<div class="gll-subtitle">LINK WORDS AROUND THE LOCK</div>`;
+        root.appendChild(el);
+
+        const logo = el.querySelector('.gll-logo');
+        const cover = el.querySelector('.gll-cover');
+        const subtitle = el.querySelector('.gll-subtitle');
+
+        const finishAndFade = async () => {
+          await anim.wait(2100);
+          el.classList.add('glci-fade-out');
+          await anim.wait(460);
+          el.remove();
+          resolve();
+        };
+
+        const onWiggleEnd = (e) => {
+          if (e.animationName !== 'gll-struggle') return;
+          logo.removeEventListener('animationend', onWiggleEnd);
+          (async () => {
+            // (continues into unlock sequence below)
+            await anim.wait(280);
+            cover.classList.add('unlocked');
+            await anim.wait(620);
+            cover.classList.add('unlock-fade');
+            await anim.wait(300);
+            cover.classList.add('lift');
+            await anim.wait(540);
+            const tiles = logo.querySelectorAll('.gll-tile');
+            if (subtitle) subtitle.classList.add('show');
+            tiles.forEach((tile, i) => {
+              setTimeout(() => tile.classList.add('gll-hop'), i * 110);
+            });
+            finishAndFade();
+          })();
+        };
+        logo.addEventListener('animationend', onWiggleEnd);
+
+        // Fly the logo in from below the canvas, then start the wiggle.
+        requestAnimationFrame(() => {
+          el.classList.add('glci-flown-in');
+          setTimeout(() => logo.classList.add('gll-struggle'), 600);
+        });
       });
     }
 
@@ -22814,6 +23257,7 @@ document.addEventListener('keydown', e => {
       'survey':          'Poll Position',
       'secret-scribble': 'Secret Scribble',
       'common-thread':   'Common Thread',
+      'grid-lock':       'Grid Lock',
       'faceoff':         'Face-off',
     };
     let _roundStartRoundNumber = 0;
@@ -23606,6 +24050,7 @@ document.addEventListener('keydown', e => {
       roundsMeta = [];
       scribblePlayerStats = {};
       commonThreadPlayerStats = {};
+      gridLockPlayerStats = {};
       playerIndex = [0, 0];
       lastRoundWinner = -1;
       _prevRoundTypePicks = [];
@@ -23890,6 +24335,7 @@ document.addEventListener('keydown', e => {
       roundsMeta = [];
       scribblePlayerStats = {};
       commonThreadPlayerStats = {};
+      gridLockPlayerStats = {};
       playerIndex = [0, 0];
       lastRoundWinner = -1;
 
@@ -24088,7 +24534,7 @@ document.addEventListener('keydown', e => {
       resetEvergreenRegions();
       gameSpeedSetting = 1;
       setGameSpeed(1);
-      teamScores=[0,0];usedQuestions=[];roundNumber=0;gameEnded=false;matchLog=[];roundsMeta=[];scribblePlayerStats={};commonThreadPlayerStats={};playerIndex=[0,0];startingTeam=0;_syncedAwards=null;_deferFaceoffScoreboard=false;
+      teamScores=[0,0];usedQuestions=[];roundNumber=0;gameEnded=false;matchLog=[];roundsMeta=[];scribblePlayerStats={};commonThreadPlayerStats={};gridLockPlayerStats={};playerIndex=[0,0];startingTeam=0;_syncedAwards=null;_deferFaceoffScoreboard=false;
       gameMode='rounds';maxRounds=0;lastRoundWinner=-1;
       resetFaceoffState();
       // Tear down face-off DOM if it was active and restore normal game elements
@@ -25516,6 +25962,7 @@ document.addEventListener('keydown', e => {
         scribblePlayerStats: null,
         commonThreadState: null,
         commonThreadPlayerStats: null,
+        gridLockPlayerStats: null,
         gridLockState: null,
         selectedRoundType: null,
         awards: null,
@@ -25629,6 +26076,7 @@ document.addEventListener('keydown', e => {
       roundsMeta = [];
       scribblePlayerStats = {};
       commonThreadPlayerStats = {};
+      gridLockPlayerStats = {};
       // Use host-determined startingTeam so both clients agree
       startingTeam = _lobbyStartingTeam !== null ? _lobbyStartingTeam : Math.floor(Math.random() * 2);
       _lobbyStartingTeam = null;

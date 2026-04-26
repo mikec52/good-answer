@@ -931,6 +931,643 @@
     }
     body.phone-mode #phone-gl-board .gl-tile.pgl-traced .gl-pts { color: #5a4420; }
 
+    /* ─── Phone-controller Secret Scribble ───────────────────────────── */
+    /* Container fills the middle space between phase indicator and
+       input-area when active. Each sub-stage (word-select / drawer /
+       guesser / round-end) is rendered inside as a single child of
+       #phone-ss-container. */
+    #phone-ss-container { display: none; }
+    body.phone-mode #phone-ss-container.active {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 10px 12px 14px;
+      gap: 10px;
+    }
+    /* SS active — input-area chrome cosmetics. Subtext stays visible (it
+       carries role guidance like "Pick a word from the cards"). Header
+       slightly tightened so two-line copy reads cleanly in the slim
+       band. */
+    body.phone-mode.phone-ss-active #turn-header { font-size: 1rem; }
+
+    /* Word-select stage. Title + countdown timer at top, three full-width
+       difficulty cards stacked below, status line under the cards. */
+    body.phone-mode .pss-ws {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      gap: 12px;
+    }
+    body.phone-mode .pss-ws-header {
+      flex: 0 0 auto;
+      background: rgba(26,26,26,0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 10px;
+    }
+    body.phone-mode .pss-ws-title {
+      font-family: "dazzle-unicase", "futura-100", sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      font-size: 1rem;
+      color: #fba300;
+      text-transform: uppercase;
+    }
+    body.phone-mode .pss-ws-timer {
+      font-family: "Bitcount Single", "futura-100", sans-serif;
+      font-size: 1.6rem;
+      color: #fff;
+      letter-spacing: 0.04em;
+      padding-left: 0.1em;
+      min-width: 1.6em;
+      text-align: right;
+    }
+    body.phone-mode .pss-ws-timer.urgent { color: #ff6b3d; }
+    body.phone-mode .pss-ws-timer.both-picked { color: #4caf50; }
+
+    /* Cards: stacked full-width plastic-style buttons matching the SS
+       module color palette (purple). Each card carries a difficulty
+       label, the word, and a points pill. */
+    body.phone-mode .pss-ws-cards {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      justify-content: center;
+    }
+    body.phone-mode .pss-ws-card {
+      position: relative;
+      flex: 0 0 auto;
+      min-height: 88px;
+      border-radius: 14px;
+      padding: 14px 18px;
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      color: #fff;
+      transition: opacity 0.25s ease, transform 0.18s ease, filter 0.18s ease;
+      background: linear-gradient(180deg, var(--pss-card-light, #c64fe0) 0%, var(--pss-card, #c000c0) 60%, var(--pss-card-dark, #780077) 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.35),
+        inset 0 -3px 0 rgba(0,0,0,0.25),
+        0 4px 0 rgba(0,0,0,0.45),
+        0 4px 10px rgba(0,0,0,0.45);
+      animation: pss-card-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    body.phone-mode .pss-ws-card.easy   { --pss-card: #008f3a; --pss-card-light: #2dbe65; --pss-card-dark: #045624; }
+    body.phone-mode .pss-ws-card.medium { --pss-card: #c06000; --pss-card-light: #ee8a23; --pss-card-dark: #7a3c00; }
+    body.phone-mode .pss-ws-card.hard   { --pss-card: #c00510; --pss-card-light: #e8404a; --pss-card-dark: #7a020a; }
+    body.phone-mode .pss-ws-card:active {
+      transform: translateY(2px);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.35),
+        inset 0 -2px 0 rgba(0,0,0,0.25),
+        0 2px 0 rgba(0,0,0,0.4),
+        0 2px 6px rgba(0,0,0,0.4);
+    }
+    body.phone-mode .pss-ws-card.picked {
+      filter: brightness(1.2) saturate(1.15);
+      animation: pss-card-pulse 0.9s ease-in-out infinite;
+    }
+    body.phone-mode .pss-ws-card.dimmed {
+      /* !important is required because .pss-ws-card has an entry
+         animation with `forwards` fill that locks opacity:1 — regular
+         declarations lose the cascade against animation fill values. */
+      opacity: 0.15 !important;
+      filter: saturate(0.5);
+      pointer-events: none;
+    }
+    body.phone-mode .pss-ws-difficulty {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.85);
+    }
+    body.phone-mode .pss-ws-word {
+      font-family: "dazzle-unicase", "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.6rem;
+      letter-spacing: 0.04em;
+      color: #fff;
+      text-transform: uppercase;
+      line-height: 1.05;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    body.phone-mode .pss-ws-pts {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      font-family: "Bitcount Single", "futura-100", sans-serif;
+      font-size: 0.95rem;
+      color: #fff;
+      letter-spacing: 0.04em;
+      background: rgba(0,0,0,0.35);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    @keyframes pss-card-in {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+    @keyframes pss-card-pulse {
+      0%, 100% { transform: translateY(0)   scale(1);    }
+      50%      { transform: translateY(-2px) scale(1.015); }
+    }
+    body.phone-mode .pss-ws-status {
+      flex: 0 0 auto;
+      text-align: center;
+      font-family: "futura-100", sans-serif;
+      font-size: 0.95rem;
+      color: #ccc;
+      min-height: 1.2em;
+    }
+
+    /* Quiet centered status (guesser word-select view, between-sessions,
+       round-end). Reused for several "nothing to do, eyes on the hub"
+       states so the visual rhythm is consistent. */
+    body.phone-mode .pss-quiet {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      gap: 10px;
+      text-align: center;
+    }
+    body.phone-mode .pss-quiet-title {
+      font-family: "dazzle-unicase", "futura-100", sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      font-size: 1.4rem;
+      color: #fba300;
+      text-transform: uppercase;
+    }
+    body.phone-mode .pss-quiet-body {
+      font-family: "futura-100", sans-serif;
+      font-size: 1rem;
+      color: #ccc;
+      max-width: 280px;
+      line-height: 1.4;
+    }
+
+    /* Drawing stage. Drawer phones get the word at top, a fluid-sized
+       canvas frame in the middle, and a tools strip at the bottom. The
+       desktop drawer view (#scribble-drawer-view) is hidden on phone —
+       its #scribble-draw-canvas element gets reparented into the phone
+       frame at drawing-start, then reparented back at teardown so the
+       desktop canvas helpers keep working when not in phone mode.
+       Hub still renders the desktop guesser view (both team canvases
+       + tile grid reveal), so we don't hide the desktop scribble-game
+       wholesale — only on phone. */
+    body.phone-mode #scribble-drawer-view,
+    body.phone-mode #scribble-guesser-view,
+    body.phone-mode #scribble-guess-area,
+    body.phone-mode #scribble-status,
+    body.phone-mode #scribble-timer { display: none !important; }
+    /* Drawing stage layout — vertical stack inside #phone-ss-container. */
+    body.phone-mode .pss-draw {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      gap: 10px;
+    }
+    body.phone-mode .pss-draw-header {
+      flex: 0 0 auto;
+      background: rgba(26,26,26,0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: grid;
+      /* word | pts | timer  — pts hugs the right edge of the word so
+         it reads as part of the word's identity; timer claims the
+         remaining space and right-aligns inside it so the digits sit
+         at the bar's right edge. */
+      grid-template-columns: auto auto 1fr;
+      align-items: center;
+      gap: 10px;
+    }
+    body.phone-mode .pss-draw-word {
+      font-family: "dazzle-unicase", "futura-100", sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      --fit-base: 1.4rem;
+      font-size: calc(var(--fit-base) * var(--fit-scale, 1));
+      color: #fff;
+      line-height: 1.05;
+      text-transform: uppercase;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    body.phone-mode .pss-draw-word.easy   { color: #4caf50; }
+    body.phone-mode .pss-draw-word.medium { color: #ffb74d; }
+    body.phone-mode .pss-draw-word.hard   { color: #ff6b6b; }
+    body.phone-mode .pss-draw-pts {
+      font-family: "Bitcount Single", "futura-100", sans-serif;
+      font-size: 0.95rem;
+      color: #aaa;
+      letter-spacing: 0.04em;
+      padding-left: 0.1em;
+      white-space: nowrap;
+    }
+    body.phone-mode .pss-draw-timer {
+      font-family: "Bitcount Single", "futura-100", sans-serif;
+      font-size: 2.1rem;
+      color: #fff;
+      letter-spacing: 0.04em;
+      padding-left: 0.1em;
+      justify-self: end;
+      transform-origin: center;
+    }
+    body.phone-mode .pss-draw-timer.warning { color: #ff6b3d; }
+    /* Final-10s pop — reuse the GL keyframe (gl-timer-jump). The class
+       is toggled per-second by scribbleUpdateTimer when sessionTimer
+       ≤ 10. The selector is added to the original rule list at line
+       9419 alongside .pgl-status-value. */
+    /* Canvas frame — square, fluid, centered in the available space.
+       The reparented #scribble-draw-canvas fills it; touch-action:none
+       prevents iOS scroll/zoom while drawing. */
+    body.phone-mode .pss-canvas-frame {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    body.phone-mode .pss-canvas-box {
+      position: relative;
+      width: min(100%, calc(100vh - 320px));
+      max-width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow:
+        0 0 0 2px rgba(255,255,255,0.1),
+        0 6px 18px rgba(0,0,0,0.5);
+      overflow: hidden;
+    }
+    body.phone-mode .pss-canvas-box > canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      cursor: crosshair;
+    }
+    /* Phone-only countdown overlay — mounted as a child of .pss-canvas-box
+       by scribblePlayCountdown(passing this element instead of the
+       desktop wrap). */
+    body.phone-mode .scribble-countdown-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 10;
+    }
+    body.phone-mode .scribble-countdown-text {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 5rem;
+      color: var(--mod-scribble);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      text-shadow:
+        0 0 6px rgba(192, 0, 192, 0.45),
+        0 2px 4px rgba(0, 0, 0, 0.85),
+        0 4px 12px rgba(0, 0, 0, 0.6);
+    }
+    /* Solved overlay — drawer's view reuses the existing .sso-* styling
+       but the phone version mounts on .pss-canvas-box. Render rule
+       carries over from the global scribble CSS; this is just a sizing
+       tweak so the word/pts read at phone scale. */
+    body.phone-mode .pss-canvas-box .scribble-solved-overlay {
+      border-radius: 10px;
+    }
+
+    /* Tools strip — one row, color buttons + brush sizes + bucket +
+       clear/undo. Compact, touch-targets ≥ 36px. Active state mirrors
+       the desktop selection. */
+    body.phone-mode .pss-tools {
+      flex: 0 0 auto;
+      background: rgba(26,26,26,0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    body.phone-mode .pss-tools-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: space-between;
+    }
+    body.phone-mode .pss-color {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.2);
+      padding: 0;
+      cursor: pointer;
+      flex: 0 0 auto;
+      transition: border-color 0.15s ease, transform 0.1s ease;
+    }
+    body.phone-mode .pss-color.active {
+      border-color: #fff;
+      transform: scale(1.15);
+    }
+    body.phone-mode .pss-size {
+      flex: 0 0 auto;
+      min-width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: #2a2a2a;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    body.phone-mode .pss-size.active {
+      background: #fba300;
+      border-color: #ffd05a;
+    }
+    body.phone-mode .pss-size .pss-size-dot {
+      display: inline-block;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    body.phone-mode .pss-eraser-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #f49898;
+      color: #ff4444;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    body.phone-mode .pss-eraser-dot::before { content: '\2715'; }
+    body.phone-mode .pss-text-btn {
+      flex: 1 1 auto;
+      min-width: 0;
+      height: 38px;
+      border-radius: 8px;
+      background: #2a2a2a;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 0.77rem;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      padding: 0 6px;
+    }
+    body.phone-mode .pss-text-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    body.phone-mode .pss-text-btn:active:not(:disabled) {
+      background: #1a1a1a;
+    }
+
+    /* Guesser drawing stage. Single big canvas — same sizing as the
+       drawer's canvas — with the timer top-center and team label
+       top-left overlaid as glassy chips. No top status strip; the
+       freed vertical space goes to the canvas + the input-area's
+       guess input below. */
+    body.phone-mode .pss-guess {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      gap: 0;
+    }
+    body.phone-mode .pss-guess-status {
+      flex: 0 0 auto;
+      background: rgba(26,26,26,0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: end;
+    }
+    body.phone-mode .pss-guess-status-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      line-height: 1;
+    }
+    body.phone-mode .pss-guess-status-cell.right { align-items: flex-end; }
+    body.phone-mode .pss-guess-status-label {
+      font-family: "futura-100", sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      color: #888;
+      text-transform: uppercase;
+    }
+    body.phone-mode .pss-guess-status-value {
+      font-family: "Bitcount Single", "futura-100", sans-serif;
+      font-size: 1.9rem;
+      color: #fff;
+      letter-spacing: 0.04em;
+      padding-left: 0.1em;
+      transform-origin: center;
+    }
+    body.phone-mode .pss-guess-status-value.warning { color: #ff6b3d; }
+    body.phone-mode .pss-guess-status-value.solved-count.full { color: #4caf50; }
+
+    body.phone-mode .pss-guess-chips {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      justify-content: center;
+    }
+    body.phone-mode .pss-guess-chip {
+      flex: 0 0 auto;
+      border-radius: 12px;
+      padding: 14px 16px;
+      background: linear-gradient(180deg, var(--pss-chip-light, #2a2a2a) 0%, var(--pss-chip, #1a1a1a) 100%);
+      border: 2px solid var(--pss-chip-border, rgba(255,255,255,0.12));
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto;
+      gap: 4px 12px;
+      align-items: center;
+      transition: border-color 0.25s ease, background 0.25s ease;
+    }
+    body.phone-mode .pss-guess-chip.team-red   { --pss-chip-border: rgba(255,85,85,0.45); --pss-chip-light: #2a1414; --pss-chip: #1a0a0a; }
+    body.phone-mode .pss-guess-chip.team-blue  { --pss-chip-border: rgba(76,140,255,0.45); --pss-chip-light: #14202a; --pss-chip: #0a121a; }
+    body.phone-mode .pss-guess-chip.solved {
+      --pss-chip-border: rgba(76,175,80,0.7);
+    }
+    body.phone-mode .pss-guess-chip.stolen {
+      --pss-chip-border: rgba(255,107,61,0.8);
+    }
+    body.phone-mode .pss-guess-chip-team {
+      font-family: "dazzle-unicase", "futura-100", sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+    }
+    body.phone-mode .pss-guess-chip.team-red .pss-guess-chip-team  { color: var(--red-text); }
+    body.phone-mode .pss-guess-chip.team-blue .pss-guess-chip-team { color: var(--blue-text); }
+    body.phone-mode .pss-guess-chip-status {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: #888;
+      justify-self: end;
+    }
+    body.phone-mode .pss-guess-chip.solved .pss-guess-chip-status { color: #4caf50; }
+    body.phone-mode .pss-guess-chip.stolen .pss-guess-chip-status { color: #ff6b3d; }
+    body.phone-mode .pss-guess-chip-detail {
+      grid-column: 1 / 3;
+      font-family: "futura-100", sans-serif;
+      font-size: 0.85rem;
+      color: #aaa;
+      letter-spacing: 0.02em;
+      line-height: 1.3;
+    }
+    body.phone-mode .pss-guess-chip-detail .pss-chip-word {
+      font-family: "dazzle-unicase", "futura-100", sans-serif;
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    body.phone-mode .pss-guess-chip-detail .pss-chip-pts {
+      font-family: "Bitcount Single", "futura-100", sans-serif;
+      color: #4caf50;
+      letter-spacing: 0.04em;
+    }
+    /* Canvas slot — same sizing as the drawer's frame (the user's spec:
+       "keep the canvas sized almost exactly the same as it was for the
+       drawing side"). The reparented teammate or opp canvas fills it;
+       for opp the tile-grid is reparented in as a sibling so it
+       overlays the canvas. align-items:flex-start anchors the canvas
+       at the top of the freed vertical space (no top status bar). */
+    body.phone-mode .pss-guess-canvas-frame {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      position: relative;
+      padding-top: 6px;
+    }
+    body.phone-mode .pss-guess-canvas-box {
+      position: relative;
+      width: min(100%, calc(100vh - 320px));
+      max-width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow:
+        0 0 0 2px rgba(255,255,255,0.1),
+        0 6px 18px rgba(0,0,0,0.5);
+      overflow: hidden;
+    }
+    body.phone-mode .pss-guess-canvas-box > canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+      pointer-events: none;
+      cursor: default;
+    }
+    /* The opponent tile grid uses the same .scribble-tile-grid base
+       rules. The reparented #scribble-tile-grid keeps its inset:0. */
+    body.phone-mode .pss-guess-canvas-box .scribble-tile-grid {
+      display: grid !important;
+    }
+    /* Overlaid label (top-left) and timer (top-center) — glassy chips
+       sitting on top of the canvas so they take no vertical space.
+       z-index above the tile-grid (z auto for tile-grid; we stack
+       these higher). */
+    body.phone-mode .pss-guess-overlay-label {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      max-width: calc(50% - 60px); /* leave room for centered timer */
+      z-index: 5;
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      font-family: "futura-100", sans-serif;
+      font-weight: 400;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: #fff;
+      text-transform: uppercase;
+      line-height: 1.2;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    body.phone-mode .pss-guess-overlay-label #phone-ss-overlay-role {
+      font-weight: 700;
+    }
+    body.phone-mode .pss-guess-overlay-label.team-red  #phone-ss-overlay-role { color: var(--red-text); }
+    body.phone-mode .pss-guess-overlay-label.team-blue #phone-ss-overlay-role { color: var(--blue-text); }
+    body.phone-mode .pss-guess-overlay-timer {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      font-family: "Bitcount Single", "futura-100", sans-serif;
+      font-size: 1.4rem;
+      color: #fff;
+      letter-spacing: 0.04em;
+      padding-left: calc(14px + 0.1em);
+      transform-origin: center;
+      pointer-events: none;
+      line-height: 1;
+    }
+    body.phone-mode .pss-guess-overlay-timer.warning { color: #ff6b3d; }
+
     /* Multiplier circle — middle-right of the button. At 57px the badge
        is too large for the top-right corner; vertically-centered reads
        cleaner and keeps the cap shape unobstructed. Uses --rt-gem-color
@@ -6822,6 +7459,12 @@
       grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr);
       pointer-events: none;
     }
+    /* Teammate-canvas tile grid is hidden by default; only the hub
+       (phone-controller display) shows it, so the hub view treats
+       both canvases as obstructed. Real guessers continue to see
+       their teammate clear. */
+    #scribble-teammate-tile-grid { display: none; }
+    body.hub-display #scribble-teammate-tile-grid { display: grid; }
     .scribble-grid-tile { background: #222; border: 1px solid rgba(255,255,255,0.06); transform-style: preserve-3d; }
     .scribble-grid-tile.revealed { animation: scribble-tile-flip 0.5s ease-in forwards; }
     .scribble-grid-tile.revealed-instant { opacity: 0; }
@@ -9006,7 +9649,9 @@
        Retriggered each second by removing + re-adding the class with
        a reflow in between. */
     .gl-timer-jump,
-    body.phone-mode .pgl-status-value.gl-timer-jump {
+    body.phone-mode .pgl-status-value.gl-timer-jump,
+    body.phone-mode .pss-draw-timer.gl-timer-jump,
+    body.phone-mode .pss-guess-overlay-timer.gl-timer-jump {
       animation: gl-timer-jump 0.5s cubic-bezier(.34,1.56,.64,1) both;
       transform-origin: center;
     }
@@ -10598,7 +11243,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.33</div>
+  <div id="version-tag">v0.34</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -10828,6 +11473,13 @@
              above the board. Built in _phoneGlMount(); hidden on
              desktop and outside Grid Lock rounds. -->
         <div id="phone-grid-lock"></div>
+
+        <!-- Phone-controller Secret Scribble stage. Word-select cards
+             (drawer) / waiting status (guesser); during drawing it
+             swaps in a full-bleed drawer canvas + tools or a guesser
+             status panel. Built/torn-down in _phoneSs* helpers; hidden
+             on desktop and outside Scribble rounds. -->
+        <div id="phone-ss-container"></div>
 
         <!-- Input-area home base. Module code never mutates this; it's
              driven by setInputAreaMode(). -->
@@ -11083,6 +11735,12 @@
                   <div class="scribble-panel" id="scribble-teammate-panel">
                     <div class="scribble-canvas-wrap">
                       <canvas id="scribble-teammate-canvas" width="380" height="380"></canvas>
+                      <!-- Tile grid overlay — only shown on the hub
+                           (body.hub-display), so the hub treats both
+                           canvases as obstructed for fairness. Real
+                           guessers continue to see their teammate
+                           clear. -->
+                      <div class="scribble-tile-grid scribble-tile-grid-teammate" id="scribble-teammate-tile-grid"></div>
                     </div>
                     <div class="scribble-panel-label" id="scribble-teammate-label">Teammate</div>
                   </div>
@@ -16661,6 +17319,9 @@ document.addEventListener('keydown', e => {
         const el = document.getElementById(id);
         if (el) el.style.display = "none";
       });
+      // Phone-controller scribble stage teardown — mirror Grid Lock /
+      // NIC patterns. Idempotent on desktop (early-return).
+      if (IS_PHONE_VIEW && typeof _phoneSsHide === "function") _phoneSsHide();
       // Content-TV
       const ctv = document.getElementById("content-tv");
       if (ctv) {
@@ -17392,10 +18053,8 @@ document.addEventListener('keydown', e => {
       (async () => {
         await introPromise;
         if (moduleKey === 'high-five') {
-          setMusicMode('playlist');
           hostProcessRoundTypePick_highFive();
         } else if (moduleKey === 'survey') {
-          setMusicMode('playlist');
           hostProcessRoundTypePick_survey();
         } else if (moduleKey === 'secret-scribble') {
           enterScribbleRound(handleModuleComplete);
@@ -17534,6 +18193,7 @@ document.addEventListener('keydown', e => {
         colorClass: 'mod-highfive',
         minPlayersPerTeam: 1,
         intro: { title: 'HIGH FIVE', subtitle: 'Rank the top five', accent: '#0000c0' },
+        music: 'playlist',
         artHtml: () => _buildH5PickerArtHtml(),
         cinematic: () => _playH5Cinematic(),
         enter(onComplete) { hostProcessRoundTypePick_highFive(); },
@@ -17545,6 +18205,7 @@ document.addEventListener('keydown', e => {
         colorClass: 'mod-pollposition',
         minPlayersPerTeam: 1,
         intro: { title: 'POLL\nPOSITION', subtitle: 'What did the crowd say?', accent: '#00c0c0' },
+        music: 'playlist',
         artHtml: () => _buildPpPickerArtHtml(),
         cinematic: () => _playPpCinematic(),
         enter(onComplete) { hostProcessRoundTypePick_survey(); },
@@ -17556,8 +18217,14 @@ document.addEventListener('keydown', e => {
         colorClass: 'mod-scribble',
         minPlayersPerTeam: 2,
         intro: { title: 'SECRET\nSCRIBBLE', subtitle: 'Draw, guess, steal', accent: '#c000c0' },
+        music: 'draw',
         artHtml: () => _buildSsPickerArtHtml(),
         cinematic: () => _playSsCinematic(),
+        // Cinematic timing: 7250ms erase phase + 5000ms hold + 460ms
+        // fade-out ≈ 12710ms. Phone view skips the visual but waits
+        // ~12500ms so the phone module flow stays in lockstep with the
+        // hub.
+        phoneIntroMs: 12500,
         enter(onComplete) { enterScribbleRound(onComplete); },
         reset() { resetScribbleState({ keepUsedWords: true }); },
       },
@@ -17567,6 +18234,7 @@ document.addEventListener('keydown', e => {
         colorClass: 'mod-commonthread',
         minPlayersPerTeam: 2,
         intro: { title: 'COMMON\nTHREAD', subtitle: 'Clue, guess, avoid', accent: '#00c000' },
+        music: 'spy',
         artHtml: '<svg class="rt-ct-svg" width="100%" height="auto" viewBox="0 0 500 210" overflow="visible">' +
           '<text class="rt-ct-word rt-ct-word-common" x="250" y="101">COMMON</text>' +
           '<text class="rt-ct-word rt-ct-word-thread" x="250" y="159">THREAD</text>' +
@@ -17582,6 +18250,7 @@ document.addEventListener('keydown', e => {
         colorClass: 'mod-gridlock',
         minPlayersPerTeam: 1,
         intro: { title: 'GRID\nLOCK', subtitle: 'Trace words around the lock', accent: '#fba300' },
+        music: 'playlist',
         artHtml: () => _buildGlPickerArtHtml(),
         cinematic: () => _playGlCinematic(),
         // Sums: 600ms fly-in + 1500ms wiggle + 280+620+300+540+2100+460ms
@@ -17596,6 +18265,7 @@ document.addEventListener('keydown', e => {
         colorClass: 'mod-nic',
         minPlayersPerTeam: 1,
         intro: { title: 'NUMBER IS\nCORRECT', subtitle: 'How close can you get?', accent: '#c06000' },
+        music: 'playlist',
         artHtml: () => _buildNicPickerArtHtml(),
         cinematic: () => _playNicCinematic(),
         enter(onComplete) { enterNicRound(onComplete); },
@@ -17776,6 +18446,14 @@ document.addEventListener('keydown', e => {
       if (scribbleState.sessionInterval) clearInterval(scribbleState.sessionInterval);
       if (scribbleState.revealTimer) clearInterval(scribbleState.revealTimer);
       if (scribbleState.renderLoopId) cancelAnimationFrame(scribbleState.renderLoopId);
+      // Phone-controller stage teardown — same idempotency pattern as
+      // Grid Lock / NIC. Note: don't tear down here when resetScribbleState
+      // is called as part of handleModuleComplete on host (the round-end
+      // soft state rendered by _phoneSsShowQuiet should persist through
+      // Ready Up). When that becomes a real concern we'll gate this on
+      // a flag; for now the next module's mount path is what reactivates
+      // the container, so there's no visible flicker.
+      if (IS_PHONE_VIEW && typeof _phoneSsHide === "function") _phoneSsHide();
       // NOTE: do NOT clear _scribbleCyclerInterval here. resetScribbleState
       // runs during handleModuleComplete (before Ready Up consensus) while
       // the summary DOM is still visible on screen — killing the interval
@@ -19235,8 +19913,6 @@ document.addEventListener('keydown', e => {
       if (typeof setPhaseText === "function") setPhaseText("gameplay", "COMMON THREAD");
       if (typeof setPhase === "function") setPhase("gameplay");
 
-      if (typeof setMusicMode === "function") setMusicMode('spy');
-
       showInputArea();
       ctRender();
       ctUpdateInputArea();
@@ -19427,22 +20103,45 @@ document.addEventListener('keydown', e => {
     }
 
     // ── Scribble tile grid ──
+    // Multi-grid aware. Each grid host (`#scribble-tile-grid`,
+    // `#scribble-teammate-tile-grid`, `#phone-ss-opp-tile-grid`) gets
+    // its own array of tile elements; reveal events apply across every
+    // grid in lockstep using a single `revealedTiles` index set.
+    // Hosts that aren't currently in the DOM are skipped.
+    function _scribbleTileGridHosts() {
+      const ids = [
+        "scribble-tile-grid",
+        "scribble-teammate-tile-grid",
+        "phone-ss-opp-tile-grid",
+      ];
+      return ids.map(id => document.getElementById(id)).filter(Boolean);
+    }
+
     function scribbleBuildTileGrid() {
-      const grid = document.getElementById("scribble-tile-grid");
-      if (!grid) return;
-      grid.innerHTML = "";
-      scribbleState.tileElements = [];
-      for (let i = 0; i < SCRIBBLE_CONFIG.gridSize * SCRIBBLE_CONFIG.gridSize; i++) {
-        const tile = document.createElement("div");
-        tile.className = "scribble-grid-tile";
-        grid.appendChild(tile);
-        scribbleState.tileElements.push(tile);
-      }
+      const hosts = _scribbleTileGridHosts();
+      if (!hosts.length) return;
+      const total = SCRIBBLE_CONFIG.gridSize * SCRIBBLE_CONFIG.gridSize;
+      scribbleState.tileElementSets = hosts.map(host => {
+        host.innerHTML = "";
+        const tiles = [];
+        for (let i = 0; i < total; i++) {
+          const tile = document.createElement("div");
+          tile.className = "scribble-grid-tile";
+          host.appendChild(tile);
+          tiles.push(tile);
+        }
+        return tiles;
+      });
+      // Back-compat: keep `tileElements` pointing at the primary
+      // (opponent) grid for any external callers.
+      scribbleState.tileElements = scribbleState.tileElementSets[0] || [];
     }
 
     function scribbleResetTileGrid() {
       scribbleState.revealedTiles = new Set();
-      scribbleState.tileElements.forEach(t => t.className = "scribble-grid-tile");
+      (scribbleState.tileElementSets || []).forEach(set => {
+        set.forEach(t => t.className = "scribble-grid-tile");
+      });
     }
 
     function scribbleRevealRandomTile() {
@@ -19454,7 +20153,9 @@ document.addEventListener('keydown', e => {
       if (unrevealed.length === 0) return;
       const pick = unrevealed[Math.floor(Math.random() * unrevealed.length)];
       scribbleState.revealedTiles.add(pick);
-      scribbleState.tileElements[pick].classList.add("revealed");
+      (scribbleState.tileElementSets || []).forEach(set => {
+        if (set[pick]) set[pick].classList.add("revealed");
+      });
     }
 
     function scribbleRevealAllTiles() {
@@ -19462,7 +20163,9 @@ document.addEventListener('keydown', e => {
       for (let i = 0; i < gs * gs; i++) {
         if (!scribbleState.revealedTiles.has(i)) {
           scribbleState.revealedTiles.add(i);
-          scribbleState.tileElements[i].classList.add("revealed-instant");
+          (scribbleState.tileElementSets || []).forEach(set => {
+            if (set[i]) set[i].classList.add("revealed-instant");
+          });
         }
       }
     }
@@ -19491,6 +20194,7 @@ document.addEventListener('keydown', e => {
       if (scribbleState.undoStack.length > 10) scribbleState.undoStack.shift();
       const btn = document.getElementById("scribble-undo-btn");
       if (btn) btn.disabled = false;
+      if (typeof _phoneSsSyncUndoState === "function") _phoneSsSyncUndoState();
     }
 
     function scribbleUndo() {
@@ -19500,6 +20204,10 @@ document.addEventListener('keydown', e => {
       c.getContext("2d").putImageData(scribbleState.undoStack.pop(), 0, 0);
       const btn = document.getElementById("scribble-undo-btn");
       if (btn) btn.disabled = scribbleState.undoStack.length === 0;
+      if (typeof _phoneSsSyncUndoState === "function") _phoneSsSyncUndoState();
+      // Undo doesn't go through pointerup; broadcast manually so guessers
+      // see the pre-stroke state immediately.
+      try { scribbleBroadcastCanvas(); } catch (e) {}
     }
 
     // Flood fill (same scanline algorithm as prototype)
@@ -19705,6 +20413,16 @@ document.addEventListener('keydown', e => {
           mode: 'guess',
           inputPlaceholder: 'Type your guess...',
         });
+        // In MP, setInputAreaMode('guess') rebuilds the input row +
+        // defaults to disabled (the non-host submit-flicker fix).
+        // updateRoleUI normally re-enables, but for scribble guessers
+        // it early-returns into updateScribbleRoleUI — so this module
+        // must own the enable explicitly. Same pattern as GL / NIC /
+        // face-off.
+        const gi = document.getElementById('guess');
+        const sb = document.querySelector('#turn-body .dome-button');
+        if (gi) { gi.disabled = false; gi.placeholder = 'Type your guess...'; }
+        if (sb) sb.disabled = false;
       } else {
         setInputAreaMode({
           mode: 'disabled',
@@ -19881,6 +20599,9 @@ document.addEventListener('keydown', e => {
       if (isDrawer) {
         if (isMyTeamDrawing) {
           scribbleShowSolved("scribble-draw-panel", solvedData);
+          // Phone drawer: mirror the overlay onto the phone canvas-box
+          // (the desktop draw-panel is hidden via CSS in phone mode).
+          if (IS_PHONE_VIEW) _phoneSsShowSolved(solvedData);
         }
       } else {
         scribbleShowSolved(isMyTeamDrawing ? "scribble-teammate-panel" : "scribble-opp-panel", solvedData);
@@ -19888,6 +20609,11 @@ document.addEventListener('keydown', e => {
           scribbleRevealAllTiles();
         }
       }
+
+      // Phone guesser: refresh chip states from canonical scribble
+      // state so the chip flips solved/stolen with the solver's name
+      // + revealed word.
+      if (IS_PHONE_VIEW) _phoneSsUpdateGuesserStatus();
     }
 
     // New scoring function that takes absolute team indices
@@ -20021,7 +20747,6 @@ document.addEventListener('keydown', e => {
     }
 
     function enterScribbleRound(onComplete) {
-      setMusicMode('draw');
       scribbleState._onComplete = onComplete || null;
       scribbleState.active = true;
       scribbleState.currentSession = 0;
@@ -20176,9 +20901,42 @@ document.addEventListener('keydown', e => {
       choicesEl.innerHTML = "";
 
       let picked = false;
+      // Shared pick-handler — invoked by either the desktop card click
+      // or the phone card click. Idempotent via the `picked` flag so a
+      // tap on the phone after a (theoretical) desktop click can't
+      // double-submit.
+      function _applyDrawerPick(c) {
+        if (picked) return;
+        picked = true;
+        // Dim desktop cards
+        choicesEl.querySelectorAll(".scribble-ws-choice").forEach(d => {
+          d.style.pointerEvents = "none";
+          if (d.dataset.diff !== c.difficulty) { d.style.opacity = "0.3"; }
+          else { d.classList.add("picked"); }
+        });
+        scribbleState._myWordPick = { word: c.word, difficulty: c.difficulty, points: c.points };
+        if (wsWaiting) { wsWaiting.textContent = "✓ Pick locked in. Waiting for other drawer..."; wsWaiting.style.display = ""; }
+        _phoneSsSetWsStatus("✓ Pick locked in. Waiting for other drawer…");
+
+        if (isMultiplayer) {
+          const pickPayload = { word: c.word, difficulty: c.difficulty, points: c.points };
+          setTimeout(() => {
+            syncState({ [`scribbleWordPicks.${myUid}`]: pickPayload });
+            if (isHost) {
+              if (!scribbleState._wordPicks) scribbleState._wordPicks = {};
+              scribbleState._wordPicks[myUid] = pickPayload;
+              scribbleHostMaybeStartEarly();
+            }
+          }, SCRIBBLE_CONFIG.pickLockInDelay);
+        } else {
+          scribbleHostMaybeStartEarly();
+        }
+      }
+
       choices.forEach((c, idx) => {
         const div = document.createElement("div");
         div.className = `scribble-ws-choice ${c.difficulty}`;
+        div.dataset.diff = c.difficulty;
         // Stagger per-card entry so they pop in left→right instead of all
         // at once. Matches Category pill stagger feel.
         div.style.animationDelay = `${idx * 110}ms`;
@@ -20186,43 +20944,20 @@ document.addEventListener('keydown', e => {
           <div class="scribble-ws-difficulty">${c.difficulty}</div>
           <span class="scribble-ws-word">${c.word.toUpperCase()}</span>
           <div class="scribble-ws-pts">${c.points} pts</div>`;
-        div.addEventListener("click", () => {
-          if (picked) return;
-          picked = true;
-          // Dim the unpicked cards, strongly highlight the picked one
-          choicesEl.querySelectorAll(".scribble-ws-choice").forEach(d => {
-            d.style.pointerEvents = "none";
-            if (d !== div) { d.style.opacity = "0.3"; }
-          });
-          div.classList.add("picked");
-          // Store pick locally — don't start drawing yet, wait for timer/both picks
-          scribbleState._myWordPick = { word: c.word, difficulty: c.difficulty, points: c.points };
-          if (wsWaiting) { wsWaiting.textContent = "✓ Pick locked in. Waiting for other drawer..."; wsWaiting.style.display = ""; }
-
-          // Sync pick to Firestore so host can track both drawers.
-          // Small delay lets the card-flash register before the write +
-          // any resulting "both picked → start drawing" race.
-          if (isMultiplayer) {
-            const pickPayload = { word: c.word, difficulty: c.difficulty, points: c.points };
-            setTimeout(() => {
-              syncState({ [`scribbleWordPicks.${myUid}`]: pickPayload });
-              // Host: mirror own pick locally since self-echo is skipped in
-              // the snapshot listener. Without this, when the host is the
-              // LAST drawer to pick, scribbleHostMaybeStartEarly never sees
-              // both picks and the 10s timer runs out before drawing starts.
-              if (isHost) {
-                if (!scribbleState._wordPicks) scribbleState._wordPicks = {};
-                scribbleState._wordPicks[myUid] = pickPayload;
-                scribbleHostMaybeStartEarly();
-              }
-            }, SCRIBBLE_CONFIG.pickLockInDelay);
-          } else {
-            // Local mode: host also checks for early start directly.
-            if (!isMultiplayer) scribbleHostMaybeStartEarly();
-          }
-        });
+        div.addEventListener("click", () => _applyDrawerPick(c));
         choicesEl.appendChild(div);
       });
+
+      // Phone-controller: render the role-appropriate stage. Drawer
+      // sees a stacked card grid that taps into the same pick handler;
+      // guesser sees a quiet "drawers picking" status.
+      if (IS_PHONE_VIEW) {
+        if (isDrawer) {
+          _phoneSsRenderDrawerWordSelect(choices, (c) => _applyDrawerPick(c));
+        } else {
+          _phoneSsRenderGuesserWordSelect();
+        }
+      }
 
       // Timer — word select phase runs up to wordSelectTime seconds.
       // Short-circuits early when both drawers have picked (host detects
@@ -20230,6 +20965,7 @@ document.addEventListener('keydown', e => {
       let timeLeft = SCRIBBLE_CONFIG.wordSelectTime;
       const timerEl = document.getElementById("scribble-ws-timer");
       if (timerEl) { timerEl.textContent = timeLeft; timerEl.classList.remove("urgent"); }
+      _phoneSsUpdateWsTimer(timeLeft);
 
       scribbleState._wsCountdown = setInterval(() => {
         timeLeft--;
@@ -20237,6 +20973,7 @@ document.addEventListener('keydown', e => {
           timerEl.textContent = timeLeft;
           if (timeLeft <= 3) timerEl.classList.add("urgent");
         }
+        _phoneSsUpdateWsTimer(timeLeft);
         if (timeLeft <= 0) {
           clearInterval(scribbleState._wsCountdown);
           scribbleState._wsCountdown = null;
@@ -20301,6 +21038,9 @@ document.addEventListener('keydown', e => {
       if (timerEl) { timerEl.classList.add("both-picked"); }
       const wsWaiting = document.getElementById("scribble-ws-waiting");
       if (wsWaiting) { wsWaiting.textContent = "Both drawers ready — starting!"; wsWaiting.style.display = ""; }
+      // Phone: mirror both-picked timer color + status copy.
+      _phoneSsUpdateWsTimer(0, { bothPicked: true });
+      _phoneSsSetWsStatus("Both drawers ready — starting!");
 
       // Brief pause so everyone sees the "both ready" beat before the
       // drawing phase takes over.
@@ -20427,13 +21167,22 @@ document.addEventListener('keydown', e => {
         const _myTeam = (isMultiplayer && myUid && teamPlayerUids[1]?.includes(myUid)) ? 1 : 0;
         const tml = document.getElementById("scribble-teammate-label");
         const opl = document.getElementById("scribble-opp-label");
+        // Hub-display mode (phone-controller hub) has no team perspective,
+        // so "Teammate" / "Opponent" copy is misleading. Relabel by team
+        // name. Team identity is still _myTeam=0 (red) for the hub by
+        // virtue of the default branch above, so teammate-slot=red,
+        // opp-slot=blue.
+        const tmlText = isHubDisplay ? (teamNames[_myTeam] || (_myTeam === 0 ? 'Red Team' : 'Blue Team')) : 'Teammate';
+        const oplText = isHubDisplay ? (teamNames[1 - _myTeam] || (_myTeam === 0 ? 'Blue Team' : 'Red Team')) : 'Opponent';
         if (tml) {
           tml.classList.remove("team-red", "team-blue");
           tml.classList.add(_myTeam === 0 ? "team-red" : "team-blue");
+          tml.textContent = tmlText;
         }
         if (opl) {
           opl.classList.remove("team-red", "team-blue");
           opl.classList.add(_myTeam === 0 ? "team-blue" : "team-red");
+          opl.textContent = oplText;
         }
       }
 
@@ -20492,6 +21241,24 @@ document.addEventListener('keydown', e => {
       const wordEl = document.getElementById("scribble-drawer-word");
       if (wordEl) { wordEl.style.display = ""; wordEl.textContent = myWord.toUpperCase(); wordEl.className = `scribble-drawer-word ${myDiff}`; }
 
+      // Phone-controller: render drawer canvas + tools (reparents the
+      // canvas) or guesser quiet status. Done AFTER desktop tool-class
+      // resets so the phone-side mirrors the canonical default
+      // selection (color #111, size 8, brush). Done BEFORE the
+      // countdown setTimeout so the countdown overlay mounts onto the
+      // phone canvas-box rather than the desktop wrap.
+      if (IS_PHONE_VIEW) {
+        if (isDrawer) {
+          _phoneSsRenderDrawerDrawing(myWord, myDiff, myPts);
+        } else {
+          // Compute viewer-relative team idx so the chips render
+          // YOUR-TEAM first.
+          const _vT = (isMultiplayer && myUid && teamPlayerUids[1]?.includes(myUid)) ? 1 : 0;
+          _phoneSsRenderGuesserDrawing(_vT);
+          _phoneSsUpdateGuesserStatus();
+        }
+      }
+
       // Init scoring + store session words on state for scribbleSubmitGuess
       scribbleState.sessionScoring = scribbleInitSessionScoring();
       scribbleState._sessionWords = { myWord, myDiff, myPts, oppWord, oppDiff, oppPts };
@@ -20536,8 +21303,13 @@ document.addEventListener('keydown', e => {
       // the entry motion. Short pause tuned by feel.
       const countdownDelay = 450;
       setTimeout(() => {
-      // Countdown, then enable drawing + start timers
-      scribblePlayCountdown(document.querySelector(".scribble-canvas-wrap"), () => {
+      // Countdown, then enable drawing + start timers. On phone the
+      // canvas was reparented into .pss-canvas-box, so attach the
+      // overlay there; non-host hub clients still use the desktop wrap.
+      const _cdHost = (IS_PHONE_VIEW && isDrawer)
+        ? document.getElementById('phone-ss-canvas-box')
+        : document.querySelector(".scribble-canvas-wrap");
+      scribblePlayCountdown(_cdHost, () => {
         scribbleState.phase = "drawing";
         scribbleState.drawingEnabled = true;
         if (drawCanvas) drawCanvas.classList.remove("disabled");
@@ -20562,12 +21334,17 @@ document.addEventListener('keydown', e => {
 
     function scribbleUpdateTimer() {
       const el = document.getElementById("scribble-timer");
-      if (!el) return;
       const m = Math.floor(scribbleState.sessionTimer / 60);
       const s = scribbleState.sessionTimer % 60;
-      el.textContent = `${m}:${s.toString().padStart(2, "0")}`;
-      if (scribbleState.sessionTimer <= 10) el.classList.add("warning");
-      else el.classList.remove("warning");
+      const text = `${m}:${s.toString().padStart(2, "0")}`;
+      const warn = scribbleState.sessionTimer <= 10;
+      if (el) {
+        el.textContent = text;
+        if (warn) el.classList.add("warning");
+        else el.classList.remove("warning");
+      }
+      // Mirror onto the phone drawer's timer (no-op when not in phone view).
+      _phoneSsUpdateDrawTimer(text, warn, scribbleState.sessionTimer);
     }
 
     function scribbleEndDrawingSession(reason, sessionData) {
@@ -20643,6 +21420,16 @@ document.addEventListener('keydown', e => {
         subtext: reason === "all-solved" ? 'Both words solved!' : 'Time\'s up',
         inputPlaceholder: 'Getting next session ready...',
       });
+
+      // Phone: swap drawer canvas / guesser status out for a quiet
+      // "session complete" panel — eyes go to the hub for the
+      // session-end beat. Drawer canvas is reparented home as a side
+      // effect of _phoneSsActivate's defensive restore (called inside
+      // _phoneSsShowQuiet → _phoneSsActivate).
+      if (IS_PHONE_VIEW) {
+        const subtitle = reason === "all-solved" ? "Both words solved!" : "Time’s up.";
+        _phoneSsShowQuiet('Session complete', subtitle);
+      }
 
       // Resolve drawer names for this session so the summary can label
       // each drawing with its artist. Uses the same pattern as
@@ -20778,6 +21565,13 @@ document.addEventListener('keydown', e => {
       // wiped sessions via resetScribbleState).
       if (scribbleState.phase === "summary") return;
       scribbleState.phase = "summary";
+
+      // Phone: swap to round-end soft state. The actual scoring
+      // animation runs on the hub; phone shows a quiet message
+      // directing eyes there. Same pattern as Grid Lock + NIC.
+      if (IS_PHONE_VIEW) {
+        _phoneSsShowQuiet('Round complete', 'A summary of the round is on the screen.');
+      }
 
       let totalRed = 0, totalBlue = 0;
       scribbleState.sessions.forEach(s => {
@@ -22138,6 +22932,452 @@ document.addEventListener('keydown', e => {
       }, 1800);
     }
 
+    // ─── Phone-controller Secret Scribble ─────────────────────────────
+    // Per-stage rendering for the phone view of Secret Scribble. The
+    // hub still shows shared content (both team canvases, tile-grid
+    // reveal, scoreboard); the phone owns role-aware content (word
+    // cards, drawer canvas, guess input, status). All entry points
+    // are no-ops on desktop, so callers can sprinkle them into the
+    // existing scribble flow without branching.
+    const _phoneSs = {
+      role: null,           // 'drawer' | 'guesser' | null
+      stage: null,          // current sub-stage key for diagnostics
+    };
+    function _phoneSsActivate() {
+      if (!IS_PHONE_VIEW) return null;
+      const el = document.getElementById('phone-ss-container');
+      if (!el) return null;
+      el.classList.add('active');
+      document.body.classList.add('phone-ss-active');
+      // Defensive: if any canvas is currently parked in the phone
+      // box (drawer canvas, or teammate/opp canvas + tile grid for
+      // guesser), return them home before whatever the caller is
+      // about to do (typically `stage.innerHTML = ...`). Without this,
+      // a role flip between sessions would orphan them.
+      if (_phoneSs._canvasOrigin) _phoneSsRestoreCanvas();
+      if (_phoneSs._guesserCanvasOrigins) _phoneSsRestoreGuesserCanvases();
+      return el;
+    }
+    function _phoneSsHide() {
+      if (!IS_PHONE_VIEW) return;
+      // Restore reparented canvases to their desktop parents BEFORE
+      // wiping the container — otherwise innerHTML='' would orphan
+      // them and break the next round's wiring (each desktop wrap
+      // expects to find its canvas inside it).
+      _phoneSsRestoreCanvas();
+      _phoneSsRestoreGuesserCanvases();
+      const el = document.getElementById('phone-ss-container');
+      if (el) {
+        el.classList.remove('active');
+        el.innerHTML = '';
+      }
+      document.body.classList.remove('phone-ss-active');
+      _phoneSs.role = null;
+      _phoneSs.stage = null;
+    }
+    // Quiet centered status — used for guesser word-select view, between
+    // sessions, and round-end ("eyes on the hub") moments.
+    function _phoneSsShowQuiet(title, body) {
+      const stage = _phoneSsActivate();
+      if (!stage) return;
+      _phoneSs.stage = 'quiet';
+      stage.innerHTML =
+          `<div class="pss-quiet">`
+        +   `<div class="pss-quiet-title">${title || ''}</div>`
+        +   `<div class="pss-quiet-body">${body || ''}</div>`
+        + `</div>`;
+    }
+    // Drawer's word-select card grid. choices = [{word, difficulty, points}, ...]
+    // onPick(pick, cardEl) is called when a card is tapped — the caller
+    // owns the actual state mutation + Firestore sync.
+    function _phoneSsRenderDrawerWordSelect(choices, onPick) {
+      const stage = _phoneSsActivate();
+      if (!stage) return;
+      _phoneSs.role = 'drawer';
+      _phoneSs.stage = 'word-select';
+      stage.innerHTML =
+          `<div class="pss-ws">`
+        +   `<div class="pss-ws-header">`
+        +     `<div class="pss-ws-title">Pick your word</div>`
+        +     `<div class="pss-ws-timer" id="phone-ss-ws-timer"></div>`
+        +   `</div>`
+        +   `<div class="pss-ws-cards" id="phone-ss-ws-cards"></div>`
+        +   `<div class="pss-ws-status" id="phone-ss-ws-status"></div>`
+        + `</div>`;
+      const cardsEl = stage.querySelector('#phone-ss-ws-cards');
+      let picked = false;
+      choices.forEach((c, idx) => {
+        const card = document.createElement('div');
+        card.className = `pss-ws-card ${c.difficulty}`;
+        card.style.animationDelay = `${idx * 80}ms`;
+        card.innerHTML =
+            `<div class="pss-ws-difficulty">${c.difficulty}</div>`
+          + `<div class="pss-ws-word">${(c.word || '').toUpperCase()}</div>`
+          + `<div class="pss-ws-pts">${c.points} pts</div>`;
+        card.addEventListener('click', () => {
+          if (picked) return;
+          picked = true;
+          cardsEl.querySelectorAll('.pss-ws-card').forEach(d => {
+            if (d !== card) d.classList.add('dimmed');
+          });
+          card.classList.add('picked');
+          if (typeof onPick === 'function') {
+            try { onPick(c, card); } catch (e) {}
+          }
+        });
+        cardsEl.appendChild(card);
+      });
+    }
+    // Guesser's word-select view — quiet "drawers are picking" status.
+    function _phoneSsRenderGuesserWordSelect() {
+      _phoneSs.role = 'guesser';
+      _phoneSs.stage = 'word-select';
+      _phoneSsShowQuiet('Secret Scribble', 'Drawers are picking words…');
+    }
+    // External-tick the word-select countdown. Caller owns the timer
+    // (scribbleStartWordSelection's setInterval); this is a pure display
+    // update so the phone tracks the same value as the desktop UI.
+    function _phoneSsUpdateWsTimer(timeLeft, opts) {
+      if (!IS_PHONE_VIEW) return;
+      const t = document.getElementById('phone-ss-ws-timer');
+      if (!t) return;
+      t.textContent = timeLeft;
+      t.classList.remove('urgent', 'both-picked');
+      if (opts && opts.bothPicked) t.classList.add('both-picked');
+      else if (timeLeft <= 3) t.classList.add('urgent');
+    }
+    // Status line under the cards. Used for "Pick locked in. Waiting for
+    // other drawer..." / "Both drawers ready — starting!" messages.
+    function _phoneSsSetWsStatus(text) {
+      if (!IS_PHONE_VIEW) return;
+      const s = document.getElementById('phone-ss-ws-status');
+      if (s) s.textContent = text || '';
+    }
+
+    // Drawer's drawing stage — word + reparented canvas + tools. The
+    // canvas (#scribble-draw-canvas) keeps its desktop wiring (pointer
+    // handlers, getBoundingClientRect-based scaling); we just move it
+    // into a phone-friendly frame. Tool buttons forward to the desktop
+    // buttons by .click() so the existing event handlers stay the
+    // single source of truth.
+    function _phoneSsRenderDrawerDrawing(myWord, myDiff, myPts) {
+      const stage = _phoneSsActivate();
+      if (!stage) return;
+      _phoneSs.role = 'drawer';
+      _phoneSs.stage = 'drawing';
+      const colors = ["#111111", "#ffffff", "#c00000", "#c0c000", "#00c000", "#00c0c0", "#0000c0", "#c000c0"];
+      const colorBtns = colors.map(c =>
+        `<button class="pss-color" data-color="${c}" style="background:${c};"></button>`
+      ).join('');
+      stage.innerHTML =
+          `<div class="pss-draw">`
+        +   `<div class="pss-draw-header">`
+        +     `<div class="pss-draw-word ${myDiff || ''}">${(myWord || '').toUpperCase()}</div>`
+        +     `<div class="pss-draw-pts">${myPts || 0} pts</div>`
+        +     `<div class="pss-draw-timer" id="phone-ss-draw-timer">1:00</div>`
+        +   `</div>`
+        +   `<div class="pss-canvas-frame">`
+        +     `<div class="pss-canvas-box" id="phone-ss-canvas-box"></div>`
+        +   `</div>`
+        +   `<div class="pss-tools">`
+        +     `<div class="pss-tools-row">${colorBtns}</div>`
+        +     `<div class="pss-tools-row">`
+        +       `<button class="pss-size" data-size="3"><span class="pss-size-dot" style="width:6px;height:6px;"></span></button>`
+        +       `<button class="pss-size" data-size="8"><span class="pss-size-dot" style="width:14px;height:14px;"></span></button>`
+        +       `<button class="pss-size" data-size="16"><span class="pss-size-dot" style="width:24px;height:24px;"></span></button>`
+        +       `<button class="pss-size pss-eraser" data-size="eraser"><span class="pss-eraser-dot"></span></button>`
+        +       `<button class="pss-size pss-bucket" data-size="bucket" title="Bucket"><img src="paint-01.png" alt="" style="width:18px;height:18px;display:block;pointer-events:none;"></button>`
+        +       `<button class="pss-text-btn" id="phone-ss-clear-btn">CLEAR</button>`
+        +       `<button class="pss-text-btn" id="phone-ss-undo-btn" disabled>UNDO</button>`
+        +     `</div>`
+        +   `</div>`
+        + `</div>`;
+      _phoneSsAttachCanvas();
+      _phoneSsWireDrawerTools();
+      // Default selection — match desktop initial state.
+      _phoneSsSyncToolSelection({ color: "#111111", size: 8, tool: "brush" });
+      // Shrink the word at ≥10 chars so long words ("DICTIONARY",
+      // "REFRIGERATOR") don't wrap or push the timer off the row.
+      const wordEl = stage.querySelector('.pss-draw-word');
+      if (wordEl && typeof fitByCharCount === 'function') {
+        fitByCharCount(wordEl, 10, (myWord || '').toUpperCase());
+      }
+    }
+
+    // Move #scribble-draw-canvas into the phone canvas-box. Remember the
+    // original parent so _phoneSsRestoreCanvas can put it back when the
+    // round ends or the phone view tears down.
+    function _phoneSsAttachCanvas() {
+      const c = document.getElementById('scribble-draw-canvas');
+      const box = document.getElementById('phone-ss-canvas-box');
+      if (!c || !box) return;
+      if (!_phoneSs._canvasOrigin) _phoneSs._canvasOrigin = c.parentElement;
+      box.appendChild(c);
+    }
+    function _phoneSsRestoreCanvas() {
+      const c = document.getElementById('scribble-draw-canvas');
+      const origin = _phoneSs._canvasOrigin;
+      if (c && origin && origin.isConnected) {
+        // Insert as the first child of the original .scribble-canvas-wrap
+        // so radial-menu / edge-tools siblings still overlay correctly.
+        origin.insertBefore(c, origin.firstChild);
+      }
+      _phoneSs._canvasOrigin = null;
+    }
+
+    // Wire phone tool buttons. Each one programmatically clicks the
+    // desktop equivalent, leveraging scribbleWireDrawingEvents' wiring.
+    // Active-class management is local to phone — the desktop classes
+    // are still kept in sync via the global event handlers below.
+    function _phoneSsWireDrawerTools() {
+      const stage = document.getElementById('phone-ss-container');
+      if (!stage) return;
+      stage.querySelectorAll('.pss-color').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const color = btn.dataset.color;
+          const desktop = document.querySelector(`.scribble-color-btn[data-color="${color}"]`);
+          if (desktop) desktop.click();
+          _phoneSsSyncToolSelection({ color, tool: 'brush' });
+        });
+      });
+      stage.querySelectorAll('.pss-size').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const v = btn.dataset.size;
+          if (v === 'eraser') {
+            const e = document.getElementById('scribble-eraser-btn');
+            if (e) e.click();
+            _phoneSsSyncToolSelection({ tool: 'eraser' });
+          } else if (v === 'bucket') {
+            const b = document.getElementById('scribble-bucket-btn');
+            if (b) b.click();
+            _phoneSsSyncToolSelection({ tool: 'bucket' });
+          } else {
+            const size = parseInt(v, 10);
+            const desktop = document.querySelector(`.scribble-size-btn[data-size="${size}"]`);
+            if (desktop) desktop.click();
+            _phoneSsSyncToolSelection({ size, tool: 'brush' });
+          }
+        });
+      });
+      const clearBtn = document.getElementById('phone-ss-clear-btn');
+      if (clearBtn) clearBtn.addEventListener('click', () => {
+        const d = document.getElementById('scribble-clear-btn');
+        if (d) d.click();
+      });
+      const undoBtn = document.getElementById('phone-ss-undo-btn');
+      if (undoBtn) undoBtn.addEventListener('click', () => {
+        const d = document.getElementById('scribble-undo-btn');
+        if (d) d.click();
+        // Mirror disabled state once undo runs (desktop button toggles
+        // based on stack depth).
+        setTimeout(() => _phoneSsSyncUndoState(), 0);
+      });
+    }
+    function _phoneSsSyncToolSelection({ color, size, tool }) {
+      const stage = document.getElementById('phone-ss-container');
+      if (!stage) return;
+      if (color != null) {
+        stage.querySelectorAll('.pss-color').forEach(b =>
+          b.classList.toggle('active', b.dataset.color === color));
+      }
+      if (tool === 'eraser') {
+        stage.querySelectorAll('.pss-size').forEach(b =>
+          b.classList.toggle('active', b.dataset.size === 'eraser'));
+      } else if (tool === 'bucket') {
+        stage.querySelectorAll('.pss-size').forEach(b =>
+          b.classList.toggle('active', b.dataset.size === 'bucket'));
+      } else if (size != null) {
+        stage.querySelectorAll('.pss-size').forEach(b =>
+          b.classList.toggle('active', b.dataset.size === String(size)));
+      }
+    }
+    function _phoneSsSyncUndoState() {
+      const desk = document.getElementById('scribble-undo-btn');
+      const ph = document.getElementById('phone-ss-undo-btn');
+      if (desk && ph) ph.disabled = !!desk.disabled;
+    }
+
+    // Display-only timer tick from scribbleUpdateTimer. Caller passes
+    // the formatted display string + warning flag + raw seconds. When
+    // seconds ≤ 10, retrigger the GL pop animation each tick by
+    // toggling the .gl-timer-jump class with a forced reflow between.
+    // Updates whichever of the drawer / guesser timer cells is mounted.
+    function _phoneSsUpdateDrawTimer(text, warning, seconds) {
+      if (!IS_PHONE_VIEW) return;
+      const targets = [
+        document.getElementById('phone-ss-draw-timer'),
+        document.getElementById('phone-ss-guess-timer'),
+      ].filter(Boolean);
+      if (!targets.length) return;
+      const final10 = (typeof seconds === 'number' && seconds <= 10 && seconds > 0);
+      const newTick = final10 && _phoneSs._lastJumpSec !== seconds;
+      if (final10) _phoneSs._lastJumpSec = seconds;
+      else if (!final10) _phoneSs._lastJumpSec = null;
+      targets.forEach(t => {
+        t.textContent = text;
+        t.classList.toggle('warning', !!warning);
+        if (final10) {
+          if (newTick) {
+            t.classList.remove('gl-timer-jump');
+            void t.offsetWidth;
+            t.classList.add('gl-timer-jump');
+          }
+        } else {
+          t.classList.remove('gl-timer-jump');
+        }
+      });
+    }
+
+    // Guesser drawing stage — status strip + single live canvas
+    // (reparented from desktop) + legend + prompt. Starts on the
+    // teammate canvas (clear). When the player's own team's drawing
+    // is solved, _phoneSsUpdateGuesserStatus auto-swaps to the
+    // opponent canvas (with tile-grid obstruction) so the player can
+    // try to steal. Caller passes viewer-relative myTeam so the
+    // legend names the right team.
+    function _phoneSsRenderGuesserDrawing(myTeam) {
+      const stage = _phoneSsActivate();
+      if (!stage) return;
+      _phoneSs.role = 'guesser';
+      _phoneSs.stage = 'drawing';
+      _phoneSs._myTeam = (typeof myTeam === 'number') ? myTeam : 0;
+      _phoneSs._guessActive = null; // 'teammate' | 'opp', set by attach
+      stage.innerHTML =
+          `<div class="pss-guess">`
+        +   `<div class="pss-guess-canvas-frame">`
+        +     `<div class="pss-guess-canvas-box" id="phone-ss-canvas-box">`
+        +       `<div class="pss-guess-overlay-label" id="phone-ss-guess-overlay-label">`
+        +         `<span id="phone-ss-overlay-role">TEAMMATE</span>`
+        +         `<span>DRAWING</span>`
+        +       `</div>`
+        +       `<div class="pss-guess-overlay-timer" id="phone-ss-guess-timer">1:00</div>`
+        +     `</div>`
+        +   `</div>`
+        + `</div>`;
+      // Initial canvas: the teammate's drawing (clear, your team to
+      // solve first for the team bonus). Will swap to opp once
+      // teammate's drawing is solved.
+      _phoneSsAttachGuesserCanvas('teammate');
+    }
+
+    // Reparent the appropriate guesser canvas (teammate or opp, plus
+    // the opp tile grid) into the phone canvas-box. Tracks origin so
+    // _phoneSsRestoreCanvas can put everything back at teardown / swap.
+    function _phoneSsAttachGuesserCanvas(which) {
+      const box = document.getElementById('phone-ss-canvas-box');
+      if (!box) return;
+      const myT = _phoneSs._myTeam || 0;
+      const teamLabel = (t) => (typeof teamNames !== 'undefined' && teamNames[t]) || (t === 0 ? 'Red Team' : 'Blue Team');
+      // Decide: 'teammate' shows MY team's canvas; 'opp' shows the
+      // OTHER team's canvas + tile grid.
+      const showOpp = (which === 'opp');
+      const targetTeam = showOpp ? (1 - myT) : myT;
+      // The desktop guesser view assigns canvases by viewer-relative
+      // role: teammate-canvas = my team's, opp-canvas = other team's.
+      // Reparent the matching desktop element(s) into the phone box.
+      const canvas = document.getElementById(showOpp ? 'scribble-opp-canvas' : 'scribble-teammate-canvas');
+      const tileGrid = showOpp ? document.getElementById('scribble-tile-grid') : null;
+      if (!canvas) return;
+      // Clear the box contents but PRESERVE the canvas itself if it's
+      // already mounted (idempotent — calling attach with the same
+      // value twice should be a no-op).
+      if (canvas.parentElement !== box) {
+        if (!_phoneSs._guesserCanvasOrigins) _phoneSs._guesserCanvasOrigins = {};
+        if (!_phoneSs._guesserCanvasOrigins[canvas.id]) {
+          _phoneSs._guesserCanvasOrigins[canvas.id] = canvas.parentElement;
+        }
+        // Clear any prior canvas/tile-grid content from the box. Don't
+        // touch overlay chrome (timer + team label) — those are owned
+        // by this stage and must persist across canvas swaps.
+        Array.from(box.children).forEach(c => {
+          if (c.tagName === 'CANVAS' || c.classList?.contains('scribble-tile-grid')) {
+            const origin = _phoneSs._guesserCanvasOrigins[c.id];
+            if (origin && origin.isConnected) origin.appendChild(c);
+          }
+          // anything else (overlays, etc.): leave in place
+        });
+        // Insert the new canvas as the FIRST child so it sits below the
+        // overlay elements in DOM order (overlays already have z-index
+        // above auto-positioned canvas via .pss-guess-overlay-* rules).
+        box.insertBefore(canvas, box.firstChild);
+      }
+      if (tileGrid && tileGrid.parentElement !== box) {
+        if (!_phoneSs._guesserCanvasOrigins) _phoneSs._guesserCanvasOrigins = {};
+        if (!_phoneSs._guesserCanvasOrigins[tileGrid.id]) {
+          _phoneSs._guesserCanvasOrigins[tileGrid.id] = tileGrid.parentElement;
+        }
+        box.appendChild(tileGrid);
+      }
+      _phoneSs._guessActive = which;
+      // Update the overlay label (top-left of the canvas). Tinted by
+      // the active team's color.
+      const labelEl = document.getElementById('phone-ss-guess-overlay-label');
+      const roleSpan = document.getElementById('phone-ss-overlay-role');
+      if (labelEl) {
+        labelEl.classList.remove('team-red', 'team-blue');
+        labelEl.classList.add(targetTeam === 0 ? 'team-red' : 'team-blue');
+      }
+      if (roleSpan) roleSpan.textContent = showOpp ? 'OPPONENT' : 'TEAMMATE';
+    }
+
+    // Restore any reparented guesser canvases (teammate, opp, opp tile
+    // grid) back to their desktop origins. Called from _phoneSsHide
+    // alongside the drawer canvas restore.
+    function _phoneSsRestoreGuesserCanvases() {
+      const origins = _phoneSs._guesserCanvasOrigins;
+      if (!origins) return;
+      Object.entries(origins).forEach(([id, origin]) => {
+        const el = document.getElementById(id);
+        if (el && origin && origin.isConnected) origin.appendChild(el);
+      });
+      _phoneSs._guesserCanvasOrigins = null;
+      _phoneSs._guessActive = null;
+    }
+
+    // Refresh the guesser status from canonical scribble state. Drives
+    // the canvas swap (teammate→opp once teammate's drawing is solved)
+    // and the solved-count display. Idempotent — safe to call from
+    // solve / reconcile / etc.
+    function _phoneSsUpdateGuesserStatus() {
+      if (!IS_PHONE_VIEW) return;
+      if (_phoneSs.role !== 'guesser' || _phoneSs.stage !== 'drawing') return;
+      const ss = (typeof scribbleState !== 'undefined') ? scribbleState : null;
+      if (!ss) return;
+      const claimed = ss.sessionScoring?.drawingFirstClaimed || [false, false];
+      const myT = _phoneSs._myTeam || 0;
+      const myTeamSolved = !!claimed[myT];
+      const oppTeamSolved = !!claimed[1 - myT];
+      // Swap rule: once my team's drawing is solved, switch to the
+      // opponent canvas (so the player can try to steal). Stay there
+      // even if opp also gets solved — the SOLVED overlay handles
+      // the both-solved end state.
+      if (myTeamSolved && _phoneSs._guessActive !== 'opp') {
+        _phoneSsAttachGuesserCanvas('opp');
+      } else if (!myTeamSolved && _phoneSs._guessActive !== 'teammate') {
+        _phoneSsAttachGuesserCanvas('teammate');
+      }
+    }
+
+    // Solved overlay on phone — drawer-only path. Mounts a clone of the
+    // desktop solved overlay onto .pss-canvas-box so the drawer sees
+    // the SOLVED!/STOLEN! pill on their own canvas. Idempotent: removes
+    // any prior overlay so consecutive solves don't stack.
+    function _phoneSsShowSolved(opts) {
+      if (!IS_PHONE_VIEW) return;
+      const box = document.getElementById('phone-ss-canvas-box');
+      if (!box) return;
+      box.querySelectorAll('.scribble-solved-overlay').forEach(el => el.remove());
+      const overlay = document.createElement('div');
+      overlay.className = 'scribble-solved-overlay' + (opts && opts.stolen ? ' sso-stolen' : '');
+      const title = (opts && opts.stolen) ? 'STOLEN!' : 'SOLVED!';
+      const wordHtml = opts && opts.word ? `<span class="sso-word">${opts.word}</span>` : '';
+      const ptsHtml  = (opts && opts.raw != null && opts.mult != null)
+        ? `<span class="sso-pts">${opts.raw} × ${opts.mult}</span>`
+        : '';
+      overlay.innerHTML = `<span class="sso-title">${title}</span>${wordHtml}${ptsHtml}`;
+      box.appendChild(overlay);
+    }
+
     // ── Multiplayer sync (host-authoritative). ─────────────────────────
     // Host writes gridLockState snapshot to Firestore on every meaningful
     // mutation (board generation, lock rotation, new entry). Non-hosts
@@ -23343,7 +24583,6 @@ document.addEventListener('keydown', e => {
 
       if (typeof setPhaseText === "function") setPhaseText("gameplay", "GRID LOCK");
       if (typeof setPhase === "function") setPhase("gameplay");
-      if (typeof setMusicMode === "function") setMusicMode('playlist');
       if (typeof showInputArea === "function") showInputArea();
       if (typeof setInputAreaMode === "function") {
         setInputAreaMode({
@@ -24639,7 +25878,6 @@ document.addEventListener('keydown', e => {
 
       if (typeof setPhaseText === 'function') setPhaseText('gameplay', 'NUMBER IS CORRECT');
       if (typeof setPhase === 'function') setPhase('gameplay');
-      if (typeof setMusicMode === 'function') setMusicMode('playlist');
       if (typeof showInputArea === 'function') showInputArea();
 
       // Host (or local) picks the round's 5 questions, then kicks off Q1.
@@ -25423,6 +26661,12 @@ document.addEventListener('keydown', e => {
     function playModuleIntro(moduleKey) {
       const mod = ROUND_MODULES[moduleKey];
       const cfg = mod && mod.intro;
+      // Kick off the module's music as the cinematic begins, so the audio
+      // bed is established underneath the visual intro rather than landing
+      // after it. Each module declares its mode via the `music` field.
+      if (mod && mod.music && typeof setMusicMode === 'function') {
+        try { setMusicMode(mod.music); } catch (e) {}
+      }
       if (!cfg) return Promise.resolve();
       // Phone view: skip the visual cinematic but WAIT the same elapsed
       // time the hub spends on it, so the phone's module flow stays in

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Good Answer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -166,6 +167,509 @@
     #game-root.app-feel textarea {
       user-select: text;
       -webkit-user-select: text;
+    }
+
+    /* Phone-controller mode (?phone=1). Strips the canvas down to evergreens
+       (#phase-indicator + #sq-zone-input) in a fluid portrait layout. The
+       JS canvas-scaling handler is also short-circuited when this class is
+       present so it doesn't fight the !important transform reset below. */
+    body.phone-mode {
+      display: block;
+      align-items: initial;
+      justify-content: initial;
+      background: #111;
+      height: 100dvh;
+    }
+    body.phone-mode #game-root {
+      width: 100vw;
+      height: 100dvh;
+      transform: none !important;
+      border-radius: 0;
+    }
+    /* Hide every #game-root direct child except #game (which contains
+       #zone-board → #sidebar-zone → evergreens). Other phase containers
+       — start-screen, mode-select, lobby, setup, fast-money, dialogs,
+       overlays, victory canvases — are not part of phone mode. */
+    body.phone-mode #game-root > *:not(#game) { display: none !important; }
+    body.phone-mode #game {
+      display: flex !important;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      flex: 1 1 auto;
+    }
+    body.phone-mode #zone-board {
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+    }
+    body.phone-mode #zone-board > *:not(#sidebar-zone) { display: none !important; }
+    body.phone-mode #sidebar-zone {
+      width: 100%;
+      height: 100%;
+      flex: 1 1 auto;
+      padding: 0;
+    }
+    body.phone-mode #sidebar-category-select,
+    body.phone-mode #sq-zone-content,
+    body.phone-mode #module-canvas { display: none !important; }
+    body.phone-mode #sidebar-question-answer {
+      width: 100%;
+      height: 100%;
+    }
+    /* Phone-mode evergreen UI tweaks. Phase indicator stays as-is at the
+       top; #sq-zone-input pins to the bottom via its margin-top:auto. The
+       middle space is intentionally empty — module overlays fill it. */
+    body.phone-mode #input-area {
+      min-height: 0;
+      max-height: none;
+      padding-bottom: max(5px, env(safe-area-inset-bottom));
+    }
+    /* PRIZES placeholder is a desktop-only affordance for the future items
+       system. Hide it on phone so the dome button breathes against the
+       device bottom edge. */
+    body.phone-mode #player-inventory { display: none; }
+    /* Trim turn-body padding so input + button cluster naturally instead
+       of stretching toward the (now-deleted) prizes tray. */
+    body.phone-mode #turn-body { padding-bottom: 14px; }
+    /* Bump #guess to a thumb-friendly height (≥44pt iOS / 48dp Android).
+       Default ~34px is too small for accurate phone tapping. */
+    body.phone-mode #guess {
+      padding: 14px;
+      font-size: 1.1rem;
+    }
+
+    /* Phone-controller placeholder — hidden by default. Only shown in
+       phone mode, and only while no game session is active (which on a
+       fresh page load means: always, since #game is display:none until
+       the game starts). Phase 2 will swap this for a real join-code UI. */
+    #phone-placeholder { display: none; }
+    body.phone-mode #phone-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100dvh;
+      background: #111;
+      color: #eee;
+      font-family: "futura-100", sans-serif;
+      text-align: center;
+      padding: 24px;
+      z-index: 100;
+    }
+    body.phone-mode #phone-placeholder .pp-title {
+      font-family: "dazzle-unicase", "futura-100", sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.08em;
+      color: #fba300;
+    }
+    body.phone-mode #phone-placeholder .pp-subtitle {
+      font-size: 1rem;
+      color: #aaa;
+      letter-spacing: 0.04em;
+    }
+    body.phone-mode #phone-placeholder .pp-status {
+      font-size: 0.9rem;
+      color: #888;
+      margin-top: 24px;
+    }
+    body.phone-mode #pp-form-stage,
+    body.phone-mode #pp-lobby-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      width: 100%;
+      max-width: 320px;
+      margin-top: 8px;
+    }
+    body.phone-mode #pp-form-stage input {
+      font-family: "futura-100", sans-serif;
+      font-size: 1.1rem;
+      padding: 12px 14px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #eee;
+      text-align: center;
+    }
+    body.phone-mode #pp-form-stage input:focus {
+      outline: none;
+      border-color: #fba300;
+    }
+    body.phone-mode #pp-form-stage #pp-code {
+      font-family: "Bitcount Single", monospace;
+      letter-spacing: 0.2em;
+      font-size: 1.5rem;
+      text-transform: uppercase;
+    }
+    body.phone-mode #pp-join-btn {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 14px 18px;
+      background: #fba300;
+      color: #111;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    body.phone-mode #pp-join-btn:disabled {
+      background: #555;
+      color: #888;
+      cursor: not-allowed;
+    }
+    body.phone-mode #pp-form-stage .pp-error {
+      font-size: 0.85rem;
+      color: #ff6b6b;
+      min-height: 1em;
+      text-align: center;
+    }
+    body.phone-mode.phone-joined #phone-placeholder { display: none; }
+
+    /* Hub-display mode (Local Game / Same room, one screen).
+       The hub is a display, not a player — there's no input field, no
+       dome button, no PRIZES tray. The input-area becomes a pure message
+       slot: bigger header + subtext text that fills the freed vertical
+       space. Module code keeps writing to setInputAreaMode the same way;
+       only the rendering of input-row / action-row / inventory is hidden,
+       so we don't need targeted message rewrites per module. */
+    body.hub-display #turn-body { display: none; }
+    body.hub-display #player-inventory { display: none; }
+    body.hub-display #endRound { display: none; }
+    body.hub-display #turn-message {
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 24px 24px;
+      gap: 16px;
+      justify-content: center;
+    }
+    body.hub-display #turn-header {
+      --fit-base: 2.5rem;
+      /* Defeat fitByCharCount's shrink in hub mode — we have room to wrap
+         instead. !important wins over the JS-set inline --fit-scale. */
+      --fit-scale: 1 !important;
+      height: auto;
+      min-height: 3.4rem;
+      line-height: 1.1;
+      white-space: normal;
+    }
+    body.hub-display #turn-header.wrap {
+      max-height: none;
+    }
+    body.hub-display #turn-subtext {
+      font-size: 1.4rem;
+      letter-spacing: 1.5px;
+      min-height: 1.6rem;
+    }
+
+    /* Phone-controller round-type picker. Vertical stack of three
+       plastic buttons filling the middle space between phase-indicator
+       and #sq-zone-input. Active only when the local phone player is
+       the picker; otherwise hidden so the empty middle space stays. */
+    #phone-round-type-picker { display: none; }
+    body.phone-mode #phone-round-type-picker.active {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 18px 16px;
+      flex: 1 1 auto;
+      min-height: 0;
+      align-items: stretch;
+      justify-content: center;
+    }
+    /* Plastic-cap button — derived from .dome-button but full-width and
+       fluid-height so three buttons share the available middle space.
+       --dome-color is set per-instance via the .mod-* class on the row. */
+    body.phone-mode .prtp-btn {
+      --dome-color: var(--mod-color, #d62020);
+      --_deep:   color-mix(in oklab, var(--dome-color) 35%, #000);
+      --_darker: color-mix(in oklab, var(--dome-color) 60%, #000);
+      --_light:  color-mix(in oklab, var(--dome-color) 75%, #fff 25%);
+      --_glow:   color-mix(in oklab, var(--dome-color) 60%, #fff 40%);
+      --_lift: 4px;
+      position: relative;
+      width: 100%;
+      flex: 1 1 0;
+      min-height: 70px;
+      isolation: isolate;
+      border: 0;
+      margin: 0;
+      background: transparent;
+      cursor: pointer;
+      appearance: none;
+      -webkit-tap-highlight-color: transparent;
+      display: grid;
+      place-items: center;
+      padding: 14px 76px;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #fff;
+      text-shadow:
+        0 -1px 0 rgba(0,0,0,0.5),
+        0 1px 1px color-mix(in oklab, var(--_light) 50%, transparent);
+      line-height: 1.1;
+      transition: filter .12s ease-out;
+    }
+    body.phone-mode .prtp-btn::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #1d1d1d 0%, #0a0a0a 50%, #1d1d1d 100%);
+      box-shadow:
+        0 4px 0 #000,
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        inset 0 -2px 6px rgba(0,0,0,0.7);
+      z-index: -2;
+    }
+    body.phone-mode .prtp-btn::after {
+      content: "";
+      position: absolute;
+      inset: calc(8px - var(--_lift)) 10px calc(12px + var(--_lift));
+      border-radius: 14px;
+      background:
+        radial-gradient(ellipse at 35% 25%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 35%),
+        radial-gradient(ellipse at 50% 110%,
+          var(--_deep)   0%,
+          var(--_darker) 30%,
+          var(--dome-color) 60%,
+          var(--_light)  90%);
+      box-shadow:
+        0 var(--_lift) 0 var(--_deep),
+        0 calc(var(--_lift) + 4px) 12px rgba(0,0,0,0.55),
+        inset 0 -8px 14px color-mix(in oklab, var(--_deep) 70%, transparent),
+        inset 0 6px 8px color-mix(in oklab, var(--_glow) 35%, transparent);
+      transition: inset .12s ease-out, box-shadow .12s ease-out;
+      z-index: -1;
+      pointer-events: none;
+    }
+    body.phone-mode .prtp-btn:active {
+      --_lift: 0px;
+    }
+    body.phone-mode .prtp-btn:active::after {
+      box-shadow:
+        inset 0 -2px 6px rgba(0,0,0,0.4),
+        0 1px 0 rgba(0,0,0,0.5);
+    }
+    /* Phone-controller NIC stage. Vertical stack: question bar at top,
+       per-player rows below. Mirrors hub data; hub DOM is hidden in
+       phone mode. */
+    #phone-nic-stage { display: none; }
+    body.phone-mode #phone-nic-stage.active {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 12px 12px 8px;
+      gap: 10px;
+    }
+    body.phone-mode .pnic-qbar {
+      flex: 0 0 auto;
+      background: rgba(26,26,26,0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    body.phone-mode .pnic-qbar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: "futura-100", sans-serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: #aaa;
+      text-transform: uppercase;
+    }
+    body.phone-mode .pnic-q-counter b {
+      color: #fff;
+      font-weight: 700;
+    }
+    body.phone-mode .pnic-timer {
+      font-family: "Bitcount Single", monospace;
+      font-size: 1.1rem;
+      color: #fff;
+      letter-spacing: 0.04em;
+      padding-left: 0.1em;
+    }
+    body.phone-mode .pnic-timer.warning {
+      color: #ff5555;
+    }
+    body.phone-mode .pnic-q-text {
+      background: #111;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #fff;
+      line-height: 1.25;
+      min-height: 2.5em;
+      display: flex;
+      align-items: center;
+    }
+    body.phone-mode .pnic-rows {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow: hidden;
+      min-height: 0;
+    }
+    body.phone-mode .pnic-row {
+      flex: 1 1 0;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 38% 62%;
+      gap: 6px;
+      align-items: stretch;
+    }
+    body.phone-mode .pnic-row-name {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-family: "dazzle-unicase", "futura-100", sans-serif;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      color: #fff;
+      text-transform: uppercase;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    body.phone-mode .pnic-row.red  .pnic-row-name { background: var(--red-bg); }
+    body.phone-mode .pnic-row.blue .pnic-row-name { background: var(--blue-bg); }
+    body.phone-mode .pnic-row-guess {
+      position: relative;
+      background: #222;
+      border-radius: 6px;
+      border: 1px solid #000;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+      background-image:
+        radial-gradient(circle at 25% 25%, rgba(255,255,255,0.05) 0.5px, transparent 1px),
+        radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 0.5px, transparent 1px);
+      background-size: 7px 7px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      padding: 0 10px;
+      gap: 8px;
+      overflow: hidden;
+    }
+    body.phone-mode .pnic-guess-main {
+      font-family: "Bitcount Single", monospace;
+      font-size: 1.5rem;
+      color: #ffb84d;
+      text-shadow:
+        0 0 6px rgba(255,184,77,0.6),
+        0 0 12px rgba(255,140,0,0.4);
+      letter-spacing: 0.04em;
+      padding-left: 0.1em;
+      line-height: 1;
+    }
+    body.phone-mode .pnic-guess-main.waiting {
+      color: rgba(255,255,255,0.4);
+      text-shadow: none;
+    }
+    body.phone-mode .pnic-guess-side {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      font-family: "futura-100", sans-serif;
+      line-height: 1;
+    }
+    body.phone-mode .pnic-guess-pct {
+      font-size: 0.65rem;
+      letter-spacing: 0.06em;
+      color: #aaa;
+      text-transform: uppercase;
+    }
+    body.phone-mode .pnic-guess-pts {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    body.phone-mode .pnic-guess-pts.pos  { color: #4caf50; }
+    body.phone-mode .pnic-guess-pts.neg  { color: #ff5555; }
+    body.phone-mode .pnic-guess-pts.zero { color: #888; }
+    body.phone-mode .pnic-guess-order {
+      font-size: 0.6rem;
+      letter-spacing: 0.06em;
+      color: #c9a64a;
+      text-transform: uppercase;
+    }
+    /* Round-end "look at the screen" message. Replaces the question bar +
+       rows when the NIC round transitions to summary on the hub. Phone
+       canvas is intentionally minimal so the player knows the action has
+       moved to the shared screen. */
+    body.phone-mode .pnic-roundend {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 24px 20px;
+      text-align: center;
+    }
+    body.phone-mode .pnic-roundend-title {
+      font-family: "dazzle-unicase", "futura-100", sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 0.1em;
+      color: #fba300;
+      text-transform: uppercase;
+    }
+    body.phone-mode .pnic-roundend-body {
+      font-family: "futura-100", sans-serif;
+      font-size: 1rem;
+      color: #ccc;
+      line-height: 1.4;
+      letter-spacing: 0.02em;
+    }
+
+    /* Multiplier circle — top-right corner. Uses --rt-gem-color (set
+       by the .rt-tier-* class) for the fill so the gem identity carries
+       across without rendering the actual gem PNG on phone. */
+    body.phone-mode .prtp-mult {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      width: 57px;
+      height: 57px;
+      border-radius: 50%;
+      background: var(--rt-gem-color, #888);
+      color: #fff;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.28rem;
+      letter-spacing: 0;
+      text-transform: none;
+      display: grid;
+      place-items: center;
+      z-index: 3;
+      box-shadow:
+        0 2px 4px rgba(0,0,0,0.5),
+        inset 0 1px 2px rgba(255,255,255,0.4),
+        inset 0 -2px 3px rgba(0,0,0,0.3);
+      text-shadow: 0 -1px 0 rgba(0,0,0,0.4);
+      pointer-events: none;
     }
 
     /* CSS-only animated blob background — replaces SVG blobs.
@@ -801,6 +1305,37 @@
       font-size: 0.8rem;
       color: rgba(255,255,255,0.4);
       margin-bottom: 24px;
+    }
+    .lobby-phone-url-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 18px;
+      margin: -12px 0 24px 0;
+      background: rgba(17,17,17,0.6);
+      border: 1px solid rgba(251,163,0,0.4);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .lobby-phone-url-row:hover {
+      border-color: rgba(251,163,0,0.8);
+      background: rgba(17,17,17,0.8);
+    }
+    .lobby-phone-url-label {
+      font-family: "futura-100", sans-serif;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.55);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .lobby-phone-url {
+      font-family: "Bitcount Mono Single", monospace;
+      font-size: 1rem;
+      color: #fba300;
+      word-break: break-all;
+      text-align: center;
     }
     .lobby-back-btn {
       margin-top: 12px;
@@ -9601,6 +10136,23 @@
     <button class="dev-btn" onclick="playCorrect(true)">▶ Top Answer</button>
     <button class="dev-btn" onclick="playWrong()">▶ Strike X</button>
   </div>
+  <!-- Phone-controller placeholder. Only visible under body.phone-mode
+       when no game session is active. Sits outside #game-root so it doesn't
+       interact with the canvas's transform/letterbox layout on desktop. -->
+  <div id="phone-placeholder">
+    <div class="pp-title">PLAY ON ONE SCREEN</div>
+    <div class="pp-subtitle">Phone Controller</div>
+    <div id="pp-form-stage">
+      <input type="text" id="pp-code" placeholder="Game code" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+      <input type="text" id="pp-name" placeholder="Your name" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="18">
+      <div class="pp-error" id="pp-error"></div>
+      <button id="pp-join-btn" onclick="phoneSubmitJoin()">Join Game</button>
+    </div>
+    <div id="pp-lobby-stage" style="display: none;">
+      <div class="pp-status" id="pp-lobby-status">You're in! Waiting for host to start…</div>
+    </div>
+  </div>
+
   <!-- CRT curvature handled by CSS 3D perspective on #content-tv -->
   <!-- 16:9 letterbox canvas -->
   <div id="game-root">
@@ -9725,7 +10277,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.27</div>
+  <div id="version-tag">v0.28</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -9754,13 +10306,17 @@
   <div id="mode-select">
     <h1>Choose Game Mode</h1>
     <div class="mode-buttons">
-      <div class="mode-btn" onclick="selectLocalMode()">
+      <div class="mode-btn" onclick="selectHubMode()">
         <div class="mode-btn-title">Local Game</div>
         <div class="mode-btn-desc">Same room, one screen</div>
       </div>
       <div class="mode-btn" onclick="selectOnlineMode()">
         <div class="mode-btn-title">Online Game</div>
         <div class="mode-btn-desc">Friends join from their devices</div>
+      </div>
+      <div class="mode-btn" onclick="selectLocalMode()">
+        <div class="mode-btn-title">Offline Mode</div>
+        <div class="mode-btn-desc">Single device, no network</div>
       </div>
     </div>
     <button class="mode-back-btn" id="mode-back-btn" onclick="backToStartScreen()">◀ Back</button>
@@ -9934,9 +10490,20 @@
           <span class="ph-span ph-module-logo"></span>
         </div>
 
+        <!-- Phone-controller round-type picker. Mounts in the middle space
+             between phase-indicator and input-area in phone mode only.
+             Hidden on desktop and when the local phone player isn't the
+             active picker — non-active phone players read the
+             "Waiting on X..." status from #input-area instead. -->
+        <div id="phone-round-type-picker"></div>
+
+        <!-- Phone-controller NIC stage. Mirrors the hub's question bar +
+             player tile grid as a compact portrait stack. Built in
+             _phoneNicRender(); hidden on desktop and outside NIC rounds. -->
+        <div id="phone-nic-stage"></div>
+
         <!-- Input-area home base. Module code never mutates this; it's
-             driven by setInputAreaMode(). Bottom-anchoring TBD — see
-             Step 5 of Pre-Blaze Cleanup Refactor. -->
+             driven by setInputAreaMode(). -->
         <div id="sq-zone-input" class="offscreen-below">
           <div id="input-area">
             <div id="turn-input-box" class="team-red">
@@ -13086,7 +13653,142 @@ document.addEventListener('keydown', e => {
     //   • Normal gem drop rates
     //   • 3-digit numeric lobby code
     //   • Music volume left at whatever the user set
-    const TEST_MODE = false;
+    const TEST_MODE = true;
+
+    // Phone-controller mode ("Play on One Screen"). When loaded with
+    // ?phone=1, the canvas is stripped down to evergreens (#phase-indicator
+    // + #sq-zone-input) in a fluid portrait layout. Pure display-mode
+    // change — game logic is untouched, this client is just a Firestore
+    // listener with a different render. See CLAUDE.md "Phone-Controller
+    // Mode" for the full plan.
+    const IS_PHONE_VIEW = (() => {
+      try { return new URLSearchParams(window.location.search).get('phone') === '1'; }
+      catch (e) { return false; }
+    })();
+    if (IS_PHONE_VIEW) {
+      document.body.classList.add('phone-mode');
+      document.getElementById('game-root')?.classList.add('phone-mode');
+      // Silence the phone client. The hub is the audio source for "Play
+      // on One Screen" mode; phones are inputs, not speakers. soundEnabled
+      // gates every Web Audio SFX path and feeds getMusicGain (music) +
+      // applyVolumes (HTML <audio> SFX), so a single flag mutes everything.
+      // No on/off control surfaced to phone players — if we ever want
+      // optional audio per-phone, add a speaker icon to #phase-indicator.
+      soundEnabled = false;
+      applyVolumes();
+    }
+
+    // Phone-controller mode entry. Runs after Firebase init resolves so
+    // anonymous auth + Firestore writes are available. Pre-fills the code
+    // field from ?code=URL param when present.
+    function phoneInit() {
+      if (!IS_PHONE_VIEW) return;
+      const codeParam = (() => {
+        try { return new URLSearchParams(window.location.search).get('code') || ''; }
+        catch (e) { return ''; }
+      })();
+      const codeEl = document.getElementById('pp-code');
+      const nameEl = document.getElementById('pp-name');
+      if (codeEl && codeParam) codeEl.value = codeParam.toUpperCase();
+      // Focus name first if code is prefilled, else focus code.
+      setTimeout(() => { (codeParam ? nameEl : codeEl)?.focus(); }, 0);
+      const onEnter = (e) => { if (e.key === 'Enter') phoneSubmitJoin(); };
+      codeEl?.addEventListener('keydown', onEnter);
+      nameEl?.addEventListener('keydown', onEnter);
+    }
+
+    async function phoneSubmitJoin() {
+      const codeEl = document.getElementById('pp-code');
+      const nameEl = document.getElementById('pp-name');
+      const errEl = document.getElementById('pp-error');
+      const btn = document.getElementById('pp-join-btn');
+      const code = (codeEl?.value || '').trim().toUpperCase();
+      let name = (nameEl?.value || '').trim();
+      errEl.textContent = '';
+      if (!code) { errEl.textContent = 'Enter a game code'; return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Joining…';
+
+      try {
+        if (!myUid) await window._fb.signInAnonymously();
+        if (!myUid) await new Promise(r => { const i = setInterval(() => { if (myUid) { clearInterval(i); r(); } }, 50); });
+
+        gameRef = window._fb.doc('games', code);
+        const snap = await window._fb.getDoc(gameRef);
+        if (!snap.exists()) throw new Error('Game not found');
+        const data = snap.data();
+        if (data.status !== 'lobby') throw new Error('Game already in progress');
+
+        const players = data.players || {};
+        if (!name) {
+          const existing = Object.values(players).map(p => p.name);
+          let n = 1;
+          while (existing.includes(`Player ${n}`)) n++;
+          name = `Player ${n}`;
+        }
+
+        let redCount = 0, blueCount = 0;
+        for (const p of Object.values(players)) {
+          if (p.team === 0) redCount++;
+          else if (p.team === 1) blueCount++;
+        }
+        const autoTeam = redCount <= blueCount ? 0 : 1;
+        const autoCaptain = !Object.values(players).some(p => p.team === autoTeam && p.isCaptain);
+
+        await window._fb.updateDoc(gameRef, {
+          [`players.${myUid}`]: { name, team: autoTeam, isHost: false, isCaptain: autoCaptain, online: true, joinedAt: Date.now() }
+        });
+
+        gameCode = code;
+        myName = name;
+        isHost = false;
+        isMultiplayer = true;
+
+        // Swap UI: hide form stage, show lobby status.
+        document.getElementById('pp-form-stage').style.display = 'none';
+        const lobbyStage = document.getElementById('pp-lobby-stage');
+        const status = document.getElementById('pp-lobby-status');
+        const teamLabel = autoTeam === 0 ? 'RED TEAM' : 'BLUE TEAM';
+        const teamColor = autoTeam === 0 ? '#ff5555' : '#4c8cff';
+        if (status) status.innerHTML = `You're on <span style="color:${teamColor};font-weight:700">${teamLabel}</span><br><span style="color:#888;font-size:0.85rem">Waiting for host to start…</span>`;
+        if (lobbyStage) lobbyStage.style.display = 'flex';
+
+        // Subscribe to game snapshot so we transition into the game when host starts.
+        if (unsubGameSnap) unsubGameSnap();
+        unsubGameSnap = window._fb.onSnapshot(gameRef, (snap) => {
+          if (!snap.exists()) {
+            // Hub left or deleted the game — kick back to form
+            if (unsubGameSnap) { unsubGameSnap(); unsubGameSnap = null; }
+            gameRef = null; gameCode = '';
+            phoneResetToForm('Game ended by host');
+            return;
+          }
+          const d = snap.data();
+          if (d.status === 'playing') {
+            document.body.classList.add('phone-joined');
+            transitionFromLobbyToGame(d);
+            return;
+          }
+        });
+      } catch (e) {
+        errEl.textContent = e?.message || 'Failed to join';
+        btn.disabled = false;
+        btn.textContent = 'Join Game';
+      }
+    }
+
+    function phoneResetToForm(msg) {
+      document.body.classList.remove('phone-joined');
+      const ph = document.getElementById('phone-placeholder');
+      if (ph) ph.style.display = '';
+      document.getElementById('pp-lobby-stage').style.display = 'none';
+      document.getElementById('pp-form-stage').style.display = 'flex';
+      const errEl = document.getElementById('pp-error');
+      if (errEl) errEl.textContent = msg || '';
+      const btn = document.getElementById('pp-join-btn');
+      if (btn) { btn.disabled = false; btn.textContent = 'Join Game'; }
+    }
 
     // Submit-button flicker debug — logs every change to the submit button's
     // `disabled` attribute with a stack trace. TEST_MODE only. Use to find
@@ -13166,6 +13868,15 @@ document.addEventListener('keydown', e => {
     let gameRef = null;          // Firestore DocumentReference for active game
     let unsubGameSnap = null;    // onSnapshot unsubscribe function
     let isHost = false;          // true if this client created the game
+    let isHubDisplay = false;    // true on the hub in "Local Game / Same room, one screen" mode (host runs logic, occupies no player slot)
+    // Setter mirrors isHubDisplay to a body class so CSS can react. Hub
+    // mode strips the input-area down to messaging only — no input field,
+    // no dome button, no PRIZES tray — since the hub is a display, not a
+    // player. See body.hub-display rules in CSS.
+    function _setHubDisplay(v) {
+      isHubDisplay = !!v;
+      document.body.classList.toggle('hub-display', isHubDisplay);
+    }
 
     // Wait for Firebase module to load, then wire up auth listener
     function initFirebase() {
@@ -14319,7 +15030,7 @@ document.addEventListener('keydown', e => {
             }
             const _thR = document.getElementById('turn-header');
             if (_thR) { _thR.style.display = ''; _thR.innerHTML = ''; }
-            _clearTurnSubtextFit();
+            _clearTurnMessageFit();
             const _iaR = document.getElementById('input-area');
             if (_iaR) _iaR.style.background = '';
             const _piR = document.getElementById('phase-indicator');
@@ -14605,6 +15316,7 @@ document.addEventListener('keydown', e => {
       // Dismiss start screen — logo slides up, then mode-select appears
       startBgMusic();
       isMultiplayer = false;
+      _setHubDisplay(false);
       if (typeof _dismissStartScreen === 'function') _dismissStartScreen();
       // Dev mode skips mode-select — auto-select local after logo transition + fade-in
       setTimeout(() => {
@@ -14899,14 +15611,12 @@ document.addEventListener('keydown', e => {
     // Clears the turn-header fit-base + fit-scale inline styles so the
     // CSS default (2rem base, 1 scale) applies again. Use at game-boundary
     // resets where face-off's 1rem base or stale shrink-scale might linger.
-    // (Formerly _clearTurnSubtextFit — retained as alias for compatibility.)
     function _clearTurnMessageFit() {
       const th = document.getElementById('turn-header');
       if (!th) return;
       th.style.removeProperty('--fit-base');
       th.style.removeProperty('--fit-scale');
     }
-    const _clearTurnSubtextFit = _clearTurnMessageFit;
 
     function setInputAreaMode(opts) {
       const {
@@ -16126,6 +16836,65 @@ document.addEventListener('keydown', e => {
           card.classList.add("spectator-disabled");
         });
       }
+
+      // Phone-controller mode: build a stripped-down vertical stack of
+      // tappable plastic buttons in the sidebar's middle space. Only the
+      // active picker's phone shows it; non-active phones already display
+      // "Waiting on X..." in the input-area and don't need a picker UI.
+      if (IS_PHONE_VIEW) {
+        _buildPhoneRoundTypePicker(moduleKeys, amIPickingPlayer);
+      }
+    }
+
+    // Phone-only picker renderer. Reuses the same moduleKeys +
+    // _roundTypePickMultipliers the desktop picker builds from, so host
+    // sync stays unified.
+    function _buildPhoneRoundTypePicker(moduleKeys, amIPickingPlayer) {
+      const host = document.getElementById("phone-round-type-picker");
+      if (!host) return;
+      host.innerHTML = "";
+      host.classList.remove("active");
+      if (!amIPickingPlayer) return;
+      const teamSizes = isMultiplayer
+        ? [teamPlayerUids[0]?.length || 0, teamPlayerUids[1]?.length || 0]
+        : [teamPlayers[0]?.length || 1, teamPlayers[1]?.length || 1];
+      const minTeamSize = Math.min(teamSizes[0], teamSizes[1]);
+      moduleKeys.forEach((key) => {
+        const mod = ROUND_MODULES[key];
+        if (!mod) return;
+        const cc = mod.colorClass || '';
+        const disabled = minTeamSize < (mod.minPlayersPerTeam || 1);
+        const gem = getRoundMultiplierGem(_roundTypePickMultipliers[key] || 1);
+        const tierClass = gem ? ` rt-tier-${gem.tier}` : '';
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `prtp-btn ${cc}`;
+        btn.dataset.moduleKey = key;
+        if (disabled) {
+          btn.disabled = true;
+          btn.classList.add("disabled");
+        } else {
+          btn.addEventListener("click", () => {
+            // Disable all picker buttons immediately so the player can't
+            // double-tap. hideRoundTypePicker will clear the host on the
+            // round-type-selected snapshot.
+            host.querySelectorAll(".prtp-btn").forEach(b => { b.disabled = true; });
+            onRoundTypePick(key);
+          });
+        }
+        const label = document.createElement("span");
+        label.className = "prtp-label";
+        label.textContent = mod.label || key;
+        btn.appendChild(label);
+        if (gem) {
+          const mult = document.createElement("span");
+          mult.className = `prtp-mult${tierClass}`;
+          mult.textContent = gem.label;
+          btn.appendChild(mult);
+        }
+        host.appendChild(btn);
+      });
+      host.classList.add("active");
     }
 
     // Hide the round-type picker container. Called on transition out of
@@ -16135,6 +16904,13 @@ document.addEventListener('keydown', e => {
     // empty baseline from resetModuleCanvas.
     function hideRoundTypePicker() {
       cancelAnimationFrame(_rtArtRaf);
+      // Phone-mode picker tears down instantly — no per-card slide-up
+      // animation needed (single column, no choreography to mirror).
+      const phoneHost = document.getElementById("phone-round-type-picker");
+      if (phoneHost) {
+        phoneHost.classList.remove("active");
+        phoneHost.innerHTML = "";
+      }
       const pickerArea = document.getElementById("round-type-picker-container");
       if (!pickerArea) return Promise.resolve();
       const cards = pickerArea.querySelectorAll(".rt-card");
@@ -22712,7 +23488,7 @@ document.addEventListener('keydown', e => {
     // Halved from the prototype's first pass per spec (April 25 session).
     const NIC_QUESTIONS_PER_ROUND = 5;
     const NIC_QUESTION_TIME_MS    = 30000;
-    const NIC_REVEAL_HOLD_MS      = 6500;
+    const NIC_REVEAL_HOLD_MS      = 10000;
     const NIC_BETWEEN_QUESTION_MS = 600;
     const NIC_EXACT_PTS = 500;
     const NIC_SCORE_BANDS = [
@@ -22763,6 +23539,20 @@ document.addEventListener('keydown', e => {
       nicState._summaryRan = false;
       const el = document.getElementById('nic-container');
       if (el) el.classList.remove('visible');
+      // Phone-controller stage teardown: clear active state + scaffold so a
+      // subsequent feud round (or a fresh NIC round) starts clean.
+      const pnic = document.getElementById('phone-nic-stage');
+      if (pnic) {
+        pnic.classList.remove('active');
+        pnic.innerHTML = '';
+      }
+      // Restore default text keyboard on #guess (NIC's active-player branch
+      // forced numeric in phone mode).
+      const gi = document.getElementById('guess');
+      if (gi) {
+        gi.removeAttribute('inputmode');
+        gi.removeAttribute('pattern');
+      }
       // NOTE: do NOT hide #nic-summary here — handleModuleComplete fires
       // mod.reset() right after nicShowSummary completes on host, which
       // would wipe the panel mid-display. The summary is intentionally
@@ -23547,6 +24337,97 @@ document.addEventListener('keydown', e => {
         const txt = el.textContent || '';
         if (txt && txt !== '…') fitByCharCount(el, 3, txt, 1);
       });
+
+      // Phone-controller mirror: render the same data into the portrait stack.
+      if (IS_PHONE_VIEW) _phoneNicRender();
+    }
+
+    // Phone-mode NIC render. Builds the question bar + per-player rows
+    // inside #phone-nic-stage. Idempotent: scaffold built once, content
+    // patched in place. Called from nicRender (per-snapshot).
+    function _phoneNicRender() {
+      const stage = document.getElementById('phone-nic-stage');
+      if (!stage) return;
+
+      // Round-end branch: when phase reaches 'done' the hub plays the
+      // round summary. Phone canvas wipes to a quiet "look at the screen"
+      // message so players know nothing on phone needs their attention
+      // until Ready Up appears in the input-area.
+      if (nicState.phase === 'done') {
+        stage.innerHTML =
+            `<div class="pnic-roundend">`
+          +   `<div class="pnic-roundend-title">Round Complete</div>`
+          +   `<div class="pnic-roundend-body">A summary of the round is on the screen.</div>`
+          + `</div>`;
+        stage.classList.add('active');
+        return;
+      }
+
+      // Build scaffold once per round; per-question updates patch in place.
+      if (!stage.querySelector('.pnic-qbar')) {
+        stage.innerHTML =
+            `<div class="pnic-qbar">`
+          +   `<div class="pnic-qbar-top">`
+          +     `<div class="pnic-q-counter">QUESTION <b id="pnic-q-num">—</b> OF <b id="pnic-q-total">${NIC_QUESTIONS_PER_ROUND}</b></div>`
+          +     `<div class="pnic-timer" id="pnic-timer-text">30</div>`
+          +   `</div>`
+          +   `<div class="pnic-q-text" id="pnic-q-text">—</div>`
+          + `</div>`
+          + `<div class="pnic-rows" id="pnic-rows"></div>`;
+      }
+      stage.classList.add('active');
+
+      const q = nicState.questions[nicState.qIdx];
+      if (q) {
+        document.getElementById('pnic-q-num').textContent = String(nicState.qIdx + 1);
+        document.getElementById('pnic-q-text').textContent = q.question || '';
+      }
+
+      const showScores = nicState.phase === 'reveal' || nicState.phase === 'between';
+      const myEffectiveUid = isMultiplayer ? myUid : (nicState.roster[nicState._localActiveIdx]?.uid);
+      const lockByUid = new Map(nicState.locks.map(l => [l.uid, l]));
+      const rowsHost = document.getElementById('pnic-rows');
+      if (!rowsHost) return;
+
+      rowsHost.innerHTML = nicState.roster.map(p => {
+        const lock = lockByUid.get(p.uid);
+        const teamCls = p.team === 0 ? 'red' : 'blue';
+        const isActive = !lock && p.uid === myEffectiveUid && nicState.phase === 'guess';
+
+        let mainHtml;
+        let sideHtml = '';
+        if (lock) {
+          mainHtml = `<span class="pnic-guess-main">${Number(lock.guess).toLocaleString()}</span>`;
+          if (showScores) {
+            const ptsClass = lock.finalPts > 0 ? 'pos' : lock.finalPts < 0 ? 'neg' : 'zero';
+            const ptsTxt = (lock.finalPts >= 0 ? '+' : '') + (lock.finalPts ?? 0).toLocaleString() + ' pts';
+            const pctTxt = lock.label || '';
+            sideHtml = `<div class="pnic-guess-side">`
+              + (pctTxt ? `<span class="pnic-guess-pct">${pctTxt}</span>` : '')
+              + `<span class="pnic-guess-pts ${ptsClass}">${ptsTxt}</span>`
+              + `</div>`;
+          } else if (p.uid === myEffectiveUid) {
+            // Own row before reveal: surface order/mult so the locked
+            // player knows where they ranked without looking up to hub.
+            const multVal = lock.mult ?? nicSpeedMult(lock.orderIdx);
+            const multTxt = multVal === 1 ? '1×' : multVal + '×';
+            const orderTxt = nicOrdinal(lock.orderIdx + 1);
+            sideHtml = `<div class="pnic-guess-side">`
+              + `<span class="pnic-guess-order">${orderTxt} • ${multTxt}</span>`
+              + `</div>`;
+          }
+        } else {
+          mainHtml = `<span class="pnic-guess-main waiting">—</span>`;
+          if (showScores) {
+            sideHtml = `<div class="pnic-guess-side"><span class="pnic-guess-pts zero">NO GUESS</span></div>`;
+          }
+        }
+
+        return `<div class="pnic-row ${teamCls}${isActive ? ' active' : ''}">`
+          + `<span class="pnic-row-name">${escapeHtml(p.name)}</span>`
+          + `<div class="pnic-row-guess">${mainHtml}${sideHtml}</div>`
+          + `</div>`;
+      }).join('');
     }
 
     function nicOrdinal(n) {
@@ -23560,11 +24441,19 @@ document.addEventListener('keydown', e => {
       const tick = () => {
         if (nicState.phase !== 'guess') return;
         const left = Math.max(0, nicState.timerEndsAt - Date.now());
-        const text = document.getElementById('nic-timer-text');
-        if (!text) return;
-        text.textContent = String(Math.ceil(left / 1000));
+        const secs = String(Math.ceil(left / 1000));
         const warn = left <= 5000;
-        text.classList.toggle('warning', warn);
+        const hub = document.getElementById('nic-timer-text');
+        if (hub) {
+          hub.textContent = secs;
+          hub.classList.toggle('warning', warn);
+        }
+        const phone = document.getElementById('pnic-timer-text');
+        if (phone) {
+          phone.textContent = secs;
+          phone.classList.toggle('warning', warn);
+        }
+        if (!hub && !phone) return;
       };
       tick();
       nicState._displayTimerHandle = setInterval(tick, 200);
@@ -23621,6 +24510,12 @@ document.addEventListener('keydown', e => {
       if (guessInput) {
         guessInput.disabled = false;
         guessInput.value = '';
+        // Phone mode: surface the native numeric keyboard. Cleared in
+        // resetNicState so feud rounds get a normal text keyboard back.
+        if (IS_PHONE_VIEW) {
+          guessInput.setAttribute('inputmode', 'numeric');
+          guessInput.setAttribute('pattern', '[0-9]*');
+        }
         try { guessInput.focus(); } catch(_) {}
       }
       if (submitBtn) submitBtn.disabled = false;
@@ -23931,7 +24826,7 @@ document.addEventListener('keydown', e => {
       if (turnHeader) { turnHeader.style.display = ''; turnHeader.innerHTML = ''; }
       const turnSubtext = document.getElementById('turn-subtext');
       if (turnSubtext) turnSubtext.textContent = '';
-      _clearTurnSubtextFit();
+      _clearTurnMessageFit();
       // Blob background → neutral black
       document.getElementById('game-root')?.style.setProperty('--bg-blob-base', '#111');
       // Question box → neutral
@@ -26717,7 +27612,7 @@ document.addEventListener('keydown', e => {
       }
       const th = document.getElementById('turn-header');
       if (th) { th.style.display = ''; th.innerHTML = ''; }
-      _clearTurnSubtextFit();
+      _clearTurnMessageFit();
       // Restore input-area and phase-indicator inline styles that face-off may have set
       const iaReset = document.getElementById('input-area');
       if (iaReset) iaReset.style.background = '';
@@ -26943,6 +27838,7 @@ document.addEventListener('keydown', e => {
       gameCode = '';
       isHost = false;
       isMultiplayer = false;
+      _setHubDisplay(false);
 
       // Show mode select — hide setup/ribbon that resetGame() showed
       document.getElementById('game').style.display = 'none';
@@ -27079,7 +27975,7 @@ document.addEventListener('keydown', e => {
       }
       const thRestore = document.getElementById('turn-header');
       if (thRestore) { thRestore.style.display = ''; thRestore.innerHTML = ''; }
-      _clearTurnSubtextFit();
+      _clearTurnMessageFit();
       resetSetupSteps();
       clearInterval(fm.timerInterval);
       document.getElementById("setup").style.display="block";
@@ -27691,12 +28587,16 @@ document.addEventListener('keydown', e => {
     });
 
     // ── Canvas scaling ────────────────────────────────────────────
+    // Skipped in phone-controller mode — the fluid portrait layout
+    // (see body.phone-mode CSS) doesn't want a fixed 1280×720 transform.
     (function scaleCanvas() {
+      if (IS_PHONE_VIEW) return;
       const root = document.getElementById('game-root');
       const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
       root.style.transform = `scale(${scale})`;
     })();
     window.addEventListener('resize', function() {
+      if (IS_PHONE_VIEW) return;
       const root = document.getElementById('game-root');
       const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
       root.style.transform = `scale(${scale})`;
@@ -27801,6 +28701,7 @@ document.addEventListener('keydown', e => {
 
     function selectLocalMode() {
       isMultiplayer = false;
+      _setHubDisplay(false);
       const modeSelect = document.getElementById('mode-select');
       const setup = document.getElementById('setup');
       playTap(1);
@@ -27817,6 +28718,67 @@ document.addEventListener('keydown', e => {
         requestAnimationFrame(() => requestAnimationFrame(slideIn));
         setTimeout(slideIn, 50); // fallback for hidden tabs
       });
+    }
+
+    // "Local Game / Same room, one screen" — phone-controller hub mode.
+    // Hub uses the same Firestore transport as Online, but it doesn't occupy
+    // a player slot; players join from their phones via QR/code.
+    function selectHubMode() {
+      isMultiplayer = true;
+      _setHubDisplay(true);
+      const modeSelect = document.getElementById('mode-select');
+      const btns = modeSelect.querySelector('.mode-buttons');
+      const backBtn = document.getElementById('mode-back-btn');
+      playTap(1);
+      btns.style.transition = 'opacity 0.25s ease';
+      btns.style.opacity = '0';
+      setTimeout(() => {
+        modeSelect.querySelector('h1').textContent = 'Local Game';
+        btns.innerHTML = `
+          <div class="join-form">
+            <h2>This screen is the hub.</h2>
+            <p style="color: #ccc; font-size: 0.95rem; line-height: 1.4; margin: 0 0 16px 0;">
+              Players will join from their phones using a code or QR.
+              The hub runs the game but doesn't play.
+            </p>
+            <div class="join-form-actions">
+              <button class="join-btn" onclick="submitCreateHubGame()">Start Hub</button>
+            </div>
+          </div>
+        `;
+        if (backBtn) backBtn.textContent = '◀ Back';
+        if (backBtn) backBtn.setAttribute('onclick', 'backToModeSelect()');
+        requestAnimationFrame(() => { btns.style.opacity = '1'; });
+      }, 250);
+    }
+
+    async function submitCreateHubGame() {
+      // Sign in anonymously (hub still needs an auth UID for hostUid + writes)
+      if (!myUid) await window._fb.signInAnonymously();
+      if (!myUid) await new Promise(r => { const i = setInterval(() => { if (myUid) { clearInterval(i); r(); } }, 50); });
+
+      gameCode = generateGameCode();
+      isHost = true;
+      _setHubDisplay(true);
+      myName = null;  // hub has no display name — it is not a player
+
+      if (TEST_MODE && questions.length > 0) computeDevModeQuestions();
+
+      gameRef = window._fb.doc('games', gameCode);
+      await window._fb.setDoc(gameRef, {
+        hostUid: myUid,
+        isHubDisplay: true,
+        status: 'lobby',
+        createdAt: window._fb.serverTimestamp(),
+        maxRounds: 2,
+        gameSpeed: gameSpeedSetting || 1,
+        teamNames: ['Red Team', 'Blue Team'],
+        teamScores: [0, 0],
+        players: {}  // hub does not occupy a slot
+      });
+
+      if (window._dismissStartScreenFinal) _dismissStartScreenFinal();
+      fadeOutScreen(document.getElementById('mode-select'), () => showLobby());
     }
 
     function selectOnlineMode() {
@@ -27978,7 +28940,7 @@ document.addEventListener('keydown', e => {
       setTimeout(() => {
         modeSelect.querySelector('h1').textContent = 'Choose Game Mode';
         btns.innerHTML = `
-          <div class="mode-btn" onclick="selectLocalMode()">
+          <div class="mode-btn" onclick="selectHubMode()">
             <div class="mode-btn-title">Local Game</div>
             <div class="mode-btn-desc">Same room, one screen</div>
           </div>
@@ -27986,10 +28948,15 @@ document.addEventListener('keydown', e => {
             <div class="mode-btn-title">Online Game</div>
             <div class="mode-btn-desc">Friends join from their devices</div>
           </div>
+          <div class="mode-btn" onclick="selectLocalMode()">
+            <div class="mode-btn-title">Offline Mode</div>
+            <div class="mode-btn-desc">Single device, no network</div>
+          </div>
         `;
         if (backBtn) backBtn.setAttribute('onclick', 'backToStartScreen()');
         requestAnimationFrame(() => { btns.style.opacity = '1'; });
         isMultiplayer = false;
+        _setHubDisplay(false);
       }, 250);
     }
 
@@ -28084,6 +29051,7 @@ document.addEventListener('keydown', e => {
     function renderLobby() {
       // Initial render — subsequent updates come from onSnapshot → renderLobbyFromData
       const lobby = document.getElementById('lobby');
+      const phoneJoinUrl = `${location.origin}${location.pathname}?phone=1&code=${gameCode}`;
       lobby.innerHTML = `
         <h1>Game Lobby</h1>
         <div class="lobby-code-row">
@@ -28091,21 +29059,26 @@ document.addEventListener('keydown', e => {
           <span class="lobby-code-copy-label" onclick="copyGameCode()">Click to copy</span>
         </div>
         <div class="lobby-code-hint" id="lobby-code-hint">Share this code with your friends</div>
+        ${isHubDisplay ? `
+        <div class="lobby-phone-url-row" onclick="copyPhoneJoinUrl()" title="Click to copy">
+          <div class="lobby-phone-url-label">Players: open this URL on your phone</div>
+          <div class="lobby-phone-url" id="lobby-phone-url">${phoneJoinUrl}</div>
+        </div>` : ''}
         <div class="lobby-teams" id="lobby-teams">
           <div class="lobby-team team-red">
             <div class="lobby-team-header" id="lobby-team-header-0" data-team="0"><span class="lobby-team-name-text">Red Team</span><span class="lobby-team-edit-icon" id="lobby-team-edit-0">&#9998;</span></div>
             <ul class="lobby-player-list" id="lobby-red-players"></ul>
-            <button class="lobby-join-team-btn red-join" onclick="joinTeam(0)">Join Red</button>
+            ${isHubDisplay ? '' : '<button class="lobby-join-team-btn red-join" onclick="joinTeam(0)">Join Red</button>'}
           </div>
           <div class="lobby-team team-unassigned">
             <div class="lobby-team-header">Unassigned</div>
             <ul class="lobby-player-list" id="lobby-unassigned-players"></ul>
-            <button class="lobby-join-team-btn unassigned-join" onclick="joinTeam(null)">Undecided</button>
+            ${isHubDisplay ? '' : '<button class="lobby-join-team-btn unassigned-join" onclick="joinTeam(null)">Undecided</button>'}
           </div>
           <div class="lobby-team team-blue">
             <div class="lobby-team-header" id="lobby-team-header-1" data-team="1"><span class="lobby-team-name-text">Blue Team</span><span class="lobby-team-edit-icon" id="lobby-team-edit-1">&#9998;</span></div>
             <ul class="lobby-player-list" id="lobby-blue-players"></ul>
-            <button class="lobby-join-team-btn blue-join" onclick="joinTeam(1)">Join Blue</button>
+            ${isHubDisplay ? '' : '<button class="lobby-join-team-btn blue-join" onclick="joinTeam(1)">Join Blue</button>'}
           </div>
         </div>
         <div class="lobby-settings" id="lobby-settings"></div>
@@ -28357,6 +29330,17 @@ document.addEventListener('keydown', e => {
         updates[`players.${oldCapEntry[0]}.isCaptain`] = false;
       }
       await window._fb.updateDoc(gameRef, updates);
+    }
+
+    function copyPhoneJoinUrl() {
+      const el = document.getElementById('lobby-phone-url');
+      if (!el) return;
+      const url = el.textContent;
+      navigator.clipboard.writeText(url).then(() => {
+        const orig = el.textContent;
+        el.textContent = 'Copied!';
+        setTimeout(() => { el.textContent = orig; }, 1500);
+      });
     }
 
     function copyGameCode() {
@@ -28734,6 +29718,9 @@ document.addEventListener('keydown', e => {
     document.fonts.ready.then(() => {
       document.getElementById('game-root').style.opacity = '1';
     });
+
+    // ── Phone-controller init ───────────────────────────────
+    phoneInit();
 
     // ── App-feel suppressions (text selection + focus outlines + right-click
     // menu) — only outside TEST_MODE. During development we want native

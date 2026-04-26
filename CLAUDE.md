@@ -131,14 +131,13 @@ With the architecture clarified, pass through each module's entry/exit to remove
 
 Net LOC goes down; N×N coupling between modules goes away.
 
-### 6. Screen-by-screen polish pass
+### 6. Screen-by-screen polish pass — DONE but always ongoing
 
-General UI polish across the game, walked through in play order rather than by concern. Not an isolated animation pass — no single animation is broken enough to need its own dedicated pass. Instead: go screen by screen (start screen → setup → lobby → category select → gameplay → steal → round result → round type picker → scribble flow → faceoff → victory → play-again) and tweak whatever needs it at that screen — layout, copy, spacing, colors, animation timing, transitions — all together in one pass per screen.
+✅ **Effectively complete (2026-04-25).** The intent of Step 6 was "make sure we don't leave a huge mess following the refactors in Steps 2–5." That's been satisfied via continuous polish work across recent sessions — picker logos, module cinematics, entry/exit animations, summary panels, the Round Summary Framework unification, evergreen-region styling, etc. The original screen-by-screen list (start screen → setup → lobby → category select → gameplay → steal → round result → round type picker → scribble flow → faceoff → victory → play-again) was largely walked organically, and the post-refactor animation concerns (content-tv tv-on, typewriter, cat-label marquee, sq-zone-input slide-up, board-wrapper slide-in, content-tv/board-wrapper sizing inside `#module-canvas`) have all been addressed in passing.
 
-Animation-specific things to keep an eye out for during this pass (carried over from what was going to be Step 6):
+**Not a pre-Blaze blocker.** Step 6 was grouped into the refactor list by adjacency, not necessity. Polish doesn't make a Cloud Functions migration easier — Blaze moves game logic from the host's browser to a server function; the visual layer is untouched.
 
-- Entrance/exit animations that assume specific DOM adjacency or sidebar geometry after the Steps 2–4 reparenting: content-tv's tv-on, the typewriter, cat-label marquee, sq-zone-input slide-up, board-wrapper slide-in from above. Keyframe origins and clipping parents may need small adjustments.
-- `#content-tv` and `#board-wrapper` sizing inside the new `#module-canvas` (follow-up from Step 2+3) — dimensions were tuned for the sidebar and may need retuning for the main zone.
+**Polish remains continuous.** Rather than batching it into a megastep, polish items get fixed inline as they get in the way of something specific. Standing items worth tracking individually: scribble summary inconsistencies (header margins, totals row spread, round-end wording mismatch — see "Scribble summary — known polish-pass items"), and any new module's summary or screen rhythm as they ship. These get addressed in their own targeted passes when they surface, not in a batched Step 6 pass.
 
 ### 7. Phase reconcile robustness (spotty-network recovery)
 
@@ -188,12 +187,135 @@ case 'scribble-session-end':
   - "Chance to steal" header renders during steal phase via `showHeader: !!stealPhase` path (now moot since turn-header is always visible, but the call remains).
   - `#player-inventory` now shows a "PRIZES" label (0.8rem futura-100, top-center) as a placeholder for the items system.
   - `#sq-zone-input` is intentionally **retained**, not removed. It's reserved as a placeholder for future content above the input-area — the margin-top-auto anchor already positions it correctly whether empty or populated.
-- **Step 6:** ⏭ Next. Screen-by-screen polish pass — see Step 6 body above.
-- **Step 7:** medium. Independent of 4–6 — can be done any time after steps 2+3 landed. Scribble handlers are the highest-value target. No rush — safety precaution rather than blocker.
+  - **Audit confirmation (2026-04-25):** all 5 original Step 5 spec items verified closed. Items 1–4 (scribble's `sq-zone-content` visibility juggling, `showInputArea`'s defensive handling, faceoff's hide-matrix, `setInputAreaMode` gymnastics) were eliminated structurally by Steps 2–4 — `#sq-zone-content` was deleted entirely with the module-canvas migration, and the fragility those defensive patterns guarded against no longer exists. Item 5 (single-writer contract for the big primary line) was settled by the role-swap in this same Step 5 work: the bug-prone element was renamed `#turn-header` and the new `#turn-subtext` has no `--fit-base`/`--fit-scale` machinery at all (fixed `font-size: 0.95rem`), making font-drift structurally impossible. All 6 `#turn-header` writers comply with the contract — substantive writes go through `setInputAreaMode` (which fits internally) or call `fitByCharCount` immediately; clears use `_clearTurnMessageFit()` to wipe both `--fit-base` and `--fit-scale`. The remaining `data-ia-mode` machinery in `updateRoleUI` / `updateTurn` is solving a separate (legitimate) module-orchestration boundary problem and would only retire if the legacy feud flow migrates from `turn-body.innerHTML` swaps to `setInputAreaMode` (a future cleanup, not a Step 5 obligation). Stale "Bottom-anchoring TBD" HTML comment dropped; `_clearTurnSubtextFit` alias retired in favor of `_clearTurnMessageFit` directly.
+- **Step 6:** ✅ Done but always ongoing (2026-04-25). Effectively satisfied via continuous polish across recent sessions; was never a true pre-Blaze blocker. See Step 6 body for details. Polish items now get tracked individually rather than batched.
+- **Step 7:** medium. Independent of 4–6 — can be done any time after steps 2+3 landed. Scribble handlers are the highest-value target. No rush — safety precaution rather than blocker. **Now the only remaining pre-Blaze item, and even it is precautionary rather than required.**
 
 ### Guiding principle — phase-indicator as reference design
 
 `#phase-indicator` is the model for how evergreen regions should be built. Its container is persistent; all possible text spans exist in the DOM simultaneously; a single attribute (`data-phase`) selects which is visible; one function (`setPhase`) mutates that attribute. No accumulation, no defensive resets, no cross-module leakage. After this refactor, every evergreen region should follow that same pattern, and every module-scoped region should live inside `#module-canvas` where it can be freely torn down.
+
+---
+
+## Phone-Controller Mode — "Play on One Screen"
+
+**Status:** Phase 1 framework landed (2026-04-26). Active branch: `main-phonecontrol`. Work continues across multiple sessions. This section is the working plan we pick up across sessions.
+
+**User-facing name:** "Play on One Screen."
+**Internal name:** Phone-controller mode / hub-display mode.
+
+### Premise
+
+Everyone gathers around a single shared screen — a TV, laptop in dock, or big monitor (the **hub**). The hub runs the game and shows everything publicly visible. Each player connects their own phone via QR code; phones provide inputs and render any role-aware content the hub can't show without spoiling the game (clue values, drawing canvases, private word lists, the word being drawn, etc.).
+
+Why now: the game has evolved into a team-based format with per-player role-aware content baked into multiple modules. Same-device offline play has become an increasingly clunky retrofit; some modules don't really work that way at all (Secret Scribble drawer can't draw on a screen everyone's watching; Common Thread clue giver can't see the board values without the room seeing them). Phone-controller mode reopens offline play to every feature in the game.
+
+### Architecture summary
+
+Most of this is already built. Phone-controller mode is the existing Firebase multiplayer architecture with one new role flag layered on:
+
+- **`isHost`** (existing) — owns game logic. Today, fused with player 1.
+- **`myUid`** (existing) — which player slot a client occupies.
+- **`isDisplay`** (new) — true on the hub when it's pure-display (no player slot of its own). Hub still runs game logic; just doesn't have an input area or get added to a team roster.
+
+Phone view is a URL-param mode (`?phone=1` or similar). Strips the 1280×720 canvas down to evergreens + per-player overlays in portrait. Same codebase, no separate build.
+
+### Network requirements
+
+**Internet access is required on every device.** Firebase/Firestore is the transport — same as current online multiplayer. Devices don't need to be on the same wifi network; they just need to all reach Firestore. The hub could be on cellular while phones are on home wifi and it would still work.
+
+If "same wifi, no internet" play ever becomes a requirement, that's a separate architectural project (WebRTC peer-to-peer with a local signaling layer). Not in scope here.
+
+### Vocabulary
+
+- **Hub** — the shared screen everyone's looking at. Renders all shared game content. Runs game logic.
+- **Phone** — an individual player's device. Renders only their personal input controls + role-aware content.
+- **Shared content** — anything visible to all players (scoreboard, gameplay area, board reveals, etc.). Lives on the hub. Never replicated to phones.
+- **Per-player content** — anything visible only to a specific player (their input area, their team's clue values, their drawing canvas). Lives on phones. Never on the hub.
+
+### UX philosophy — Jackbox
+
+Phones are minimal. Just what the player needs to be inputting, plus any role-aware content the hub can't show. The hub's evergreen scoreboard + phase indicator handle public status info; phones don't duplicate it.
+
+When a player isn't actively inputting, their phone shows a simple status line ("Player X is selecting" / "Player X is up") — just enough to know whose turn it is. No mini-scoreboards on phones, no live event feeds, no canvas reproductions. Eyes go to the hub; thumbs stay on the phone.
+
+### Decisions made (planning session, 2026-04-25)
+
+- **Mode select:** "Play on One Screen" ships as a third option alongside Local and Online. Likely replaces Local entirely once it proves out — the current local-mode retrofit is clunky for several modules. Local stays available during the transition as a fallback. **Naming update (2026-04-26):** the user-facing labels are now **Local Game** ("Same room, one screen" — phone-controller hub mode), **Online Game** (existing remote multiplayer), and **Offline Mode** (the previously-default "Local Game" same-device path, kept alive but renamed to clear the way for hub mode to claim the prime "Local Game" branding). Mode-select renders all three buttons in that order; both the static HTML and the `backToModeSelect` reset path stay in sync.
+- **Lobby (v1):** All lobby functions stay on the hub for the first pass. Player movement, team assignment, captain assignment, kick player, settings — all driven by the hub's existing UI. Phones in the lobby just show "You're in! Team [X]." Captain controls / privileged actions can migrate to phones later if it becomes a pain point; not currently a priority.
+- **Category select / round-type picker:** Hub renders the existing visual UI (animated pills, gem reveals, etc.). Active player's phone shows a tappable mobile-friendly list of the same options. Other phones show "Player X is selecting the next round."
+- **Phone status info:** Per the Jackbox philosophy, no mini-scoreboard or duplicated public state on phones. Hub's evergreen scoreboard is the single source of public status.
+
+### Per-screen / per-module plans — TO BE DETAILED
+
+The full per-screen and per-module layout decisions are deferred to the next planning session. Rough framing already established:
+
+- **Hub side, per screen:** mostly unchanged from today's MP non-host view, minus the input-area home base (which moves entirely to phones).
+- **Phone side, per screen:** input-area equivalent + role-aware overlays per module.
+
+Modules with non-trivial role-aware content needing dedicated design:
+- **Common Thread** — card backs (team values + penalty values) visible only to the clue giver's phone. Hub shows card fronts only. Open question: how do guessers tap cards to flip them — each guesser gets a tappable grid on phone (cramped on a 16-card layout), or guessers call out picks verbally and the captain/designated player taps on their phone (cleaner, more game-show feel — leans this way).
+- **Secret Scribble** — drawing canvas + the word being drawn on drawer's phone only. Hub shows both team canvases (with opponent canvas tile-grid reveal). Drawer's phone canvas can be larger and more usable than the postage-stamp canvas they get on a shared display today.
+- **Grid Lock** — private word list per player on each phone. Hub shows shared 5×5 grid + lock indicator + timer only. This module was effectively designed with mobile-control in mind.
+- **Number Is Correct** — number entry on phone, leveraging native iOS/Android numeric keyboards via `inputmode="numeric"`. Hub shows the LED tile grid with player lock states + revealed scores.
+- **Face-off** — battle participants get their own input on phone. Open question: do they see remaining-tile count or just an input box? Probably need at least a count so they know how much is left to grab.
+
+Modules that are mostly straightforward:
+- **High Five / Poll Position** — input box + question text on phone (so player can reference without looking up).
+- **Round-type picker / category select** — tappable list on phone.
+- **Steal phase** — input box on phone for stealing player; "Other team is stealing..." status for everyone else.
+
+### Implementation phases
+
+Decomposes into roughly four chunks, in dependency order:
+
+1. **Phone view as a URL-param mode.** ✅ Framework landed (2026-04-26). `?phone=1` URL flag detected at script load via `IS_PHONE_VIEW` constant; `phone-mode` class applied to `<body>` and `#game-root`. CSS rules under `body.phone-mode` strip the canvas to a fluid portrait layout: every direct child of `#game-root` hidden except `#game`, which navigates to `#zone-board → #sidebar-zone → #phase-indicator + #sq-zone-input`. `#sq-zone-content` (content-tv) and `#module-canvas` hidden inside the sidebar/main zones. The canvas-scaling resize handler (`scaleCanvas` IIFE + window resize listener) early-returns on `IS_PHONE_VIEW` so it doesn't fight the `transform: none !important` reset. `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">` added to `<head>` (no-op on desktop, required for portrait phone rendering). New `#phone-placeholder` element (sibling of `#game-root`, hidden by default, visible only under `body.phone-mode`) shows "PLAY ON ONE SCREEN / Phone Controller / Waiting for session…" on a fresh page load — phase 2 will swap this for the join-code UI. **Verified:** desktop layout untouched, transform scaling intact, no console errors; phone view at 375×812 renders the placeholder; manually showing `#game` confirmed the strip-down exposes only phase-indicator + input-area. Files touched: `feud.html` (CSS block + URL detection + class application + viewport meta + placeholder DOM + canvas-scaling guards). No game logic touched.
+
+2. **Hub-display-only mode + phone-side join.** ✅ Entry point + end-to-end join landed (2026-04-26). New global `isHubDisplay` flag (cleared everywhere `isMultiplayer` resets). Mode select gained a third button — **Local Game / "Same room, one screen"** — which routes through `selectHubMode()` → `submitCreateHubGame()`. The hub creates a Firestore game with `isHubDisplay: true` on the doc and an empty `players: {}` map (hub occupies no slot, runs game logic). `renderLobby()` conditionally hides the Join Red / Undecided / Join Blue buttons when `isHubDisplay`, and renders an amber-bordered "Players: open this URL on your phone" panel showing `${origin}${pathname}?phone=1&code=${gameCode}` (click-to-copy via `copyPhoneJoinUrl()`). Captain auto-assignment to first joiner per team works without changes since the hub is absent from `players`. Phone-side: `#phone-placeholder` was rebuilt as a real join form (game code prefilled from `?code=` URL param, name field, Join Game button styled as an amber dome-button). `phoneInit()` runs at script load to wire focus + Enter handlers; `phoneSubmitJoin()` mirrors the desktop `submitJoinGame` flow (anonymous auth → Firestore `updateDoc` of `players.${myUid}` with auto-team + auto-captain) then swaps to a "You're on RED/BLUE TEAM — Waiting for host to start…" lobby status. Phone subscribes to the game snapshot; on `status === 'playing'` it adds `body.phone-joined` (hides the placeholder via CSS) and calls `transitionFromLobbyToGame(data)` so the existing online-client flow takes over. `phoneResetToForm()` covers the hub-deletes-game cleanup path. **Verified end-to-end** with 4 emulated mobile players joining a hub game; phase indicator + input area render correctly in portrait. **Evergreen polish pass shipped same session:** `body.phone-mode #sidebar-zone { padding: 0 }` (was `0 8px 0 0` on desktop, causing an 8px sliver on the right of both phase indicator and input area at 430-wide iPhone 14 Pro Max emulation); `body.phone-mode #input-area` drops the desktop `min/max-height: 350px` so the input-area sizes to its content + uses `padding-bottom: max(5px, env(safe-area-inset-bottom))` for iOS home-indicator clearance; `#player-inventory` (PRIZES placeholder) hidden in phone mode; `#turn-body` padding-bottom trimmed to 14px. The middle gap between phase indicator and input area is intentionally preserved — that's where module overlays will mount in phase 3. **What's still deferred to a follow-up:** hub-aware game-start guards in `lobbyStartGame()` / `transitionFromLobbyToGame` (today they assume host is in `players` / `teamPlayerUids` — empty-host appears to work through lobby + game-start, but no module has actually been played yet on hub since per-module phone overlays don't exist); in-game render suppression on the hub itself (it currently renders the desktop UI even though the hub isn't a player); team-arrow / captain-badge edge cases when host UID is absent. **Phone view at game-start** correctly strips to phase-indicator + input-area but the middle is a blank gray gap — that's expected, the round-type picker / module overlays are phase 3 work.
+
+3. **Per-module phone overlays.** First pass landed (2026-04-26) — round-type picker + NIC. Each module gets a phone-mode rendering of its role-aware content. Bulk of the work, but modular — ship one module at a time. Suggested order, simplest first: NIC → Grid Lock → ranked questions (H5 / Poll Position) → Face-off → Secret Scribble → Common Thread. **Next session target:** Grid Lock or Secret Scribble (both use real touch interactions on phone — drawing canvas / tile tapping — which is a meaningfully different design exercise from NIC's number entry).
+
+4. **QR code + URL auto-join.** Trivial once 1+2 land. QR library on the lobby screen renders the join URL. ~half session.
+
+**Total estimated effort:** ~10–15 sessions of focused work across multiple branches if useful (e.g. one branch per chunk).
+
+### What landed (2026-04-26 — phase 3 first pass)
+
+**Round-type picker on phone.** New `#phone-round-type-picker` div between `#phase-indicator` and `#sq-zone-input` in `#sidebar-zone`, populated by `_buildPhoneRoundTypePicker(moduleKeys, amIPickingPlayer)` from inside `showRoundTypePicker`. Three full-width plastic buttons stacked vertically (`.prtp-btn`, dome-button recipe with `--dome-color: var(--mod-color)`), white bold futura label, multiplier circle in top-right corner using `var(--rt-gem-color)` for fill (no gem PNG on phone — the colored circle alone carries the rarity signal). Hidden on desktop and on non-active-picker phones; non-active phones see "Waiting on X..." in the existing input-area instead. `hideRoundTypePicker` clears the phone host with `innerHTML = ""` + class removal — no per-card slide-up choreography needed. Module color identity is consumed via the existing `.mod-*` classes (`mod-highfive`, `mod-gridlock`, etc.) which set `--mod-color`; gem tier identity via `.rt-tier-*` which sets `--rt-gem-color`. No host sync changes — the same `roundTypePicks` + `roundTypeMultipliers` snapshot drives both desktop and phone renders.
+
+**NIC stage on phone.** New `#phone-nic-stage` div, populated by `_phoneNicRender()` called at the tail of `nicRender()`. Layout: compact `.pnic-qbar` at top (Q-counter + timer on left/right inline, question text in a `#111` data field below), then `.pnic-rows` flex-stretch column with one `.pnic-row` per roster player (team-colored dazzle-unicase nametag + LED-amber Bitcount guess slot). Reveal phase populates a `.pnic-guess-side` cell to the right of the guess number with pct band ("WITHIN 10%", "EXACT!", "OVER 75%") + signed pts (green/red/zero). Locked-but-not-revealed: own row shows order/mult ("1ST • 2×") in the side cell so the player knows where they ranked without looking up; other locked rows just show the number. Display timer is wired into `nicStartDisplayTimer`'s tick — same wall-clock-bound interval ticks both `#nic-timer-text` (hub) and `#pnic-timer-text` (phone). Active-player branch of `nicUpdateInputArea` sets `inputmode="numeric" pattern="[0-9]*"` on `#guess` so iOS/Android surface the native number keyboard; `resetNicState` strips both attributes so subsequent feud rounds get a normal text keyboard back.
+
+**Round-end clear-down on phone.** When `nicState.phase === 'done'` (the host is playing the round summary), `_phoneNicRender` short-circuits the question-bar/rows scaffold and renders a quiet centered `.pnic-roundend` message: gold "ROUND COMPLETE" title + grey "A summary of the round is on the screen." body. Pattern: when the action moves to the hub, the phone canvas wipes clean so players know nothing on phone needs their attention until Ready Up appears in the input-area. **This is intended as a pattern for all future modules**, not just NIC — the same shape applies whenever the hub plays a round summary. We can extract a shared helper (`_buildPhoneRoundEndMsg(moduleLabel)` or similar) when the second module needs it.
+
+**NIC pacing tweak.** `NIC_REVEAL_HOLD_MS` bumped 6500ms → 10000ms. The phone-controller mode benefits from a longer reveal hold so players can look up at the hub, take in the row of guesses + scores, and reorient before the next question lands. Per-module timing constants are the canonical place for this kind of tuning — each module's pacing constants live at the top of its section, no cross-module coupling.
+
+**Phone audio mute.** When `IS_PHONE_VIEW` is true, the script-load init block sets `soundEnabled = false` and calls `applyVolumes()`. `soundEnabled` is the single gate consulted by every Web Audio SFX path (`playTick`, `playKeystroke`, `playChime`, etc.) and feeds `getMusicGain()` (music) + `applyVolumes()` (HTML `<audio>` SFX), so one flag silences everything. The phone has no UI to re-enable audio — by design. The hub is the speaker for "Play on One Screen" mode; phones are inputs. If we ever want optional per-phone audio (the doorbell ring on a buzz-in, e.g.), the natural mount point is a small speaker icon in `#phase-indicator`'s top-right corner that flips `soundEnabled` and re-runs `applyVolumes()`.
+
+**Touch-target bumps.** `#guess` input field on phone padded `14px` + `font-size: 1.1rem` ≈ 57px tall (was ~34px), comfortably above iOS 44pt / Android 48dp minimums. Active-player NIC row gets a `.active` class but no orange ring (a previous experiment) — the team-colored nametag is sufficient self-identification; an extra ring confused viewers into thinking it was the tap target.
+
+### Hub-Display Messaging Mode (evergreen)
+
+Separate from phone view: when the hub is in "Local Game / Same room, one screen" mode (`isHubDisplay === true`), the hub's input-area is a pure messaging slot — no input field, no dome button, no PRIZES tray. Justification: the hub doesn't occupy a player slot, so it has nothing to type or tap. All gameplay actions originate on phones.
+
+**Implementation.** New `_setHubDisplay(v)` setter (next to the `let isHubDisplay` declaration) wraps assignment + toggles `body.hub-display`. All 6 non-declaration `isHubDisplay = X` sites updated to call `_setHubDisplay(...)`. CSS rules under `body.hub-display` strip `#turn-body`, `#player-inventory`, `#endRound` (`display: none`); grow `#turn-message` to claim the freed vertical space (`flex: 1 1 auto`); bump `#turn-header` to `--fit-base: 2.5rem` with `--fit-scale: 1 !important` (defeats the JS-set fit-shrink so wrapping does the work instead — text reads big-and-wraps rather than shrunk-and-fits); bump `#turn-subtext` to `1.4rem`.
+
+**Per-module verbiage stays unchanged.** Modules continue calling `setInputAreaMode({header, subtext})` with the same strings they always have. We'll only target-rewrite a specific module's hub message if real testing surfaces a string that doesn't read well in this stripped-down format. Keeps content surface area minimal.
+
+### Open questions to resolve in future sessions
+
+- **Hub-as-display-only vs. hub-as-host-and-player:** support both, or default to display-only? Current lean: support both, default to display-only when user picks "Play on One Screen" mode.
+- **Reconnection / refresh handling:** phone tab refresh, accidental dismissal of the URL, low-battery sleep. Player slot persists in Firestore by `myUid`; need to validate the rejoin-same-slot flow under all entry points.
+- **QR code encoding:** `https://.../feud.html?code=ABC123&phone=1` is the minimum. Should it also encode display name? Probably not — name entry on phone is part of the join flow.
+- **QR code layout in lobby:** big and central while waiting for players? tucked into a corner once players have joined? Worth a small UX pass.
+- **Common Thread guesser interaction model:** see "modules needing dedicated design" above.
+- **Settings access in hub-display-only mode:** today, lobby host has interactive settings. If hub is pure display, who controls settings? Probably: settings stay on hub, captain or designated player walks over to adjust. v1 keeps it simple.
+
+### Cross-references in this doc
+
+- Multiplayer architecture (the foundation): see "Multiplayer Implementation" section.
+- Module orchestration (each module is already self-contained behind a clean interface): see "Module Orchestration Layer."
+- Input-area home base (already evergreen-only post-refactor — central to phone view): see "Input-Area Home Base."
+- Pre-Blaze refactor (cleared the way for this): see "Pre-Blaze Cleanup Refactor — Strategy."
 
 ---
 

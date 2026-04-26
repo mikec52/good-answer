@@ -25,8 +25,8 @@ Because the game is still in rapid structural flux, the snapshot branches (`offl
 
 ### Hosting & Deployment
 - **GitHub Pages** serves the game at **https://mikec52.github.io/good-answer/feud.html**
-- Source repo: `mikec52/good-answer` (public). Pages is configured to serve from **`main`** (active dev branch). `offline` and `multi` are held as rollback snapshots.
-- **Deploy workflow**: `git push origin main` = live in ~60 seconds. No build step, no config files. To change which branch Pages serves from: `gh api --method PUT repos/mikec52/good-answer/pages -f "source[branch]=<branch>" -f "source[path]=/"`.
+- Source repo: `mikec52/good-answer` (public). Pages is configured to serve from **`main-phonecontrol`** (the current active dev branch). When the active branch changes (e.g. `main-phonecontrol` is merged back to `main` and retired), update Pages source via `gh api --method PUT repos/mikec52/good-answer/pages -f "source[branch]=<branch>"` AND update this doc. `main`, `offline`, and `multi` are held as rollback snapshots.
+- **Deploy workflow**: `git push origin main-phonecontrol` (current Pages branch) = live in ~60 seconds. Verify with `gh api repos/mikec52/good-answer/pages | jq .source.branch` if unsure which branch is currently serving. No build step, no config files. To change which branch Pages serves from: `gh api --method PUT repos/mikec52/good-answer/pages -f "source[branch]=<branch>" -f "source[path]=/"`.
 - GitHub CLI (`gh`) is installed and authenticated for Mike's account (`mikec52`). Git credentials are wired through `gh auth setup-git`.
 - This is a temporary static hosting solution for playtesting. When Phase 2A (Firebase shared state) arrives, the hosting may migrate to Netlify/Vercel/Cloudflare Pages for serverless function support — or Firebase Hosting itself. The migration is trivial since all these platforms point at the same GitHub repo.
 

@@ -237,9 +237,17 @@
        system. Hide it on phone so the dome button breathes against the
        device bottom edge. */
     body.phone-mode #player-inventory { display: none; }
-    /* Trim turn-body padding so input + button cluster naturally instead
-       of stretching toward the (now-deleted) prizes tray. */
-    body.phone-mode #turn-body { padding-bottom: 14px; }
+    /* #endRound is the legacy feud mid-round button — never used on phone. */
+    body.phone-mode #endRound { display: none; }
+    /* Phone default: input-area is a compact header-only guidance band.
+       Hide the input/button row by default; modules that need keyboard
+       input ('guess'), an action button ('action'), or the CT clue
+       composer ('compose-clue') opt back in via setInputAreaMode's
+       mode parameter, which sets data-ia-mode on #input-area. */
+    body.phone-mode #turn-body { padding-bottom: 14px; display: none; }
+    body.phone-mode #input-area[data-ia-mode="guess"] #turn-body,
+    body.phone-mode #input-area[data-ia-mode="action"] #turn-body,
+    body.phone-mode #input-area[data-ia-mode="compose-clue"] #turn-body { display: flex; }
     /* Bump #guess to a thumb-friendly height (≥44pt iOS / 48dp Android).
        Default ~34px is too small for accurate phone tapping. */
     body.phone-mode #guess {
@@ -730,17 +738,11 @@
       padding: 10px 12px 14px;
       gap: 10px;
     }
-    /* Phone GL: keep the input-area visible but strip its chrome (input
-       row, prizes tray, action button) so it acts as a slim guidance
-       header — "TRACE WORDS ON THE GRID" sits on the dark band, with
-       no keyboard surface to fight the trace gesture. */
-    body.phone-mode.phone-gl-active #turn-body,
-    body.phone-mode.phone-gl-active #player-inventory,
-    body.phone-mode.phone-gl-active #endRound { display: none !important; }
-    body.phone-mode.phone-gl-active #turn-message { padding-bottom: 12px; }
+    /* Phone GL: stripped header-only state ('disabled' mode). Subtext
+       hidden + header tightened because the surface is just the trace
+       guidance label. */
     body.phone-mode.phone-gl-active #turn-subtext { display: none; }
     body.phone-mode.phone-gl-active #turn-header { font-size: 1rem; }
-    body.phone-mode.phone-gl-active #input-area { min-height: 0; }
 
     /* Status strip — Bitcount timer + valid word count, frosted-glass
        panel directly under the phase indicator. */
@@ -10582,7 +10584,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.29</div>
+  <div id="version-tag">v0.30</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">

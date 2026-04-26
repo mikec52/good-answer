@@ -301,6 +301,75 @@ Separate from phone view: when the hub is in "Local Game / Same room, one screen
 
 **Per-module verbiage stays unchanged.** Modules continue calling `setInputAreaMode({header, subtext})` with the same strings they always have. We'll only target-rewrite a specific module's hub message if real testing surfaces a string that doesn't read well in this stripped-down format. Keeps content surface area minimal.
 
+### Phone-controller polish (2026-04-26 follow-up — post real-device testing)
+
+Real-device test on iPhone 15 Pro Max showed the actual usable area is meaningfully smaller than DevTools' iPhone 14 Pro Max emulation (DevTools doesn't model the browser chrome that real devices consume). **Calibration recommendation: emulate iPhone SE (375×667) in DevTools** — that's a closer proxy for real Pro Max usable area after URL bar / home indicator overhead.
+
+**Phase indicator shrunk on phone.** 140px → 60px. Internals scaled in lockstep: `.ph-span --fit-base` 1.5rem → 0.95rem; `.ph-module-logo > * max-height` 120px → 48px; `.ph-faceoff-logo font-size` 3rem → 1.5rem; `#ph-gem` 40px → 28px (and `bottom: -20px` → `-14px`). Border-radius drops 30px → 18px to keep proportions. Reclaims ~80px of vertical real estate. Module logos still read clearly at 48px tall; face-off team-colored "FACE OFF" still scans at 1.5rem.
+
+**`#turn-message` content-driven on phone.** Desktop's `min-height: 110px` floor was sized for "primary line + secondary line" composition; on phone it caused tall input-area when modules emit single-line states. Phone now `min-height: 0` with tighter padding (`10px 14px 4px`). Reclaims ~30-50px depending on whether subtext is set.
+
+**Static radial backdrop on phone.** `body.phone-mode #game-root { background: radial-gradient(ellipse 75% 60% at 50% 40%, #2c2c2c 0%, #1a1a1a 55%, #0c0c0c 100%) }`. Replaces the team-color-tinted `color-mix(--bg-blob-base, white)` desktop bg. The center band sits ~`#2c2c2c` so the picker / NIC stage / round-end message read against a slightly brighter backdrop than the dark phase indicator + input-area chrome that bracket them. **Perf note:** the desktop SVG `#bg-animation` is `display: none` on phone via the existing `:not(#game)` rule — its CSS animations never tick on phone, so the backdrop replacement is a visual choice, not a perf one. Team-color tint via `--bg-blob-base` no longer reaches anything on phone (the override is opaque); phase indicator carries the team color during round-select, modules carry it via their own UI.
+
+**Tooltip system on phone — whitelist + simplified positioning** (lives in Tooltip System section's "Phone-controller behavior" subsection — read it there for the contract).
+
+**iOS audio gotcha — `audio.muted` is the reliable mute, not `audio.volume`.** Real-device testing on iPhone 15 Pro Max revealed bg music playing on phone despite the v0.28 mute (`soundEnabled = false` + `applyVolumes()` setting `audio.volume = 0`). Root cause: iOS Safari ignores programmatic `audio.volume` changes on `HTMLAudioElement` in some contexts (treats volume as hardware-controlled by physical buttons). The element-level `muted` property is a separate flag iOS respects unconditionally.
+
+The IS_PHONE_VIEW init now sets both: `soundEnabled = false` + `applyVolumes()` AND `musicSlots.forEach(s => s.audio.muted = true)` + `sfxTracks.forEach(t => t.muted = true)`. No other code in the codebase ever writes to `.muted`, so once set at script-load these flags hold for the session.
+
+**For future audio work:** if you add a new HTMLAudioElement (e.g. another music track, a new SFX file), audit whether the phone init needs to mute it explicitly. The `muted` flag is the source of truth on iOS; `volume` is a soft hint that works on most desktops but may not on phones. Web Audio API paths (`tickAudioCtx` + `AudioBufferSourceNode`) are gated on `soundEnabled` directly and don't have this issue.
+
+### Phone-controller Grid Lock — full mobile UX (2026-04-26 / 27)
+
+Grid Lock is the first module with a touch-native phone interaction. The phone view is a complete rebuild rather than a mirror of the hub layout.
+
+**Layout** (top → bottom inside `#phone-grid-lock`):
+- Status strip (frosted glass, 2-cell grid): TIME LEFT (Bitcount timer) + WORDS (valid count). Mounts directly under the phase indicator.
+- Board stack (`.pgl-board-stack`, inline-flex column, intrinsic-width to the board) — wrapped in `.pgl-board-wrap` (flex 1 1 auto, centers horizontally + vertically in the remaining space):
+  - Feedback bar (`.pgl-feedback`) — sized to the board's width, anchored just above the grid (not the canvas top), so it stays glued to the grid on different device heights.
+  - Board frame (`.pgl-board-frame`, position: relative) — holds the 5×5 grid + the intro cover plate overlay.
+- Input-area (`#sq-zone-input`) — full-width band at the bottom, used as a guidance label rather than an input surface (see Input-Area swap below).
+
+**No keyboard, no input field.** Word entry is touch-trace only on phone. The trace gesture would fight the iOS keyboard popup if the input remained, so the input + button + prizes tray are hidden via `body.phone-mode.phone-gl-active` CSS rules. The header band stays visible and shows "TRACE WORDS ON THE GRID" set by `glStartPlay` via `setInputAreaMode({mode: 'disabled', header})`. The phone branch of `glStartPlay` also explicitly strips the `offscreen-below` class from `#sq-zone-input` (the HTML default) so it sits in place rather than 400% below.
+
+**Trace mechanics:**
+- Pointerdown on a tile starts a trace. Pointermove uses `document.elementFromPoint` for hit-detection; adjacency check is 8-neighbor; locked tile is excluded from valid path additions.
+- Backtrack supported (sweep finger back to the previous tile pops the head).
+- Pointerup commits the traced word via `glSubmitWord(word)` — the existing host-pipeline path (host/local: sync evaluate; non-host: pendingAction → host → reconcile).
+- `touch-action: none` on `#phone-gl-board` is required for pointermove tracing to work on iOS without page-scroll fighting.
+- `setPointerCapture` on pointerdown so dragging off the original tile keeps the gesture going.
+
+**Feedback bar — single element, four states:**
+- Idle: empty/transparent (no chrome).
+- Tracing: orange bg, live word preview as the path builds.
+- Ok: green bg, "WORD" + "+pts".
+- Bad: red bg, "WORD — REASON".
+- Pointerup leaves the bar in its `tracing` (orange) state — the CSS bg transition (0.32s) then morphs orange → green/red smoothly when the result lands. No intermediate "checking" state means no blank frame between trace-end and result. For the host/local sync path the morph is effectively immediate; for non-host's host round-trip (~200-500ms) the orange persists naturally as a "checking" cue.
+- Score-additive layout: word stays centered in the bar; score (`.pgl-feedback-pts`) is `position: absolute; left: calc(100% + 10px)` anchored to a `.pgl-feedback-word` wrapper, so adding the score doesn't shift the word's centered position.
+- Clear is a CSS fade (0.32s) on bg + border + color (text). Base color is `transparent` so word/score fade together with the bg. State classes (`ok`/`bad`/`tracing`) restore `color: #fff`. innerHTML stays during the fade for a clean reveal-then-disappear.
+
+**Intro choreography (cover + 3-2-1):** mirrors the hub. `_phoneGlMount()` is called at the top of `glRunIntro` (not just at `glStartPlay`) so the cover is visible during the intro. The cover (`#phone-gl-cover`, reusing the desktop `.gl-cover` / `.gl-cover-shake` / `.gl-cover-off` classes) overlays the board frame absolutely. `glRunIntro` walks both desktop AND phone covers/countdowns, applying class changes to all (the SFX `animationiteration` listener attaches to whichever cover is in a visible container so the iteration actually fires). The phone cover slides off via `.gl-cover-off` synchronized with the hub. Phone-specific CSS scales the engraved tile logo to 28px and the countdown text to 4.5rem.
+
+**Hub layout cleanup during play.** `enterGridLockRound` adds `.gl-hub-play-mode` to `#grid-lock-container`; `glRunReveal`'s entry removes it before adding `.gl-reveal-mode`. While set: `.gl-left-col` (the per-player wordlist) is hidden, `.gl-right-col` becomes `flex: 1 1 100%; justify-content: center`, so the timer + grid stack centers vertically and horizontally in the canvas. Wordlists are now phone-only (each player sees their own private list) — the hub canvas during play shows just the shared grid + lock + timer.
+
+**Phase indicator on phone — plain text instead of animated logos.** `_getModuleLogoHtml` returns `<span class="ph-mod-text">${label.toUpperCase()}</span>` when `IS_PHONE_VIEW`. The 60px phase band can't read the picker SVGs / CSS marquees; bold white futura on the module-color bg is the cleaner cue.
+
+**Cinematic skip (timed) on phone.** `playModuleIntro` skips the visual cinematic on phone but waits a per-module duration that approximates the hub cinematic length so the phone module flow stays in lockstep with the shared screen. Cinematics mount to `#module-canvas` (`display: none` on phone), CSS animations don't fire on hidden elements, so `animationend` would never resolve — the wait substitutes for real animation playback. Per-module override via `ROUND_MODULES[key].phoneIntroMs`. Default `PHONE_INTRO_DEFAULT_MS = 6500`. Grid Lock set to `phoneIntroMs: 6400` (sum of its cinematic timing: 600ms fly-in + 1500ms wiggle + 280+620+300+540+2100+460ms post-wiggle chain).
+
+**Final-10s clock jump + final-5s vibration.** `glUpdateTimerDisplay` detects the per-second tick (gates on `_lastSec` change since the function fires at 250ms cadence). When `timeLeft ≤ 10`, applies `.gl-timer-jump` keyframe to both desktop `.gl-timer` and phone `.pgl-status-value` (retriggered each second via class-toggle + reflow). When `timeLeft ≤ 5`, calls `navigator.vibrate(60)` — works on Android Chrome/Firefox; iOS Safari deliberately doesn't expose `vibrate` (Apple gates haptics behind native APIs), so it no-ops there. Wrapped in feature-check + try/catch.
+
+**Phone-mode background.** Switched from radial gradient (the `2c2c2c → 0c0c0c` dark blob) to a graph-paper backdrop: `#444` field with subtle `#555` 24px gridlines via two linear-gradients. Dark UI surfaces (status strip, board frame, input-area, frosted-glass panels) read with stronger contrast against the mid-gray field.
+
+**Round-end soft state.** `glRunReveal` calls `_phoneGlShowRoundEnd()` which swaps the trace board out for a quiet "Round Complete — A summary of the round is on the screen" message and removes `phone-gl-active` so the input-area can return to its normal state for Ready Up. `resetGridLockState` calls `_phoneGlHide()` for full teardown at the next round entry.
+
+**Lock visuals on phone.** `glUpdateLockDisplay` walks both `#grid-lock-board .gl-tile` AND `#phone-gl-board .gl-tile` per-board (separate iterations so per-tile index math stays correct). SFX is gated to fire on only one of the two boards via a `withSfx` flag, preventing double-play on a future scenario where both DOMs are alive.
+
+### Round-type picker polish (2026-04-27)
+
+**Phone — labels raised, caps brightened, badges middle-right.** `.prtp-btn` got asymmetric vertical padding (`14px 76px 22px`) to lift the centered label off the cap's optical bottom. The `--_deep` and `--_darker` shade ramp was pulled toward the dome color (60%/78% from 35%/60%) and the bottom inset shadow softened (4px / 35% mix from 8px / 70%) — caps read brighter overall, less black-mixed. `.prtp-mult` moved from top-right to middle-right via `top: 44%; right: 14px; transform: translateY(-50%)` (44% lands the badge on the cap's optical center, accounting for the asymmetric padding raising the visual midpoint above the geometric one).
+
+**Hub — full opacity for spectators.** `.rt-card.spectator-disabled { opacity: 1 }` overrides the global `.spectator-disabled { opacity: 0.6 }`. Click-blocking still works via the inline `pointer-events: none` JS sets at picker render + the `.spectator-disabled .btn-3d/.action-btn` rule. Other spectator-disabled elements (cat-rows, etc.) keep their dim. Reason: round-type picker is a moment for everyone in the room to read along with the active picker — dimming half-hides the labels.
+
 ### Open questions to resolve in future sessions
 
 - **Hub-as-display-only vs. hub-as-host-and-player:** support both, or default to display-only? Current lean: support both, default to display-only when user picks "Play on One Screen" mode.
@@ -1454,11 +1523,11 @@ Original prototype: [nic.html](nic.html) (standalone). Now integrated as `ROUND_
 
 ### Scoring
 
-Halved from the prototype's first pass (April 25 session). Per-question scoring is `band × speedMult`:
+Per-question scoring is `(band + closestBonus) × speedMult`:
 
 | Closeness               | Base pts |
 |-------------------------|---------:|
-| Exact (`diff === 0`)    |      500 |
+| Exact (`diff === 0`)    |      300 |
 | Within 10%              |      150 |
 | Within 20%              |      125 |
 | Within 30%              |      100 |
@@ -1467,7 +1536,11 @@ Halved from the prototype's first pass (April 25 session). Per-question scoring 
 | Within 75%              |        0 |
 | Over 75% off            |      −50 |
 
-Speed multiplier: 1st lock ×2, 2nd ×1.75, 3rd ×1.5, 4th+ ×1. Speed mult applies even to the −50 penalty (so a 1st-place lock that's >75% off = −100). Pct denominator is `|diff| / |answer|`; answer = 0 not currently in the bank.
+**Closest bonus (+50, pre-multiplier).** The lock(s) with the smallest absolute `|guess - answer|` on a question get an extra +50 added to their `band` BEFORE the speed multiplier (so the bonus gets multiplied). Ties: every lock at the min diff qualifies, all get the bonus. This lets a player who was very far off offset their wrong-band penalty if they were closest — e.g. everyone is 400%+ off but one player is 400% off and the others are 500%+: the 400% player's `−50 + 50 = 0` base, ×2 mult = 0 finalPts (penalty offset), while the others stay negative.
+
+Speed multiplier: 1st lock ×2, 2nd ×1.75, 3rd ×1.5, 4th+ ×1. Speed mult applies even to the −50 penalty (so a 1st-place lock that's >75% off without the closest bonus = −100). Pct denominator is `|diff| / |answer|`; answer = 0 not currently in the bank.
+
+`lock.closest` (boolean) is set on each scored lock for any future visual treatment. `nicPlayerStats.exactCount` is keyed off the `bandPts === NIC_EXACT_PTS` (pre-bonus) so a closest bonus on a non-exact band doesn't inflate the exact stat.
 
 ### State (`nicState`)
 
@@ -2804,6 +2877,18 @@ Static HTML: add `data-tip="id"` directly. Dynamic JS: include in template liter
 ### Dynamic tooltip overrides
 
 The `dynamicTipText` map (just above `showTooltip()`) allows specific tooltip IDs to override their CSV text with live values. Each entry is a function returning `{ flavor?, description? }` — unset fields fall through to CSV. Currently used by `board-mult` to show the current multiplier value in the flavor text.
+
+### Phone-controller behavior
+
+Tooltips on phone re-purpose the existing desktop hover machinery as a tap-to-show / tap-elsewhere-to-hide popover. iOS/Android fire a synthetic `mouseover` on tap (the long-standing "ghost mouseover" behavior browsers use for hover-styled UI compat), so the existing `mouseover` listener already routes taps into the show path; `mouseout` on the next tap drives hide. That's the standard mobile popover idiom — no new event wiring needed.
+
+Two phone-specific guards prevent the system from misbehaving:
+
+1. **Whitelist** (`PHONE_TOOLTIP_WHITELIST`, declared next to `tooltipDelay`). Only ids in this Set surface tooltips on phone. Most desktop tooltips explain values that are visible elsewhere on the screen (e.g. the multiplier shown directly on the board); the popover is redundant and the screen real estate cost outweighs the benefit. Current whitelist is gem tiers only: `gem-emerald`, `gem-sapphire`, `gem-amethyst`, `gem-topaz`. The mouseover delegation has a phone branch that early-returns when `IS_PHONE_VIEW && !PHONE_TOOLTIP_WHITELIST.has(id)`. **Side benefit:** filters out the iOS phantom-`mouseover`-on-keyboard-popup that fires on the submit button when the user taps into `#guess` — the button isn't whitelisted, so the timer never schedules.
+
+2. **Simplified positioning.** Phone has no horizontal real estate for a tooltip alongside an element. `showTooltip` has a `IS_PHONE_VIEW` early branch that decides above/below based on the element's vertical position (above if element is in the bottom half, below if in the top half), skips the desktop canvas-zone left/right rules, and skips the `data-tip-placement` forced placements (left/right forces don't make sense on phone). Above/below `data-tip-placement` would still naturally apply, but the simplified branch handles the common case directly.
+
+**Adding new phone tooltips:** add the id to `PHONE_TOOLTIP_WHITELIST`. Default is "skip" — the whitelist is intentionally tiny and grows only when a specific tooltip earns its keep on phone. If a future need calls for richer touch UI (lists, images, multi-paragraph), build a purpose-built modal/sheet rather than expanding the tooltip system.
 
 ---
 

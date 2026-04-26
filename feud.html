@@ -177,7 +177,7 @@
       display: block;
       align-items: initial;
       justify-content: initial;
-      background: #111;
+      background: #444;
       height: 100dvh;
     }
     body.phone-mode #game-root {
@@ -185,6 +185,13 @@
       height: 100dvh;
       transform: none !important;
       border-radius: 0;
+      /* Graph-paper backdrop — dark mid-gray field with subtle #555
+         gridlines. 24px cell size keeps the grid present without
+         competing for attention with module content. */
+      background:
+        linear-gradient(to right, #555 1px, transparent 1px) 0 0 / 24px 24px,
+        linear-gradient(to bottom, #555 1px, transparent 1px) 0 0 / 24px 24px,
+        #444;
     }
     /* Hide every #game-root direct child except #game (which contains
        #zone-board → #sidebar-zone → evergreens). Other phase containers
@@ -238,6 +245,65 @@
     body.phone-mode #guess {
       padding: 14px;
       font-size: 1.1rem;
+    }
+    /* Phase indicator on phone — desktop's 140px is ~25% of an iPhone SE
+       viewport. 60px reclaims ~80px for the gameplay middle area without
+       losing the team-color signal or the active-player label. Module
+       logos + face-off text + the post-pick gem all scale down with it. */
+    body.phone-mode #phase-indicator {
+      max-height: 60px;
+      min-height: 60px;
+      border-radius: 0 0 18px 18px;
+      padding: 0 12px;
+      /* Stacking context so the gem (which overflows below via
+         bottom: -14px) renders above sibling stage elements
+         (#phone-grid-lock, #phone-nic-stage, status strips, etc.). */
+      position: relative;
+      z-index: 50;
+    }
+    body.phone-mode #phase-indicator .ph-span {
+      --fit-base: 0.95rem;
+      letter-spacing: 0.02em;
+      padding: 0 12px;
+    }
+    body.phone-mode #phase-indicator .ph-span.ph-module-logo {
+      padding: 6px 10px;
+    }
+    body.phone-mode #phase-indicator .ph-module-logo > * {
+      max-height: 48px;
+    }
+    /* Plain-text module label inside phase-indicator on phone. Replaces
+       the picker-art animation since the slim 60px band can't read the
+       SVG/marquee logos. */
+    body.phone-mode #phase-indicator .ph-mod-text {
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.4rem;
+      letter-spacing: 0.08em;
+      color: #fff;
+      text-transform: uppercase;
+      line-height: 1;
+      width: auto;
+      max-height: none;
+    }
+    body.phone-mode #phase-indicator .ph-faceoff-logo {
+      font-size: 1.5rem;
+      gap: 0.25em;
+    }
+    body.phone-mode #phase-indicator .rt-gem.ph-gem {
+      width: 28px;
+      height: 28px;
+      bottom: -14px;
+    }
+    body.phone-mode #phase-indicator .rt-gem.ph-gem .rt-gem-value {
+      font-size: 0.85rem;
+    }
+    /* Input-area home-base on phone — drop the desktop 110px floor on
+       #turn-message so it sizes to content. Reclaims ~30-50px when only
+       the header line is set (no subtext). Padding tightens too. */
+    body.phone-mode #turn-message {
+      min-height: 0;
+      padding: 10px 14px 4px;
     }
 
     /* Phone-controller placeholder — hidden by default. Only shown in
@@ -390,8 +456,10 @@
        --dome-color is set per-instance via the .mod-* class on the row. */
     body.phone-mode .prtp-btn {
       --dome-color: var(--mod-color, #d62020);
-      --_deep:   color-mix(in oklab, var(--dome-color) 35%, #000);
-      --_darker: color-mix(in oklab, var(--dome-color) 60%, #000);
+      /* Lightened cap shade ramp — pulled the dark stops up toward the
+         dome color so the bottom-radial isn't pure-black at 0%. */
+      --_deep:   color-mix(in oklab, var(--dome-color) 60%, #000);
+      --_darker: color-mix(in oklab, var(--dome-color) 78%, #000);
       --_light:  color-mix(in oklab, var(--dome-color) 75%, #fff 25%);
       --_glow:   color-mix(in oklab, var(--dome-color) 60%, #fff 40%);
       --_lift: 4px;
@@ -408,7 +476,9 @@
       -webkit-tap-highlight-color: transparent;
       display: grid;
       place-items: center;
-      padding: 14px 76px;
+      /* Asymmetric vertical padding raises the label ~6px off the
+         optical bottom of the cap. */
+      padding: 14px 76px 22px;
       font-family: "futura-100", sans-serif;
       font-weight: 700;
       font-size: 1.5rem;
@@ -438,17 +508,20 @@
       position: absolute;
       inset: calc(8px - var(--_lift)) 10px calc(12px + var(--_lift));
       border-radius: 14px;
+      /* Lightened: top sheen unchanged; bottom radial now leads with
+         the dome color (deep/darker pushed back to 30%/60%) so the
+         center body reads brighter. */
       background:
         radial-gradient(ellipse at 35% 25%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 35%),
         radial-gradient(ellipse at 50% 110%,
-          var(--_deep)   0%,
-          var(--_darker) 30%,
-          var(--dome-color) 60%,
-          var(--_light)  90%);
+          var(--_darker) 0%,
+          var(--dome-color) 35%,
+          var(--_light)   95%);
+      /* Reduced bottom inset shadow — softer and less black-mixed. */
       box-shadow:
         0 var(--_lift) 0 var(--_deep),
         0 calc(var(--_lift) + 4px) 12px rgba(0,0,0,0.55),
-        inset 0 -8px 14px color-mix(in oklab, var(--_deep) 70%, transparent),
+        inset 0 -4px 10px color-mix(in oklab, var(--_deep) 35%, transparent),
         inset 0 6px 8px color-mix(in oklab, var(--_glow) 35%, transparent);
       transition: inset .12s ease-out, box-shadow .12s ease-out;
       z-index: -1;
@@ -644,13 +717,216 @@
       letter-spacing: 0.02em;
     }
 
-    /* Multiplier circle — top-right corner. Uses --rt-gem-color (set
-       by the .rt-tier-* class) for the fill so the gem identity carries
-       across without rendering the actual gem PNG on phone. */
+    /* Phone-controller Grid Lock stage. Trace-only board with a slim
+       status strip (timer + valid-word count) and a feedback bar above
+       the board. Input-area is hidden via body.phone-gl-active so the
+       board can claim the full middle-and-bottom space. */
+    #phone-grid-lock { display: none; }
+    body.phone-mode #phone-grid-lock.active {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 10px 12px 14px;
+      gap: 10px;
+    }
+    /* Phone GL: keep the input-area visible but strip its chrome (input
+       row, prizes tray, action button) so it acts as a slim guidance
+       header — "TRACE WORDS ON THE GRID" sits on the dark band, with
+       no keyboard surface to fight the trace gesture. */
+    body.phone-mode.phone-gl-active #turn-body,
+    body.phone-mode.phone-gl-active #player-inventory,
+    body.phone-mode.phone-gl-active #endRound { display: none !important; }
+    body.phone-mode.phone-gl-active #turn-message { padding-bottom: 12px; }
+    body.phone-mode.phone-gl-active #turn-subtext { display: none; }
+    body.phone-mode.phone-gl-active #turn-header { font-size: 1rem; }
+    body.phone-mode.phone-gl-active #input-area { min-height: 0; }
+
+    /* Status strip — Bitcount timer + valid word count, frosted-glass
+       panel directly under the phase indicator. */
+    body.phone-mode .pgl-status {
+      flex: 0 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: rgba(26,26,26,0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 10px;
+      padding: 8px 14px;
+      align-items: center;
+    }
+    body.phone-mode .pgl-status-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1;
+    }
+    body.phone-mode .pgl-status-label {
+      font-family: "futura-100", sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 4px;
+    }
+    body.phone-mode .pgl-status-value {
+      font-family: "Bitcount Single", "futura-100", sans-serif;
+      font-size: 1.6rem;
+      color: #fff;
+      letter-spacing: 0.04em;
+    }
+    body.phone-mode .pgl-status-value.warn { color: #ff6b3d; }
+    body.phone-mode .pgl-status-value.done { color: #ff3030; }
+
+    /* Feedback bar — fixed-height container that swaps between four
+       states: idle (empty/transparent — guidance text lives in the
+       input-area instead), tracing (live word preview while finger
+       drags), ok (accepted word), bad (rejected word). The CSS
+       transition smoothly morphs orange → green/red when the result
+       lands; clear is JS-snap to avoid a flash of the placeholder over
+       a still-fading colored bg. */
+    body.phone-mode .pgl-feedback {
+      flex: 0 0 auto;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      /* Base color is transparent so text fades along with the bg
+         when the state class is removed on clear. State classes
+         (ok/bad/tracing) restore color: #fff. */
+      color: transparent;
+      background: transparent;
+      border: 1px solid transparent;
+      transition: background 0.32s ease, color 0.32s ease, border 0.32s ease;
+    }
+    body.phone-mode .pgl-feedback.ok {
+      color: #fff;
+      background: rgb(34,140,52);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    body.phone-mode .pgl-feedback.bad {
+      color: #fff;
+      background: rgb(170,34,34);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    body.phone-mode .pgl-feedback.tracing {
+      color: #fff;
+      background: rgba(192,96,0,0.65);
+      border: 1px solid rgba(255,180,80,0.35);
+    }
+    /* The word stays centered in the bar; the score floats off the
+       word's right edge as an absolutely-positioned suffix so adding
+       the score doesn't shift the word's centered position. */
+    body.phone-mode .pgl-feedback-word {
+      position: relative;
+      display: inline-block;
+    }
+    body.phone-mode .pgl-feedback-pts {
+      position: absolute;
+      left: calc(100% + 10px);
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: "Bitcount Single", "futura-100", sans-serif;
+      font-weight: 400;
+      font-size: 1.1rem;
+      white-space: nowrap;
+    }
+
+    /* Board wrap — centers the board+feedback stack both horizontally
+       and vertically in the remaining space. */
+    body.phone-mode .pgl-board-wrap {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* Stack the feedback bar directly above the board frame so the
+       feedback is anchored to the grid, not the canvas top. The stack
+       sizes to the board's intrinsic width via inline-flex. */
+    body.phone-mode .pgl-board-stack {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+    /* Frame wraps the board + the intro cover; sized to the board so
+       the cover's `inset: 0` overlays the tile area exactly. */
+    body.phone-mode .pgl-board-frame {
+      position: relative;
+      display: inline-block;
+    }
+    /* Scale the engraved tile logo + countdown text down for phone. */
+    body.phone-mode #phone-gl-cover .gll-tile {
+      width: 28px;
+      height: 28px;
+      font-size: 1rem;
+    }
+    body.phone-mode #phone-gl-countdown {
+      font-size: 4.5rem;
+      text-shadow:
+        0 0 3px rgba(0,0,0,0.95),
+        0 3px 7px rgba(0,0,0,0.85),
+        0 5px 14px rgba(0,0,0,0.7);
+    }
+    body.phone-mode #phone-gl-board {
+      display: grid;
+      /* Tile size scales to fit the available width; cap at 64px so the
+         board doesn't overpower vertical space on tall phones. */
+      --pgl-tile: min(calc((100vw - 56px) / 5), 64px);
+      grid-template-columns: repeat(5, var(--pgl-tile));
+      grid-template-rows: repeat(5, var(--pgl-tile));
+      gap: 6px;
+      padding: 8px;
+      background: #1a1a1a;
+      border-radius: 12px;
+      touch-action: none; /* required for pointermove tracing */
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    /* Phone tile reuses the desktop .gl-tile look but with fluid size. */
+    body.phone-mode #phone-gl-board .gl-tile {
+      font-size: calc(var(--pgl-tile) * 0.46);
+      box-shadow: 0 2px 0 #8a6f3d, inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+    body.phone-mode #phone-gl-board .gl-tile .gl-pts {
+      font-size: calc(var(--pgl-tile) * 0.18);
+      bottom: 3px;
+      right: 4px;
+    }
+    /* Tracing highlight — the trail of selected tiles glows orange. */
+    body.phone-mode #phone-gl-board .gl-tile.pgl-traced {
+      background: linear-gradient(180deg, #ffb347 0%, #fb8c00 100%);
+      color: #1a1a1a;
+      box-shadow:
+        0 0 0 2px rgba(255,255,255,0.4),
+        0 0 12px rgba(251,140,0,0.6),
+        0 2px 0 #8a6f3d,
+        inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+    body.phone-mode #phone-gl-board .gl-tile.pgl-traced .gl-pts { color: #5a4420; }
+
+    /* Multiplier circle — middle-right of the button. At 57px the badge
+       is too large for the top-right corner; vertically-centered reads
+       cleaner and keeps the cap shape unobstructed. Uses --rt-gem-color
+       (set by .rt-tier-*) so gem identity carries without the PNG. */
     body.phone-mode .prtp-mult {
       position: absolute;
-      top: 10px;
-      right: 12px;
+      /* 44% (vs. geometric 50%) lands the badge on the optical center
+         of the cap face — the asymmetric padding-bottom on .prtp-btn
+         raises the cap's visual midpoint above the element's midpoint. */
+      top: 44%;
+      right: 14px;
+      transform: translateY(-50%);
       width: 57px;
       height: 57px;
       border-radius: 50%;
@@ -4262,6 +4538,11 @@
       opacity: 0.6;
       cursor: default;
     }
+    /* Round-type picker cards: full opacity for spectators so the room
+       can read along with the active picker. Click-blocking is still
+       handled by the inline pointer-events: none + spectator-disabled
+       class on child interactive elements. */
+    .rt-card.spectator-disabled { opacity: 1; }
     .spectator-disabled .btn-3d,
     .spectator-disabled .action-btn {
       pointer-events: none;
@@ -8631,6 +8912,14 @@
       align-items: center;
       gap: 10px;
     }
+    /* Hub-during-play: hide the wordlist column (now phone-only) and let
+       the right column center the grid in the canvas. justify-content
+       centers the timer + board stack vertically too. */
+    #grid-lock-container.gl-hub-play-mode .gl-left-col { display: none; }
+    #grid-lock-container.gl-hub-play-mode .gl-right-col {
+      flex: 1 1 100%;
+      justify-content: center;
+    }
     .gl-wordlist-header {
       display: flex;
       justify-content: space-between;
@@ -8696,6 +8985,22 @@
     }
     .gl-timer.warn { color: #ef9a3a; }
     .gl-timer.done { color: #ef5350; }
+    /* Final-10s clock jump — applied via .gl-timer-jump on both the
+       desktop .gl-timer and the phone .pgl-status-value timer cell.
+       Retriggered each second by removing + re-adding the class with
+       a reflow in between. */
+    .gl-timer-jump,
+    body.phone-mode .pgl-status-value.gl-timer-jump {
+      animation: gl-timer-jump 0.5s cubic-bezier(.34,1.56,.64,1) both;
+      transform-origin: center;
+    }
+    @keyframes gl-timer-jump {
+      0%   { transform: scale(1);    }
+      30%  { transform: scale(1.28); }
+      55%  { transform: scale(0.95); }
+      80%  { transform: scale(1.06); }
+      100% { transform: scale(1);    }
+    }
     .gl-board-wrap {
       position: relative;
       padding: 8px;
@@ -10277,7 +10582,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.28</div>
+  <div id="version-tag">v0.29</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -10501,6 +10806,12 @@
              player tile grid as a compact portrait stack. Built in
              _phoneNicRender(); hidden on desktop and outside NIC rounds. -->
         <div id="phone-nic-stage"></div>
+
+        <!-- Phone-controller Grid Lock stage. Touch-trace board with a
+             status strip (timer + valid-word count) and a feedback bar
+             above the board. Built in _phoneGlMount(); hidden on
+             desktop and outside Grid Lock rounds. -->
+        <div id="phone-grid-lock"></div>
 
         <!-- Input-area home base. Module code never mutates this; it's
              driven by setInputAreaMode(). -->
@@ -13260,6 +13571,18 @@
 
     let tooltipDelay = 400; // ms before tooltip appears (adjustable in settings)
     let hideHelpTips = false; // when true, "help" class tooltips are suppressed
+    // Phone-controller whitelist — only these tooltip ids are allowed to
+    // surface on phone. Most desktop tooltips are redundant on phone (the
+    // value they explain is visible elsewhere) and the screen real estate
+    // cost outweighs the benefit. Add ids here only when tap-to-show is
+    // genuinely useful and the alternatives (richer touch UI, inline
+    // labels) would be heavier than the existing tooltip infra.
+    // The synthetic mouseover from iOS/Android tap drives show; mouseout
+    // on tap-elsewhere drives hide — net effect is tap-to-show /
+    // tap-elsewhere-to-hide, which is the standard mobile popover idiom.
+    const PHONE_TOOLTIP_WHITELIST = new Set([
+      'gem-emerald', 'gem-sapphire', 'gem-amethyst', 'gem-topaz',
+    ]);
 
     const _tip = {
       el: null, flavor: null, desc: null,
@@ -13301,6 +13624,28 @@
       const elCenterX = rect.left + rect.width / 2;
       const elCenterY = rect.top + rect.height / 2;
       let x, y, placement;
+      // Phone branch: ignore the canvas-zone left/right rules entirely —
+      // there's no horizontal real estate on a portrait phone for a
+      // tooltip alongside the element. Just decide above/below based on
+      // where the target sits vertically. Center horizontally on the
+      // element, clamp later. Skip the forcedPlacement machinery too;
+      // the desktop "above/below" forces still apply as expected, the
+      // "left/right" forces don't make sense on phone.
+      if (IS_PHONE_VIEW) {
+        const above = elCenterY > canvasRect.top + canvasRect.height * 0.5;
+        placement = above ? 'above' : 'below';
+        x = rect.left + rect.width / 2 - tipRect.width / 2;
+        y = above ? (rect.top - tipRect.height - 8) : (rect.bottom + 8);
+        x = Math.max(4, Math.min(x, window.innerWidth - tipRect.width - 4));
+        y = Math.max(4, Math.min(y, window.innerHeight - tipRect.height - 4));
+        _tip.el.style.left = x + 'px';
+        _tip.el.style.top  = y + 'px';
+        _tip.el.dataset.placement = placement;
+        const arrowLocalX = Math.max(12, Math.min(elCenterX - x, tipRect.width - 12));
+        _tip.el.style.setProperty('--tip-arrow-x', arrowLocalX + 'px');
+        _tip.el.style.removeProperty('--tip-arrow-y');
+        return;
+      }
       let forcedPlacement = target.dataset.tipPlacement;
       // Auto-flip forced below/above when element is near the edge they'd clip off
       if (forcedPlacement === 'below' && elCenterY > canvasRect.top + canvasRect.height * 0.8) {
@@ -13373,6 +13718,11 @@
     document.addEventListener('mouseover', (e) => {
       const target = e.target.closest('[data-tip]');
       if (!target) return;
+      // Phone gating: ignore mouseover (real or synthetic-from-tap) on
+      // anything not whitelisted. Filters out the phantom mouseover that
+      // fires on the submit button when the keyboard pops up and shifts
+      // layout — the button isn't whitelisted, so the timer never runs.
+      if (IS_PHONE_VIEW && !PHONE_TOOLTIP_WHITELIST.has(target.dataset.tip)) return;
       // Already tracking this element — don't restart timer
       if (_tip.activeTarget === target || (_tip.timer && _tip._pendingTarget === target)) return;
       hideTooltip();
@@ -13653,7 +14003,7 @@ document.addEventListener('keydown', e => {
     //   • Normal gem drop rates
     //   • 3-digit numeric lobby code
     //   • Music volume left at whatever the user set
-    const TEST_MODE = true;
+    const TEST_MODE = false;
 
     // Phone-controller mode ("Play on One Screen"). When loaded with
     // ?phone=1, the canvas is stripped down to evergreens (#phase-indicator
@@ -13676,6 +14026,16 @@ document.addEventListener('keydown', e => {
       // optional audio per-phone, add a speaker icon to #phase-indicator.
       soundEnabled = false;
       applyVolumes();
+      // iOS Safari quirk: `audio.volume` is sometimes ignored on
+      // HTMLAudioElement (treated as hardware-volume-only), so
+      // applyVolumes() setting volume = 0 isn't reliably silent on real
+      // iPhones. `audio.muted` is a separate property that iOS respects.
+      // Force-mute every audio element at the source so volume tinkering
+      // elsewhere can't accidentally unmute. Belt-and-suspenders to the
+      // soundEnabled gate (which already short-circuits Web Audio SFX
+      // and prevents playSound() from firing HTMLAudio SFX).
+      musicSlots.forEach(s => { s.audio.muted = true; });
+      sfxTracks.forEach(t => { t.muted = true; });
     }
 
     // Phone-controller mode entry. Runs after Firebase init resolves so
@@ -15948,6 +16308,14 @@ document.addEventListener('keydown', e => {
       'faceoff': 'mod-faceoff',
     };
     function _getModuleLogoHtml(moduleKey) {
+      // Phone view: skip the animated picker art and just render the
+      // module's label as plain bold white text. The phase-indicator
+      // band is too short on phone to read the picker animations.
+      if (IS_PHONE_VIEW) {
+        const mod = ROUND_MODULES[moduleKey];
+        const label = (moduleKey === 'faceoff') ? 'FACE OFF' : (mod && mod.label) || '';
+        return `<span class="ph-mod-text">${label.toUpperCase()}</span>`;
+      }
       if (moduleKey === 'faceoff') {
         return '<span class="ph-faceoff-logo"><span class="ph-fo-face">FACE</span><span class="ph-fo-off">OFF</span></span>';
       }
@@ -17139,6 +17507,10 @@ document.addEventListener('keydown', e => {
 
     // Registry of round type modules. Each defines its label, player
     // requirements, entry function, and reset function.
+    // Phone view waits this many ms in playModuleIntro to stay in
+    // lockstep with the hub's cinematic. Per-module override via
+    // ROUND_MODULES[key].phoneIntroMs.
+    const PHONE_INTRO_DEFAULT_MS = 6500;
     const ROUND_MODULES = {
       'high-five': {
         label: 'High Five',
@@ -17196,6 +17568,9 @@ document.addEventListener('keydown', e => {
         intro: { title: 'GRID\nLOCK', subtitle: 'Trace words around the lock', accent: '#fba300' },
         artHtml: () => _buildGlPickerArtHtml(),
         cinematic: () => _playGlCinematic(),
+        // Sums: 600ms fly-in + 1500ms wiggle + 280+620+300+540+2100+460ms
+        // post-wiggle chain ≈ 6.4s. Tune if cinematic timing changes.
+        phoneIntroMs: 6400,
         enter(onComplete) { enterGridLockRound(onComplete); },
         reset() { resetGridLockState(); },
       },
@@ -21228,6 +21603,8 @@ document.addEventListener('keydown', e => {
       gridLockState._revealTotals = null;
       gridLockState._bonuses = null;
       gridLockState.onComplete = null;
+      // Phone-controller: tear down the trace board when GL resets.
+      if (IS_PHONE_VIEW && typeof _phoneGlHide === "function") _phoneGlHide();
     }
 
     function glLocalPlayerName() {
@@ -21254,27 +21631,42 @@ document.addEventListener('keydown', e => {
 
     function glRenderBoard() {
       const grid = document.getElementById('grid-lock-board');
-      if (!grid) return;
-      grid.innerHTML = '';
-      gridLockState.tiles.forEach((tile, i) => {
-        const el = document.createElement('div');
-        el.className = 'gl-tile';
-        if (i === gridLockState.lockedIdx) el.classList.add('locked');
-        el.textContent = tile;
-        const pts = document.createElement('span');
-        pts.className = 'gl-pts';
-        pts.textContent = GL_LETTER_POINTS[tile];
-        el.appendChild(pts);
-        grid.appendChild(el);
-      });
+      if (grid) {
+        grid.innerHTML = '';
+        gridLockState.tiles.forEach((tile, i) => {
+          const el = document.createElement('div');
+          el.className = 'gl-tile';
+          if (i === gridLockState.lockedIdx) el.classList.add('locked');
+          el.textContent = tile;
+          const pts = document.createElement('span');
+          pts.className = 'gl-pts';
+          pts.textContent = GL_LETTER_POINTS[tile];
+          el.appendChild(pts);
+          grid.appendChild(el);
+        });
+      }
+      // Phone-controller mirror.
+      if (IS_PHONE_VIEW) _phoneGlRenderBoard();
     }
     // Drive lock/unlock visuals + SFX from lockedIdx transitions.
     // - tile newly locked (no .locked → .locked): drop red lock SVG, pulse border
     // - tile newly unlocked (.locked → no): swap to green unlocked SVG, fade out
     // SFX is gated on phase==='play' so reveal-time teardown stays silent.
     function glUpdateLockDisplay() {
-      const tileEls = document.querySelectorAll('#grid-lock-board .gl-tile');
       const phase = gridLockState.phase;
+      // Walk both desktop and phone boards. Pass `withSfx` only on the
+      // first non-empty board so a hub with both DOMs alive (or any
+      // future side-by-side scenario) doesn't double-play the SFX.
+      const boards = ['#grid-lock-board', '#phone-gl-board'];
+      let sfxConsumed = false;
+      boards.forEach(sel => {
+        const tiles = document.querySelectorAll(`${sel} .gl-tile`);
+        if (!tiles.length) return;
+        _glUpdateLockDisplayForBoard(tiles, phase, !sfxConsumed);
+        sfxConsumed = true;
+      });
+    }
+    function _glUpdateLockDisplayForBoard(tileEls, phase, withSfx) {
       tileEls.forEach((el, i) => {
         const wasLocked = el.classList.contains('locked');
         const shouldLock = (i === gridLockState.lockedIdx);
@@ -21287,7 +21679,7 @@ document.addEventListener('keydown', e => {
           overlay.className = 'gl-lock-overlay locked-svg';
           overlay.innerHTML = `<svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">${_GLL_LOCK_SVG_INNER}</svg>`;
           el.appendChild(overlay);
-          if (phase === 'play' && typeof playSound === "function") playSound(sfxLock);
+          if (withSfx && phase === 'play' && typeof playSound === "function") playSound(sfxLock);
         } else if (!shouldLock && wasLocked) {
           el.classList.remove('locked');
           el.classList.add('unlocking');
@@ -21297,7 +21689,7 @@ document.addEventListener('keydown', e => {
             overlay.classList.add('unlocked-svg');
             overlay.innerHTML = `<svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">${_GLL_UNLOCK_SVG_INNER}</svg>`;
           }
-          if (phase === 'play' && typeof playSound === "function") playSound(sfxUnlock);
+          if (withSfx && phase === 'play' && typeof playSound === "function") playSound(sfxUnlock);
           // Hold the green unlock solid for 0.25s, then start the 0.5s fade.
           setTimeout(() => {
             const o = el.querySelector('.gl-lock-overlay');
@@ -21373,6 +21765,10 @@ document.addEventListener('keydown', e => {
       });
       if (stickToBottom) listEl.scrollTop = listEl.scrollHeight;
       glUpdateHeader();
+      if (IS_PHONE_VIEW) {
+        _phoneGlUpdateCount();
+        _phoneGlCheckForResult();
+      }
     }
     function glUpdateHeader() {
       const myName = glLocalPlayerName();
@@ -21385,11 +21781,321 @@ document.addEventListener('keydown', e => {
       if (pEl) pEl.textContent = pts;
     }
     function glUpdateTimerDisplay() {
+      const t = gridLockState.timeLeft;
       const el = document.getElementById('grid-lock-timer');
+      if (el) {
+        el.textContent = glFormatTime(t);
+        el.classList.toggle('warn', t <= 30 && t > 0);
+        el.classList.toggle('done', t === 0);
+      }
+      // Phone-controller: mirror into the status strip.
+      const pEl = document.getElementById('phone-gl-timer');
+      if (pEl) {
+        pEl.textContent = glFormatTime(t);
+        pEl.classList.toggle('warn', t <= 30 && t > 0);
+        pEl.classList.toggle('done', t === 0);
+      }
+      // Per-second triggers (this function fires at the timer interval's
+      // 250ms cadence; we want effects on the second-change only).
+      if (glUpdateTimerDisplay._lastSec !== t) {
+        glUpdateTimerDisplay._lastSec = t;
+        // Final-10s clock jump on both desktop + phone — driven by a
+        // toggled animation class, retriggered each second via reflow.
+        if (t <= 10 && t > 0) {
+          [el, pEl].forEach(node => {
+            if (!node) return;
+            node.classList.remove('gl-timer-jump');
+            void node.offsetWidth;
+            node.classList.add('gl-timer-jump');
+          });
+        }
+        // Final-5s haptic (Android browsers only — iOS Safari no-ops).
+        if (t <= 5 && t > 0 && typeof navigator !== "undefined" && navigator.vibrate) {
+          try { navigator.vibrate(60); } catch (_) {}
+        }
+      }
+    }
+
+    // ─── Phone-controller Grid Lock ──────────────────────────────────
+    // Trace-only board mounted into #phone-grid-lock. Builds a scaffold
+    // (status strip + feedback bar + 5×5 board) once per round; the
+    // board reuses the .gl-tile look from desktop. Lock visuals are
+    // driven by glUpdateLockDisplay (generalized to walk both boards).
+    const _phoneGl = {
+      trace: [],          // array of tile indices in path order
+      pointerId: null,
+      tracking: false,
+      lastSeenEntryTs: 0,
+      lastSeenRejectTs: 0,
+      pendingWord: null,  // word awaiting host evaluation (non-host)
+      feedbackTimer: null,
+    };
+    function _phoneGlMount() {
+      if (!IS_PHONE_VIEW) return;
+      const stage = document.getElementById('phone-grid-lock');
+      if (!stage) return;
+      if (!stage.querySelector('.pgl-board-wrap')) {
+        stage.innerHTML =
+            `<div class="pgl-status">`
+          +   `<div class="pgl-status-cell">`
+          +     `<div class="pgl-status-label">Time Left</div>`
+          +     `<div class="pgl-status-value" id="phone-gl-timer">3:00</div>`
+          +   `</div>`
+          +   `<div class="pgl-status-cell">`
+          +     `<div class="pgl-status-label">Words</div>`
+          +     `<div class="pgl-status-value" id="phone-gl-count">0</div>`
+          +   `</div>`
+          + `</div>`
+          + `<div class="pgl-board-wrap">`
+          +   `<div class="pgl-board-stack">`
+          +     `<div class="pgl-feedback" id="phone-gl-feedback"></div>`
+          +     `<div class="pgl-board-frame">`
+          +       `<div id="phone-gl-board"></div>`
+          +       `<div id="phone-gl-cover" class="gl-cover">`
+          +         `<div class="gl-cover-logo"></div>`
+          +         `<div id="phone-gl-countdown" class="gl-countdown"></div>`
+          +       `</div>`
+          +     `</div>`
+          +   `</div>`
+          + `</div>`;
+        // Populate the engraved-tile logo at a phone-friendly scale.
+        const coverLogo = stage.querySelector('#phone-gl-cover .gl-cover-logo');
+        if (coverLogo && typeof _buildGlStackedLogoHtml === "function") {
+          coverLogo.innerHTML = _buildGlStackedLogoHtml(28, 4, false);
+        }
+        const board = stage.querySelector('#phone-gl-board');
+        board.addEventListener('pointerdown', _phoneGlOnPointerDown);
+        board.addEventListener('pointermove', _phoneGlOnPointerMove);
+        board.addEventListener('pointerup', _phoneGlOnPointerUp);
+        board.addEventListener('pointercancel', _phoneGlOnPointerUp);
+      }
+      stage.classList.add('active');
+      document.body.classList.add('phone-gl-active');
+      _phoneGlRenderBoard();
+      glUpdateTimerDisplay();
+      _phoneGlUpdateCount();
+    }
+    function _phoneGlHide() {
+      if (!IS_PHONE_VIEW) return;
+      const stage = document.getElementById('phone-grid-lock');
+      if (stage) {
+        stage.classList.remove('active');
+        stage.innerHTML = '';
+      }
+      document.body.classList.remove('phone-gl-active');
+      _phoneGl.trace = [];
+      _phoneGl.tracking = false;
+      _phoneGl.pointerId = null;
+      _phoneGl.pendingWord = null;
+      if (_phoneGl.feedbackTimer) { clearTimeout(_phoneGl.feedbackTimer); _phoneGl.feedbackTimer = null; }
+    }
+    // Soft round-end state on phone: trace board goes away (so the
+    // input-area can return for Ready Up), but the phone GL stage stays
+    // mounted with a quiet "look at the screen" message so the canvas
+    // isn't blank. resetGridLockState (next GL round entry) does the
+    // full teardown via _phoneGlHide.
+    function _phoneGlShowRoundEnd() {
+      if (!IS_PHONE_VIEW) return;
+      const stage = document.getElementById('phone-grid-lock');
+      if (!stage) return;
+      stage.innerHTML =
+          `<div class="pnic-roundend">`
+        +   `<div class="pnic-roundend-title">Round Complete</div>`
+        +   `<div class="pnic-roundend-body">A summary of the round is on the screen.</div>`
+        + `</div>`;
+      stage.classList.add('active');
+      document.body.classList.remove('phone-gl-active');
+      _phoneGl.trace = [];
+      _phoneGl.tracking = false;
+      _phoneGl.pointerId = null;
+      _phoneGl.pendingWord = null;
+      if (_phoneGl.feedbackTimer) { clearTimeout(_phoneGl.feedbackTimer); _phoneGl.feedbackTimer = null; }
+    }
+    function _phoneGlRenderBoard() {
+      const board = document.getElementById('phone-gl-board');
+      if (!board) return;
+      board.innerHTML = '';
+      gridLockState.tiles.forEach((tile, i) => {
+        const el = document.createElement('div');
+        el.className = 'gl-tile';
+        el.dataset.idx = i;
+        if (i === gridLockState.lockedIdx) el.classList.add('locked');
+        el.textContent = tile;
+        const pts = document.createElement('span');
+        pts.className = 'gl-pts';
+        pts.textContent = GL_LETTER_POINTS[tile];
+        el.appendChild(pts);
+        board.appendChild(el);
+      });
+    }
+    function _phoneGlUpdateCount() {
+      const el = document.getElementById('phone-gl-count');
       if (!el) return;
-      el.textContent = glFormatTime(gridLockState.timeLeft);
-      el.classList.toggle('warn', gridLockState.timeLeft <= 30 && gridLockState.timeLeft > 0);
-      el.classList.toggle('done', gridLockState.timeLeft === 0);
+      const myName = glLocalPlayerName();
+      const count = gridLockState.entries.filter(e => e.player === myName && e.valid).length;
+      el.textContent = count;
+    }
+    function _phoneGlTileFromPoint(x, y) {
+      const node = document.elementFromPoint(x, y);
+      if (!node) return -1;
+      const tile = node.closest('#phone-gl-board .gl-tile');
+      if (!tile) return -1;
+      const idx = parseInt(tile.dataset.idx, 10);
+      return Number.isFinite(idx) ? idx : -1;
+    }
+    function _phoneGlIsAdjacent(a, b) {
+      const ar = Math.floor(a / 5), ac = a % 5;
+      const br = Math.floor(b / 5), bc = b % 5;
+      const dr = Math.abs(ar - br), dc = Math.abs(ac - bc);
+      return (dr <= 1 && dc <= 1) && !(dr === 0 && dc === 0);
+    }
+    function _phoneGlOnPointerDown(e) {
+      if (gridLockState.phase !== 'play') return;
+      const idx = _phoneGlTileFromPoint(e.clientX, e.clientY);
+      if (idx < 0) return;
+      if (idx === gridLockState.lockedIdx) return;
+      e.preventDefault();
+      _phoneGl.tracking = true;
+      _phoneGl.pointerId = e.pointerId;
+      _phoneGl.trace = [idx];
+      try { e.target.setPointerCapture(e.pointerId); } catch (_) {}
+      _phoneGlPaintTrace();
+      _phoneGlShowTracingPreview();
+    }
+    function _phoneGlOnPointerMove(e) {
+      if (!_phoneGl.tracking) return;
+      if (e.pointerId !== _phoneGl.pointerId) return;
+      const idx = _phoneGlTileFromPoint(e.clientX, e.clientY);
+      if (idx < 0) return;
+      if (idx === gridLockState.lockedIdx) return;
+      const trace = _phoneGl.trace;
+      const last = trace[trace.length - 1];
+      if (idx === last) return;
+      // Backtrack: if user swept back to the previous tile, pop the head.
+      if (trace.length >= 2 && idx === trace[trace.length - 2]) {
+        trace.pop();
+        _phoneGlPaintTrace();
+        _phoneGlShowTracingPreview();
+        return;
+      }
+      // Already in trace (no revisits).
+      if (trace.includes(idx)) return;
+      // Must be adjacent to last.
+      if (!_phoneGlIsAdjacent(last, idx)) return;
+      trace.push(idx);
+      _phoneGlPaintTrace();
+      _phoneGlShowTracingPreview();
+    }
+    function _phoneGlOnPointerUp(e) {
+      if (!_phoneGl.tracking) return;
+      if (e.pointerId !== _phoneGl.pointerId) return;
+      _phoneGl.tracking = false;
+      _phoneGl.pointerId = null;
+      const word = _phoneGl.trace.map(i => gridLockState.tiles[i]).join('');
+      _phoneGl.trace = [];
+      _phoneGlPaintTrace();
+      if (!word) { _phoneGlClearFeedback(); return; }
+      // Take a snapshot of entries/rejects timestamps so the next render
+      // hook can detect the resulting entry and flash the feedback bar.
+      _phoneGl.lastSeenEntryTs = _phoneGlMaxTs(gridLockState.entries);
+      _phoneGl.lastSeenRejectTs = _phoneGlMaxTs(gridLockState._localRejects || []);
+      _phoneGl.pendingWord = word;
+      // Leave the bar in 'tracing' (orange) showing the final word —
+      // the CSS transition then morphs orange → green/red smoothly when
+      // the result lands. No intermediate "checking" state means no
+      // blank frame between trace-end and result.
+      glSubmitWord(word);
+    }
+    function _phoneGlMaxTs(arr) {
+      const myName = glLocalPlayerName();
+      let max = 0;
+      for (const e of arr) if (e.player === myName && e.timestamp > max) max = e.timestamp;
+      return max;
+    }
+    function _phoneGlPaintTrace() {
+      const board = document.getElementById('phone-gl-board');
+      if (!board) return;
+      const tiles = board.querySelectorAll('.gl-tile');
+      const set = new Set(_phoneGl.trace);
+      tiles.forEach((el, i) => {
+        el.classList.toggle('pgl-traced', set.has(i));
+      });
+    }
+    function _phoneGlShowTracingPreview() {
+      const word = _phoneGl.trace.map(i => gridLockState.tiles[i]).join('');
+      if (word.length >= 1) _phoneGlSetFeedback('tracing', word);
+      else _phoneGlClearFeedback();
+    }
+    // Single-element feedback bar with four states (idle/tracing/ok/bad).
+    // showFeedback animates IN via the CSS transition (bg fades from
+    // gray-dashed → colored). clearFeedback snaps OUT instantly: temp-
+    // disabling the transition so the bg + text update in the same
+    // frame, then restoring the transition for the next show. This
+    // eliminates the flicker where "Trace a word" reappeared briefly
+    // over a still-fading colored background.
+    function _phoneGlSetFeedback(kind, text, ptsText) {
+      const el = document.getElementById('phone-gl-feedback');
+      if (!el) return;
+      if (_phoneGl.feedbackTimer) { clearTimeout(_phoneGl.feedbackTimer); _phoneGl.feedbackTimer = null; }
+      el.style.transition = '';
+      el.classList.remove('ok', 'bad', 'tracing');
+      if (kind === 'ok') el.classList.add('ok');
+      else if (kind === 'bad') el.classList.add('bad');
+      else if (kind === 'tracing') el.classList.add('tracing');
+      el.innerHTML = '';
+      const word = document.createElement('span');
+      word.className = 'pgl-feedback-word';
+      word.textContent = text || '';
+      el.appendChild(word);
+      if (ptsText) {
+        // Append inside the word span so its absolute positioning
+        // anchors to the word's right edge — score hangs off the word
+        // without shifting the word's centered position in the bar.
+        const p = document.createElement('span');
+        p.className = 'pgl-feedback-pts';
+        p.textContent = ptsText;
+        word.appendChild(p);
+      }
+    }
+    function _phoneGlClearFeedback() {
+      const el = document.getElementById('phone-gl-feedback');
+      if (!el) return;
+      if (_phoneGl.feedbackTimer) { clearTimeout(_phoneGl.feedbackTimer); _phoneGl.feedbackTimer = null; }
+      // Just remove the state class — the CSS transition fades bg,
+      // border, AND color (text) together to transparent. innerHTML
+      // stays so the word/score remain in the DOM during the fade
+      // (color → transparent makes them invisible at the end).
+      el.style.transition = '';
+      el.classList.remove('ok', 'bad', 'tracing');
+    }
+    // Called from glRenderWordList. Looks for any new entry/reject for
+    // the local player since the trace was released; if found, shows
+    // ok/bad feedback for ~1.6s, then clears.
+    function _phoneGlCheckForResult() {
+      if (!IS_PHONE_VIEW) return;
+      if (!_phoneGl.pendingWord) return;
+      const myName = glLocalPlayerName();
+      // Look for a synced entry first (host accepted or rejected it).
+      const entry = [...gridLockState.entries].reverse().find(
+        e => e.player === myName && e.timestamp > _phoneGl.lastSeenEntryTs && e.word === _phoneGl.pendingWord
+      );
+      const reject = [...(gridLockState._localRejects || [])].reverse().find(
+        e => e.player === myName && e.timestamp > _phoneGl.lastSeenRejectTs && e.word === _phoneGl.pendingWord
+      );
+      const result = entry || reject;
+      if (!result) return;
+      _phoneGl.pendingWord = null;
+      if (result.valid) {
+        _phoneGlSetFeedback('ok', result.word, `+${result.points}`);
+      } else {
+        const reason = (result.reason || 'rejected').toUpperCase();
+        _phoneGlSetFeedback('bad', `${result.word} — ${reason}`);
+      }
+      if (_phoneGl.feedbackTimer) clearTimeout(_phoneGl.feedbackTimer);
+      _phoneGl.feedbackTimer = setTimeout(() => {
+        // Don't overwrite an active trace preview that started since.
+        if (!_phoneGl.tracking) _phoneGlClearFeedback();
+      }, 1800);
     }
 
     // ── Multiplayer sync (host-authoritative). ─────────────────────────
@@ -21773,6 +22479,7 @@ document.addEventListener('keydown', e => {
       if (red) red.classList.add('gl-pre-enter-left');
       if (blue) blue.classList.add('gl-pre-enter-left');
       pane.style.display = 'grid';
+      container.classList.remove('gl-hub-play-mode');
       container.classList.add('gl-reveal-mode');
       // Team names header.
       const redName = document.getElementById('gl-reveal-red-name');
@@ -21825,6 +22532,9 @@ document.addEventListener('keydown', e => {
       const stillAlive = () => gridLockState._revealGen === myGen && gridLockState.active;
       if (gridLockState._revealRan) return;
       gridLockState._revealRan = true;
+      // Phone-controller: swap the trace board out for a quiet round-end
+      // message so the input-area can come back for Ready Up.
+      if (IS_PHONE_VIEW) _phoneGlShowRoundEnd();
       const entries = gridLockState.entries || [];
       if (entries.length === 0) {
         console.warn('[grid-lock] glRunReveal — no entries; skipping reveal, going straight to summary');
@@ -22392,15 +23102,33 @@ document.addEventListener('keydown', e => {
       gridLockState.phase = 'play';
       const cover = document.getElementById('grid-lock-cover');
       if (cover) cover.classList.add('gl-cover-off');
+      const phoneCover = document.getElementById('phone-gl-cover');
+      if (phoneCover) phoneCover.classList.add('gl-cover-off');
       glStartTimer();
       glSyncState();
       if (typeof setInputAreaMode === "function") {
-        setInputAreaMode({
-          mode: 'guess',
-          header: 'GRID LOCK',
-          subtext: 'Trace words, avoid the lock',
-          inputPlaceholder: 'Enter a word…',
-        });
+        // On phone, the input-area chrome is hidden via .phone-gl-active;
+        // only the header band is visible, so use it as a guidance label
+        // for the touch-trace gesture. Desktop keeps its full guess UI.
+        if (IS_PHONE_VIEW) {
+          setInputAreaMode({
+            mode: 'disabled',
+            header: 'TRACE WORDS ON THE GRID',
+            subtext: '',
+          });
+          // sq-zone-input keeps its initial .offscreen-below class
+          // (translateY(400%)) until showInputArea slides it in. On
+          // phone we just need it visible in place — strip the offset.
+          const szi = document.getElementById('sq-zone-input');
+          if (szi) szi.classList.remove('offscreen-below', 'input-exit');
+        } else {
+          setInputAreaMode({
+            mode: 'guess',
+            header: 'GRID LOCK',
+            subtext: 'Trace words, avoid the lock',
+            inputPlaceholder: 'Enter a word…',
+          });
+        }
       }
       // GL is all-players-simultaneous; updateRoleUI early-returns for
       // gridLockState.active so it can't enable the input/submit, and in MP
@@ -22410,22 +23138,41 @@ document.addEventListener('keydown', e => {
       const submitBtn = document.querySelector('#turn-body .dome-button');
       if (input) input.disabled = false;
       if (submitBtn) submitBtn.disabled = false;
-      if (input) input.focus();
+      // On phone the input-area is hidden under .phone-gl-active; mount
+      // the touch-trace board into the middle of the canvas.
+      if (IS_PHONE_VIEW) _phoneGlMount();
+      else if (input) input.focus();
     }
 
     function glRunIntro() {
       gridLockState.phase = 'intro';
-      const cover = document.getElementById('grid-lock-cover');
-      const countEl = document.getElementById('grid-lock-countdown');
-      if (cover) cover.classList.remove('gl-cover-off', 'gl-cover-shake');
-      if (countEl) countEl.textContent = '';
+      // Mount the phone scaffold up-front so its cover plate is visible
+      // during the intro. Idempotent.
+      if (IS_PHONE_VIEW) _phoneGlMount();
+      // Walk both desktop and phone covers/countdowns. Either may be
+      // null on a given client (phone has no #grid-lock-cover in view,
+      // hub has no #phone-gl-cover). The animationiteration listener
+      // for shake SFX is attached to whichever cover lives in a visible
+      // container so the iterationcount actually fires.
+      const covers = [
+        document.getElementById('grid-lock-cover'),
+        document.getElementById('phone-gl-cover'),
+      ].filter(Boolean);
+      const countEls = [
+        document.getElementById('grid-lock-countdown'),
+        document.getElementById('phone-gl-countdown'),
+      ].filter(Boolean);
+      const sfxCover = IS_PHONE_VIEW
+        ? document.getElementById('phone-gl-cover')
+        : document.getElementById('grid-lock-cover');
+      covers.forEach(c => c.classList.remove('gl-cover-off', 'gl-cover-shake'));
+      countEls.forEach(c => c.textContent = '');
       const push = (fn, ms) => { gridLockState.introHandles.push(setTimeout(fn, ms)); };
       // Container slide-in is 0.5s; hold an extra 1s after it lands before
       // the cover starts shaking. Subsequent steps shift by SHAKE_DELAY.
       const SHAKE_DELAY = 1500;
       push(() => {
-        if (!cover) return;
-        cover.classList.add('gl-cover-shake');
+        covers.forEach(c => c.classList.add('gl-cover-shake'));
         // Play once at shake start + first 2 iterations (3 plays total).
         // The trailing iteration was running past the visual shake.
         let shakePlays = 1;
@@ -22435,27 +23182,29 @@ document.addEventListener('keydown', e => {
           shakePlays++;
           if (typeof playSound === "function") playSound(sfxBlockShake);
         };
-        cover.addEventListener('animationiteration', onIter);
+        if (sfxCover) sfxCover.addEventListener('animationiteration', onIter);
         gridLockState._shakeIterHandler = onIter;
+        gridLockState._shakeIterCover = sfxCover;
       }, SHAKE_DELAY);
       push(() => {
-        if (!cover) return;
-        cover.classList.remove('gl-cover-shake');
-        if (gridLockState._shakeIterHandler) {
-          cover.removeEventListener('animationiteration', gridLockState._shakeIterHandler);
+        covers.forEach(c => c.classList.remove('gl-cover-shake'));
+        const sfxC = gridLockState._shakeIterCover;
+        if (sfxC && gridLockState._shakeIterHandler) {
+          sfxC.removeEventListener('animationiteration', gridLockState._shakeIterHandler);
           gridLockState._shakeIterHandler = null;
+          gridLockState._shakeIterCover = null;
         }
       }, SHAKE_DELAY + 2000);
-      push(() => { if (countEl) { countEl.textContent = '3'; if (typeof playTick === "function") playTick(0, { volume: 0.5 }); } }, SHAKE_DELAY + 2000);
-      push(() => { if (countEl) { countEl.textContent = '2'; if (typeof playTick === "function") playTick(0.33, { volume: 0.6 }); } }, SHAKE_DELAY + 3000);
-      push(() => { if (countEl) { countEl.textContent = '1'; if (typeof playTick === "function") playTick(0.66, { volume: 0.7 }); } }, SHAKE_DELAY + 4000);
+      push(() => { countEls.forEach(c => c.textContent = '3'); if (typeof playTick === "function") playTick(0, { volume: 0.5 }); }, SHAKE_DELAY + 2000);
+      push(() => { countEls.forEach(c => c.textContent = '2'); if (typeof playTick === "function") playTick(0.33, { volume: 0.6 }); }, SHAKE_DELAY + 3000);
+      push(() => { countEls.forEach(c => c.textContent = '1'); if (typeof playTick === "function") playTick(0.66, { volume: 0.7 }); }, SHAKE_DELAY + 4000);
       push(() => {
-        if (countEl) { countEl.textContent = 'GO!'; if (typeof playTick === "function") playTick(1, { volume: 1.0 }); }
+        countEls.forEach(c => c.textContent = 'GO!'); if (typeof playTick === "function") playTick(1, { volume: 1.0 });
       }, SHAKE_DELAY + 5000);
       // Hold GO! visible for 250ms before the cover slides off and the
       // timer starts — the previous flash was too brief to register.
       push(() => { glStartPlay(); }, SHAKE_DELAY + 5250);
-      push(() => { if (countEl) countEl.textContent = ''; }, SHAKE_DELAY + 5950);
+      push(() => { countEls.forEach(c => c.textContent = ''); }, SHAKE_DELAY + 5950);
     }
 
     async function enterGridLockRound(onComplete) {
@@ -22495,6 +23244,10 @@ document.addEventListener('keydown', e => {
       const _glContainer = document.getElementById('grid-lock-container');
       if (_glContainer) {
         _glContainer.classList.remove('gl-reveal-mode');
+        // Hub layout during play: hide the per-player word list (now
+        // a phone-only surface) and let the right column center the
+        // grid in the canvas.
+        _glContainer.classList.add('gl-hub-play-mode');
         const _lc = _glContainer.querySelector('.gl-left-col');
         const _rc = _glContainer.querySelector('.gl-right-col');
         if (_lc) _lc.classList.remove('gl-play-exit');
@@ -23490,7 +24243,12 @@ document.addEventListener('keydown', e => {
     const NIC_QUESTION_TIME_MS    = 30000;
     const NIC_REVEAL_HOLD_MS      = 10000;
     const NIC_BETWEEN_QUESTION_MS = 600;
-    const NIC_EXACT_PTS = 500;
+    const NIC_EXACT_PTS = 300;
+    // Per-question bonus awarded to the player(s) with the smallest
+    // absolute diff from the answer. Added BEFORE the speed multiplier
+    // so it gets multiplied. Ties: every player at the min diff qualifies.
+    // Lets a player offset a wrong-band penalty if they were closest.
+    const NIC_CLOSEST_BONUS = 50;
     const NIC_SCORE_BANDS = [
       { maxPct: 0.10, pts: 150 },
       { maxPct: 0.20, pts: 125 },
@@ -23951,14 +24709,30 @@ document.addEventListener('keydown', e => {
 
       const q = nicState.questions[nicState.qIdx];
       if (q) {
+        // Closest-bonus eligibility: find the min absolute diff across
+        // all locks; every lock at that diff qualifies (ties all win).
+        const closestUids = new Set();
+        if (nicState.locks.length) {
+          let minDiff = Infinity;
+          nicState.locks.forEach(lock => {
+            const d = Math.abs(lock.guess - q.answer);
+            if (d < minDiff) minDiff = d;
+          });
+          nicState.locks.forEach(lock => {
+            if (Math.abs(lock.guess - q.answer) === minDiff) closestUids.add(lock.uid);
+          });
+        }
         nicState.locks.forEach(lock => {
-          const { basePts, label } = nicScoreGuess(lock.guess, q.answer);
+          const { basePts: bandPts, label } = nicScoreGuess(lock.guess, q.answer);
+          const closestBonus = closestUids.has(lock.uid) ? NIC_CLOSEST_BONUS : 0;
+          const basePts = bandPts + closestBonus;
           const mult = nicSpeedMult(lock.orderIdx);
           const finalPts = Math.round(basePts * mult);
           lock.basePts = basePts;
           lock.mult = mult;
           lock.finalPts = finalPts;
           lock.label = label;
+          lock.closest = closestBonus > 0;
           nicState.scoresByUid[lock.uid] = (nicState.scoresByUid[lock.uid] || 0) + finalPts;
           nicState.teamTotals[lock.team] += finalPts;
 
@@ -23969,7 +24743,9 @@ document.addEventListener('keydown', e => {
           });
           ps.locked++;
           ps.points += finalPts;
-          if (basePts === NIC_EXACT_PTS) ps.exactCount++;
+          // Use bandPts (pre-bonus) for the exact-count check so a closest
+          // bonus tacked onto a non-exact band doesn't inflate the stat.
+          if (bandPts === NIC_EXACT_PTS) ps.exactCount++;
           if (lock.orderIdx === 0) ps.firstLockCount++;
           const denom = Math.abs(q.answer) || 1;
           ps.sumPctOff += Math.abs(lock.guess - q.answer) / denom;
@@ -24406,9 +25182,10 @@ document.addEventListener('keydown', e => {
               + (pctTxt ? `<span class="pnic-guess-pct">${pctTxt}</span>` : '')
               + `<span class="pnic-guess-pts ${ptsClass}">${ptsTxt}</span>`
               + `</div>`;
-          } else if (p.uid === myEffectiveUid) {
-            // Own row before reveal: surface order/mult so the locked
-            // player knows where they ranked without looking up to hub.
+          } else {
+            // Pre-reveal: show order/mult on every locked row (not just
+            // the local player's). Keeps the layout aligned across rows
+            // and lets everyone see where each lock ranked in real time.
             const multVal = lock.mult ?? nicSpeedMult(lock.orderIdx);
             const multTxt = multVal === 1 ? '1×' : multVal + '×';
             const orderTxt = nicOrdinal(lock.orderIdx + 1);
@@ -24600,6 +25377,18 @@ document.addEventListener('keydown', e => {
       const mod = ROUND_MODULES[moduleKey];
       const cfg = mod && mod.intro;
       if (!cfg) return Promise.resolve();
+      // Phone view: skip the visual cinematic but WAIT the same elapsed
+      // time the hub spends on it, so the phone's module flow stays in
+      // lockstep with what players see on the shared screen. Cinematics
+      // mount to #module-canvas (display:none on phone), so CSS
+      // animations never fire and animationend never resolves — we'd
+      // otherwise hang the chain. Instead we wait a per-module duration
+      // that approximates the hub cinematic length. Tune via
+      // ROUND_MODULES[key].phoneIntroMs.
+      if (IS_PHONE_VIEW) {
+        const ms = (mod && mod.phoneIntroMs) || PHONE_INTRO_DEFAULT_MS;
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
       if (mod.cinematic) {
         const p = mod.cinematic();
         window._moduleIntroPromise = p;

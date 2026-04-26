@@ -615,7 +615,10 @@
       flex: 1 1 0;
       min-height: 0;
       display: grid;
-      grid-template-columns: 38% 62%;
+      /* fr units (vs. %) so the 6px gap is subtracted from available
+         width before the columns share — otherwise 38%+62%+gap > 100%
+         and the right border gets clipped at the stage edge. */
+      grid-template-columns: 38fr 62fr;
       gap: 6px;
       align-items: stretch;
     }
@@ -626,12 +629,14 @@
       padding: 4px 8px;
       border-radius: 6px;
       font-family: "dazzle-unicase", "futura-100", sans-serif;
-      font-size: 0.95rem;
+      /* fit-shrink for names > 8 chars — fitByCharCount sets --fit-scale
+         in JS after render. Replaces the previous ellipsis truncation. */
+      --fit-base: 0.95rem;
+      font-size: calc(var(--fit-base) * var(--fit-scale, 1));
       letter-spacing: 0.04em;
       color: #fff;
       text-transform: uppercase;
       overflow: hidden;
-      text-overflow: ellipsis;
       white-space: nowrap;
     }
     body.phone-mode .pnic-row.red  .pnic-row-name { background: var(--red-bg); }
@@ -647,12 +652,18 @@
         radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 0.5px, transparent 1px);
       background-size: 7px 7px;
       display: grid;
-      grid-template-columns: 1fr auto;
+      /* Fixed 1fr / 1fr split keeps the number's column width constant
+         across rows — empty side info doesn't let the number column
+         expand and recenter. Numbers stack at the same x-position
+         vertically across all rows. */
+      grid-template-columns: 1fr 1fr;
       align-items: center;
       padding: 0 10px;
       gap: 8px;
       overflow: hidden;
     }
+    /* Number sits centered within its left column (consistent x). */
+    body.phone-mode .pnic-guess-main { justify-self: center; }
     body.phone-mode .pnic-guess-main {
       font-family: "Bitcount Single", monospace;
       font-size: 1.5rem;
@@ -10587,7 +10598,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.31</div>
+  <div id="version-tag">v0.32</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -21941,43 +21952,36 @@ document.addEventListener('keydown', e => {
       el.textContent = count;
     }
     function _phoneGlTileFromPoint(x, y) {
-      // Direct hit: finger is on a tile.
-      const node = document.elementFromPoint(x, y);
-      if (node) {
-        const tile = node.closest('#phone-gl-board .gl-tile');
-        if (tile) {
-          const idx = parseInt(tile.dataset.idx, 10);
-          if (Number.isFinite(idx)) return idx;
-        }
-      }
-      // Gap-fallback: finger landed in the inter-tile gap or just off
-      // a tile edge. Find the nearest tile center within a reasonable
-      // slop threshold (~half a tile + the gap). Adjacency / locked-tile
-      // checks downstream still gate which tile actually gets added to
-      // the trace, so this only rescues near-misses that already wanted
-      // to land on a valid neighbor.
+      // Inner-zone gating: only register a tile when the finger is
+      // close to its CENTER, not just touching any part of the tile.
+      // The user's pain-point was diagonal swipes accidentally picking
+      // up cardinal-direction neighbors as the finger crossed their
+      // outer edge. Using a small radius around each tile's center as
+      // the "add zone" means a finger sweeping diagonally between two
+      // diagonal tiles passes through the corners of the cardinal-
+      // adjacent tiles (which sit ~tileSize/2 from cardinal centers)
+      // without entering their inner zone.
+      //
+      // Threshold: tileSize * 0.35 is roughly half the tile minus a
+      // safety margin. On a 64px tile that's ~22px from center —
+      // generous enough for direct presses, tight enough to ignore
+      // edge crossings.
       const board = document.getElementById('phone-gl-board');
       if (!board) return -1;
       const tiles = board.querySelectorAll('.gl-tile');
       if (!tiles.length) return -1;
       const sample = tiles[0].getBoundingClientRect();
-      const tileSize = sample.width;
-      const slop = tileSize * 0.6; // half-tile + a touch of the gap
+      const innerRadius = sample.width * 0.35;
       let bestIdx = -1;
       let bestDist = Infinity;
       tiles.forEach((el, i) => {
         const r = el.getBoundingClientRect();
         const cx = r.left + r.width / 2;
         const cy = r.top + r.height / 2;
-        const dx = x - cx;
-        const dy = y - cy;
-        const d = Math.hypot(dx, dy);
+        const d = Math.hypot(x - cx, y - cy);
         if (d < bestDist) { bestDist = d; bestIdx = i; }
       });
-      if (bestIdx < 0) return -1;
-      // Only return if the finger is reasonably close (i.e. inside the
-      // tile or just in the gap). Beyond that, it's a real miss.
-      return (bestDist <= slop + (tileSize * 0.5)) ? bestIdx : -1;
+      return (bestIdx >= 0 && bestDist <= innerRadius) ? bestIdx : -1;
     }
     function _phoneGlIsAdjacent(a, b) {
       const ar = Math.floor(a / 5), ac = a % 5;
@@ -25241,6 +25245,13 @@ document.addEventListener('keydown', e => {
           + `<div class="pnic-row-guess">${mainHtml}${sideHtml}</div>`
           + `</div>`;
       }).join('');
+
+      // Names > 8 chars get fit-shrunk via --fit-scale (CSS uses
+      // calc(var(--fit-base) * var(--fit-scale, 1)) on .pnic-row-name).
+      rowsHost.querySelectorAll('.pnic-row-name').forEach(el => {
+        const txt = el.textContent || '';
+        if (txt) fitByCharCount(el, 8, txt, 1);
+      });
     }
 
     function nicOrdinal(n) {

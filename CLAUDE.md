@@ -1274,7 +1274,7 @@ Boggle-style 5×5 word-forming minigame. All players play simultaneously for the
 - Core port: tile generation, dictionary loader (`dictionary.txt`, ~278k words), prefix-pruned solver, weighted letter distribution with anti-clustering (`CLUSTER_PENALTY = 0.5`), vowel floor (7) + row/col vowel max (4), solvability floor (150) with reroll retry.
 - Word validation, scoring, bonus computation (`glComputeBonuses`):
   - First-to-enter (+50) — earliest valid uncancelled submission per word, cross-team.
-  - Longest valid word (×2) — length computed across the **whole round**, only uncancelled scored words on EITHER team at that length qualify.
+  - Longest valid word (×2) — single round-wide winner; longest valid uncancelled word, ties broken by earliest timestamp. Cross-team. Only that one entry doubles.
   - Most valid words (+100) — cancellation-blind. Tie-split: `Math.floor(100 / numWinners)` per tied player, remainder discarded. Cross-team eligible.
 - Cancellation: word valid on both teams → scores nothing for either team and earns no first-entry / longest bonus. Same-team duplicates each score independently.
 - Multiplayer (host-authoritative): board generation + lock rotation + timer all run on host; non-hosts mirror via `gridLockState` Firestore sync. Submissions route through `pendingAction: { type: 'gridLockSubmit', word, uid }`. Non-host pre-checks (length / dict / self-duplicate) reject locally with neutralbeep + shake — only valid dict words round-trip to the host. Display uses `_localRejects` for local-only failures.
@@ -1376,10 +1376,10 @@ Word base score = sum of letter values. "Qu" tile contributes Q(10) + U(1) = 11.
 **Three bonuses, computed by a pure function `computeGridLockBonuses(entries)`:**
 
 1. **First-to-enter** (+50): for each unique valid word across all players, the earliest-timestamped entry's player gets +50. Works across teams — whoever clocked the word first.
-2. **Longest valid word per team** (×2): each team's longest valid word length; all valid words at that max length on that team get a 2× on their base. Ties all benefit.
+2. **Longest valid word — single round-wide winner** (×2): exactly ONE entry across both teams gets the doubled points. Pick the longest valid + uncancelled word; tie-break by earliest timestamp. Earlier rule was per-team with all entries at max length winning, which inflated the bonus's reach — the single-winner version makes it a real prize. Same-word same-team duplicates: only the earliest entry wins. Cross-team: the earliest entry wins regardless of team.
 3. **Most valid words by an individual** (+100): counts **valid** submissions per player (dict-passing + path-valid at submit time, regardless of whether the word ended up cancelled by the opposing team). Invalid attempts (typos, non-words, wrong-path) are NOT factored. Ties all benefit.
 
-Bonus function signature: `{ firstBonus: {player: points}, longestMultWords: {0: Set, 1: Set}, countBonus: {player: points} }`.
+Bonus function signature: `{ firstBonus: {player: points}, longestKey: Set<entry-key>, longestEntry: entry|null, countBonus: {player: points}, cancelled: Set<word> }`. `entry-key` format is `${word}|${timestamp}|${player}` so per-entry resolution survives same-word duplicates. Consumers check `bonuses.longestKey.has(\`${e.word}|${e.timestamp}|${e.player}\`)`.
 
 **Entry log shape** (every submission, regardless of outcome):
 ```js
@@ -1436,7 +1436,7 @@ gridLockState: {
   roundEndsAt: serverTimestamp,       // wall-clock target
   nextLockAt: serverTimestamp,        // next rotation tick
   entries: [ { player, team, word, valid, reason, timestamp, path } ],
-  bonuses: null | { firstBonus, longestMultWords, countBonus },  // computed at end by host
+  bonuses: null | { firstBonus, longestKey, longestEntry, countBonus, cancelled },  // computed at end by host
   solutionsCount: number,             // solver count, for awards or stats
 }
 ```
@@ -1472,7 +1472,7 @@ Each `case 'gridlock-<phase>':` handler must be idempotent — "bring the client
 ### Known pitfalls (from proto + anticipated at integration)
 
 - **Solver performance** — always use prefix pruning. Without it, full-board solve hangs.
-- **Set serialization** — `longestMultWords` uses Sets. Don't JSON-stringify for Firestore; convert to arrays at the boundary, rehydrate on read.
+- **Set serialization** — `longestKey` is a Set. Don't JSON-stringify for Firestore; convert to array at the boundary, rehydrate on read.
 - **Chat-style scroll** — the "respect manual scroll-up" nuance is easy to miss. Use the `scrollTop + clientHeight >= scrollHeight - threshold` check on every render.
 - **Locked-tile visual** — grayscale filter interacts oddly with the tile-hover transforms in the existing tile visual language; verify at integration.
 - **Cover-plate shake timing** — 2s feels right in proto; tune against the 3-2-1-GO cadence so total intro is ~5s, not longer.

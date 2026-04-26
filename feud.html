@@ -10598,7 +10598,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.32</div>
+  <div id="version-tag">v0.33</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -21518,7 +21518,8 @@ document.addEventListener('keydown', e => {
 
     function glComputeBonuses(entries) {
       const firstBonus = {};
-      const longestMultWords = { 0: new Set(), 1: new Set() };
+      const longestKey = new Set();   // entry-key of the SINGLE longest-word winner
+      let longestEntry = null;        // the resolved winning entry (or null)
       const countBonus = {};
       const cancelled = glCancelledSet(entries);
 
@@ -21532,24 +21533,23 @@ document.addEventListener('keydown', e => {
       }
       for (const e of firstByWord.values()) firstBonus[e.player] = (firstBonus[e.player] || 0) + GL_FIRST_BONUS;
 
-      // Longest × 2: length computed ACROSS THE WHOLE ROUND (not per
-      // team), restricted to uncancelled scored words. If the longest
-      // scored word is 6 letters, only 6-letter uncancelled words on
-      // either team qualify — a team whose longest was 4 gets nothing.
-      let longestLen = 0;
-      const teamValidUncancelled = [[], []];
+      // Longest × 2: ONE entry wins per round across both teams.
+      // Pick the longest valid + uncancelled word; tie-break by
+      // earliest timestamp. Only that one entry gets the doubled
+      // points — even if a teammate submitted the same word later
+      // or the other team had a same-length word, only the first-
+      // submitted longest wins.
       for (const e of entries) {
         if (!e.valid) continue;
         if (cancelled.has(e.word)) continue;
-        teamValidUncancelled[e.team].push(e);
-        if (e.word.length > longestLen) longestLen = e.word.length;
-      }
-      if (longestLen > 0) {
-        for (const team of [0, 1]) {
-          for (const e of teamValidUncancelled[team]) {
-            if (e.word.length === longestLen) longestMultWords[team].add(e.word);
-          }
+        if (!longestEntry
+            || e.word.length > longestEntry.word.length
+            || (e.word.length === longestEntry.word.length && e.timestamp < longestEntry.timestamp)) {
+          longestEntry = e;
         }
+      }
+      if (longestEntry) {
+        longestKey.add(`${longestEntry.word}|${longestEntry.timestamp}|${longestEntry.player}`);
       }
 
       // "Most valid words" bonus: cancellation-blind — every valid entry
@@ -21573,7 +21573,7 @@ document.addEventListener('keydown', e => {
           countBonus[player] = (countBonus[player] || 0) + share;
         }
       }
-      return { firstBonus, longestMultWords, countBonus, cancelled };
+      return { firstBonus, longestKey, longestEntry, countBonus, cancelled };
     }
 
     const gridLockState = {
@@ -22578,7 +22578,7 @@ document.addEventListener('keydown', e => {
       const entries = gridLockState.entries || [];
       if (entries.length === 0) {
         console.warn('[grid-lock] glRunReveal — no entries; skipping reveal, going straight to summary');
-        gridLockState._bonuses = { firstBonus: {}, longestMultWords: { 0: new Set(), 1: new Set() }, countBonus: {} };
+        gridLockState._bonuses = { firstBonus: {}, longestKey: new Set(), longestEntry: null, countBonus: {} };
         await _glShowTimesUp(1500);
         if (!stillAlive()) return;
         await _glPlayExitAnimations();
@@ -22687,7 +22687,7 @@ document.addEventListener('keydown', e => {
             track.appendChild(rowEl);
             glFlashPath(row.word, 0); // neutral red flash for cancelled
           } else {
-            const isLongest = bonuses.longestMultWords[row.team].has(row.word);
+            const isLongest = bonuses.longestKey.has(`${row.word}|${row.timestamp}|${row.player}`);
             const wordPts = isLongest ? row.points * 2 : row.points;
             const isFirst = firstBadgeKey.has(`${row.word}|${row.timestamp}|${row.player}`);
             const firstBonus = isFirst ? GL_FIRST_BONUS : 0;
@@ -22853,7 +22853,7 @@ document.addEventListener('keydown', e => {
         if (isCancelled) {
           row.innerHTML = `<span class="gl-reveal-word">${e.word}<span class="gl-reveal-player">(${e.player})</span></span>`;
         } else {
-          const isLongest = bonuses.longestMultWords[e.team].has(e.word);
+          const isLongest = bonuses.longestKey.has(`${e.word}|${e.timestamp}|${e.player}`);
           const wordPts = isLongest ? (e.points || 0) * 2 : (e.points || 0);
           const isFirst = firstKey.has(`${e.word}|${e.timestamp}|${e.player}`);
           const firstBonus = isFirst ? GL_FIRST_BONUS : 0;
@@ -23087,7 +23087,7 @@ document.addEventListener('keydown', e => {
           rec.cancelled += 1;
         } else {
           rec.words += 1;
-          const isLongest = bonuses.longestMultWords[e.team] && bonuses.longestMultWords[e.team].has(e.word);
+          const isLongest = bonuses.longestKey && bonuses.longestKey.has(`${e.word}|${e.timestamp}|${e.player}`);
           const wordPts = isLongest ? (e.points || 0) * 2 : (e.points || 0);
           const longestBonus = isLongest ? (e.points || 0) : 0; // the doubled portion
           rec.points += wordPts;

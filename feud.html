@@ -8911,30 +8911,137 @@
     }
     .rt-card-title.rt-card-logo .gll-picker { margin: 0 auto; }
 
-    /* ─── Number Is Correct (NIC) — logo + cinematic ─── */
+    /* ─── Number Is Correct (NIC) — wordmark logo + bulb marquee ─── */
+    /* Single knob: --nic-logo-size sets the root em that drives all sizing
+       (wordmark, bulbs, perimeter). The outer .nic-logo is the bulb-marquee
+       perimeter; .nic-wordmark sits centered inside with breathing room so
+       bulbs run AROUND the logo, not on top of it (matches prototype's
+       1280×720 stage with the wordmark centered in the middle). */
     .nic-logo {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      line-height: 0.95;
+      position: relative;
+      display: inline-block;
       font-family: 'dazzle-unicase', sans-serif;
-      letter-spacing: 0.04em;
-      color: var(--mod-nic);
-      text-shadow: 0 2px 0 rgba(0,0,0,0.35);
+      font-size: var(--nic-logo-size, 2rem);
+      width: 15rem;
+      height: 6rem;
+      line-height: 1;
+      overflow: visible;
+      text-transform: none;          /* defeat ancestors' uppercase */
+      letter-spacing: normal;
     }
-    .nic-logo-row {
-      font-size: var(--nic-logo-size, 2.2rem);
+    .nic-logo-bulbs {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .nic-logo .nic-bulb {
+      position: absolute;
+      width: 0.16em; height: 0.16em;
+      margin: -0.08em 0 0 -0.08em;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #fff7c4 0%, #ffd24a 35%, #fba300 70%, #7a4500 100%);
+      box-shadow:
+        0 0 0.1em rgba(255,220,100,0.85),
+        0 0 0.25em rgba(251,163,0,0.55);
+    }
+    .nic-logo .nic-bulb.dim {
+      background: radial-gradient(circle at 35% 30%, #ffe890 0%, #c98800 50%, #5a3a00 100%);
+      box-shadow: 0 0 0.05em rgba(200,140,0,0.4);
+    }
+    @keyframes nic-bulb-chase {
+      0%, 100% { background: radial-gradient(circle at 35% 30%, #fff7c4 0%, #ffd24a 35%, #fba300 70%, #7a4500 100%); box-shadow: 0 0 0.1em rgba(255,220,100,0.85), 0 0 0.25em rgba(251,163,0,0.55); }
+      50%      { background: radial-gradient(circle at 35% 30%, #ffe890 0%, #c98800 50%, #5a3a00 100%); box-shadow: 0 0 0.05em rgba(200,140,0,0.4); }
+    }
+    .nic-logo.bulbs-on .nic-bulb { animation: nic-bulb-chase 0.9s ease-in-out infinite; }
+    .nic-logo:not(.bulbs-on) .nic-logo-bulbs { opacity: 0; }
+
+    .nic-wordmark {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: auto auto auto;
+      grid-template-rows: auto auto;
+      align-items: center;
+      justify-content: center;
+      align-content: center;
+      column-gap: 0.03em;
+      row-gap: 0.04em;
+      text-transform: none;          /* defeat ancestors' uppercase */
+    }
+    .nic-wordmark .word, .nic-wordmark .w-hash { text-transform: none; }
+    .nic-wordmark .rot-slot {
+      grid-column: 1; grid-row: 1;
+      height: 1em; width: 0.44em;
+      display: flex; align-items: center; justify-content: center;
+      overflow: visible;
+    }
+    .nic-wordmark .is-slot {
+      grid-column: 1; grid-row: 2;
+      height: 1em;
+      display: flex; align-items: center; justify-content: center;
+      overflow: visible;
+    }
+    .nic-wordmark .word {
+      display: inline-block;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity;
+      line-height: 1;
       white-space: nowrap;
     }
-    .nic-logo-bot {
-      font-size: calc(var(--nic-logo-size, 2.2rem) * 1.5);
-      letter-spacing: 0.08em;
+    .nic-wordmark .w-the {
+      font-weight: 300;
+      color: #fff;
+      font-size: 0.75rem;
+      transform: rotate(-90deg);
+      letter-spacing: 0.02em;
     }
-    /* Picker-card variant: scale to fit card */
-    .nic-picker { --nic-logo-size: 1.7rem; }
-    /* Phase-indicator variant: smaller, fits the 140px band */
-    #phase-indicator .ph-module-logo .nic-logo { --nic-logo-size: 1.4rem; }
+    .nic-wordmark .w-is {
+      font-weight: 100;
+      color: #fff;
+      font-size: 2rem;
+      letter-spacing: -0.01em;
+    }
+    .nic-wordmark .w-number {
+      font-weight: 700;
+      font-size: 2rem;
+      color: #ffe000;
+      letter-spacing: -0.01em;
+      grid-column: 2; grid-row: 1;
+      margin-left: -10px;
+    }
+    .nic-wordmark .w-correct {
+      font-weight: 700;
+      font-size: 2rem;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+      grid-column: 2; grid-row: 2;
+    }
+    .nic-wordmark .w-hash {
+      grid-column: 3; grid-row: 1 / span 2;
+      font-family: 'dazzle-unicase', sans-serif;
+      font-weight: 400;
+      font-size: 3rem;
+      color: #ff8a00;
+      line-height: 0.9;
+      align-self: center;
+      margin-left: 0.04em;
+    }
+    /* Cinematic init state: words start hidden, animation drives them in. */
+    .nic-logo.cinematic .word, .nic-logo.cinematic .w-hash { opacity: 0; }
 
+    /* Picker-card variant — full bulb-marquee logo, looping. */
+    .nic-picker { --nic-logo-size: 1.5rem; }
+    .rt-card-title.rt-card-logo .nic-picker { margin: 0 auto; }
+    /* Phase-indicator variant — sized to fill the 140px band's content area
+       (max-height 120px). Override the global .ph-module-logo > * width:100%
+       since this logo is em-sized and stretching it would break the ratio. */
+    #phase-indicator .ph-module-logo .nic-logo {
+      --nic-logo-size: 2.2rem;
+      width: 7em;          /* honor intrinsic ratio */
+    }
+    #phase-indicator .ph-module-logo .nic-logo-bulbs { display: none; }
+
+    /* ─── Cinematic stage ─── */
     #nic-cinematic {
       position: absolute;
       inset: 0;
@@ -8946,18 +9053,103 @@
       transition: opacity 460ms ease-out;
     }
     #nic-cinematic.nicci-fade-out { opacity: 0; }
-    #nic-cinematic .nic-logo { --nic-logo-size: 4rem; }
-    #nic-cinematic:not(.nicci-flown-in) .nic-logo { transform: translateY(720px); }
-    #nic-cinematic.nicci-flown-in .nic-logo {
-      animation: nicci-fly-in 0.6s cubic-bezier(.34,1.56,.64,1) both;
+
+    /* ─── Intro-only logo variant ─────────────────────────────────────────
+       Locks the cinematic to the original HTML reference dimensions, fully
+       independent of any picker tweaks on .nic-logo / .nic-wordmark / .nic-picker.
+       Every value derived from the prototype's 158px-em base (wordmark
+       ~800×320 inside a 1280×720 stage). */
+    .nic-logo.nic-logo-intro {
+      --nic-logo-size: 4.6rem;
+      width: 9em;
+      height: 3.4em;
+      background: #c00510;
+      border-radius: 0.18em;
+      box-shadow:
+        inset 0 0 0 0.04em rgba(0,0,0,0.4),
+        0 0.3em 1.2em rgba(0,0,0,0.55);
     }
-    @keyframes nicci-fly-in {
-      0%   { transform: translateY(720px); }
-      100% { transform: translateY(0); }
+    /* Subtle CRT vignette + scanlines on the red rectangle */
+    .nic-logo.nic-logo-intro::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 50%, transparent 50%, rgba(0,0,0,0.45) 100%);
+      pointer-events: none;
+      border-radius: inherit;
+      z-index: 0;
     }
+    .nic-logo.nic-logo-intro .nic-logo-bulbs,
+    .nic-logo.nic-logo-intro .nic-wordmark { z-index: 1; }
+    /* Pull bulbs in slightly off the rectangle edge */
+    .nic-logo.nic-logo-intro .nic-logo-bulbs { inset: 0.18em; }
+    /* Entry animation for the rectangle (and its bulbs) — fades + scales in
+       before the words run. Words remain hidden via .cinematic .word { opacity: 0 }. */
+    .nic-logo.nic-logo-intro.nicci-frame-in {
+      animation: nic-frame-in 0.55s cubic-bezier(.34,1.4,.64,1) both;
+    }
+    @keyframes nic-frame-in {
+      from { transform: scale(0.4); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    .nic-logo.nic-logo-intro .nic-wordmark {
+      column-gap: 0.032em;
+      row-gap: 0.038em;
+    }
+    .nic-logo.nic-logo-intro .rot-slot {
+      width: 0.443em;
+      height: 1em;
+    }
+    .nic-logo.nic-logo-intro .is-slot { height: 1em; }
+    .nic-logo.nic-logo-intro .w-the {
+      font-size: 0.354em;
+      font-weight: 300;
+      letter-spacing: 0.02em;
+    }
+    .nic-logo.nic-logo-intro .w-is {
+      font-size: 1em;
+      font-weight: 100;
+      letter-spacing: -0.01em;
+    }
+    .nic-logo.nic-logo-intro .w-number {
+      font-size: 1em;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-left: -0.19em;
+    }
+    .nic-logo.nic-logo-intro .w-correct {
+      font-size: 1em;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-left: 0;
+    }
+    .nic-logo.nic-logo-intro .w-hash {
+      font-size: 1.77em;
+      font-weight: 400;
+      line-height: 0.9;
+      margin-left: -0.038em;
+    }
+
+    /* Container shake on impact */
+    @keyframes nic-shake-tiny {
+      0%, 100% { transform: translate(0, 0); }
+      20% { transform: translate(-3px, 2px); }
+      40% { transform: translate(3px, -2px); }
+      60% { transform: translate(-2px, -1px); }
+      80% { transform: translate(2px, 1px); }
+    }
+    @keyframes nic-shake-big {
+      0%, 100% { transform: translate(0, 0); }
+      15% { transform: translate(-10px, 6px) rotate(-0.4deg); }
+      30% { transform: translate(8px, -5px) rotate(0.3deg); }
+      45% { transform: translate(-7px, -4px) rotate(-0.2deg); }
+      60% { transform: translate(6px, 5px) rotate(0.2deg); }
+      80% { transform: translate(-3px, -2px); }
+    }
+    #nic-cinematic .nic-logo.shake     { animation: nic-shake-tiny 0.28s ease-out; }
+    #nic-cinematic .nic-logo.shake-big { animation: nic-shake-big 0.5s ease-out; }
     #nic-cinematic .nic-subtitle {
       position: absolute;
-      bottom: 28%;
+      bottom: 22%;
       font-family: 'futura-100', sans-serif;
       font-size: 1.1rem;
       letter-spacing: 0.18em;
@@ -8983,107 +9175,223 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      padding: 16px 22px;
+      padding: 0 22px 16px;
+      box-sizing: border-box;
+    }
+    /* Top question bar — full-bleed frosted-glass container.
+       Slides down from behind the scoreboard at round start. Bleeds past
+       the canvas top edge so its body fills the scoreboard's rounded-corner
+       gap (mirrors gl-summary / nic-summary pattern). */
+    .nic-question-bar {
+      position: relative;
+      margin: -9px -22px 0;        /* honest bleed amount past canvas top */
+      padding: 23px 18px 14px;     /* top padding = bleed cover + content breathing */
+      background: rgba(26,26,26,0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 0 0 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-sizing: border-box;
+      animation: nic-qbar-in 0.5s ease both;
+    }
+    @keyframes nic-qbar-in {
+      from { transform: translateY(-100%); opacity: 0; }
+      to   { transform: translateY(0);     opacity: 1; }
+    }
+    .nic-qbar-top, .nic-qbar-bottom {
+      display: grid;
+      grid-template-columns: minmax(140px, 200px) 1fr;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .nic-meta, .nic-question-card, .nic-answer-value-cell {
+      background: #111;
+      border-radius: 8px;
       box-sizing: border-box;
     }
     .nic-meta {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: space-between;
-      font-size: 0.78rem;
-      letter-spacing: 0.14em;
-      color: #999;
+      gap: 6px;
+      padding: 8px 10px;
+      text-align: center;
+    }
+    .nic-q-counter {
+      font-family: "dazzle-unicase", sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.12em;
+      color: #ccc;
     }
     .nic-q-counter b { color: var(--mod-nic, #c06000); font-weight: 700; }
-    .nic-timer-wrap { display: flex; align-items: center; gap: 10px; }
-    .nic-timer-bar {
-      width: 220px; height: 8px;
-      background: #1a1a1a;
-      border: 1px solid #333;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .nic-timer-fill {
-      height: 100%; width: 100%;
-      background: linear-gradient(90deg, #4caf50, var(--mod-nic, #c06000));
-      transition: width 0.25s linear;
-    }
-    .nic-timer-fill.warning { background: var(--red-text, #ff5555); }
     .nic-timer-text {
-      font-family: 'video', monospace;
-      font-size: 1rem;
-      width: 36px; text-align: right;
-      color: #fff;
+      font-family: "Bitcount Single", monospace;
+      font-variant-numeric: tabular-nums;
+      font-size: 2.2rem;
+      font-weight: 400;
+      color: #ffffff;
+      letter-spacing: 0.05em;
+      text-shadow:
+        0 1px 2px rgba(0,0,0,0.55),
+        0 0 6px rgba(0,0,0,0.35);
     }
     .nic-timer-text.warning { color: var(--red-text, #ff5555); }
     .nic-question-card {
-      background: rgba(26,26,26,0.85);
-      border-radius: 12px;
-      padding: 14px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 14px;
       text-align: center;
+      min-width: 0;
     }
     .nic-q-cat {
-      font-size: 0.7rem;
+      font-family: "dazzle-unicase", sans-serif;
+      font-size: 0.75rem;
       letter-spacing: 0.16em;
       color: var(--mod-nic, #c06000);
       text-transform: uppercase;
-      margin-bottom: 6px;
     }
     .nic-q-text {
       font-size: 1.25rem;
       line-height: 1.3;
+      color: #fff;
+      min-height: calc(1.25rem * 1.3 * 2); /* reserve 2 lines */
     }
-    .nic-answer-reveal {
-      text-align: center;
-      font-size: 0.95rem;
-      letter-spacing: 0.1em;
-      opacity: 0;
-      transition: opacity 0.4s ease;
-    }
-    .nic-answer-reveal.visible { opacity: 1; }
-    .nic-answer-label { color: #888; }
-    .nic-answer-value {
-      font-family: 'video', monospace;
-      font-size: 1.6rem;
-      color: var(--mod-nic, #c06000);
-      margin-left: 8px;
-    }
-    .nic-rows {
-      flex: 1;
+    .nic-answer-label-cell {
       display: flex;
-      flex-direction: column;
-      gap: 6px;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 10px;
+    }
+    .nic-answer-label {
+      font-family: "dazzle-unicase", sans-serif;
+      font-size: 1rem;
+      color: #ccc;
+      letter-spacing: 0.16em;
+    }
+    .nic-answer-value-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 56px;
+      padding: 6px 16px;
       overflow: hidden;
     }
-    .nic-row {
-      display: grid;
-      grid-template-columns: minmax(120px, 1fr) 130px 36px 48px minmax(120px, 1fr) 90px;
-      align-items: center;
-      gap: 10px;
-      background: rgba(26,26,26,0.85);
-      border-radius: 8px;
-      padding: 8px 14px;
-      border: 2px solid transparent;
-      font-size: 0.95rem;
-      transition: border-color 0.2s ease;
+    .nic-answer-value {
+      font-family: "Bitcount Single", monospace;
+      font-weight: 500;
+      font-size: 1.8rem;
+      line-height: 1;
+      color: var(--mod-nic, #c06000);
+      text-shadow: 0 0 6px rgba(192,96,0,0.4);
+      transition: opacity 0.3s ease, color 0.3s ease;
+      letter-spacing: 0.05em;
     }
+    .nic-answer-value.hidden { opacity: 0.35; color: #555; text-shadow: none; letter-spacing: 0.3em; }
+    .nic-rows {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(var(--nic-tile-cols, 4), 1fr);
+      grid-auto-rows: min-content;
+      gap: calc(8px * var(--nic-tile-scale, 1));
+      overflow: hidden;
+      align-content: start;
+    }
+    .nic-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 0;
+      background: transparent;
+      border-radius: 8px;
+      padding: 0;
+      border: 0;
+      font-size: 0.95rem;
+      text-align: center;
+      min-width: 0;
+    }
+    .nic-row > * { width: 100%; text-align: center; }
     .nic-row.active  { border-color: var(--mod-nic, #c06000); }
     .nic-row.locked  { border-color: rgba(192,96,0,0.4); }
-    .nic-row.red  .nic-row-name { color: var(--red-text, #ff5555); }
-    .nic-row.blue .nic-row-name { color: var(--blue-text, #4c8cff); }
+    .nic-row.red  .nic-row-name { background: var(--red-bg, #990b0b); color: #fff; }
+    .nic-row.blue .nic-row-name { background: var(--blue-bg, #053977); color: #fff; }
     .nic-row-name {
+      font-family: "dazzle-unicase", sans-serif;
+      font-size: calc(2rem * var(--nic-tile-scale, 1));
       letter-spacing: 0.05em;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      padding: calc(4px * var(--nic-tile-scale, 1)) calc(8px * var(--nic-tile-scale, 1));
+      border-radius: 6px;
+      box-sizing: border-box;
     }
-    .nic-row-guess {
-      font-family: 'video', monospace;
-      font-size: 1.2rem;
-      text-align: center;
-      color: #fff;
+    .nic-row-guess, .nic-row-guess.waiting {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      aspect-ratio: 1 / 1;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      padding: calc(8px * var(--nic-tile-scale, 1)) calc(6px * var(--nic-tile-scale, 1));
+      background:
+        radial-gradient(circle at center, rgba(40,40,40,1) 0.5px, transparent 1.2px) 0 0 / 7px 7px,
+        #111;
+      border: 2px solid #000;
+      border-radius: 6px;
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.8);
+      overflow: hidden;
+      font-family: "Bitcount Single", monospace;
     }
-    .nic-row-guess.waiting { color: #555; }
+    .nic-guess-top, .nic-guess-bottom {
+      font-family: "Bitcount Single", monospace;
+      font-weight: 350;
+      font-size: calc(0.85rem * var(--nic-tile-scale, 1));
+      letter-spacing: 0.06em;
+      line-height: 1;
+      color: #ffcf3a;
+      text-shadow: 0 0 4px rgba(255,176,40,0.45);
+      min-height: calc(0.85rem * var(--nic-tile-scale, 1));
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: calc(2px * var(--nic-tile-scale, 1));
+    }
+    .nic-guess-top:empty, .nic-guess-bottom:empty { visibility: hidden; }
+    .nic-guess-pct, .nic-guess-pts {
+      font-family: "Bitcount Single", monospace;
+      font-weight: 350;
+      font-size: calc(0.85rem * var(--nic-tile-scale, 1));
+      letter-spacing: 0.06em;
+      line-height: 1;
+    }
+    .nic-guess-pct { color: #ffcf3a; text-shadow: 0 0 4px rgba(255,176,40,0.45); }
+    .nic-guess-pts.pos  { color: #6cf06f; text-shadow: 0 0 6px rgba(60,220,80,0.5); }
+    .nic-guess-pts.neg  { color: #ff6464; text-shadow: 0 0 6px rgba(255,80,80,0.5); }
+    .nic-guess-pts.zero { color: #886633; text-shadow: none; }
+    .nic-guess-main {
+      --fit-base: calc(4.5rem * var(--nic-tile-scale, 1));
+      font-family: "Bitcount Single", monospace;
+      font-weight: 500;
+      font-size: calc(var(--fit-base) * var(--fit-scale, 1));
+      line-height: 1;
+      color: #ffcf3a;
+      text-shadow: 0 0 6px rgba(255,176,40,0.55), 0 0 14px rgba(255,140,0,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      width: 100%;
+    }
+    .nic-guess-main.waiting { color: #fff; text-shadow: none; }
     .nic-row-order, .nic-row-mult {
       font-family: 'video', monospace;
       text-align: center;
@@ -9125,9 +9433,13 @@
     @keyframes nic-summary-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-100%); opacity: 0; } }
 
     .nic-summary-body {
-      max-height: 350px;
+      height: 350px;            /* definite height — required for grid row to
+                                   constrain children, otherwise .nic-summary-right
+                                   stretches to content-size and the qlist column
+                                   never registers overflow for the vertical marquee. */
       display: grid;
       grid-template-columns: 1fr 1.4fr;
+      grid-template-rows: 1fr;  /* one row, fill body height */
       gap: 10px;
       min-height: 0;
       overflow: hidden;
@@ -9196,28 +9508,78 @@
       overflow: hidden;
     }
     .nic-summary-qrow {
-      display: grid;
-      grid-template-columns: 30px 1fr auto;
-      gap: 8px;
-      align-items: center;
-      padding: 4px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 8px 8px;
       font-size: 0.85rem;
       border-bottom: 1px solid rgba(255,255,255,0.04);
     }
+    .nic-summary-qrow .nic-q-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      text-align: center;
+    }
     .nic-summary-qrow .nic-q-num {
-      font-family: 'video', monospace;
+      font-family: "dazzle-unicase", sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
       color: var(--mod-nic, #c06000);
     }
     .nic-summary-qrow .nic-q-snippet {
       color: #ccc;
+      font-size: 0.85rem;
+      line-height: 1.25;
+    }
+    .nic-summary-qrow .nic-q-answer {
+      font-family: "Bitcount Single", monospace;
+      font-weight: 500;
+      font-size: 1.1rem;
+      color: var(--mod-nic, #c06000);
+      text-shadow: 0 0 4px rgba(192,96,0,0.4);
+    }
+    /* Per-question guesses — flex-wrap row capped at 4 cells per line; rows
+       center-justify so a 2-player game shows the pair centered, while 5–8
+       players wrap to a centered 2nd row. */
+    .nic-q-guesses {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px 10px;
+    }
+    .nic-q-guess {
+      /* 4-per-row: subtract the 3 column gaps (3 × 10px = 30px) from 100%
+         and divide. max-width pins the basis so flex-grow/shrink can't
+         silently expand items into a fewer-column row. */
+      flex: 0 0 calc((100% - 30px) / 4);
+      max-width: calc((100% - 30px) / 4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+      font-size: 0.75rem;
+      min-width: 0;
+      text-align: center;
+    }
+    .nic-q-guess .nic-q-guess-name {
+      font-family: "dazzle-unicase", sans-serif;
+      letter-spacing: 0.04em;
+      color: #888;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      max-width: 100%;
     }
-    .nic-summary-qrow .nic-q-answer {
-      font-family: 'video', monospace;
+    .nic-q-guess .nic-q-guess-name.team-red  { color: var(--red-text, #ff5555); }
+    .nic-q-guess .nic-q-guess-name.team-blue { color: var(--blue-text, #4c8cff); }
+    .nic-q-guess .nic-q-guess-val {
+      font-family: "Bitcount Single", monospace;
+      font-weight: 500;
+      font-size: 0.95rem;
       color: #fff;
-      font-weight: 700;
     }
   </style>
 </head>
@@ -9363,7 +9725,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.26</div>
+  <div id="version-tag">v0.27</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -12698,7 +13060,12 @@ document.addEventListener('keydown', e => {
     // categoryMultiplier. Stacks multiplicatively with categoryMultiplier.
     let currentRoundMultiplier = 1;
     let _roundTypePickMultipliers = {}; // ephemeral: moduleKey → multiplier, used during picker display
-    let _prevRoundTypePicks = [];       // moduleKeys shown in the previous round's picker (host/local only).
+    // Round-type picker state (host/local only). _moduleLastShownRound maps
+    // moduleKey → round index of its most recent picker appearance; weighted
+    // recency-bias sampler in showRoundTypePicker uses (currentIdx - lastIdx)
+    // as the fairness signal so unseen modules surface organically.
+    let _moduleLastShownRound = {};
+    let _roundPickerCounter = 0;
                                         // Any eligible module NOT in this list is guaranteed in the next picker,
                                         // preventing a module from being unlucky-excluded multiple rounds in a row.
 
@@ -14936,7 +15303,7 @@ document.addEventListener('keydown', e => {
       startingTeam = Math.floor(Math.random() * 2);
       resetFaceoffState();
       resetCommonThreadState();
-      _prevRoundTypePicks = [];
+      _moduleLastShownRound = {}; _roundPickerCounter = 0;
 
       teamNames[0] = document.getElementById("redTeamName").value.trim() || "Red Team";
       teamNames[1] = document.getElementById("blueTeamName").value.trim() || "Blue Team";
@@ -15588,13 +15955,16 @@ document.addEventListener('keydown', e => {
       // Build picker HTML — rendered into #round-type-picker-container in
       // #module-canvas (NOT the sidebar). Keeps the input-area home base visible
       // in the sidebar during round selection. This is a placeholder layout;
-      // round-type selection is slated for a richer visual redesign.
       // Pick 3 modules for the picker. Host/local samples from ROUND_MODULES;
       // non-host reads the host's selection from syncedData.
-      // Guarantee rule: any eligible module NOT shown in the previous round is
-      // included this round — prevents a module from being unlucky-excluded
-      // for multiple rounds in a row.
+      //
+      // Recency-weighted sampler: weight per module = 1 + (rounds since last
+      // shown) × RECENCY_K. Weighted random sample without replacement. A
+      // module just shown gets weight 1; one unseen for 4 rounds gets weight
+      // ~5×; never-shown modules get a generous head-start. Scales smoothly
+      // with any module count, never forces a fixed rotation.
       const PICKER_SIZE = 3;
+      const RECENCY_K = 1.5;
       let moduleKeys;
       if (syncedData?.roundTypePicks) {
         moduleKeys = syncedData.roundTypePicks;
@@ -15603,32 +15973,40 @@ document.addEventListener('keydown', e => {
         const eligible = allKeys.filter(k => minTeamSize >= (ROUND_MODULES[k].minPlayersPerTeam || 1));
         if (eligible.length <= PICKER_SIZE) {
           moduleKeys = eligible.slice();
-        } else {
-          const guaranteed = eligible.filter(k => !_prevRoundTypePicks.includes(k));
-          const pool = eligible.filter(k => _prevRoundTypePicks.includes(k));
-          // Shuffle pool, fill remaining slots
-          for (let i = pool.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [pool[i], pool[j]] = [pool[j], pool[i]];
-          }
-          const needed = Math.max(0, PICKER_SIZE - guaranteed.length);
-          moduleKeys = guaranteed.concat(pool.slice(0, needed));
-          // If guaranteed exceeds PICKER_SIZE (e.g. 2+ modules skipped last
-          // round — can happen if eligibility changed), trim randomly.
-          if (moduleKeys.length > PICKER_SIZE) {
-            for (let i = moduleKeys.length - 1; i > 0; i--) {
-              const j = Math.floor(Math.random() * (i + 1));
-              [moduleKeys[i], moduleKeys[j]] = [moduleKeys[j], moduleKeys[i]];
-            }
-            moduleKeys = moduleKeys.slice(0, PICKER_SIZE);
-          }
-          // Final shuffle so guaranteed modules aren't always leftmost
+          // Still shuffle so order isn't deterministic
           for (let i = moduleKeys.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [moduleKeys[i], moduleKeys[j]] = [moduleKeys[j], moduleKeys[i]];
           }
+        } else {
+          _roundPickerCounter++;
+          const weights = new Map();
+          for (const k of eligible) {
+            const last = _moduleLastShownRound[k];
+            // Never-shown modules get a head-start equivalent to having been
+            // missed for several rounds, so they surface early without being
+            // mathematically guaranteed.
+            const rsl = (last == null) ? (eligible.length) : (_roundPickerCounter - last);
+            weights.set(k, 1 + rsl * RECENCY_K);
+          }
+          // Weighted sample without replacement
+          moduleKeys = [];
+          const pool = eligible.slice();
+          while (moduleKeys.length < PICKER_SIZE && pool.length) {
+            let totalW = 0;
+            for (const k of pool) totalW += weights.get(k);
+            let r = Math.random() * totalW;
+            let pickIdx = 0;
+            for (let i = 0; i < pool.length; i++) {
+              r -= weights.get(pool[i]);
+              if (r <= 0) { pickIdx = i; break; }
+            }
+            moduleKeys.push(pool[pickIdx]);
+            pool.splice(pickIdx, 1);
+          }
         }
-        _prevRoundTypePicks = moduleKeys.slice();
+        // Mark the shown modules as last-seen this round
+        for (const k of moduleKeys) _moduleLastShownRound[k] = _roundPickerCounter;
       }
 
       // Round-multiplier rolls per card. Host/local rolls fresh. Non-host
@@ -22334,7 +22712,7 @@ document.addEventListener('keydown', e => {
     // Halved from the prototype's first pass per spec (April 25 session).
     const NIC_QUESTIONS_PER_ROUND = 5;
     const NIC_QUESTION_TIME_MS    = 30000;
-    const NIC_REVEAL_HOLD_MS      = 4500;
+    const NIC_REVEAL_HOLD_MS      = 6500;
     const NIC_BETWEEN_QUESTION_MS = 600;
     const NIC_EXACT_PTS = 500;
     const NIC_SCORE_BANDS = [
@@ -22393,19 +22771,65 @@ document.addEventListener('keydown', e => {
       // Mirrors the comment in glShowSummary's tail.
     }
 
-    // Shared logo HTML — used by picker card, phase indicator, and cinematic.
+    // Shared logo HTML — wordmark + bulb-marquee perimeter. Bulbs are
+    // generated as evenly-spaced dots around the logo's bounding box.
     function _buildNicLogoHtml(extraClass) {
+      const bulbs = _buildNicBulbsHtml();
       return `<div class="nic-logo ${extraClass || ''}">`
-           + `<div class="nic-logo-row nic-logo-top">NUMBER IS</div>`
-           + `<div class="nic-logo-row nic-logo-bot">CORRECT</div>`
+           +   `<div class="nic-logo-bulbs">${bulbs}</div>`
+           +   `<div class="nic-wordmark">`
+           +     `<div class="rot-slot"><span class="word w-the" data-word="the">the</span></div>`
+           +     `<span class="word w-number" data-word="number">number</span>`
+           +     `<div class="is-slot"><span class="word w-is" data-word="is">is</span></div>`
+           +     `<span class="word w-correct" data-word="correct">correct</span>`
+           +     `<span class="word w-hash" data-word="hash">#</span>`
+           +   `</div>`
            + `</div>`;
     }
+    // Generate the bulb perimeter — top/bottom edges get more bulbs than
+    // the sides since the logo is wider than tall (~5.4em x 2.4em).
+    function _buildNicBulbsHtml() {
+      const top = 14, side = 6;
+      const out = [];
+      let i = 0;
+      // top edge (left → right)
+      for (let c = 0; c <= top; c++) {
+        const x = (c / top) * 100;
+        out.push(`<div class="nic-bulb${i % 2 ? ' dim' : ''}" style="left:${x}%;top:0%;animation-delay:${(i * 0.05).toFixed(2)}s"></div>`);
+        i++;
+      }
+      // right edge (top → bottom)
+      for (let r = 1; r <= side; r++) {
+        const y = (r / (side + 1)) * 100;
+        out.push(`<div class="nic-bulb${i % 2 ? ' dim' : ''}" style="left:100%;top:${y}%;animation-delay:${(i * 0.05).toFixed(2)}s"></div>`);
+        i++;
+      }
+      // bottom edge (right → left)
+      for (let c = top; c >= 0; c--) {
+        const x = (c / top) * 100;
+        out.push(`<div class="nic-bulb${i % 2 ? ' dim' : ''}" style="left:${x}%;top:100%;animation-delay:${(i * 0.05).toFixed(2)}s"></div>`);
+        i++;
+      }
+      // left edge (bottom → top)
+      for (let r = side; r >= 1; r--) {
+        const y = (r / (side + 1)) * 100;
+        out.push(`<div class="nic-bulb${i % 2 ? ' dim' : ''}" style="left:0%;top:${y}%;animation-delay:${(i * 0.05).toFixed(2)}s"></div>`);
+        i++;
+      }
+      return out.join('');
+    }
+    // Picker card: full bulbs-on logo, looping marquee — the "final" state.
     function _buildNicPickerArtHtml() {
-      return _buildNicLogoHtml('nic-picker');
+      return _buildNicLogoHtml('nic-picker bulbs-on');
     }
 
-    // Cinematic: fly logo up from below the canvas, hold with subtitle,
-    // fade out. Mirrors the pattern of _playGlCinematic / _playCtCinematic.
+    // ── Cinematic ──
+    // Plays the full wordmark assembly:
+    //   1. THE slides in from the left (rotated, no bounce)
+    //   2. NUMBER from right, collides with THE
+    //   3. IS up from bottom, slams into THE
+    //   4. CORRECT from right, collides with IS
+    //   5. # finale — drops from above, lands centered, marquee bulbs ignite
     function _playNicCinematic() {
       return new Promise((resolve) => {
         const root = document.getElementById('module-canvas') || document.getElementById('game-root');
@@ -22415,15 +22839,139 @@ document.addEventListener('keydown', e => {
 
         const el = document.createElement('div');
         el.id = 'nic-cinematic';
-        el.innerHTML = _buildNicLogoHtml() + `<div class="nic-subtitle">HOW CLOSE CAN YOU GET?</div>`;
+        el.innerHTML = _buildNicLogoHtml('cinematic nic-logo-intro') + `<div class="nic-subtitle">DON'T FORGET TO GET YOUR PETS SPAYED AND NEUTERED</div>`;
         root.appendChild(el);
-        const subtitle = el.querySelector('.nic-subtitle');
 
-        requestAnimationFrame(() => el.classList.add('nicci-flown-in'));
+        const logo = el.querySelector('.nic-logo');
+        const subtitle = el.querySelector('.nic-subtitle');
+        const getEl = (w) => logo.querySelector(`[data-word="${w}"]`);
+
+        const speed = 1;
+        const SQUASH = 1.5;
+        const WORD_GAP = 120 / speed;
+        const animationToken = ++_nicCinematicToken;
+
+        const wait = (ms) => anim.wait(ms / speed);
+
+        function shake(big) {
+          logo.classList.remove('shake', 'shake-big');
+          void logo.offsetWidth;
+          logo.classList.add(big ? 'shake-big' : 'shake');
+          setTimeout(() => logo.classList.remove('shake', 'shake-big'), big ? 500 : 280);
+        }
+
+        // THE — slides in from LEFT (already rotated -90deg)
+        function animateThe() {
+          return new Promise((res) => {
+            const e = getEl('the');
+            if (!e) return res();
+            const dur = 480 / speed;
+            e.style.transition = 'none';
+            e.style.opacity = '1';
+            e.style.transform = 'translateX(-1100px) rotate(-90deg)';
+            e.offsetHeight;
+            e.style.transition = `transform ${dur}ms cubic-bezier(0.25, 0.8, 0.35, 1)`;
+            e.style.transform = 'translateX(0) rotate(-90deg)';
+            setTimeout(res, dur + 20);
+          });
+        }
+        // IS — up from below, slams into THE
+        function animateIs() {
+          return new Promise((res) => {
+            const e = getEl('is');
+            if (!e) return res();
+            const flyDur = 380 / speed, sqDur = 100 / speed, setDur = 260 / speed;
+            e.style.transition = 'none';
+            e.style.opacity = '1';
+            e.style.transform = 'translateY(900px)';
+            e.offsetHeight;
+            e.style.transition = `transform ${flyDur}ms cubic-bezier(0.30, 0.85, 0.40, 1)`;
+            e.style.transform = `translateY(${-10 * SQUASH}px)`;
+            setTimeout(() => {
+              e.style.transition = `transform ${sqDur}ms cubic-bezier(0.5, 0, 0.5, 1)`;
+              e.style.transform = `translateY(${6 * SQUASH}px) scale(${1 + 0.20 * SQUASH}, ${1 - 0.28 * SQUASH})`;
+              setTimeout(() => {
+                e.style.transition = `transform ${setDur * 0.55}ms cubic-bezier(0.34, 1.5, 0.64, 1)`;
+                e.style.transform = `translateY(${-3 * SQUASH}px) scale(${1 - 0.04 * SQUASH}, ${1 + 0.05 * SQUASH})`;
+                setTimeout(() => {
+                  e.style.transition = `transform ${setDur * 0.45}ms cubic-bezier(0.34, 1.2, 0.64, 1)`;
+                  e.style.transform = 'translateY(0) scale(1, 1)';
+                  setTimeout(res, setDur * 0.45 + 20);
+                }, setDur * 0.55);
+              }, sqDur);
+            }, flyDur);
+          });
+        }
+        // NUMBER / CORRECT — slide in from RIGHT, contract on collision.
+        function animateRightSlider(word) {
+          return new Promise((res) => {
+            const e = getEl(word);
+            if (!e) return res();
+            const flyDur = 420 / speed, sqDur = 100 / speed, setDur = 280 / speed;
+            e.style.transformOrigin = '0% 50%';
+            e.style.transition = 'none';
+            e.style.opacity = '1';
+            e.style.transform = 'translateX(1500px) scale(1, 1)';
+            e.offsetHeight;
+            e.style.transition = `transform ${flyDur}ms cubic-bezier(0.30, 0.85, 0.40, 1)`;
+            e.style.transform = `translateX(${-12 * SQUASH}px) scale(1, 1)`;
+            setTimeout(() => {
+              e.style.transition = `transform ${sqDur}ms cubic-bezier(0.5, 0, 0.5, 1)`;
+              e.style.transform = `translateX(0) scale(${1 - 0.16 * SQUASH}, ${1 + 0.10 * SQUASH})`;
+              setTimeout(() => {
+                e.style.transition = `transform ${setDur * 0.55}ms cubic-bezier(0.34, 1.5, 0.64, 1)`;
+                e.style.transform = `translateX(0) scale(${1 + 0.04 * SQUASH}, ${1 - 0.03 * SQUASH})`;
+                setTimeout(() => {
+                  e.style.transition = `transform ${setDur * 0.45}ms cubic-bezier(0.34, 1.2, 0.64, 1)`;
+                  e.style.transform = 'translateX(0) scale(1, 1)';
+                  setTimeout(res, setDur * 0.45 + 20);
+                }, setDur * 0.55);
+              }, sqDur);
+            }, flyDur);
+          });
+        }
+        // # finale — drops in, gentle settle, ignite bulbs
+        function animateHash() {
+          return new Promise((res) => {
+            const e = getEl('hash');
+            if (!e) return res();
+            const flyDur = 380 / speed, setDur = 280 / speed;
+            e.style.transition = 'none';
+            e.style.opacity = '1';
+            e.style.transform = 'translate(0, -900px) scale(0.4) rotate(30deg)';
+            e.offsetHeight;
+            e.style.transition = `transform ${flyDur}ms cubic-bezier(0.20, 0.65, 0.30, 1.0)`;
+            e.style.transform = 'translate(0, 0) scale(1.08) rotate(0deg)';
+            setTimeout(() => {
+              shake(true);
+              e.style.transition = `transform ${setDur}ms cubic-bezier(0.34, 1.5, 0.64, 1)`;
+              e.style.transform = 'translate(0, 0) scale(1, 1) rotate(0deg)';
+              setTimeout(res, setDur + 20);
+            }, flyDur);
+          });
+        }
+
         (async () => {
-          await anim.wait(700);     // logo fly-in completes
+          if (animationToken !== _nicCinematicToken) return;
+          // Frame + bulbs in first — red rectangle scales/fades in, then
+          // bulbs ignite while the rectangle settles. Words start hidden.
+          logo.classList.add('nicci-frame-in');
+          await wait(550);                if (animationToken !== _nicCinematicToken) return;
+          logo.classList.remove('nicci-frame-in');
+          logo.classList.add('bulbs-on');
+          await wait(250);                if (animationToken !== _nicCinematicToken) return;
+          await animateThe();             if (animationToken !== _nicCinematicToken) return;
+          await wait(WORD_GAP);
+          await animateRightSlider('number'); if (animationToken !== _nicCinematicToken) return;
+          await wait(WORD_GAP);
+          await animateIs();              if (animationToken !== _nicCinematicToken) return;
+          await wait(WORD_GAP);
+          await animateRightSlider('correct'); if (animationToken !== _nicCinematicToken) return;
+          await wait(WORD_GAP);
+          await animateHash();            if (animationToken !== _nicCinematicToken) return;
           if (subtitle) subtitle.classList.add('show');
-          await anim.wait(1700);    // hold
+          await anim.wait(600);   // subtitle fade-in (0.2s delay + 0.4s transition)
+          await anim.wait(2000);  // hold full logo for 2s
           el.classList.add('nicci-fade-out');
           await anim.wait(460);
           el.remove();
@@ -22431,6 +22979,7 @@ document.addEventListener('keydown', e => {
         })();
       });
     }
+    let _nicCinematicToken = 0;
 
     // ── Roster: flat interleaved [{uid, name, team}] ──
     // Multiplayer uses canonical teamPlayerUids + teamPlayers (sorted by uid).
@@ -22746,12 +23295,45 @@ document.addEventListener('keydown', e => {
       const qListTrack = document.getElementById('nic-summary-qlist-track');
       if (qListCol) qListCol.classList.remove('nic-marquee-active');
       if (qListTrack) {
+        // Pull per-question guesses out of matchLog (NIC entries are emitted
+        // host-side at reveal time). Match by question text — NIC's question
+        // pool dedupes within a session via _usedQuestionIdxs.
+        const guessesByQ = {};
+        if (typeof matchLog !== 'undefined' && Array.isArray(matchLog)) {
+          // Dedup by (question + team + player) — host can re-emit on reveal
+          // re-entry. Team is part of the key because both teams may have
+          // identically-named players ("Player 1" on red AND blue), so a
+          // name-only key would collapse them. Last-write-wins.
+          const seen = new Map();
+          for (const e of matchLog) {
+            if (e.roundType !== 'number-is-correct' || e.outcome !== 'nic_question') continue;
+            seen.set(`${e.question}::${e.team}::${e.player}`, e);
+          }
+          for (const e of seen.values()) {
+            (guessesByQ[e.question] = guessesByQ[e.question] || []).push(e);
+          }
+        }
         qListTrack.innerHTML = nicState.questions.map((q, i) => {
-          const snippet = (q.question || '').length > 80 ? q.question.slice(0, 77) + '…' : (q.question || '');
+          const text = q.question || '';
+          const guesses = (guessesByQ[text] || []).slice().sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+          const buildGuessSpan = (g) => {
+            const teamCls = g.team === 0 ? 'team-red' : 'team-blue';
+            const valTxt = Number(g.guess).toLocaleString();
+            return `<span class="nic-q-guess">`
+                 +   `<span class="nic-q-guess-name ${teamCls}">${escapeHtml(g.player || '')}</span>`
+                 +   `<span class="nic-q-guess-val">${valTxt}</span>`
+                 + `</span>`;
+          };
+          const guessHtml = guesses.length
+            ? guesses.map(buildGuessSpan).join('')
+            : `<span class="nic-q-guess"><span class="nic-q-guess-val" style="color:#666;font-style:italic;">No guesses</span></span>`;
           return `<div class="nic-summary-qrow">`
-               + `<span class="nic-q-num">Q${i + 1}</span>`
-               + `<span class="nic-q-snippet">${escapeHtml(snippet)}</span>`
-               + `<span class="nic-q-answer">${(q.answer ?? '').toLocaleString()}</span>`
+               +   `<div class="nic-q-info">`
+               +     `<span class="nic-q-num">Q${i + 1}</span>`
+               +     `<span class="nic-q-snippet">${escapeHtml(text)}</span>`
+               +     `<span class="nic-q-answer">${(q.answer ?? '').toLocaleString()}</span>`
+               +   `</div>`
+               +   `<div class="nic-q-guesses">${guessHtml}</div>`
                + `</div>`;
         }).join('');
       }
@@ -22764,14 +23346,14 @@ document.addEventListener('keydown', e => {
       }
 
       // Activate vertical marquee on either column whose track overflows.
-      // Defer one frame so layout has flushed before measurement.
-      requestAnimationFrame(() => {
+      // Wait for the slide-in animation to settle so heights are real, then
+      // measure. Without this delay, qListCol.clientHeight reads as 0 mid-
+      // animation and the marquee never arms (host bug previously seen).
+      setTimeout(() => {
         const armMarquee = (colEl, trackEl) => {
           if (!colEl || !trackEl) return;
           const overflow = trackEl.scrollHeight - colEl.clientHeight;
           if (overflow > 4) {
-            // Slower for longer overflow so the scroll feels readable. ~3s
-            // per row of overflow, capped between 10–24s.
             const dur = Math.max(10, Math.min(24, 8 + overflow / 12));
             colEl.style.setProperty('--nic-marquee-distance', `${-overflow}px`);
             colEl.style.setProperty('--nic-marquee-dur', `${dur}s`);
@@ -22780,7 +23362,7 @@ document.addEventListener('keydown', e => {
         };
         armMarquee(rankCol, rankTrack);
         armMarquee(qListCol, qListTrack);
-      });
+      }, 500 / (gameSpeed || 1));
 
       await new Promise(r => setTimeout(r, 600 / (gameSpeed || 1)));
 
@@ -22879,29 +23461,36 @@ document.addEventListener('keydown', e => {
       if (!root.querySelector('.nic-stage')) {
         root.innerHTML =
           `<div class="nic-stage">`
-          +   `<div class="nic-meta">`
-          +     `<div class="nic-q-counter">QUESTION <b id="nic-q-num">—</b> OF <b id="nic-q-total">${NIC_QUESTIONS_PER_ROUND}</b></div>`
-          +     `<div class="nic-timer-wrap"><div class="nic-timer-bar"><div class="nic-timer-fill" id="nic-timer-fill"></div></div><div class="nic-timer-text" id="nic-timer-text">30</div></div>`
+          +   `<div class="nic-question-bar">`
+          +     `<div class="nic-qbar-top">`
+          +       `<div class="nic-meta">`
+          +         `<div class="nic-q-counter">QUESTION <b id="nic-q-num">—</b> OF <b id="nic-q-total">${NIC_QUESTIONS_PER_ROUND}</b></div>`
+          +         `<div class="nic-timer-text" id="nic-timer-text">30</div>`
+          +       `</div>`
+          +       `<div class="nic-question-card">`
+          +         `<div class="nic-q-cat" id="nic-q-cat">—</div>`
+          +         `<div class="nic-q-text" id="nic-q-text">—</div>`
+          +       `</div>`
+          +     `</div>`
+          +     `<div class="nic-qbar-bottom">`
+          +       `<div class="nic-answer-label-cell"><span class="nic-answer-label">ANSWER:</span></div>`
+          +       `<div class="nic-answer-value-cell"><span class="nic-answer-value hidden" id="nic-answer-value">— — —</span></div>`
+          +     `</div>`
           +   `</div>`
-          +   `<div class="nic-question-card">`
-          +     `<div class="nic-q-cat" id="nic-q-cat">—</div>`
-          +     `<div class="nic-q-text" id="nic-q-text">—</div>`
-          +   `</div>`
-          +   `<div class="nic-answer-reveal" id="nic-answer-reveal"><span class="nic-answer-label">ANSWER:</span> <span class="nic-answer-value" id="nic-answer-value">—</span></div>`
           +   `<div class="nic-rows" id="nic-rows"></div>`
           + `</div>`;
       }
 
       const q = nicState.questions[nicState.qIdx];
+      const showAnswer = nicState.phase === 'reveal' || nicState.phase === 'between';
+      const answerEl = document.getElementById('nic-answer-value');
       if (q) {
         document.getElementById('nic-q-num').textContent = String(nicState.qIdx + 1);
         document.getElementById('nic-q-cat').textContent = q.category || '';
         document.getElementById('nic-q-text').textContent = q.question || '';
-        document.getElementById('nic-answer-value').textContent = (q.answer ?? '').toLocaleString();
+        answerEl.textContent = showAnswer ? (q.answer ?? '').toLocaleString() : '— — —';
       }
-
-      const showAnswer = nicState.phase === 'reveal' || nicState.phase === 'between';
-      document.getElementById('nic-answer-reveal').classList.toggle('visible', showAnswer);
+      answerEl.classList.toggle('hidden', !showAnswer);
 
       nicRenderRows();
     }
@@ -22909,6 +23498,9 @@ document.addEventListener('keydown', e => {
     function nicRenderRows() {
       const host = document.getElementById('nic-rows');
       if (!host) return;
+      const N = Math.max(4, Math.min(8, nicState.roster.length));
+      host.style.setProperty('--nic-tile-cols', N);
+      host.style.setProperty('--nic-tile-scale', Math.min(1, 4 / N));
       const lockByUid = new Map(nicState.locks.map(l => [l.uid, l]));
       const showScores = nicState.phase === 'reveal' || nicState.phase === 'between';
       const myEffectiveUid = isMultiplayer ? myUid : (nicState.roster[nicState._localActiveIdx]?.uid);
@@ -22917,20 +23509,44 @@ document.addEventListener('keydown', e => {
         const lock = lockByUid.get(p.uid);
         const teamCls = p.team === 0 ? 'red' : 'blue';
         const isActive = !lock && p.uid === myEffectiveUid && nicState.phase === 'guess';
-        const orderBadge = lock ? `<span class="nic-row-order">${nicOrdinal(lock.orderIdx + 1)}</span>` : '';
-        const multBadge  = lock ? `<span class="nic-row-mult">${lock.mult ? (lock.mult === 1 ? '1×' : lock.mult + '×') : (nicSpeedMult(lock.orderIdx) === 1 ? '1×' : nicSpeedMult(lock.orderIdx) + '×')}</span>` : '';
-        const guessCell  = lock ? `<span class="nic-row-guess">${Number(lock.guess).toLocaleString()}</span>` : `<span class="nic-row-guess waiting">${isActive ? '…' : ''}</span>`;
-        const diffCell   = (showScores && lock) ? `<span class="nic-row-diff ${lock.basePts === NIC_EXACT_PTS ? 'exact' : ''}">${lock.label || ''}</span>` : '';
-        const ptsCell    = (showScores && lock) ? `<span class="nic-row-pts ${lock.finalPts > 0 ? 'pos' : lock.finalPts < 0 ? 'neg' : 'zero'}">${(lock.finalPts >= 0 ? '+' : '') + (lock.finalPts ?? 0).toLocaleString()}</span>` : (showScores ? `<span class="nic-row-pts zero">no guess</span>` : '');
+
+        let topSpan = '<span class="nic-guess-top"></span>';
+        let mainSpan;
+        let bottomSpan = '<span class="nic-guess-bottom"></span>';
+
+        if (lock) {
+          mainSpan = `<span class="nic-guess-main">${Number(lock.guess).toLocaleString()}</span>`;
+          const multVal = lock.mult ?? nicSpeedMult(lock.orderIdx);
+          const multTxt = multVal === 1 ? '1×' : multVal + '×';
+          const orderTxt = nicOrdinal(lock.orderIdx + 1) + ' ANSWER';
+          bottomSpan = `<span class="nic-guess-bottom">${orderTxt} • ${multTxt}</span>`;
+          if (showScores) {
+            const ptsClass = lock.finalPts > 0 ? 'pos' : lock.finalPts < 0 ? 'neg' : 'zero';
+            const ptsTxt = (lock.finalPts >= 0 ? '+' : '') + (lock.finalPts ?? 0).toLocaleString() + ' pts';
+            const pctTxt = lock.label || '';
+            topSpan = `<span class="nic-guess-top">`
+              + `<span class="nic-guess-pct">${pctTxt}</span>`
+              + `<span class="nic-guess-pts ${ptsClass}">${ptsTxt}</span>`
+              + `</span>`;
+          }
+        } else {
+          mainSpan = `<span class="nic-guess-main waiting">—</span>`;
+          if (showScores) {
+            topSpan = `<span class="nic-guess-top"><span class="nic-guess-pts zero">NO GUESS</span></span>`;
+          }
+        }
+
+        const guessClass = `nic-row-guess${lock ? '' : ' waiting'}`;
         return `<div class="nic-row ${teamCls} ${lock ? 'locked' : ''} ${isActive ? 'active' : ''}">`
           + `<span class="nic-row-name">${escapeHtml(p.name)}</span>`
-          + guessCell
-          + orderBadge
-          + multBadge
-          + diffCell
-          + ptsCell
+          + `<div class="${guessClass}">${topSpan}${mainSpan}${bottomSpan}</div>`
           + `</div>`;
       }).join('');
+
+      host.querySelectorAll('.nic-guess-main').forEach(el => {
+        const txt = el.textContent || '';
+        if (txt && txt !== '…') fitByCharCount(el, 3, txt, 1);
+      });
     }
 
     function nicOrdinal(n) {
@@ -22944,14 +23560,10 @@ document.addEventListener('keydown', e => {
       const tick = () => {
         if (nicState.phase !== 'guess') return;
         const left = Math.max(0, nicState.timerEndsAt - Date.now());
-        const fill = document.getElementById('nic-timer-fill');
         const text = document.getElementById('nic-timer-text');
-        if (!fill || !text) return;
-        const pct = Math.max(0, Math.min(1, left / NIC_QUESTION_TIME_MS));
-        fill.style.width = (pct * 100) + '%';
+        if (!text) return;
         text.textContent = String(Math.ceil(left / 1000));
         const warn = left <= 5000;
-        fill.classList.toggle('warning', warn);
         text.classList.toggle('warning', warn);
       };
       tick();
@@ -25959,7 +26571,7 @@ document.addEventListener('keydown', e => {
       nicPlayerStats = {};
       playerIndex = [0, 0];
       lastRoundWinner = -1;
-      _prevRoundTypePicks = [];
+      _moduleLastShownRound = {}; _roundPickerCounter = 0;
       resetCommonThreadState();
 
       // Restore preserved state
@@ -27989,7 +28601,7 @@ document.addEventListener('keydown', e => {
       resetScribbleState();
       resetCommonThreadState();
       resetGridLockState();
-      _prevRoundTypePicks = [];
+      _moduleLastShownRound = {}; _roundPickerCounter = 0;
 
       // Set scoreboard team labels
       const redLabelH4 = document.querySelector("#red-score-box .team-label h4");

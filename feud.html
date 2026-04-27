@@ -736,6 +736,145 @@
       letter-spacing: 0.02em;
     }
 
+    /* Phone-controller Common Thread stage. The desktop #ct-board /
+       #ct-clue-banner / #ct-stepper-external get reparented in here on
+       CT entry, so the existing role-aware ctRenderBoard() logic drives
+       both views unchanged. Hub display sees the same board (front
+       cards) by virtue of having no UID in clueGiverUids.
+       --ct-card-face mirrors the value scoped to #common-thread-container
+       so reparented cards keep the beige guesser-front color (the var is
+       not on :root, so cards moved out of the original container would
+       otherwise fall back to transparent). */
+    #phone-ct-stage {
+      display: none;
+      --ct-card-face: #e8dcc0;
+    }
+    body.phone-mode #phone-ct-stage.active {
+      display: flex;
+      flex-direction: column;
+      /* basis 0 (not auto) so the input-area's content-sized flex-shrink:0
+         claims its space first; the stage takes the leftover. With basis
+         auto the stage's intrinsic content drove the math and the input-
+         area got pushed below the viewport when compose-clue grew. */
+      flex: 1 1 0;
+      min-height: 0;
+      padding: 4px 6px 6px;
+      gap: 4px;
+      align-items: center;
+    }
+    /* Wrapper around the board lets it shrink-to-fit when stepper +
+       banner together claim more vertical space than expected (e.g.
+       compose-clue mode adds the stepper row). */
+    /* Board fills the leftover stage space (banner above, stepper
+       below in compose mode). No aspect-ratio: card width stays fixed
+       at board_width / 4, only card height varies with available
+       vertical space. Mike's choice — maximizes horizontal real estate
+       for word text, with the trade-off that cards become landscape
+       rectangles when compose-clue mode shrinks the available height. */
+    body.phone-mode #phone-ct-stage .ct-board {
+      flex: 1 1 0;
+      min-height: 0;
+      width: 100%;
+      height: auto;
+      padding: 6px;
+      gap: 4px;
+      /* Override desktop's repeat(4, 80px) so row tracks fluid-size
+         with the (variable) container height instead of staying pinned
+         at 80px and overflowing. */
+      grid-template-rows: repeat(4, 1fr);
+    }
+    /* Mike's ask: cards small, text very small by default — pinch-zoom
+       is the escape hatch for closer reading. fitByCharCount sets
+       --fit-scale on each .ct-word; the calc() composes that with the
+       small phone base. Desktop CT word rule is unaffected (it doesn't
+       reference --fit-scale). */
+    body.phone-mode #phone-ct-stage .ct-card-face .ct-word {
+      font-size: calc(0.7rem * var(--fit-scale, 1));
+      line-height: 1.05;
+      letter-spacing: 0.5px;
+    }
+    body.phone-mode #phone-ct-stage .ct-card-face .ct-value {
+      font-size: 0.6rem;
+      bottom: 2px;
+    }
+    /* Banner: trim to claim less vertical real estate than desktop. */
+    body.phone-mode #phone-ct-stage .ct-clue-banner {
+      min-height: 36px;
+      max-height: 36px;
+      padding: 4px 10px;
+      gap: 6px;
+    }
+    body.phone-mode #phone-ct-stage .ct-clue-banner .ct-clue-word,
+    body.phone-mode #phone-ct-stage .ct-clue-banner .ct-clue-count {
+      font-size: 1.1rem;
+    }
+    body.phone-mode #phone-ct-stage .ct-clue-banner .ct-clue-label {
+      font-size: 0.6rem;
+    }
+    body.phone-mode #phone-ct-stage .ct-clue-banner .ct-clue-remaining {
+      font-size: 0.7rem;
+      margin-left: 6px;
+    }
+    body.phone-mode #phone-ct-stage .ct-clue-waiting {
+      font-size: 0.85rem;
+    }
+    /* Hide the footer team-stats row on phone — the hub scoreboard is
+       authoritative, no need to duplicate streak/mult/round on phone. */
+    body.phone-mode #phone-ct-stage .ct-footer { display: none; }
+    /* Reposition the external count stepper as a centered horizontal
+       bar inside the phone stage (desktop has it floating absolutely
+       to the right of the input-area, which would land off-screen on
+       phone). Stepper visibility is still gated by the compose-clue
+       branch in setInputAreaMode (display:none → flex). */
+    body.phone-mode #phone-ct-stage #ct-stepper-external {
+      position: static;
+      flex-direction: row;
+      align-items: center;
+      gap: 18px;
+      padding: 6px 18px;
+      border-radius: 10px;
+      transform: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    /* Defeat the desktop slide-in/out keyframes (their translate(-50%)
+       Y offsets misposition the horizontal bar). */
+    body.phone-mode #phone-ct-stage #ct-stepper-external.ct-step-enter,
+    body.phone-mode #phone-ct-stage #ct-stepper-external.ct-step-exit {
+      animation: none;
+    }
+    body.phone-mode #phone-ct-stage #ct-stepper-external .ct-ext-arrow {
+      font-size: 1.8rem;
+      padding: 4px 14px;
+    }
+    body.phone-mode #phone-ct-stage #ct-stepper-external .ct-ext-value {
+      font-size: 1.8rem;
+    }
+    /* Quiet round-end panel shown after the round resolves; phone goes
+       passive while the hub plays the summary. */
+    body.phone-mode #phone-ct-stage .pct-roundend {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-align: center;
+      padding: 0 18px;
+    }
+    body.phone-mode #phone-ct-stage .pct-roundend-title {
+      font-family: "dazzle-unicase", serif;
+      font-size: 1.5rem;
+      color: #fba300;
+      letter-spacing: 0.04em;
+    }
+    body.phone-mode #phone-ct-stage .pct-roundend-body {
+      font-family: "futura-100", sans-serif;
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: #aaa;
+      max-width: 280px;
+    }
+
     /* Phone-controller Grid Lock stage. Trace-only board with a slim
        status strip (timer + valid-word count) and a feedback bar above
        the board. Input-area is hidden via body.phone-gl-active so the
@@ -11281,7 +11420,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.35</div>
+  <div id="version-tag">v0.36</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -11523,6 +11662,13 @@
              status panel. Built/torn-down in _phoneSs* helpers; hidden
              on desktop and outside Scribble rounds. -->
         <div id="phone-ss-container"></div>
+
+        <!-- Phone-controller Common Thread stage. The desktop board /
+             clue-banner / count-stepper get reparented in here on CT
+             entry so role-aware rendering (clue-giver back-faces vs
+             guesser fronts) is automatic. Built/torn-down in
+             _phoneCt* helpers; hidden on desktop and outside CT. -->
+        <div id="phone-ct-stage"></div>
 
         <!-- Input-area home base. Module code never mutates this; it's
              driven by setInputAreaMode(). -->
@@ -16716,6 +16862,22 @@ document.addEventListener('keydown', e => {
       const inputAreaEl = document.getElementById('input-area');
       if (!turnBody) return;
 
+      // Idempotency guard for 'guess' mode. In simultaneous-input modules
+      // (NIC, Face-off, Grid Lock) every snapshot from any player triggers
+      // every other client's role-UI function, which calls setInputAreaMode
+      // ('guess'). Without this guard the input value, caret, and focus get
+      // clobbered on every submit — making the modules effectively unplayable
+      // when multiple people type at once. Header / subtext / team color
+      // can't legitimately change while staying in 'guess' mode in any
+      // current module (any state change that would alter them transitions
+      // through 'disabled' first), so a no-op is safe. If a future module
+      // needs in-place updates while in 'guess' mode, it should use direct
+      // textContent writes on #turn-header / #turn-subtext rather than
+      // routing through setInputAreaMode.
+      if (mode === 'guess' && inputAreaEl?.getAttribute('data-ia-mode') === 'guess') {
+        return;
+      }
+
       // Tag the input-area with its current mode so updateTurn / updateRoleUI
       // can detect "module-owned" states ('disabled', 'action') and skip
       // their own subtext/header overrides. Without this, legacy feud turn
@@ -18562,6 +18724,11 @@ document.addEventListener('keydown', e => {
 
     function resetCommonThreadState() {
       ctResetStatsTracking();
+      // Phone-controller: full teardown of the phone stage. Idempotent
+      // and safe whether the round ended via the summary path (banner/
+      // board already restored by _phoneCtShowRoundEnd) or via an
+      // abrupt reset (resetGame, play-again).
+      if (IS_PHONE_VIEW && typeof _phoneCtUnmount === "function") _phoneCtUnmount();
       // NOTE: do NOT hide the summary here. handleModuleComplete calls
       // mod.reset() → this function at the 6.5s hold; tearing down the
       // summary before Ready Up cuts the panel short. Summary persists
@@ -18809,6 +18976,11 @@ document.addEventListener('keydown', e => {
         <div class="ct-card-face ct-card-front ${typeClass}"><div class="ct-word">${card.word}</div><div class="ct-value">${frontValue}</div></div>
         <div class="ct-card-face ct-card-back ${typeClass}"><div class="ct-word">${card.word}</div><div class="ct-value"></div></div>
       `;
+      // Shrink word text from 7+ chars. fitByCharCount sets --fit-scale
+      // inline; phone CT word rule composes it via calc(). Desktop word
+      // rule doesn't reference the var, so the inline value is harmless
+      // there.
+      el.querySelectorAll('.ct-word').forEach(w => fitByCharCount(w, 6, card.word, 1));
       el.addEventListener("click", () => ctOnCardClick(i));
       return el;
     }
@@ -19359,6 +19531,12 @@ document.addEventListener('keydown', e => {
         // Wait for the transform transition to settle (0.5s / speed).
         await new Promise(r => setTimeout(r, 520 / (gameSpeed || 1)));
       }
+
+      // Phone-controller: reparent banner/board back to the (hidden)
+      // hub container BEFORE the display:none below — the stage swaps
+      // to a quiet "look at the screen" panel. Hub continues to play
+      // the celebration in #module-canvas.
+      if (IS_PHONE_VIEW && typeof _phoneCtShowRoundEnd === "function") _phoneCtShowRoundEnd();
 
       if (board)  board.style.display  = "none";
       if (banner) banner.style.display = "none";
@@ -19960,6 +20138,10 @@ document.addEventListener('keydown', e => {
       ctRender();
       ctUpdateInputArea();
       ctSyncState();
+      // Phone-controller: reparent banner/board/stepper into the phone
+      // stage. ctRenderBoard's role-aware logic continues to drive the
+      // single DOM tree unchanged.
+      if (IS_PHONE_VIEW && typeof _phoneCtMount === "function") _phoneCtMount();
     }
 
     function ctRemainingForTeam(t) {
@@ -22764,6 +22946,99 @@ document.addEventListener('keydown', e => {
       _phoneGl.pendingWord = null;
       if (_phoneGl.feedbackTimer) { clearTimeout(_phoneGl.feedbackTimer); _phoneGl.feedbackTimer = null; }
     }
+
+    // ---- Phone-controller Common Thread ----
+    // CT's role-aware view (clue givers see card backs, guessers see
+    // fronts) is already driven by ctRenderBoard's amICtAnyClueGiver()
+    // check, so the phone view is purely a layout move: reparent the
+    // existing #ct-clue-banner / #ct-board / #ct-stepper-external into
+    // #phone-ct-stage on entry, restore them on exit. One DOM tree,
+    // two renders for free.
+    const _phoneCt = { mounted: false, _origStepperParent: null };
+
+    function _phoneCtMount() {
+      if (!IS_PHONE_VIEW) return;
+      const stage = document.getElementById('phone-ct-stage');
+      const banner = document.getElementById('ct-clue-banner');
+      const board = document.getElementById('ct-board');
+      const stepper = document.getElementById('ct-stepper-external');
+      if (!stage || !banner || !board) return;
+      // Cache stepper's original parent once so unmount can restore it.
+      // Banner and board always belong to #common-thread-container — no
+      // need to cache those.
+      if (stepper && !_phoneCt._origStepperParent) {
+        _phoneCt._origStepperParent = stepper.parentNode;
+      }
+      // Drop any leftover round-end panel from a prior CT round.
+      stage.innerHTML = '';
+      stage.appendChild(banner);
+      stage.appendChild(board);
+      if (stepper) stage.appendChild(stepper);
+      // ctShowSummary on the previous round may have set display:none;
+      // clear so this round renders.
+      banner.style.display = '';
+      board.style.display = '';
+      stage.classList.add('active');
+      document.body.classList.add('phone-ct-active');
+      _phoneCt.mounted = true;
+    }
+
+    // Phone goes passive while the hub plays the round summary. Move
+    // banner/board/stepper back to their canonical homes (so the
+    // hub-side ctShowSummary path operates on intact DOM) and swap the
+    // stage to a quiet "look at the screen" panel.
+    function _phoneCtShowRoundEnd() {
+      if (!IS_PHONE_VIEW) return;
+      const stage = document.getElementById('phone-ct-stage');
+      if (!stage) return;
+      _phoneCtRestoreOrigParents();
+      stage.innerHTML =
+          `<div class="pct-roundend">`
+        +   `<div class="pct-roundend-title">Round Complete</div>`
+        +   `<div class="pct-roundend-body">A summary of the round is on the screen.</div>`
+        + `</div>`;
+      // Stage stays .active so the panel is visible. Drop the body
+      // class so any compose-clue-only CSS hooks switch off.
+      document.body.classList.remove('phone-ct-active');
+    }
+
+    function _phoneCtUnmount() {
+      if (!IS_PHONE_VIEW) return;
+      const stage = document.getElementById('phone-ct-stage');
+      _phoneCtRestoreOrigParents();
+      if (stage) {
+        stage.classList.remove('active');
+        stage.innerHTML = '';
+      }
+      document.body.classList.remove('phone-ct-active');
+      _phoneCt.mounted = false;
+    }
+
+    // Idempotent: safe whether elements are currently in #phone-ct-stage
+    // or already back in their original parents.
+    function _phoneCtRestoreOrigParents() {
+      const banner = document.getElementById('ct-clue-banner');
+      const board = document.getElementById('ct-board');
+      const stepper = document.getElementById('ct-stepper-external');
+      const ctContainer = document.getElementById('common-thread-container');
+      if (ctContainer) {
+        // Original DOM order: banner → board → footer → summary.
+        // Anchoring on .ct-footer means we end up before footer/summary
+        // even if footer is currently display:none.
+        const footer = ctContainer.querySelector('.ct-footer');
+        if (banner && banner.parentNode !== ctContainer) {
+          ctContainer.insertBefore(banner, footer || null);
+        }
+        if (board && board.parentNode !== ctContainer) {
+          ctContainer.insertBefore(board, footer || null);
+        }
+      }
+      if (stepper && _phoneCt._origStepperParent
+          && stepper.parentNode !== _phoneCt._origStepperParent) {
+        _phoneCt._origStepperParent.appendChild(stepper);
+      }
+    }
+
     function _phoneGlRenderBoard() {
       const board = document.getElementById('phone-gl-board');
       if (!board) return;
@@ -24567,10 +24842,16 @@ document.addEventListener('keydown', e => {
       const _glContainer = document.getElementById('grid-lock-container');
       if (_glContainer) {
         _glContainer.classList.remove('gl-reveal-mode');
-        // Hub layout during play: hide the per-player word list (now
-        // a phone-only surface) and let the right column center the
-        // grid in the canvas.
-        _glContainer.classList.add('gl-hub-play-mode');
+        // Hub-display only: the per-player word list moves to phones,
+        // and the shared screen centers the grid in the canvas.
+        // Standard multiplayer (each player on their own device) keeps
+        // the wordlist — it's the player's only feedback that a word
+        // was accepted.
+        if (isHubDisplay) {
+          _glContainer.classList.add('gl-hub-play-mode');
+        } else {
+          _glContainer.classList.remove('gl-hub-play-mode');
+        }
         const _lc = _glContainer.querySelector('.gl-left-col');
         const _rc = _glContainer.querySelector('.gl-right-col');
         if (_lc) _lc.classList.remove('gl-play-exit');
@@ -26600,6 +26881,12 @@ document.addEventListener('keydown', e => {
 
       // Active player input
       const subtext = isMultiplayer ? 'MAKE YOUR GUESS' : `${slot ? slot.name.toUpperCase() + ' — ' : ''}MAKE YOUR GUESS`;
+      // Capture transition: are we entering 'guess' mode fresh, or already
+      // in it? On already-in-guess (re-render from another player's snapshot)
+      // we must NOT touch value / focus / inputmode — that's the simultaneous
+      // input clobber. setInputAreaMode itself early-returns in this case;
+      // we mirror the gate here for the post-call enable/focus block.
+      const wasGuessMode = document.getElementById('input-area')?.getAttribute('data-ia-mode') === 'guess';
       setInputAreaMode({
         mode: 'guess',
         header: 'NUMBER IS CORRECT',
@@ -26614,14 +26901,16 @@ document.addEventListener('keydown', e => {
       const submitBtn = document.querySelector('#turn-body .dome-button');
       if (guessInput) {
         guessInput.disabled = false;
-        guessInput.value = '';
-        // Phone mode: surface the native numeric keyboard. Cleared in
-        // resetNicState so feud rounds get a normal text keyboard back.
-        if (IS_PHONE_VIEW) {
-          guessInput.setAttribute('inputmode', 'numeric');
-          guessInput.setAttribute('pattern', '[0-9]*');
+        if (!wasGuessMode) {
+          guessInput.value = '';
+          // Phone mode: surface the native numeric keyboard. Cleared in
+          // resetNicState so feud rounds get a normal text keyboard back.
+          if (IS_PHONE_VIEW) {
+            guessInput.setAttribute('inputmode', 'numeric');
+            guessInput.setAttribute('pattern', '[0-9]*');
+          }
+          try { guessInput.focus(); } catch(_) {}
         }
-        try { guessInput.focus(); } catch(_) {}
       }
       if (submitBtn) submitBtn.disabled = false;
     }
@@ -27229,6 +27518,10 @@ document.addEventListener('keydown', e => {
         placeholder = 'Waiting...';
       }
 
+      // Capture transition before setInputAreaMode runs — see nicUpdateInputArea
+      // for the rationale. Re-rendering on another battle participant's snapshot
+      // must not steal focus from a typing player.
+      const wasGuessMode = document.getElementById('input-area')?.getAttribute('data-ia-mode') === 'guess';
       setInputAreaMode({
         mode: canInput ? 'guess' : 'disabled',
         header, subtext,
@@ -27244,7 +27537,9 @@ document.addEventListener('keydown', e => {
         const submitBtn = document.querySelector('#turn-body .dome-button');
         if (guessInput) {
           guessInput.disabled = false;
-          setTimeout(() => guessInput.focus(), 100);
+          if (!wasGuessMode) {
+            setTimeout(() => guessInput.focus(), 100);
+          }
         }
         if (submitBtn) submitBtn.disabled = false;
       }

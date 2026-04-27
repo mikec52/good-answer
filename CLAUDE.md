@@ -510,6 +510,22 @@ Between rounds, all players see a "Ready Up" button. First click starts a 10-sec
 5. **Debug logging cleanup** — diagnostic `console.log` statements in `category-select` transition, `play-again` transition, and `host syncing category-select` should be removed once multiplayer flows are stable.
 6. **Face-off UI polish** — cover plate clipping, countdown animation timing on non-host, turn-header/turn-subtext styling consistency, neutral color refinements. Functional but needs visual iteration.
 
+### What Was Fixed (April 27 session — simultaneous-input clobber)
+
+**⚠️ Awaiting multi-device verification.** The fix is shipped but neither Mike nor Claude can reproduce or verify the simultaneous-input bug from a single environment — it requires 2+ devices typing concurrently into a NIC or Face-off round. Watch for confirmation at the next multi-device playtest before marking resolved. If the bug persists after this fix, the next suspects are (a) reconcile paths re-rendering DOM ancestors of `#guess`, (b) `updateRoleUI` running anywhere despite the early-returns for the simultaneous modules, or (c) a third writer to `gi.value` outside the three audited functions.
+
+**What was reported (first multi-player playtest, April 26):** while one player's submit was being validated/synced through Firestore, other players' inputs got cut short or reset mid-type. Initially read like a Firestore concurrency limitation — actually a client-side DOM clobber.
+
+**Root cause.** Every submit triggers a host snapshot, every client's `reconcileLocalState` runs, and the simultaneous-input modules' role-UI functions (`nicUpdateInputArea`, `updateFaceoffRoleUI`) call `setInputAreaMode({mode:'guess', ...})` on every snapshot. The `'guess'` branch unconditionally wiped `gi.value`, and the callers then *also* wiped value, set `inputmode`/`pattern`, and called `.focus()` (or a delayed `.focus()` on faceoff). On any concurrently-typing player, this destroyed the in-progress text, caret, and focus on every other player's submit.
+
+**Fix shape.** `setInputAreaMode` is now idempotent for `'guess'` — when called with `mode === 'guess'` while `data-ia-mode === 'guess'` is already set, it early-returns. Header/subtext/team color can't legitimately change while staying in `'guess'` mode in any current module (any state change that would alter them transitions through `'disabled'` first), so the no-op is safe. `nicUpdateInputArea` and `updateFaceoffRoleUI` capture `wasGuessMode` before calling and gate their post-call `value = ''` / `.focus()` / phone `inputmode` set behind `!wasGuessMode`.
+
+**Contract for new modules.** If a future simultaneous-input module needs to update header/subtext/team color while staying in `'guess'` mode, it should write directly to `#turn-header` / `#turn-subtext` rather than routing through `setInputAreaMode` (the early-return would no-op the call). Comment in `setInputAreaMode` documents this.
+
+**Grid Lock not affected.** `glStartPlay` is one-shot at intro completion, not called per-snapshot, so it never participated in the bug. The early-return guard is harmlessly no-op for it (data-ia-mode isn't `'guess'` at that point — coming from intro).
+
+**Files touched.** `feud.html` only. `setInputAreaMode` (~12-line guard added), `nicUpdateInputArea` (gating around value/focus/inputmode block), `updateFaceoffRoleUI` (gating around `setTimeout(.focus, 100)`). No state changes, no architectural changes.
+
 ### What Was Fixed (April 26 session — NIC visual completion + picker overhaul)
 
 NIC module visually feature-complete; round-type picker rebuilt for scale.

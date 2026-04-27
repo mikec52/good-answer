@@ -3742,14 +3742,26 @@
     /* Left column inside ranked-row: stacks content-tv on top of the
        last-guess pill so the pill tracks the TV's horizontal position
        and can fade out alongside the TV's exit animations. Margin
-       moved here from #content-tv so the col owns vertical rhythm. */
+       moved here from #content-tv so the col owns vertical rhythm.
+       Width is derived from #content-tv (300px when visible, 0 when
+       display:none) — NOT hardcoded — so the col doesn't claim layout
+       space during round-type-picker / category-select phases when
+       content-tv is display:none and the picker / pills should fill
+       ranked-row's full width. */
     #content-tv-col {
       display: flex;
       flex-direction: column;
       align-items: center;
-      flex-shrink: 0;
-      width: 300px;
       margin: 30px 0 10px 0;
+      overflow: hidden;
+    }
+    /* When content-tv is hidden via inline display:none (round-type
+       picker, category-select, non-ranked rounds), collapse the col
+       too so the pill's padding doesn't claim layout space. JS sets
+       display via inline style consistently — match either spacing. */
+    #ranked-row:has(#content-tv[style*="display: none"]) #content-tv-col,
+    #ranked-row:has(#content-tv[style*="display:none"]) #content-tv-col {
+      display: none;
     }
 
     /* Content TV — 300×300 "screen" that wraps cat-label + question-box */
@@ -11787,7 +11799,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.38</div>
+  <div id="version-tag">v0.39</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">

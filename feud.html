@@ -11848,7 +11848,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.44</div>
+  <div id="version-tag">v0.45</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -20610,11 +20610,12 @@ document.addEventListener('keydown', e => {
             if (child.classList.contains("answer")) track.appendChild(child);
           });
           answersEl.appendChild(track);
-          // Boomerang marquee arm: measured after layout. Duration scales
-          // with overflow distance (~30px per second, min 6s) so more
-          // overflow = longer scroll. alternate direction in CSS handles
-          // the return trip.
-          requestAnimationFrame(() => {
+          // Boomerang marquee arm: measured after the summary panel's
+          // slide-in animation settles. requestAnimationFrame fires too
+          // early — answersEl.clientHeight reads as 0 mid-animation and
+          // overflow never registers. setTimeout(500ms) matches the NIC
+          // summary pattern (see armMarquee in nicShowSummary).
+          setTimeout(() => {
             if (!track.isConnected) return;
             const overflow = track.scrollHeight - answersEl.clientHeight;
             if (overflow <= 2) return;
@@ -20622,7 +20623,7 @@ document.addEventListener('keydown', e => {
             const dur = Math.max(6, overflow / 30);
             track.style.setProperty("--h5-board-duration", `${dur}s`);
             track.classList.add("marquee");
-          });
+          }, 500 / (gameSpeed || 1));
         }
       }
 

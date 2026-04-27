@@ -273,7 +273,7 @@ Decomposes into roughly four chunks, in dependency order:
 
 2. **Hub-display-only mode + phone-side join.** ✅ Entry point + end-to-end join landed (2026-04-26). New global `isHubDisplay` flag (cleared everywhere `isMultiplayer` resets). Mode select gained a third button — **Local Game / "Same room, one screen"** — which routes through `selectHubMode()` → `submitCreateHubGame()`. The hub creates a Firestore game with `isHubDisplay: true` on the doc and an empty `players: {}` map (hub occupies no slot, runs game logic). `renderLobby()` conditionally hides the Join Red / Undecided / Join Blue buttons when `isHubDisplay`, and renders an amber-bordered "Players: open this URL on your phone" panel showing `${origin}${pathname}?phone=1&code=${gameCode}` (click-to-copy via `copyPhoneJoinUrl()`). Captain auto-assignment to first joiner per team works without changes since the hub is absent from `players`. Phone-side: `#phone-placeholder` was rebuilt as a real join form (game code prefilled from `?code=` URL param, name field, Join Game button styled as an amber dome-button). `phoneInit()` runs at script load to wire focus + Enter handlers; `phoneSubmitJoin()` mirrors the desktop `submitJoinGame` flow (anonymous auth → Firestore `updateDoc` of `players.${myUid}` with auto-team + auto-captain) then swaps to a "You're on RED/BLUE TEAM — Waiting for host to start…" lobby status. Phone subscribes to the game snapshot; on `status === 'playing'` it adds `body.phone-joined` (hides the placeholder via CSS) and calls `transitionFromLobbyToGame(data)` so the existing online-client flow takes over. `phoneResetToForm()` covers the hub-deletes-game cleanup path. **Verified end-to-end** with 4 emulated mobile players joining a hub game; phase indicator + input area render correctly in portrait. **Evergreen polish pass shipped same session:** `body.phone-mode #sidebar-zone { padding: 0 }` (was `0 8px 0 0` on desktop, causing an 8px sliver on the right of both phase indicator and input area at 430-wide iPhone 14 Pro Max emulation); `body.phone-mode #input-area` drops the desktop `min/max-height: 350px` so the input-area sizes to its content + uses `padding-bottom: max(5px, env(safe-area-inset-bottom))` for iOS home-indicator clearance; `#player-inventory` (PRIZES placeholder) hidden in phone mode; `#turn-body` padding-bottom trimmed to 14px. The middle gap between phase indicator and input area is intentionally preserved — that's where module overlays will mount in phase 3. **What's still deferred to a follow-up:** hub-aware game-start guards in `lobbyStartGame()` / `transitionFromLobbyToGame` (today they assume host is in `players` / `teamPlayerUids` — empty-host appears to work through lobby + game-start, but no module has actually been played yet on hub since per-module phone overlays don't exist); in-game render suppression on the hub itself (it currently renders the desktop UI even though the hub isn't a player); team-arrow / captain-badge edge cases when host UID is absent. **Phone view at game-start** correctly strips to phase-indicator + input-area but the middle is a blank gray gap — that's expected, the round-type picker / module overlays are phase 3 work.
 
-3. **Per-module phone overlays.** Each module gets a phone-mode rendering of its role-aware content. Bulk of the work, but modular — ship one module at a time. Status snapshot (2026-04-27):
+3. **Per-module phone overlays.** Each module gets a phone-mode rendering of its role-aware content. Bulk of the work, but modular — ship one module at a time. Status snapshot (2026-04-28):
 
    | Module | Status |
    |---|---|
@@ -281,13 +281,13 @@ Decomposes into roughly four chunks, in dependency order:
    | Number Is Correct (NIC) | ✅ Complete |
    | Grid Lock (GL) | ✅ Complete |
    | Common Thread (CT) | ✅ Complete |
+   | High Five | ✅ Complete |
+   | Poll Position | ✅ Complete |
    | Secret Scribble | 🟡 Working, needs polish |
-   | High Five | ⬜ Not started |
-   | Poll Position | ⬜ Not started |
    | Face-off | ⬜ Not started |
    | Endgame Flow (victory dialog / Game Recap) | ⬜ Not started |
 
-   The "complete" modules are functionally feature-complete on phone but each may still surface text-sizing / touch-target tweaks during real-device playtesting. Polish for Scribble, and the four not-started modules + endgame flow, are queued for future sessions.
+   The "complete" modules are functionally feature-complete on phone but each may still surface text-sizing / touch-target tweaks during real-device playtesting. High Five + Poll Position share the `#phone-h5-stage` (cat-select cards on H5 entry; unified frosted-glass board panel for both; `.ph5-rows` vertical marquee arms when the answer track overflows the available height — needed for 7-row Poll Position boards on tighter viewports). Polish for Scribble, and Face-off + endgame flow, are queued for future sessions.
 
 4. **QR code + URL auto-join.** Trivial once 1+2 land. QR library on the lobby screen renders the join URL. ~half session.
 

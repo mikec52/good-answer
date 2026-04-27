@@ -50,21 +50,43 @@ Because the game is still in rapid structural flux, the snapshot branches (`offl
 
 ## Long-Term Development Strategy
 
-The goal is a polished, distributable game app without migrating away from the current HTML/JS stack. Three additive phases:
+The goal is a polished, distributable game app without migrating away from the current HTML/JS stack. The plan has two product paths — a desktop multiplayer experience and a hub-mode "Play on One Screen" experience — both shipping inside the same codebase, with a sub-goal of native app wrappers for each.
 
-1. **HTML/JS game (current)** — continue developing `feud.html` as a single-file vanilla build. Same-room play (one device, one host, players submit guesses at the keyboard) is largely functional. Balatro-inspired contained viewport, zone-based layout, animation-rich transitions (see "Viewport Redesign" section below). This phase is "done" when the game is feature-complete and visually polished for single-session use.
+### Goal 1 — Desktop multiplayer (primary path)
 
-2. **Server layer — Remote Play (ACTIVE)** — add a real-time backend so multiple devices share game state. Implementation: Firebase/Firestore with client-authoritative architecture. **Phase 2A (shared state) and Phase 2B (authenticated players) are live on `main`.** See "Multiplayer Implementation" section below for current status and architecture details.
+The bulk of development to date. A real game running across multiple computers, each player on their own device, Firebase/Firestore as the real-time backend. Not a Jackbox clone — the game logic, animations, and visual polish all live inside the desktop app, not on a separate "hub" screen. Status today: Firebase-backed multiplayer is live on `main` with most modules feature-complete; remaining pre-Blaze cleanup + Cloud Functions migration are the open items (see "Pre-Blaze Cleanup Refactor — Strategy").
 
-3. **Electron / Capacitor shell (stretch goal)** — wrap the finished game in a native app shell for distribution. Platform priority: Mac → iOS → Windows → Android → Steam. Note: Electron covers Mac/Windows/Linux (desktop only); iOS and Android require Capacitor instead. Game code inside is unchanged either way.
+  - **Sub-goal: Electron port.** Wrap the finished desktop game in a native shell for Mac and Windows distribution. Adds polish and perceived quality (no browser chrome, app-feel windowing, native menus, auto-update) and serves as the actual product packaging. Game code inside Electron is unchanged.
 
-**Distribution phases:**
-- **Phase 1 (current goal)**: Owner-hosted. Mike is always the session host; others join as players at a shared URL.
-- **Phase 2 (future)**: Self-serve hosting. Other users can independently spin up and host their own game sessions.
+### Goal 1A — Hub mode ("Play on One Screen")
 
-**Character mascots (exploratory):** A host character and his dog that react to game moments (correct answers, strikes, steals, etc.), adding personality. Early asset experiments use frame-swap animation (JS `setInterval` cycling preloaded PNGs). The long-term asset pipeline uses Replicate models trained on reference images for consistent, animation-ready sprite frames. Not a confirmed feature — experimental and low priority.
+A single-screen hub experience similar in shape to Jackbox, offered as a different mode inside the same application. One device drives the shared screen (TV, laptop, monitor); each player connects their own phone via QR code as a controller. Likely to become the primary way most people interact with the game once it's polished. Active branch: `main-phonecontrol`.
 
-**What this avoids:** No migration to Unity or Phaser. The current stack is the final stack. Phaser would only be reconsidered if animation/visual polish becomes a hard blocker — not anticipated.
+  - **Parity is a hard requirement.** Every module that exists in desktop multiplayer must work in hub mode. Concessions are minimized — the only one made so far is Secret Scribble's delayed opponent-canvas reveal on phone, and that's intended as the upper bound on tradeoffs. If a module can't reach parity through proper design, that's the cue to reconsider the module, not lower the bar on parity.
+  - **Sub-goal: Capacitor controller app.** Wrap the phone-controller view (`?phone=1`) in a native iOS/Android shell. Big UX wins: no browser chrome, native audio (sidesteps the iOS `audio.muted` quirk), real haptics on iOS, screen wake-lock, native QR scanner, App Store / Play Store distribution. Same architecture — still talks to Firebase, still loads the same web view internally. Asymmetric distribution: hub stays inside the Electron desktop app; phone controller has its own native shell.
+
+### Relationship between Goal 1 and Goal 1A
+
+Sequential by *origin*, parallel in *practice*. Every feature is conceived and executed for desktop first; the hub-mode / phone-controller view gets ported from the desktop design. Goal 1A's "1A" naming reflects that ordering — it's not a parallel design effort, it's always informed by the desktop experience that came right before it. Once we're caught up to parity across all existing modules, new modules will be built desktop-first then immediately ported to hub mode in the same development arc.
+
+### Product / distribution model
+
+Two apps, two roles, two pricing models:
+
+- **Desktop app (Electron)** — the paid product. Distribution channel TBD (not a current planning concern). Hub mode is a feature inside the same app, not a separate product.
+- **Phone controller app (Capacitor)** — free, distributed via App Store / Play Store. Pure companion to the desktop app. Its only job is to be a smoother controller during hub mode than the web `?phone=1` view; the web view continues to work for users who haven't installed the app.
+
+The web version (current GitHub Pages deploy) keeps working alongside both native apps — useful for testing, casual play, and as a fallback distribution path.
+
+### What this is *not*
+
+- **Not phone-only multiplayer.** A version of the game where every player is on a phone (no shared hub screen) was considered and rejected. The format depends on shared spectacle moments — the collective reaction when an answer reveals, the side-by-side suspense of Number Is Correct's LED tile grid, the simultaneity of Face-off's two battles. Those moments fragment when each player is on their own phone, and the modules that depend on them most (NIC, Face-off, ranked-question reveals) lose what makes them work. The free phone app exists *only* as a controller for the desktop hub, not as a standalone gameplay surface. If this changes, it's a deliberate reversal, not a drift.
+- **Not a Jackbox clone.** Jackbox apps are essentially just hub screens — there's no real game inside the app itself, just orchestration of phone inputs. Our desktop app contains a real, fully-featured game; hub mode is an additional way to play it, not the only way.
+- **Not a stack migration.** No Unity, no Phaser, no React rewrite. The current vanilla HTML/CSS/JS stack is the final stack. Phaser would only be reconsidered if animation/visual polish becomes a hard blocker — not anticipated.
+
+### Character mascots (exploratory)
+
+A host character and his dog that react to game moments (correct answers, strikes, steals, etc.), adding personality. Early asset experiments use frame-swap animation (JS `setInterval` cycling preloaded PNGs). The long-term asset pipeline uses Replicate models trained on reference images for consistent, animation-ready sprite frames. Not a confirmed feature — experimental and low priority.
 
 ---
 
@@ -241,7 +263,7 @@ When a player isn't actively inputting, their phone shows a simple status line (
 
 ### Decisions made (planning session, 2026-04-25)
 
-- **Mode select:** "Play on One Screen" ships as a third option alongside Local and Online. Likely replaces Local entirely once it proves out — the current local-mode retrofit is clunky for several modules. Local stays available during the transition as a fallback. **Naming update (2026-04-26):** the user-facing labels are now **Local Game** ("Same room, one screen" — phone-controller hub mode), **Online Game** (existing remote multiplayer), and **Offline Mode** (the previously-default "Local Game" same-device path, kept alive but renamed to clear the way for hub mode to claim the prime "Local Game" branding). Mode-select renders all three buttons in that order; both the static HTML and the `backToModeSelect` reset path stay in sync.
+- **Mode select:** "Play on One Screen" ships as a third option alongside Local and Online. Offline Mode (the previous same-device path) is kept as a husk with a low chance of long-term survival — there's still some reluctance to kill it off completely, so it stays in the mode-select indefinitely as a fallback. Hub mode is the intended primary local-play experience going forward. **Naming update (2026-04-26):** the user-facing labels are now **Local Game** ("Same room, one screen" — phone-controller hub mode), **Online Game** (existing remote multiplayer), and **Offline Mode** (the previously-default "Local Game" same-device path, kept alive but renamed to clear the way for hub mode to claim the prime "Local Game" branding). Mode-select renders all three buttons in that order; both the static HTML and the `backToModeSelect` reset path stay in sync.
 - **Lobby (v1):** All lobby functions stay on the hub for the first pass. Player movement, team assignment, captain assignment, kick player, settings — all driven by the hub's existing UI. Phones in the lobby just show "You're in! Team [X]." Captain controls / privileged actions can migrate to phones later if it becomes a pain point; not currently a priority.
 - **Category select / round-type picker:** Hub renders the existing visual UI (animated pills, gem reveals, etc.). Active player's phone shows a tappable mobile-friendly list of the same options. Other phones show "Player X is selecting the next round."
 - **Phone status info:** Per the Jackbox philosophy, no mini-scoreboard or duplicated public state on phones. Hub's evergreen scoreboard is the single source of public status.

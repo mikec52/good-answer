@@ -11813,7 +11813,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.42</div>
+  <div id="version-tag">v0.43</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -17428,11 +17428,18 @@ document.addEventListener('keydown', e => {
         case 'guess':
           // When already in 'guess' mode, skip the input-row rebuild +
           // value/caret/placeholder clear — that's the simultaneous-input
-          // protection (NIC / Face-off / GL). BUT still restore inputRow /
-          // actionRow display state, in case the prior state was 'action'
-          // (Ready Up) which hid inputRow. Layout-only writes don't touch
-          // input value/caret/focus.
+          // protection (NIC / Face-off / GL). BUT still:
+          //   1. Call restoreCanonicalInputRow — idempotent: only rebuilds
+          //      when #guess is missing (e.g., after CT compose-clue, or
+          //      any flow that overwrote inputRow.innerHTML). Without this,
+          //      the input field can be missing on round 2+ after some
+          //      modules (PP-after-scribble bug, observed on real devices).
+          //   2. Restore inputRow / actionRow display in case the prior
+          //      state was 'action' (Ready Up) which hid inputRow.
+          // Layout-only writes don't touch input value/caret/focus, so the
+          // simultaneous-input protection is preserved.
           if (skipInputRowRebuild) {
+            restoreCanonicalInputRow();
             inputRow.style.display = '';
             actionRow.style.display = 'none';
             break;

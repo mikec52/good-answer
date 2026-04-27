@@ -11813,7 +11813,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.41</div>
+  <div id="version-tag">v0.42</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -15279,6 +15279,14 @@ document.addEventListener('keydown', e => {
     //   • 3-digit numeric lobby code
     //   • Music volume left at whatever the user set
     const TEST_MODE = false;
+
+    // ── TEMPORARY DEBUG FLAG ──
+    // When true, Poll Position only serves Survey questions that have
+    // exactly 7 answers (the longest in the current question bank).
+    // Used to spot-check the phone-view answer-row layout against the
+    // longest possible board. Remove once verified.
+    const _DEBUG_PP_LONGEST_ONLY = true;
+    const _DEBUG_PP_TARGET_ANSWERS = 7;
 
     // Phone-controller mode ("Play on One Screen"). When loaded with
     // ?phone=1, the canvas is stripped down to evergreens (#phase-indicator
@@ -28379,7 +28387,11 @@ document.addEventListener('keydown', e => {
       if (poolFilter?.surveyOnly) {
         // Generate a Survey question and go straight to gameplay
         const surveyIdx = questions.map((q, idx) => ({ q, idx }))
-          .filter(obj => !usedQuestions.includes(obj.idx) && obj.q.category === 'Survey' && (!devModeAllowedQuestions || devModeAllowedQuestions.has(obj.idx)));
+          .filter(obj => !usedQuestions.includes(obj.idx)
+            && obj.q.category === 'Survey'
+            && (!devModeAllowedQuestions || devModeAllowedQuestions.has(obj.idx))
+            // TEMPORARY DEBUG: limit Poll Position to longest-board questions.
+            && (!_DEBUG_PP_LONGEST_ONLY || (obj.q.answers && obj.q.answers.length === _DEBUG_PP_TARGET_ANSWERS)));
         if (surveyIdx.length > 0) {
           const choice = surveyIdx[Math.floor(Math.random() * surveyIdx.length)];
           _preSelectedQuestions = { 'Survey': { question: choice.q.question, category: 'Survey', answers: choice.q.answers.map(a => ({ text: a.text, display: a.display, points: a.points, variants: a.variants || [] })), _poolIdx: choice.idx } };

@@ -473,8 +473,15 @@
       --_lift: 4px;
       position: relative;
       width: 100%;
-      flex: 1 1 0;
-      min-height: 70px;
+      /* Natural-height with a cap. flex:1 1 0 was stretching buttons to
+         fill all available vertical space — on the first round (where
+         the input-area's content varies) the picker host got more room
+         than subsequent rounds, producing oversized buttons. Capped
+         heights + `justify-content: center` on the host keeps geometry
+         stable across rounds. */
+      flex: 0 0 auto;
+      min-height: 90px;
+      max-height: 130px;
       isolation: isolate;
       border: 0;
       margin: 0;
@@ -896,6 +903,324 @@
       color: #aaa;
       max-width: 280px;
     }
+
+    /* ──────────────────────────────────────────────────────────
+       Phone-controller High Five / Poll Position stage.
+       One container, two modes (cat-select + board) plus a quiet
+       round-end state. Streak / multiplier / strikes intentionally
+       NOT mirrored — they live on the hub.
+       ────────────────────────────────────────────────────────── */
+    #phone-h5-stage { display: none; }
+    body.phone-mode #phone-h5-stage.active {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 12px 12px 8px;
+      gap: 10px;
+    }
+
+    /* Cat-select mode: vertical stack of flat plastic cards. Survey
+       gets its own card if hasSurvey is true. Cards stack centered
+       vertically; gem badges overlay on top of the symmetric padding
+       (no asymmetric right-pad to "make room" — labels stay centered). */
+    body.phone-mode #phone-h5-stage .ph5-cat-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1 1 auto;
+      min-height: 0;
+      justify-content: center;
+    }
+    body.phone-mode .ph5-cat-card {
+      --cat-card-color: var(--cat-solid, #555);
+      position: relative;
+      flex: 0 0 auto;
+      min-height: 80px;
+      border: 0;
+      border-radius: 14px;
+      cursor: pointer;
+      appearance: none;
+      -webkit-tap-highlight-color: transparent;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: linear-gradient(180deg,
+        color-mix(in oklab, var(--cat-card-color) 75%, #fff 25%) 0%,
+        var(--cat-card-color) 60%,
+        color-mix(in oklab, var(--cat-card-color) 70%, #000 30%) 100%);
+      box-shadow:
+        0 4px 0 color-mix(in oklab, var(--cat-card-color) 40%, #000),
+        0 6px 12px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.3),
+        inset 0 -2px 4px rgba(0,0,0,0.25);
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 1.6rem;
+      letter-spacing: 0.08em;
+      color: #fff;
+      text-transform: uppercase;
+      text-shadow: 0 -1px 0 rgba(0,0,0,0.4), 0 1px 1px rgba(255,255,255,0.2);
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    }
+    body.phone-mode .ph5-cat-card.cat-sports { color: #111; text-shadow: 0 1px 0 rgba(255,255,255,0.3); }
+    body.phone-mode .ph5-cat-card:active {
+      transform: translateY(2px);
+      box-shadow:
+        0 2px 0 color-mix(in oklab, var(--cat-card-color) 40%, #000),
+        0 3px 6px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.3),
+        inset 0 -2px 4px rgba(0,0,0,0.25);
+    }
+    body.phone-mode .ph5-cat-card.disabled {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+    /* Gem badge mid-right (same anchor as .prtp-mult). */
+    body.phone-mode .ph5-cat-mult {
+      position: absolute;
+      top: 50%;
+      right: 14px;
+      transform: translateY(-50%);
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-family: "Bitcount Single", monospace;
+      font-size: 1rem;
+      color: #111;
+      background: var(--rt-gem-color, #c0c0c0);
+      box-shadow:
+        0 2px 0 rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.6),
+        inset 0 -2px 3px rgba(0,0,0,0.3);
+      letter-spacing: 0.02em;
+      padding-left: 0.1em;
+    }
+    body.phone-mode .ph5-cat-mult.rt-tier-emerald  { --rt-gem-color: #00a90d; color: #fff; }
+    body.phone-mode .ph5-cat-mult.rt-tier-sapphire { --rt-gem-color: #4c8cff; color: #fff; }
+    body.phone-mode .ph5-cat-mult.rt-tier-amethyst { --rt-gem-color: #d803ff; color: #fff; }
+    body.phone-mode .ph5-cat-mult.rt-tier-topaz    { --rt-gem-color: #fe5815; color: #fff; }
+
+    /* Board mode: one frosted-glass panel that holds the question bar
+       + answer rows. Mirrors the hub's #board-wrapper pattern: panel
+       bg is the "frame" (frosted glass), data fields inside are #111.
+       Top-justified — rows take their natural height, leftover space
+       sits below. */
+    body.phone-mode #phone-h5-stage .ph5-board {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      gap: 6px;
+      align-self: stretch;
+      background: rgba(26,26,26,0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 10px;
+      padding: 10px;
+      justify-content: flex-start;
+    }
+    body.phone-mode .ph5-qbar {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    body.phone-mode .ph5-qbar-cat {
+      font-family: "Bitcount Single", monospace;
+      font-size: 0.9rem;
+      letter-spacing: 0.06em;
+      color: #fff;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 6px;
+      align-self: flex-start;
+      background: var(--cat-solid, #444);
+    }
+    body.phone-mode .ph5-qbar-cat.cat-sports { color: #111; }
+    body.phone-mode .ph5-qbar-q {
+      background: #111;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #fff;
+      line-height: 1.25;
+      min-height: 2.4em;
+      display: flex;
+      align-items: center;
+    }
+    body.phone-mode .ph5-rows {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    body.phone-mode .ph5-row {
+      flex: 0 0 auto;
+      min-height: 38px;
+      display: grid;
+      grid-template-columns: 28px 1fr 56px;
+      gap: 4px;
+      align-items: stretch;
+      background: #111;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+    body.phone-mode .ph5-row-num {
+      display: grid;
+      place-items: center;
+      font-family: "Bitcount Single", monospace;
+      font-weight: 300;
+      font-size: 1.1rem;
+      color: #fff;
+      background: #1f1f1f;
+      padding-left: 0.1em;
+    }
+    body.phone-mode .ph5-row-text {
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      font-family: "Bitcount Single", monospace;
+      font-weight: 300;
+      font-size: 1rem;
+      color: rgba(255,255,255,0.45);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    body.phone-mode .ph5-row-pts {
+      display: grid;
+      place-items: center;
+      font-family: "Bitcount Single", monospace;
+      font-weight: 300;
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.45);
+      background: #1f1f1f;
+      padding-left: 0.1em;
+    }
+    /* Revealed-correct row */
+    body.phone-mode .ph5-row.revealed-correct {
+      background: #1b5e20;
+    }
+    body.phone-mode .ph5-row.revealed-correct .ph5-row-num,
+    body.phone-mode .ph5-row.revealed-correct .ph5-row-pts {
+      background: #2e7d32;
+    }
+    body.phone-mode .ph5-row.revealed-correct .ph5-row-text,
+    body.phone-mode .ph5-row.revealed-correct .ph5-row-pts {
+      color: #fff;
+    }
+    /* Revealed-missed row (round-end Reveal All) */
+    body.phone-mode .ph5-row.revealed-missed {
+      background: #7b0000;
+    }
+    body.phone-mode .ph5-row.revealed-missed .ph5-row-num,
+    body.phone-mode .ph5-row.revealed-missed .ph5-row-pts {
+      background: #9b1c1c;
+    }
+    body.phone-mode .ph5-row.revealed-missed .ph5-row-text,
+    body.phone-mode .ph5-row.revealed-missed .ph5-row-pts {
+      color: #fff;
+    }
+
+    /* Quiet round-end soft state (matches NIC/GL/CT pattern). */
+    body.phone-mode #phone-h5-stage .ph5-roundend {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 24px 20px;
+      text-align: center;
+    }
+    body.phone-mode .ph5-roundend-title {
+      font-family: "dazzle-unicase", "futura-100", sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 0.1em;
+      color: #fba300;
+      text-transform: uppercase;
+    }
+    body.phone-mode .ph5-roundend-body {
+      font-family: "futura-100", sans-serif;
+      font-size: 1rem;
+      color: #ccc;
+      line-height: 1.4;
+      letter-spacing: 0.02em;
+    }
+
+    /* ──────────────────────────────────────────────────────────
+       Last-guess pill — sits directly below content-tv inside the
+       left column of #ranked-row. Hub-display + regular MP non-host
+       views see it; phone view doesn't (#module-canvas is display:none
+       on phone). The pill fades out in lockstep with content-tv's
+       exit animations (ct-hidden / slide-out-left / tv-off).
+       ────────────────────────────────────────────────────────── */
+    #last-guess-pill {
+      margin-top: 12px;
+      opacity: 0;
+      pointer-events: none;
+      max-width: 300px;
+      padding: 10px 22px;
+      border-radius: 999px;
+      background: rgba(26,26,26,0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-family: "futura-100", sans-serif;
+      font-weight: 500;
+      font-size: 1.05rem;
+      color: #fff;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      transform: translateY(8px);
+      transition: transform 0.32s ease, opacity 0.32s ease;
+    }
+    #last-guess-pill.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    /* Fade out alongside content-tv's exit animations. Uses :has() to
+       react to state classes on the sibling element; supported in all
+       evergreen browsers we target. */
+    #content-tv-col:has(#content-tv.ct-hidden) #last-guess-pill,
+    #content-tv-col:has(#content-tv.slide-out-left) #last-guess-pill,
+    #content-tv-col:has(#content-tv.tv-off) #last-guess-pill {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    #last-guess-pill .lgp-player {
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    #last-guess-pill .lgp-player.team-red  { color: var(--red-text); }
+    #last-guess-pill .lgp-player.team-blue { color: var(--blue-text); }
+    #last-guess-pill .lgp-guess {
+      font-style: italic;
+      color: #ddd;
+      max-width: 280px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #last-guess-pill .lgp-mark {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+    #last-guess-pill .lgp-mark.ok  { color: #4caf50; }
+    #last-guess-pill .lgp-mark.bad { color: #ff5555; }
 
     /* Phone-controller Grid Lock stage. Trace-only board with a slim
        status strip (timer + valid-word count) and a feedback bar above
@@ -3414,6 +3739,19 @@
       box-sizing: border-box;
     }
 
+    /* Left column inside ranked-row: stacks content-tv on top of the
+       last-guess pill so the pill tracks the TV's horizontal position
+       and can fade out alongside the TV's exit animations. Margin
+       moved here from #content-tv so the col owns vertical rhythm. */
+    #content-tv-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+      width: 300px;
+      margin: 30px 0 10px 0;
+    }
+
     /* Content TV — 300×300 "screen" that wraps cat-label + question-box */
     #content-tv {
       width: 300px;
@@ -3422,7 +3760,6 @@
       position: relative;
       overflow: hidden;
       flex-shrink: 0;
-      margin: 30px 0 10px 0;
       display: flex;
       flex-direction: column;
       /* Vignette shadow moved to ::after so it renders above children */
@@ -11450,7 +11787,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.37</div>
+  <div id="version-tag">v0.38</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -11700,6 +12037,15 @@
              _phoneCt* helpers; hidden on desktop and outside CT. -->
         <div id="phone-ct-stage"></div>
 
+        <!-- Phone-controller High Five / Poll Position stage. Single
+             container with internal modes: .ph5-mode-cat (category
+             cards, H5 only — Poll Position skips this step) and
+             .ph5-mode-board (question bar + answer rows). Built/torn-
+             down in _phoneH5* helpers; hidden on desktop and outside
+             ranked-question rounds. Streak / multiplier / strikes
+             intentionally NOT mirrored — they live on the hub. -->
+        <div id="phone-h5-stage"></div>
+
         <!-- Input-area home base. Module code never mutates this; it's
              driven by setInputAreaMode(). -->
         <div id="sq-zone-input" class="offscreen-below">
@@ -11774,6 +12120,11 @@
           <!-- Ranked-question row: content-tv (300px) on the left, board-wrapper
                on the right. Flex row so they sit side-by-side in the module canvas. -->
           <div id="ranked-row">
+          <!-- Left column wraps content-tv + last-guess pill so the pill
+               sits directly under the TV and tracks its horizontal position
+               automatically. The pill fades out in lockstep with content-tv's
+               exit animations via CSS sibling-state selectors. -->
+          <div id="content-tv-col">
           <!-- Content-TV: category label + question text + CRT overlays.
                Relocated here from the sidebar. Slides in from left during
                ranked-question entry. -->
@@ -11787,6 +12138,11 @@
             </div>
             <div id="content-tv-vignette"></div>
           </div>
+          <!-- Last-guess pill. Slides up directly below content-tv whenever
+               a guess resolves. Fades out in lockstep with content-tv's
+               exit animations (tv-off / slide-out-left / ct-hidden). -->
+          <div id="last-guess-pill"></div>
+          </div><!-- end #content-tv-col -->
 
           <!-- Round-type picker. Hidden by default; populated + shown by
                showRoundTypePicker(). Redesign target: richer visual panels. -->
@@ -15503,7 +15859,30 @@ document.addEventListener('keydown', e => {
 
       // ── Match log ──
       if (data.matchLog) {
+        const prevLen = matchLog.length;
         matchLog = [...data.matchLog];
+        // Last-guess pill on non-host: when a new matchLog entry lands and
+        // it's a ranked-question / steal outcome, show the pill. Dedupe via
+        // _lastGuessPillSeenKey so host (which fires from logGuess directly)
+        // doesn't re-fire on its own echo. Non-host's logGuess is never
+        // called locally; this is the sole entry point on that side.
+        if (!isHost && matchLog.length > prevLen) {
+          const latest = matchLog[matchLog.length - 1];
+          if (latest && (latest.outcome === 'correct' || latest.outcome === 'wrong'
+              || latest.outcome === 'steal_success' || latest.outcome === 'steal_fail'
+              || latest.outcome === 'duplicate')) {
+            const key = `${latest.player}|${latest.guess}|${latest.timestamp}`;
+            if (key !== _lastGuessPillSeenKey) {
+              _lastGuessPillSeenKey = key;
+              showLastGuessPill({
+                player: latest.player,
+                team: latest.team,
+                guess: latest.guess,
+                outcome: latest.outcome,
+              });
+            }
+          }
+        }
       }
 
       // ── Scribble per-player counters (host-authoritative) ──
@@ -16396,6 +16775,9 @@ document.addEventListener('keydown', e => {
       document.getElementById("questionActions").style.display = "flex";
       document.getElementById("input-area").classList.remove("hidden");
 
+      // Phone-controller: mount the board stage on non-host phones.
+      _phoneH5MountBoard();
+
       // Board slides in (parallel with content-tv sequence)
       const bw = document.getElementById("board-wrapper");
       if (bw) {
@@ -16892,21 +17274,17 @@ document.addEventListener('keydown', e => {
       const inputAreaEl = document.getElementById('input-area');
       if (!turnBody) return;
 
-      // Idempotency guard for 'guess' mode. In simultaneous-input modules
+      // Idempotency flag for 'guess' mode. In simultaneous-input modules
       // (NIC, Face-off, Grid Lock) every snapshot from any player triggers
       // every other client's role-UI function, which calls setInputAreaMode
-      // ('guess'). Without this guard the input value, caret, and focus get
-      // clobbered on every submit — making the modules effectively unplayable
-      // when multiple people type at once. Header / subtext / team color
-      // can't legitimately change while staying in 'guess' mode in any
-      // current module (any state change that would alter them transitions
-      // through 'disabled' first), so a no-op is safe. If a future module
-      // needs in-place updates while in 'guess' mode, it should use direct
-      // textContent writes on #turn-header / #turn-subtext rather than
-      // routing through setInputAreaMode.
-      if (mode === 'guess' && inputAreaEl?.getAttribute('data-ia-mode') === 'guess') {
-        return;
-      }
+      // ('guess'). The input-row rebuild below clears value/caret/focus —
+      // making those modules unplayable when multiple people type at once.
+      // BUT ranked-question rounds legitimately update header/subtext while
+      // staying in 'guess' mode (gameplay → steal both = 'guess'). So we
+      // still apply header/subtext/teamColor writes; only the input-row
+      // rebuild is skipped when already in 'guess' mode.
+      const skipInputRowRebuild = (mode === 'guess'
+        && inputAreaEl?.getAttribute('data-ia-mode') === 'guess');
 
       // Tag the input-area with its current mode so updateTurn / updateRoleUI
       // can detect "module-owned" states ('disabled', 'action') and skip
@@ -17014,6 +17392,10 @@ document.addEventListener('keydown', e => {
 
       switch (mode) {
         case 'guess':
+          // Skip the input-row rebuild + value/caret clear when already in
+          // 'guess' mode — header/subtext/teamColor writes above still ran.
+          // This is the simultaneous-input protection (NIC / Face-off / GL).
+          if (skipInputRowRebuild) break;
           restoreCanonicalInputRow();
           inputRow.style.display = '';
           actionRow.style.display = 'none';
@@ -17401,6 +17783,13 @@ document.addEventListener('keydown', e => {
     // Idempotent — safe to call repeatedly.
     function resetModuleCanvas() {
       // 1. Module-canvas children → canonical empty state
+
+      // Phone-controller H5 / Poll Position stage — full teardown so the
+      // next module enters with a blank middle space on phone. Idempotent.
+      _phoneH5Hide();
+
+      // Hide last-guess pill if still showing from a previous round.
+      hideLastGuessPill();
 
       // Round-type picker
       const picker = document.getElementById("round-type-picker-container");
@@ -18175,6 +18564,191 @@ document.addEventListener('keydown', e => {
         host.appendChild(btn);
       });
       host.classList.add("active");
+    }
+
+    // ───────────────────────────────────────────────────────────
+    // Phone-controller High Five / Poll Position helpers.
+    //
+    // Single stage (#phone-h5-stage) toggles between two modes:
+    //   .ph5-mode-cat    — three (or four with Survey) flat cards
+    //   .ph5-mode-board  — question bar + answer rows
+    // …plus a quiet round-end soft state. No streak / multiplier /
+    // strikes mirroring — those stay on the hub by design.
+    // ───────────────────────────────────────────────────────────
+    function _phoneH5GetCatClass(cat) {
+      const c = (cat || "").toLowerCase();
+      if (c === 'survey')                          return 'cat-survey';
+      if (c.includes('science'))                   return 'cat-science';
+      if (c.includes('geo'))                       return 'cat-geography';
+      if (c.includes('pop') || c.includes('cult')) return 'cat-popculture';
+      if (c.includes('sport'))                     return 'cat-sports';
+      return '';
+    }
+
+    function _phoneH5MountCatSelect(picks, hasSurvey, amPicker) {
+      if (!IS_PHONE_VIEW) return;
+      const host = document.getElementById("phone-h5-stage");
+      if (!host) return;
+      // Spectators on phone read "Waiting on X..." from the input-area;
+      // the cat-select stage stays empty + hidden for them.
+      if (!amPicker) {
+        host.classList.remove("active");
+        host.innerHTML = "";
+        return;
+      }
+      const stack = document.createElement("div");
+      stack.className = "ph5-cat-stack";
+      const allCats = (picks || []).slice();
+      if (hasSurvey) allCats.push('Survey');
+      allCats.forEach(cat => {
+        const cc = _phoneH5GetCatClass(cat);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `ph5-cat-card${cc ? ' ' + cc : ''}`;
+        btn.dataset.cat = cat;
+        btn.textContent = cat;
+        const cm = (typeof categoryMultipliers === 'object' && categoryMultipliers[cat]) || 1;
+        const gem = (typeof getRoundMultiplierGem === 'function') ? getRoundMultiplierGem(cm) : null;
+        if (gem) {
+          const mult = document.createElement("span");
+          mult.className = `ph5-cat-mult rt-tier-${gem.tier}`;
+          mult.textContent = gem.label;
+          btn.appendChild(mult);
+        }
+        btn.addEventListener("click", () => {
+          // Disable all cards immediately to prevent double-tap.
+          host.querySelectorAll(".ph5-cat-card").forEach(b => b.classList.add("disabled"));
+          onCategoryClick(cat);
+        });
+        stack.appendChild(btn);
+      });
+      host.innerHTML = "";
+      host.appendChild(stack);
+      host.classList.add("active");
+    }
+
+    function _phoneH5MountBoard() {
+      if (!IS_PHONE_VIEW) return;
+      const host = document.getElementById("phone-h5-stage");
+      if (!host || !currentQuestion) return;
+      const board = document.createElement("div");
+      board.className = "ph5-board";
+      // Question bar
+      const qbar = document.createElement("div");
+      qbar.className = "ph5-qbar";
+      const cc = _phoneH5GetCatClass(currentQuestion.category);
+      const catEl = document.createElement("div");
+      catEl.className = `ph5-qbar-cat${cc ? ' ' + cc : ''}`;
+      catEl.textContent = currentQuestion.category;
+      const qEl = document.createElement("div");
+      qEl.className = "ph5-qbar-q";
+      qEl.textContent = currentQuestion.question;
+      qbar.append(catEl, qEl);
+      // Rows
+      const rows = document.createElement("div");
+      rows.className = "ph5-rows";
+      board.append(qbar, rows);
+      host.innerHTML = "";
+      host.appendChild(board);
+      host.classList.add("active");
+      _phoneH5RenderRows();
+    }
+
+    function _phoneH5RenderRows() {
+      if (!IS_PHONE_VIEW) return;
+      const rowsHost = document.querySelector("#phone-h5-stage .ph5-rows");
+      if (!rowsHost || !currentQuestion) return;
+      rowsHost.innerHTML = "";
+      currentQuestion.answers.forEach((ans, i) => {
+        const row = document.createElement("div");
+        row.className = "ph5-row";
+        row.dataset.idx = i;
+        const num = document.createElement("div");
+        num.className = "ph5-row-num";
+        num.textContent = i + 1;
+        const txt = document.createElement("div");
+        txt.className = "ph5-row-text";
+        const pts = document.createElement("div");
+        pts.className = "ph5-row-pts";
+        if (revealed && revealed[i]) {
+          const data = (revealedData && revealedData[i]) || null;
+          const missed = data && data.missed;
+          row.classList.add(missed ? "revealed-missed" : "revealed-correct");
+          // Phone view: use ans.text only (skip ans.display's "(context)"
+          // detail — the hub carries the full breakdown).
+          txt.textContent = ans.text;
+          pts.textContent = ans.points;
+        } else {
+          txt.textContent = "—";
+          pts.textContent = "—";
+        }
+        row.append(num, txt, pts);
+        rowsHost.appendChild(row);
+      });
+    }
+
+    function _phoneH5FlipTile(idx, type) {
+      if (!IS_PHONE_VIEW) return;
+      const row = document.querySelector(`#phone-h5-stage .ph5-row[data-idx="${idx}"]`);
+      if (!row || !currentQuestion) return;
+      const ans = currentQuestion.answers[idx];
+      if (!ans) return;
+      row.classList.remove("revealed-correct", "revealed-missed");
+      row.classList.add(type === 'missed' ? "revealed-missed" : "revealed-correct");
+      const txt = row.querySelector(".ph5-row-text");
+      const pts = row.querySelector(".ph5-row-pts");
+      // Phone view: ans.text only (no display variant).
+      if (txt) txt.textContent = ans.text;
+      if (pts) pts.textContent = ans.points;
+    }
+
+    function _phoneH5ShowRoundEnd() {
+      if (!IS_PHONE_VIEW) return;
+      const host = document.getElementById("phone-h5-stage");
+      if (!host) return;
+      host.innerHTML = `
+        <div class="ph5-roundend">
+          <div class="ph5-roundend-title">ROUND COMPLETE</div>
+          <div class="ph5-roundend-body">A summary of the round is on the screen.</div>
+        </div>`;
+      host.classList.add("active");
+    }
+
+    function _phoneH5Hide() {
+      if (!IS_PHONE_VIEW) return;
+      const host = document.getElementById("phone-h5-stage");
+      if (!host) return;
+      host.classList.remove("active");
+      host.innerHTML = "";
+    }
+
+    // ───────────────────────────────────────────────────────────
+    // Last-guess pill — slides up at the bottom of #module-canvas
+    // every time a guess resolves. Hub-display + non-host MP see it;
+    // active player on phone doesn't (whole canvas is hidden on phone).
+    // ───────────────────────────────────────────────────────────
+    let _lastGuessPillSeenKey = null;
+    function showLastGuessPill({ player, team, guess, outcome }) {
+      if (IS_PHONE_VIEW) return;
+      const pill = document.getElementById("last-guess-pill");
+      if (!pill || !player || !guess) return;
+      const teamCls = team === 1 ? 'team-blue' : 'team-red';
+      const isOk = outcome === 'correct' || outcome === 'steal_success';
+      const mark = isOk ? '✓' : '✗';
+      const markCls = isOk ? 'ok' : 'bad';
+      pill.innerHTML = `
+        <span class="lgp-player ${teamCls}">${player}</span>
+        <span class="lgp-text">guessed</span>
+        <span class="lgp-guess">"${guess}"</span>
+        <span class="lgp-mark ${markCls}">${mark}</span>`;
+      // Pill stays visible until the next guess swaps it (or hideLastGuessPill
+      // is called from resetModuleCanvas at round transitions).
+      pill.classList.add("visible");
+    }
+    function hideLastGuessPill() {
+      const pill = document.getElementById("last-guess-pill");
+      if (!pill) return;
+      pill.classList.remove("visible");
     }
 
     // Hide the round-type picker container. Called on transition out of
@@ -19850,6 +20424,9 @@ document.addEventListener('keydown', e => {
         // display so the next ranked round's entry works normally.
         const rankedRow = document.getElementById("ranked-row");
         if (rankedRow) rankedRow.style.display = "none";
+
+        // Phone-controller: hub plays the summary; phone goes passive.
+        _phoneH5ShowRoundEnd();
 
         await showH5Summary(scoringTeam);
       } finally {
@@ -28024,6 +28601,10 @@ document.addEventListener('keydown', e => {
 
       // Re-apply role UI after pills are rendered (dims/disables for spectators)
       if (isMultiplayer) updateRoleUI(getActivePlayerUid());
+
+      // Phone-controller: mount the simplified cat-select stage. Hub +
+      // desktop are unaffected (helper is gated on IS_PHONE_VIEW).
+      _phoneH5MountCatSelect(picks, !!hasSurvey, amPicker);
     }
 
     async function animateCategoryTransition(category) {
@@ -28330,6 +28911,9 @@ document.addEventListener('keydown', e => {
       document.getElementById("questionActions").style.display = "flex";
       document.getElementById("input-area").classList.remove("hidden");
 
+      // Phone-controller: swap the cat-select stage out for the board.
+      _phoneH5MountBoard();
+
       // Slide board wrapper in (starts immediately alongside content-tv)
       const bw = document.getElementById("board-wrapper");
       if (bw) {
@@ -28471,6 +29055,9 @@ document.addEventListener('keydown', e => {
         if (revealed[i]) applyTileMarquee(d.querySelector('.tile-back .tile-text'));
       }
       updateBoardRoundTotal(false);
+      // Phone-controller: keep phone rows in sync after any board rebuild
+      // (e.g. after a strike re-renders the board on host).
+      _phoneH5RenderRows();
     }
 
     function buildTileBack(back, i, ans, opts) {
@@ -28612,6 +29199,10 @@ document.addEventListener('keydown', e => {
     }
 
     async function flipTile(index, type, earnedTotal, appliedMult) {
+      // Phone-controller: mirror the reveal (no scoring choreography —
+      // the hub plays the per-tile mult/total breakdown; phone just
+      // flips the row to its revealed-correct / revealed-missed state).
+      _phoneH5FlipTile(index, type);
       const tile = document.querySelector(`[data-tile-index="${index}"]`);
       if (!tile) return;
       const inner = tile.querySelector('.tile-inner');
@@ -28935,7 +29526,7 @@ document.addEventListener('keydown', e => {
         // updateRoleUI below. In local mode fall back to "{name} is up".
         const iAmActive = isMultiplayer ? amIActivePlayer() : false;
         const header = stealPhase
-          ? 'Chance to steal'
+          ? `${teamName} CAN STEAL`
           : `${teamName} has the board`;
         let subtext;
         if (stealPhase) {
@@ -29084,6 +29675,7 @@ document.addEventListener('keydown', e => {
     }
 
     function logGuess({ player, team, guess, outcome, points = null, multiplier = null, streak = null, streakBroken = 0, isSteal = false, question = null, category = null, roundType = null }) {
+      const ts = Date.now();
       matchLog.push({
         player,
         team,
@@ -29098,8 +29690,18 @@ document.addEventListener('keydown', e => {
         roundType: roundType || currentRoundType || null,
         question: question || (currentQuestion ? currentQuestion.question : null),
         category: category || (currentQuestion ? currentQuestion.category : null),
-        timestamp: Date.now(),
+        timestamp: ts,
       });
+      // Last-guess pill: only ranked-question / steal outcomes carry a
+      // human-readable text guess worth narrating. Other modules either
+      // don't have guesses (NIC numeric is shown live) or have their own
+      // visible feedback (GL words, CT card flips, scribble drawings).
+      if (outcome === 'correct' || outcome === 'wrong'
+          || outcome === 'steal_success' || outcome === 'steal_fail'
+          || outcome === 'duplicate') {
+        _lastGuessPillSeenKey = `${player}|${guess}|${ts}`;
+        showLastGuessPill({ player, team, guess, outcome });
+      }
     }
 
     // ---------- roundsMeta helpers ----------

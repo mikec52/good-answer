@@ -11799,7 +11799,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.39</div>
+  <div id="version-tag">v0.40</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -17404,10 +17404,17 @@ document.addEventListener('keydown', e => {
 
       switch (mode) {
         case 'guess':
-          // Skip the input-row rebuild + value/caret clear when already in
-          // 'guess' mode — header/subtext/teamColor writes above still ran.
-          // This is the simultaneous-input protection (NIC / Face-off / GL).
-          if (skipInputRowRebuild) break;
+          // When already in 'guess' mode, skip the input-row rebuild +
+          // value/caret/placeholder clear — that's the simultaneous-input
+          // protection (NIC / Face-off / GL). BUT still restore inputRow /
+          // actionRow display state, in case the prior state was 'action'
+          // (Ready Up) which hid inputRow. Layout-only writes don't touch
+          // input value/caret/focus.
+          if (skipInputRowRebuild) {
+            inputRow.style.display = '';
+            actionRow.style.display = 'none';
+            break;
+          }
           restoreCanonicalInputRow();
           inputRow.style.display = '';
           actionRow.style.display = 'none';

@@ -448,6 +448,22 @@
        plastic buttons filling the middle space between phase-indicator
        and #sq-zone-input. Active only when the local phone player is
        the picker; otherwise hidden so the empty middle space stays. */
+    /* Phone-only version watermark, top-left of phase indicator. Hidden on
+       desktop. Tiny + dimmed so it's there for triage but doesn't pull eye. */
+    #phone-version-tag { display: none; }
+    body.phone-mode #phone-version-tag {
+      display: block;
+      position: absolute;
+      top: 4px;
+      left: 8px;
+      font-family: "Bitcount Mono Single", monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.35);
+      pointer-events: none;
+      z-index: 5;
+    }
+
     #phone-round-type-picker { display: none; }
     body.phone-mode #phone-round-type-picker.active {
       display: flex;
@@ -1053,11 +1069,30 @@
       display: flex;
       align-items: center;
     }
+    /* .ph5-rows is the clipping container (fixed-height, overflow:hidden);
+       .ph5-rows-track is what translates during the marquee. For ≤6 rows
+       the track fits inside the container and no marquee fires. For 7+
+       rows we measure overflow in JS and arm the loop. */
     body.phone-mode .ph5-rows {
-      flex: 0 0 auto;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    body.phone-mode .ph5-rows-track {
       display: flex;
       flex-direction: column;
       gap: 4px;
+    }
+    body.phone-mode .ph5-rows.ph5-marquee-active .ph5-rows-track {
+      animation: ph5-rows-marquee var(--ph5-marquee-dur, 16s) ease-in-out infinite;
+    }
+    @keyframes ph5-rows-marquee {
+      0%   { transform: translateY(0); }
+      12%  { transform: translateY(0); }
+      50%  { transform: translateY(var(--ph5-marquee-distance, 0)); }
+      62%  { transform: translateY(var(--ph5-marquee-distance, 0)); }
+      100% { transform: translateY(0); }
     }
     body.phone-mode .ph5-row {
       flex: 0 0 auto;
@@ -11813,7 +11848,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.43</div>
+  <div id="version-tag">v0.44</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -12029,6 +12064,11 @@
           <span class="ph-span ph-steal-chance"></span>
           <span class="ph-span ph-round-result"></span>
           <span class="ph-span ph-module-logo"></span>
+          <!-- Phone-only version watermark (top-left). Mirrored from
+               #version-tag at script init so we have a single source of
+               truth. Hidden on desktop. Useful for triaging bug
+               screenshots from real-device playtesters. -->
+          <span id="phone-version-tag"></span>
         </div>
 
         <!-- Phone-controller round-type picker. Mounts in the middle space
@@ -15319,6 +15359,11 @@ document.addEventListener('keydown', e => {
       // and prevents playSound() from firing HTMLAudio SFX).
       musicSlots.forEach(s => { s.audio.muted = true; });
       sfxTracks.forEach(t => { t.muted = true; });
+      // Mirror the canvas-level #version-tag onto the phone phase indicator
+      // so screenshots from real-device playtesters carry the version.
+      const _vt  = document.getElementById('version-tag');
+      const _pvt = document.getElementById('phone-version-tag');
+      if (_vt && _pvt) _pvt.textContent = _vt.textContent;
     }
 
     // Phone-controller mode entry. Runs after Firebase init resolves so
@@ -18706,7 +18751,17 @@ document.addEventListener('keydown', e => {
       if (!IS_PHONE_VIEW) return;
       const rowsHost = document.querySelector("#phone-h5-stage .ph5-rows");
       if (!rowsHost || !currentQuestion) return;
-      rowsHost.innerHTML = "";
+      // Track wrapper holds the actual rows; .ph5-rows is the clipping
+      // container that animates with the marquee. Reused if present.
+      let track = rowsHost.querySelector(".ph5-rows-track");
+      if (!track) {
+        rowsHost.innerHTML = "";
+        track = document.createElement("div");
+        track.className = "ph5-rows-track";
+        rowsHost.appendChild(track);
+      } else {
+        track.innerHTML = "";
+      }
       currentQuestion.answers.forEach((ans, i) => {
         const row = document.createElement("div");
         row.className = "ph5-row";
@@ -18731,7 +18786,34 @@ document.addEventListener('keydown', e => {
           pts.textContent = "—";
         }
         row.append(num, txt, pts);
-        rowsHost.appendChild(row);
+        track.appendChild(row);
+      });
+      _phoneH5ArmRowsMarquee();
+    }
+
+    // Measure overflow on .ph5-rows after layout settles. If the track is
+    // taller than the visible area (≥7-row Survey questions), arm a back-
+    // and-forth vertical marquee. Otherwise leave the rows static.
+    function _phoneH5ArmRowsMarquee() {
+      if (!IS_PHONE_VIEW) return;
+      const rowsHost = document.querySelector("#phone-h5-stage .ph5-rows");
+      const track = rowsHost?.querySelector(".ph5-rows-track");
+      if (!rowsHost || !track) return;
+      // Defer to next frame so the freshly-rendered track has measured height.
+      requestAnimationFrame(() => {
+        const overflow = track.scrollHeight - rowsHost.clientHeight;
+        if (overflow > 4) {
+          // Slow loop scaled with overflow distance — minimum 14s, ~1s per
+          // 12px of overflow on top of that. Tuned to feel readable, not rushy.
+          const dur = Math.max(14, Math.min(28, 12 + overflow / 12));
+          rowsHost.style.setProperty("--ph5-marquee-distance", `${-overflow}px`);
+          rowsHost.style.setProperty("--ph5-marquee-dur", `${dur}s`);
+          rowsHost.classList.add("ph5-marquee-active");
+        } else {
+          rowsHost.classList.remove("ph5-marquee-active");
+          rowsHost.style.removeProperty("--ph5-marquee-distance");
+          rowsHost.style.removeProperty("--ph5-marquee-dur");
+        }
       });
     }
 

@@ -5469,6 +5469,11 @@
       width: 210px;
       height: 55px;
       margin: 4px auto;
+      /* Force own compositor layer so the prism's 3D context is isolated from
+         siblings (phase-indicator chrome, picker card, etc.) — reduces z-fight
+         and tile-rerender flicker on larger viewports. */
+      transform: translateZ(0);
+      will-change: transform;
     }
     .rt-pp-tilt {
       width: 100%;
@@ -5482,6 +5487,9 @@
       height: 100%;
       transform-style: preserve-3d;
       animation: rt-pp-spin 9s cubic-bezier(0.6, 0.0, 0.3, 1) infinite;
+      /* Hint to the compositor that this element's transform is animating —
+         keeps the layer's backing texture pinned across keyframe steps. */
+      will-change: transform;
     }
     .rt-pp-face, .rt-pp-cap {
       position: absolute;
@@ -5493,6 +5501,10 @@
       border: 2px solid #111;
       box-sizing: border-box;
       box-shadow: inset 0 9px 22px rgba(0, 0, 0, 0.12);
+      /* Skip rendering the back side — opposite faces are coplanar at 180°,
+         so without this they z-fight and flash on every rotation pass. */
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
     .rt-pp-face {
       inset: 0;
@@ -5542,14 +5554,21 @@
       height: 540px;
       overflow: visible;
     }
-    .ppci-slot { perspective: 1600px; }
+    .ppci-slot {
+      perspective: 1600px;
+      transform: translateZ(0);
+      will-change: transform;
+    }
     .ppci-prism {
       position: relative;
       width: 100%;
       height: 100%;
+      will-change: transform;
       transform-style: preserve-3d;
     }
     .ppci-face, .ppci-cap {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
       position: absolute;
       display: flex;
       align-items: center;
@@ -12222,7 +12241,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.50</div>
+  <div id="version-tag">v0.51</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">

@@ -310,11 +310,11 @@ Decomposes into roughly four chunks, in dependency order:
    | Common Thread (CT) | ✅ Complete |
    | High Five | ✅ Complete |
    | Poll Position | ✅ Complete |
-   | Secret Scribble | 🟡 Working, needs polish |
+   | Secret Scribble | ✅ Complete |
    | Face-off | ⬜ Not started |
    | Endgame Flow (victory dialog / Game Recap) | ⬜ Not started |
 
-   The "complete" modules are functionally feature-complete on phone but each may still surface text-sizing / touch-target tweaks during real-device playtesting. High Five + Poll Position share the `#phone-h5-stage` (cat-select cards on H5 entry; unified frosted-glass board panel for both; `.ph5-rows` vertical marquee arms when the answer track overflows the available height — needed for 7-row Poll Position boards on tighter viewports). Polish for Scribble, and Face-off + endgame flow, are queued for future sessions.
+   The "complete" modules are functionally feature-complete on phone but each may still surface text-sizing / touch-target tweaks during real-device playtesting. High Five + Poll Position share the `#phone-h5-stage` (cat-select cards on H5 entry; unified frosted-glass board panel for both; `.ph5-rows` vertical marquee arms when the answer track overflows the available height — needed for 7-row Poll Position boards on tighter viewports). Face-off + endgame flow are queued for future sessions.
 
 4. **QR code + URL auto-join.** ✅ Shipped (2026-04-28). `qrcode-generator@1.4.4` (~5kb) loaded via CDN in `<head>`. `renderPhoneJoinQr(url)` helper called at the tail of `renderLobby()` when `isHubDisplay`; produces a scalable SVG inside `#lobby-phone-qr` (white-padded card, 150×150). The full join URL still renders below the QR as a click-to-copy fallback (label: "Or join with room code at:"). On a real phone, native camera scan opens the URL directly — no manual code entry.
 
@@ -685,6 +685,26 @@ Between rounds, all players see a "Ready Up" button. First click starts a 10-sec
 4. **No disconnect handling** — host leaving mid-game strands all players. Lobby back button handles pre-game disconnect, but mid-game disconnects are unhandled.
 5. **Debug logging cleanup** — diagnostic `console.log` statements in `category-select` transition, `play-again` transition, and `host syncing category-select` should be removed once multiplayer flows are stable.
 6. **Face-off UI polish** — cover plate clipping, countdown animation timing on non-host, turn-header/turn-subtext styling consistency, neutral color refinements. Functional but needs visual iteration.
+
+### What Was Fixed (April 28 session — Secret Scribble phone-controller polish + PP marquee)
+
+Closes Secret Scribble for the phone-controller project. Cleanup across hub, multiplayer canvas, and phone surfaces.
+
+- **Hub canvas team flip** — left slot was rendering blue, right slot rendering red. `scribbleApplyCanvasSnapshot` derived `myTeam` from `teamPlayerUids[0]?.includes(myUid)` which returns `false` when `myUid` is undefined (hub display has no player slot), so it fell through to `myTeam = 1`. The label-side derivation in `scribbleSetupGuesserUI` used the inverted check (`teamPlayerUids[1]?.includes(myUid)`) and resolved to `0`. Two functions disagreeing about hub's "team" → labels said "Red Team" on the left while blue's drawing landed there. Fix: explicit `if (isHubDisplay) myTeam = 0` branch in both spots so team-0 → left, team-1 → right unconditionally on hub.
+- **Summary cross-fade flicker** — the auto-cycler between Session 1 and Session 2 used a 150ms removal stagger to avoid a "neither block visible" gap, but the asymmetry produced a one-frame opacity pop just before full fade-out. Replaced with symmetric crossfade — `add('active')` on incoming + `remove('active')` from outgoing in the same tick. Both transitions now run for the full 0.9s, no pop.
+- **`TIME'S UP` / `DRAWINGS SOLVED` session-end card** — added `.ss-end-overlay` / `.ss-end-card` mirroring Grid Lock's `gl-times-up-card` design, recolored `var(--mod-scribble)` magenta with white text. Mounted on `#module-canvas` for hub + multiplayer canvas surfaces; phone uses `_phoneSsShowQuiet` with the matching wording. Card fades out 1.5s after appearing (`.ss-end-out` → `ss-end-card-out` keyframe) so players can see the drawings clearly behind it for the rest of the hold. `SCRIBBLE_CONFIG.sessionEndHold` raised 2200 → 5000 → 7000ms total. Cleanup added in the existing setTimeout + `resetGameUI` so stale overlays don't leak between rounds.
+- **Per-player score lines on solved overlay** — overlay used to show only `[raw] × [mult]` and only when the viewer's team scored. Now team-agnostic — every drawing's solve renders a list of `[player-name] +[total]` lines pulled from `scribbleState.sessionScoring.events` (guess + drawer-bonus), with the player name in their team color and the `+X` in white. Both clients see the full picture.
+- **Wrong-guesses recap restored** — render path at `scribbleRenderSessions` was intact but the `wrongGuesses.push(...)` site in `scribbleEvaluateGuess`'s wrong-answer branch had been dropped after commit `3c5042d`. Restored the push (with team + uid + ts), and included `scribbleScoring` in the wrong-guess sync so non-host clients see the same list. Summary now shows the wrong-guesses chip row again.
+- **Tablet pass for phone-mode SS surfaces** — added `@media (min-width: 700px) body.phone-mode` block AFTER the phone rules (cascade rule). Caps `.pss-canvas-box` and `.pss-guess-canvas-box` at 700px (matches CT/H5 tablet pass). Centers `.pss-tools` (max 700px), grows controls so they read dense rather than spread: colors 26 → 40px, sizes 38 → 56px, eraser 22 → 30px, text buttons 38 → 52px. Added `.pss-draw-header` growth in the same block — `--fit-base` 1.4 → 2rem, pts 0.95 → 1.3rem, timer 2.1 → 3rem (fit-scale still composes with the base bump).
+- **Phone eraser circle** — bumped `.pss-eraser-dot` 16 → 22px, font-size 0.85 → 1rem, `line-height: 1`, plus a 0.5px optical nudge on the ✕ pseudo-element so it centers cleanly in the circle.
+- **Countdown overlay unified** — `.scribble-countdown-overlay` lost its `rgba(0,0,0,0.75)` backdrop (now `transparent`), text recolored from `#fba300` to `var(--mod-scribble)`, no text-shadow. Phone version was already magenta; now hub / multiplayer / phone all show the same clean magenta countdown on the white canvas.
+
+**Adjacent fixes / non-Scribble items in the same session:**
+
+- **PP round summary marquee** — long-standing bug where Poll Position's 7-row summary never armed the vertical marquee. Diagnosis (after several attempts) was a class/id mismatch on the cloned board: `<div id="board-wrapper" class="offscreen">` only carried the *id*, not the *class* `board-wrapper`. The previous fix added the CSS rule `.h5-board-recap .board-wrapper { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0 }` to restore the flex chain after id-stripping, but never tagged the clone with the matching anchor class — so the selector matched nothing. The flex chain stayed broken, `.h5-recap-answers` sized to its content, `scrollHeight ≈ clientHeight` → marquee never armed. Fix: one line, `clone.classList.add("board-wrapper")` after `clone.removeAttribute("id")` in `showH5Summary`. H5's 5 rows fit the 205px max-height anyway, which is why the symptom only surfaced visibly on PP.
+- **Last-guess pill — two-line layout** — split into `[Player] guessed:` (line 1, with colon, player team-colored) and `"[guess]"` (line 2, italic) for cleaner separation.
+- **Common Thread tablet card text ceiling** — 6-letter words on largest tablets were hitting card edges. Dropped the cqw clamp ceiling 2.6rem → 2.4rem on `body.phone-mode #phone-ct-stage .ct-card-face .ct-word`. Phone floor (1rem) and cqw ratio (4.4cqw) untouched, so phones / mid-tablets unchanged — only the tablet-cap binding case shrinks.
+- **High Five cat-select tablet cap** — `.ph5-cat-card` now has `width: 100%; max-width: 600px; align-self: center` matching the round-type picker dome buttons. Stops iPad portrait from rendering ~900px-wide cat cards.
 
 ### What Was Fixed (April 27 session — simultaneous-input clobber)
 

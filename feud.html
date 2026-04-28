@@ -937,7 +937,7 @@
        is unit-agnostic and composes correctly with the cqw base.
        Desktop CT word rule is unaffected (no body.phone-mode prefix). */
     body.phone-mode #phone-ct-stage .ct-card-face .ct-word {
-      font-size: calc(clamp(1rem, 4.4cqw, 2.6rem) * var(--fit-scale, 1));
+      font-size: calc(clamp(1rem, 4.4cqw, 2.4rem) * var(--fit-scale, 1));
       line-height: 1.05;
       letter-spacing: 0.5px;
     }
@@ -1209,6 +1209,15 @@
       position: relative;
       flex: 0 0 auto;
       min-height: 80px;
+      /* Tablet cap — matches the round-type picker dome buttons
+         (.prtp-btn). Without this, .ph5-cat-stack's default
+         align-items:stretch produces ~900px-wide cards on iPad
+         portrait that read as cartoonish. 600px keeps the card a
+         comfortable tap-target proportion. Phone widths still
+         fill (width: 100%) since they're below the cap. */
+      width: 100%;
+      max-width: 600px;
+      align-self: center;
       border: 0;
       border-radius: 14px;
       cursor: pointer;
@@ -2097,10 +2106,6 @@
       color: var(--mod-scribble);
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      text-shadow:
-        0 0 6px rgba(192, 0, 192, 0.45),
-        0 2px 4px rgba(0, 0, 0, 0.85),
-        0 4px 12px rgba(0, 0, 0, 0.6);
     }
     /* Solved overlay — drawer's view reuses the existing .sso-* styling
        but the phone version mounts on .pss-canvas-box. Render rule
@@ -2168,8 +2173,8 @@
       background: currentColor;
     }
     body.phone-mode .pss-eraser-dot {
-      width: 16px;
-      height: 16px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       background: #f49898;
       color: #ff4444;
@@ -2177,9 +2182,17 @@
       align-items: center;
       justify-content: center;
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 1rem;
+      line-height: 1;
     }
-    body.phone-mode .pss-eraser-dot::before { content: '\2715'; }
+    body.phone-mode .pss-eraser-dot::before {
+      content: '\2715';
+      display: block;
+      line-height: 1;
+      /* Tiny optical nudge — the ✕ glyph sits slightly above its em
+         baseline, so a 1px down shift centers it inside the circle. */
+      transform: translateY(0.5px);
+    }
     body.phone-mode .pss-text-btn {
       flex: 1 1 auto;
       min-width: 0;
@@ -2411,6 +2424,86 @@
       line-height: 1;
     }
     body.phone-mode .pss-guess-overlay-timer.warning { color: #ff6b3d; }
+
+    /* ── Tablet (≥700px) overrides for Secret Scribble phone view ──
+       Caps canvases at 700px so they don't sprawl across an iPad/Galaxy
+       Tab portrait viewport, and grows toolbar controls so they don't
+       look lost in the wider band. Lives AFTER the phone rules so the
+       cascade resolves correctly (same-specificity rules use source
+       order). */
+    @media (min-width: 700px) {
+      /* 4a — canvas max-width caps */
+      body.phone-mode .pss-canvas-box {
+        max-width: 700px;
+      }
+      body.phone-mode .pss-guess-canvas-box {
+        max-width: 700px;
+      }
+      body.phone-mode .pss-guess-canvas-frame {
+        align-items: center;
+      }
+
+      /* 4c — toolbar tablet sizing. Cap the toolbar width to match the
+         canvas; grow controls so they read big-and-tactile rather than
+         spread-and-thin. */
+      body.phone-mode .pss-tools {
+        max-width: 700px;
+        margin: 0 auto;
+        gap: 12px;
+        padding: 12px 16px;
+      }
+      body.phone-mode .pss-tools-row {
+        gap: 12px;
+        justify-content: center;
+      }
+      body.phone-mode .pss-color {
+        width: 40px;
+        height: 40px;
+        border-width: 3px;
+      }
+      body.phone-mode .pss-size {
+        min-width: 56px;
+        height: 56px;
+        border-radius: 12px;
+      }
+      body.phone-mode .pss-size .pss-size-dot {
+        /* Brush previews are inline styled width/height — bump the
+           visual via transform instead of trying to override the
+           inline style. */
+        transform: scale(1.25);
+      }
+      body.phone-mode .pss-eraser-dot {
+        width: 30px;
+        height: 30px;
+        font-size: 1.35rem;
+      }
+      body.phone-mode .pss-text-btn {
+        height: 52px;
+        font-size: 0.95rem;
+        border-radius: 12px;
+        padding: 0 16px;
+        flex: 0 1 auto;
+        min-width: 120px;
+      }
+
+      /* Drawer header (word + pts + timer) — scales with device size so
+         it doesn't read tiny on tablet. fit-base growth still composes
+         with fitByCharCount so long words still shrink proportionally. */
+      body.phone-mode .pss-draw-header {
+        padding: 14px 20px;
+        gap: 16px;
+        border-radius: 14px;
+      }
+      body.phone-mode .pss-draw-word {
+        --fit-base: 2rem;
+      }
+      body.phone-mode .pss-draw-pts {
+        font-size: 1.3rem;
+      }
+      body.phone-mode .pss-draw-timer {
+        font-size: 3rem;
+      }
+    }
 
     /* Multiplier circle — middle-right of the button. At 57px the badge
        is too large for the top-right corner; vertically-centered reads
@@ -8539,10 +8632,14 @@
     .scribble-status.timeup { color: #ff4444; }
 
     .scribble-countdown-overlay {
-      position: absolute; inset: 0; background: rgba(0,0,0,0.75); display: flex;
+      position: absolute; inset: 0; background: transparent; display: flex;
       align-items: center; justify-content: center; z-index: 50; border-radius: 6px; pointer-events: none;
     }
-    .scribble-countdown-text { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; font-size: 3rem; color: #fba300; animation: scribble-countdown-pop 0.8s ease-out both; }
+    .scribble-countdown-text {
+      font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; font-size: 3rem; color: var(--mod-scribble);
+      animation: scribble-countdown-pop 0.8s ease-out both;
+    }
     @keyframes scribble-countdown-pop { 0% { transform: scale(2); opacity: 0; } 30% { transform: scale(1); opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
 
     .scribble-solved-overlay {
@@ -8560,6 +8657,52 @@
     .scribble-solved-overlay .sso-title { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; font-size: 1.5rem; color: #fff; line-height: 1; }
     .scribble-solved-overlay .sso-word  { font-family: "futura-100", sans-serif; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; font-size: 1rem; color: #fff; line-height: 1; }
     .scribble-solved-overlay .sso-pts   { font-family: "Bitcount Single", monospace; font-size: 0.85rem; color: rgba(255,255,255,0.85); letter-spacing: 0.5px; line-height: 1; }
+    .scribble-solved-overlay .sso-events { display: flex; flex-direction: column; align-items: center; gap: 1px; margin-top: 2px; }
+    .scribble-solved-overlay .sso-event {
+      font-family: "futura-100", sans-serif; font-weight: 700;
+      font-size: 0.85rem; letter-spacing: 0.5px; line-height: 1.05;
+      color: #fff;
+    }
+    .scribble-solved-overlay .sso-event .sso-event-name.team-red  { color: var(--red-text); }
+    .scribble-solved-overlay .sso-event .sso-event-name.team-blue { color: var(--blue-text); }
+    .scribble-solved-overlay .sso-event .sso-event-pts { color: #fff; }
+
+    /* Session-end card — TIME'S UP / DRAWINGS SOLVED. Same shape as
+       Grid Lock's gl-times-up-card, recolored magenta to match the
+       Secret Scribble module identity. Mounted on #module-canvas. */
+    .ss-end-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: transparent;
+      z-index: 70;
+      pointer-events: none;
+    }
+    .ss-end-overlay.ss-end-out .ss-end-card { animation: ss-end-card-out 0.35s ease-in forwards; }
+    .ss-end-card {
+      background: var(--mod-scribble);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 14px;
+      padding: 20px 46px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06) inset;
+      animation: ss-end-card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    .ss-end-text {
+      font-family: "futura-100", "Futura", sans-serif;
+      font-weight: 700;
+      font-size: 4.2rem;
+      color: #fff;
+      letter-spacing: 0.12em;
+      text-shadow: 0 0 30px rgba(0,0,0,0.45);
+    }
+    @keyframes ss-end-card-in {
+      0%   { opacity: 0; transform: scale(0.85); }
+      60%  { opacity: 1; transform: scale(1.04); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes ss-end-card-out {
+      0%   { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.92); }
+    }
 
     /* Summary panel sits flush against the scoreboard above — negative
        margin cancels #scribble-container's 8px top padding so there's no
@@ -12241,7 +12384,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.51</div>
+  <div id="version-tag">v0.52</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -18529,6 +18672,7 @@ document.addEventListener('keydown', e => {
 
       // Scribble solved overlays (belt-and-braces — container already hidden)
       document.querySelectorAll(".scribble-solved-overlay").forEach(el => el.remove());
+      document.querySelectorAll(".ss-end-overlay").forEach(el => el.remove());
 
       // Module intro splash (if lingering from an aborted transition)
       const _mi = document.getElementById("module-intro");
@@ -19334,9 +19478,8 @@ document.addEventListener('keydown', e => {
       const markCls = isOk ? 'ok' : 'bad';
       pill.innerHTML = `
         <div class="lgp-text-col">
-          <span class="lgp-player ${teamCls}">${player}</span>
-          <span class="lgp-text">guessed</span>
-          <span class="lgp-guess">"${guess}"</span>
+          <div class="lgp-line-1"><span class="lgp-player ${teamCls}">${player}</span> <span class="lgp-text">guessed:</span></div>
+          <div class="lgp-line-2"><span class="lgp-guess">"${guess}"</span></div>
         </div>
         <div class="lgp-mark-col"><span class="lgp-mark ${markCls}">${mark}</span></div>`;
       // Pill stays visible until the next guess swaps it (or hideLastGuessPill
@@ -19806,7 +19949,7 @@ document.addEventListener('keydown', e => {
       pickLockInDelay: 150,
       // Pause (ms) session-end screen holds before next word-select /
       // summary transition.
-      sessionEndHold: 2200,
+      sessionEndHold: 7000,
       countdownBeats: ["Ready", "Set", "Draw!"],
       difficultyPoints: { easy: 50, medium: 75, hard: 100 },
       // [minSecondsRemaining, multiplier] — 15-second brackets
@@ -21051,6 +21194,16 @@ document.addEventListener('keydown', e => {
         recapHost.innerHTML = "";
         const clone = liveBoard.cloneNode(true);
         clone.removeAttribute("id");
+        // The CSS rule `.h5-board-recap .board-wrapper { display: flex; ... }`
+        // is what restores the flex chain after the id is stripped — but
+        // the live #board-wrapper has no `board-wrapper` class, only the
+        // id, so the selector wouldn't match without explicitly tagging
+        // the clone here. Without this, .h5-recap-answers' flex:1 1 auto +
+        // min-height:0 are inert, the answer list expands to its content,
+        // and the marquee never arms (scrollHeight ≈ clientHeight). This
+        // bug surfaces on PP first because it has up to 7 rows; H5's 5
+        // rows fit the 205px max-height and don't need the marquee.
+        clone.classList.add("board-wrapper");
         clone.classList.remove("offscreen", "slide-in");
         clone.style.transform = "";
         clone.style.animation = "none";
@@ -21754,8 +21907,12 @@ document.addEventListener('keydown', e => {
       // Determine which target canvas this snapshot goes to
       // Guesser view has teammate-canvas (my team) and opp-canvas (other team)
       // Drawer view has no separate canvas (they draw on their own)
+      // Hub display has no team perspective; route team 0 → left
+      // (teammate-canvas), team 1 → right (opp-canvas) unconditionally.
       let myTeam = 0;
-      if (isMultiplayer && myUid) {
+      if (isHubDisplay) {
+        myTeam = 0;
+      } else if (isMultiplayer && myUid) {
         myTeam = teamPlayerUids[0]?.includes(myUid) ? 0 : 1;
       }
       const targetId = (teamIdx === myTeam) ? "scribble-teammate-canvas" : "scribble-opp-canvas";
@@ -21983,8 +22140,24 @@ document.addEventListener('keydown', e => {
             setTimeout(() => gi.classList.remove('input-shake'), 320);
           }
         }
+        // Record the wrong guess so the round summary can show a chip
+        // list per session. Render path lives in scribbleRenderSessions.
+        if (scribbleState.sessionScoring) {
+          if (!Array.isArray(scribbleState.sessionScoring.wrongGuesses)) {
+            scribbleState.sessionScoring.wrongGuesses = [];
+          }
+          scribbleState.sessionScoring.wrongGuesses.push({
+            team: guesserTeam,
+            guess: guess.trim(),
+            uid: guesserUid,
+            ts: Date.now(),
+          });
+        }
         if (isMultiplayer) {
-          syncState({ pendingAction: null });
+          syncState({
+            scribbleScoring: scribbleState.sessionScoring,
+            pendingAction: null,
+          });
         }
       }
     }
@@ -22007,24 +22180,43 @@ document.addEventListener('keydown', e => {
 
       // Build solved overlay data
       const W = word ? word.toUpperCase() : null;
-      const isStolen = !isMyTeamGuessed && isMyTeamDrawing; // opponents took our word
+      const isStolen = guesserTeam !== drawerTeam; // opponents took the word
 
-      let solvedData;
-      if (isStolen) {
-        // Red "STOLEN!" pill — show drawer bonus (always 50 × time mult)
-        solvedData = { word: W, stolen: true };
-        if (result.mult != null) {
-          solvedData.raw  = 50;
-          solvedData.mult = result.mult;
-        }
-      } else {
-        // Green "SOLVED!" pill — show guesser pts when our team scored
-        solvedData = { word: W };
-        if (isMyTeamGuessed && result.raw != null && result.mult != null) {
-          solvedData.raw  = result.raw;
-          solvedData.mult = result.mult;
-        }
+      // Assemble per-player point lines (team-agnostic — show all scorers
+      // for this drawing regardless of viewer perspective). Pulls from the
+      // session scoring events that just landed.
+      const drawerSessionIdx = scribbleState.currentSession;
+      let drawerName = null;
+      if (isMultiplayer && teamPlayerUids[drawerTeam]?.length) {
+        const di = drawerSessionIdx % teamPlayerUids[drawerTeam].length;
+        drawerName = findPlayerName(teamPlayerUids[drawerTeam][di]);
+      } else if (teamPlayers[drawerTeam]?.length) {
+        const di = drawerSessionIdx % teamPlayers[drawerTeam].length;
+        const p = teamPlayers[drawerTeam][di];
+        drawerName = typeof p === 'object' ? p.name : p;
       }
+      const guesserName = (isMultiplayer && guesserUid)
+        ? findPlayerName(guesserUid)
+        : (teamPlayers[guesserTeam]?.[0]?.name || teamPlayers[guesserTeam]?.[0] || null);
+
+      const events = [];
+      // Most recent session events for this drawing — the guess + any
+      // drawer-bonus that just fired in scribbleScoreGuessAbs.
+      const ssEvents = (scribbleState.sessionScoring?.events || []).filter(e => e.drawerTeam === drawerTeam);
+      // Guesser line
+      const guessEv = [...ssEvents].reverse().find(e => e.type === 'guess');
+      if (guessEv && guesserName) {
+        events.push({ name: guesserName, team: guesserTeam, total: guessEv.total });
+      } else if (guesserName && result.total != null) {
+        events.push({ name: guesserName, team: guesserTeam, total: result.total });
+      }
+      // Drawer-bonus line (only when this drawing was the first solved this session)
+      const bonusEv = [...ssEvents].reverse().find(e => e.type === 'drawer-bonus');
+      if (bonusEv && drawerName) {
+        events.push({ name: drawerName, team: drawerTeam, total: bonusEv.total });
+      }
+
+      const solvedData = { word: W, stolen: isStolen, events };
 
       // Show solved overlay pill — location depends on role
       if (isDrawer) {
@@ -22156,10 +22348,18 @@ document.addEventListener('keydown', e => {
       overlay.className = "scribble-solved-overlay" + (opts.stolen ? " sso-stolen" : "");
       const title   = opts.stolen ? "STOLEN!" : "SOLVED!";
       const wordHtml = opts.word ? `<span class="sso-word">${opts.word}</span>` : "";
-      const ptsHtml  = (opts.raw != null && opts.mult != null)
-        ? `<span class="sso-pts">${opts.raw} × ${opts.mult}</span>`
-        : "";
-      overlay.innerHTML = `<span class="sso-title">${title}</span>${wordHtml}${ptsHtml}`;
+      // Per-player point lines, team-colored. Each entry: { name, team, total }
+      const events = Array.isArray(opts.events) ? opts.events : [];
+      let eventsHtml = "";
+      if (events.length) {
+        const lines = events.map(ev => {
+          const tc = ev.team === 1 ? "team-blue" : "team-red";
+          const safeName = String(ev.name || "").replace(/</g, "&lt;");
+          return `<span class="sso-event"><span class="sso-event-name ${tc}">${safeName}</span> <span class="sso-event-pts">+${ev.total}</span></span>`;
+        }).join("");
+        eventsHtml = `<span class="sso-events">${lines}</span>`;
+      }
+      overlay.innerHTML = `<span class="sso-title">${title}</span>${wordHtml}${eventsHtml}`;
       wrap.appendChild(overlay);
     }
 
@@ -22594,8 +22794,11 @@ document.addEventListener('keydown', e => {
       } else {
         if (drawerView) drawerView.style.display = "none";
         if (guesserView) guesserView.style.display = "flex";
-        // Color panel labels by team: teammate = my team, opponent = other
-        const _myTeam = (isMultiplayer && myUid && teamPlayerUids[1]?.includes(myUid)) ? 1 : 0;
+        // Color panel labels by team: teammate = my team, opponent = other.
+        // Hub display: team 0 (red) → left, team 1 (blue) → right.
+        const _myTeam = isHubDisplay
+          ? 0
+          : ((isMultiplayer && myUid && teamPlayerUids[1]?.includes(myUid)) ? 1 : 0);
         const tml = document.getElementById("scribble-teammate-label");
         const opl = document.getElementById("scribble-opp-label");
         // Hub-display mode (phone-controller hub) has no team perspective,
@@ -22844,11 +23047,32 @@ document.addEventListener('keydown', e => {
         }
       }
 
+      // Mount session-end card on the module canvas (hub + non-host
+      // multiplayer canvases). Phone surfaces use the quiet panel below.
+      // Auto-removed alongside .scribble-solved-overlay at the end of the
+      // hold (cleanup in the setTimeout below).
+      if (!IS_PHONE_VIEW) {
+        const canvas = document.getElementById('module-canvas');
+        if (canvas && !canvas.querySelector('.ss-end-overlay')) {
+          const endLabel = reason === "all-solved" ? "DRAWINGS SOLVED" : "TIME'S UP";
+          const overlay = document.createElement('div');
+          overlay.className = 'ss-end-overlay';
+          overlay.innerHTML = `<div class="ss-end-card"><div class="ss-end-text">${endLabel}</div></div>`;
+          canvas.appendChild(overlay);
+          // Fade the card out after 1.5s so players can see the
+          // drawings clearly behind it for the rest of the hold.
+          // .ss-end-out triggers ss-end-card-out (0.35s scale + fade).
+          setTimeout(() => {
+            if (overlay.isConnected) overlay.classList.add('ss-end-out');
+          }, 1500);
+        }
+      }
+
       // Transition input-area to session-end state
       setInputAreaMode({
         mode: 'disabled',
-        header: 'Session complete',
-        subtext: reason === "all-solved" ? 'Both words solved!' : 'Time\'s up',
+        header: reason === "all-solved" ? 'DRAWINGS SOLVED' : "TIME'S UP",
+        subtext: 'Getting next drawing ready...',
         inputPlaceholder: 'Getting next session ready...',
       });
 
@@ -22858,8 +23082,8 @@ document.addEventListener('keydown', e => {
       // effect of _phoneSsActivate's defensive restore (called inside
       // _phoneSsShowQuiet → _phoneSsActivate).
       if (IS_PHONE_VIEW) {
-        const subtitle = reason === "all-solved" ? "Both words solved!" : "Time’s up.";
-        _phoneSsShowQuiet('Session complete', subtitle);
+        const title = reason === "all-solved" ? "DRAWINGS SOLVED" : "TIME'S UP";
+        _phoneSsShowQuiet(title, 'Getting next drawing ready...');
       }
 
       // Resolve drawer names for this session so the summary can label
@@ -22979,6 +23203,7 @@ document.addEventListener('keydown', e => {
       setTimeout(() => {
         scribbleState.currentSession = nextSession;
         document.querySelectorAll(".scribble-solved-overlay").forEach(el => el.remove());
+        document.querySelectorAll(".ss-end-overlay").forEach(el => el.remove());
         if (sgEl) sgEl.classList.remove("sg-fly-out");
         if (nextSession < 2) {
           scribbleStartWordSelection();
@@ -23248,10 +23473,11 @@ document.addEventListener('keydown', e => {
         _scribbleCyclerInterval = setInterval(() => {
           const prev = idx;
           idx = (idx + 1) % blocks.length;
+          // Symmetric crossfade — incoming and outgoing transition in
+          // lockstep over the same 0.9s. Asymmetric staggering caused a
+          // one-frame pop just before the outgoing block fully faded.
           blocks[idx].classList.add("active");
-          // Stagger removal so both blocks overlap mid-fade — prevents the
-          // brief moment where neither is fully visible.
-          setTimeout(() => { blocks[prev].classList.remove("active"); }, 150);
+          blocks[prev].classList.remove("active");
         }, 5000);
       }
     }

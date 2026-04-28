@@ -382,6 +382,57 @@
       color: #888;
       margin-top: 24px;
     }
+    body.phone-mode .pp-team-switch {
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
+    body.phone-mode .pp-team-switch-label {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    body.phone-mode .pp-team-switch-row {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      justify-content: center;
+    }
+    body.phone-mode .pp-team-btn {
+      flex: 1 1 0;
+      font-family: "futura-100", sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 12px 8px;
+      background: #1a1a1a;
+      border: 2px solid #333;
+      border-radius: 8px;
+      color: #ccc;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      transition: background 0.18s, border-color 0.18s, color 0.18s;
+      touch-action: manipulation;
+    }
+    body.phone-mode .pp-team-btn.active.pp-team-red {
+      background: var(--red-bg, #990b0b);
+      border-color: var(--red-text, #ff5555);
+      color: #fff;
+    }
+    body.phone-mode .pp-team-btn.active.pp-team-blue {
+      background: var(--blue-bg, #053977);
+      border-color: var(--blue-text, #4c8cff);
+      color: #fff;
+    }
+    body.phone-mode .pp-team-btn.active.pp-team-undecided {
+      background: #444;
+      border-color: #888;
+      color: #fff;
+    }
     body.phone-mode #pp-form-stage,
     body.phone-mode #pp-lobby-stage {
       display: flex;
@@ -3042,65 +3093,114 @@
       text-transform: uppercase;
       color: #fff;
       letter-spacing: 0.06em;
-      margin-bottom: 8px;
+      margin-bottom: 30px;
     }
     .lobby-code-display {
       font-family: "Bitcount Single", monospace;
       font-size: 4rem;
-      color: #fba300;
-      letter-spacing: 0.2em;
+      color: white;
       text-align: center;
-      margin-bottom: 4px;
       cursor: pointer;
       transition: text-shadow 0.3s;
+      padding-left: 5px;
     }
     .lobby-code-display:hover {
       text-shadow: 0 0 16px rgba(251,163,0,0.5);
     }
     .lobby-code-hint {
       font-family: "futura-100", sans-serif;
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.4);
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: white;
+    }
+    .lobby-main-row {
+      display: flex;
+      gap: 20px;
+      width: 92%;
+      max-width: 1100px;
       margin-bottom: 24px;
+      align-items: center;
+    }
+    .lobby-main-left {
+      flex: 0 0 30%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      background: #fba300;
+      border-radius: 16px;
+      padding: 10px 18px;
+    }
+    .lobby-main-right {
+      flex: 0 0 calc(70% - 20px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      border-left: 1px solid rgba(255,255,255,0.18);
+      padding: 0 20px;
     }
     .lobby-phone-url-row {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 4px;
-      padding: 10px 18px;
-      margin: -12px 0 24px 0;
-      background: rgba(17,17,17,0.6);
-      border: 1px solid rgba(251,163,0,0.4);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-    }
-    .lobby-phone-url-row:hover {
-      border-color: rgba(251,163,0,0.8);
-      background: rgba(17,17,17,0.8);
+      width: 100%;
+      box-sizing: border-box;
     }
     .lobby-phone-url-label {
       font-family: "futura-100", sans-serif;
-      font-size: 0.75rem;
-      color: rgba(255,255,255,0.55);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: white;
       text-transform: uppercase;
       letter-spacing: 0.08em;
+    }
+    .lobby-phone-url-altlabel {
+      font-family: "futura-100", sans-serif;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.85);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 6px;
     }
     .lobby-phone-url {
       font-family: "Bitcount Mono Single", monospace;
       font-size: 1rem;
-      color: #fba300;
+      color: white;
       word-break: break-all;
       text-align: center;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .lobby-phone-url:hover {
+      background: rgba(0,0,0,0.18);
+      color: #fff;
+    }
+    .lobby-phone-qr {
+      background: #fff;
+      padding: 8px;
+      border-radius: 6px;
+      margin-top: 6px;
+      line-height: 0;
+      display: inline-block;
+    }
+    .lobby-phone-qr img,
+    .lobby-phone-qr svg {
+      display: block;
+      width: 150px;
+      height: 150px;
     }
     .lobby-back-btn {
       margin-top: 12px;
     }
     .lobby-code-row {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 12px;
     }
     .lobby-code-copy-label {
       font-family: "futura-100", sans-serif;
@@ -3116,9 +3216,7 @@
     .lobby-teams {
       display: flex;
       gap: 16px;
-      margin-bottom: 24px;
-      width: 90%;
-      max-width: 800px;
+      width: 100%;
     }
     .lobby-team {
       flex: 1;
@@ -3317,7 +3415,7 @@
     .lobby-settings {
       display: flex;
       gap: 48px;
-      margin-bottom: 32px;
+      margin-bottom: 12px;
       font-family: "futura-100", sans-serif;
       color: rgba(255,255,255,0.6);
       font-size: 1.8rem;
@@ -11955,6 +12053,7 @@
       color: #fff;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 </head>
 <body>
   <div id="tooltip">
@@ -11988,6 +12087,14 @@
     </div>
     <div id="pp-lobby-stage" style="display: none;">
       <div class="pp-status" id="pp-lobby-status">You're in! Waiting for host to start…</div>
+      <div class="pp-team-switch" id="pp-team-switch">
+        <div class="pp-team-switch-label">Switch team</div>
+        <div class="pp-team-switch-row">
+          <button type="button" class="pp-team-btn pp-team-red" data-team="0" onclick="joinTeam(0)">Red</button>
+          <button type="button" class="pp-team-btn pp-team-undecided" data-team="" onclick="joinTeam(null)">Undecided</button>
+          <button type="button" class="pp-team-btn pp-team-blue" data-team="1" onclick="joinTeam(1)">Blue</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -12115,7 +12222,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.49</div>
+  <div id="version-tag">v0.50</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -12230,7 +12337,7 @@
                 </defs>
               </svg>
             </div>
-            <input type="hidden" id="roundsInput" value="2">
+            <input type="hidden" id="roundsInput" value="4">
           </div>
           <div class="win-option-sub">
             <label>Game Speed:</label>
@@ -15586,6 +15693,7 @@ document.addEventListener('keydown', e => {
     //   • 3-digit numeric lobby code
     //   • Music volume left at whatever the user set
     const TEST_MODE = false;
+    const DEFAULT_MAX_ROUNDS = TEST_MODE ? 2 : 4;
 
     // ── TEMPORARY DEBUG FLAG ──
     // When true, Poll Position only serves Survey questions that have
@@ -15703,11 +15811,8 @@ document.addEventListener('keydown', e => {
         // Swap UI: hide form stage, show lobby status.
         document.getElementById('pp-form-stage').style.display = 'none';
         const lobbyStage = document.getElementById('pp-lobby-stage');
-        const status = document.getElementById('pp-lobby-status');
-        const teamLabel = autoTeam === 0 ? 'RED TEAM' : 'BLUE TEAM';
-        const teamColor = autoTeam === 0 ? '#ff5555' : '#4c8cff';
-        if (status) status.innerHTML = `You're on <span style="color:${teamColor};font-weight:700">${teamLabel}</span><br><span style="color:#888;font-size:0.85rem">Waiting for host to start…</span>`;
         if (lobbyStage) lobbyStage.style.display = 'flex';
+        _phoneRefreshLobbyView({ players: { [myUid]: { team: autoTeam } } });
 
         // Subscribe to game snapshot so we transition into the game when host starts.
         if (unsubGameSnap) unsubGameSnap();
@@ -15725,12 +15830,32 @@ document.addEventListener('keydown', e => {
             transitionFromLobbyToGame(d);
             return;
           }
+          _phoneRefreshLobbyView(d);
         });
       } catch (e) {
         errEl.textContent = e?.message || 'Failed to join';
         btn.disabled = false;
         btn.textContent = 'Join Game';
       }
+    }
+
+    function _phoneRefreshLobbyView(data) {
+      const me = data?.players?.[myUid];
+      const team = me?.team;
+      const status = document.getElementById('pp-lobby-status');
+      if (status) {
+        let label, color;
+        if (team === 0)      { label = 'RED TEAM';   color = '#ff5555'; }
+        else if (team === 1) { label = 'BLUE TEAM';  color = '#4c8cff'; }
+        else                 { label = 'UNDECIDED';  color = '#bbb';    }
+        status.innerHTML = `You're on <span style="color:${color};font-weight:700">${label}</span><br><span style="color:#888;font-size:0.85rem">Waiting for host to start…</span>`;
+      }
+      const btns = document.querySelectorAll('#pp-team-switch .pp-team-btn');
+      btns.forEach(btn => {
+        const t = btn.dataset.team;
+        const isActive = (t === '0' && team === 0) || (t === '1' && team === 1) || (t === '' && (team !== 0 && team !== 1));
+        btn.classList.toggle('active', isActive);
+      });
     }
 
     function phoneResetToForm(msg) {
@@ -17319,10 +17444,10 @@ document.addEventListener('keydown', e => {
         if (modeSelect && modeSelect.style.display === 'flex') selectLocalMode();
       }, 1200);
 
-      // Pre-select Rounds mode with 2 rounds
+      // Pre-select Rounds mode with default round count
       setGameMode('rounds');
-      const firstSvg = document.querySelector('.rounds-svg');
-      if (firstSvg) selectRounds(2, firstSvg);
+      const defaultSvg = document.querySelector(`.rounds-svg[onclick*="selectRounds(${DEFAULT_MAX_ROUNDS},"]`) || document.querySelector('.rounds-svg');
+      if (defaultSvg) selectRounds(DEFAULT_MAX_ROUNDS, defaultSvg);
 
       // Pre-fill team names
       document.getElementById('redTeamName').value = 'Turbo Team';
@@ -18042,7 +18167,7 @@ document.addEventListener('keydown', e => {
     function startGame() {
       setMusicMode('playlist');
       gameMode = 'rounds';
-      maxRounds = parseInt(document.getElementById('roundsInput').value) || 2;
+      maxRounds = parseInt(document.getElementById('roundsInput').value) || DEFAULT_MAX_ROUNDS;
       targetScore = Infinity;
       lastRoundWinner = -1;
       teamScores = [0, 0]; usedQuestions = [];
@@ -32286,7 +32411,7 @@ document.addEventListener('keydown', e => {
         isHubDisplay: true,
         status: 'lobby',
         createdAt: window._fb.serverTimestamp(),
-        maxRounds: 2,
+        maxRounds: DEFAULT_MAX_ROUNDS,
         gameSpeed: gameSpeedSetting || 1,
         teamNames: ['Red Team', 'Blue Team'],
         teamScores: [0, 0],
@@ -32380,7 +32505,7 @@ document.addEventListener('keydown', e => {
         hostUid: myUid,
         status: 'lobby',
         createdAt: window._fb.serverTimestamp(),
-        maxRounds: 2,
+        maxRounds: DEFAULT_MAX_ROUNDS,
         gameSpeed: gameSpeedSetting || 1,
         teamNames: ['Red Team', 'Blue Team'],
         teamScores: [0, 0],
@@ -32570,39 +32695,61 @@ document.addEventListener('keydown', e => {
       const phoneJoinUrl = `${location.origin}${location.pathname}?phone=1&code=${gameCode}`;
       lobby.innerHTML = `
         <h1>Game Lobby</h1>
-        <div class="lobby-code-row">
-          <div class="lobby-code-display" onclick="copyGameCode()" title="Click to copy">${gameCode}</div>
-          <span class="lobby-code-copy-label" onclick="copyGameCode()">Click to copy</span>
+        <div class="lobby-main-row">
+          <div class="lobby-main-left">
+            ${isHubDisplay ? `
+            <div class="lobby-phone-url-row">
+              <div class="lobby-phone-url-label">Scan to Join</div>
+              <div class="lobby-phone-qr" id="lobby-phone-qr"></div>
+              <div class="lobby-phone-url-altlabel">Or join with room code at:</div>
+              <div class="lobby-phone-url" id="lobby-phone-url" onclick="copyPhoneJoinUrl()" title="Click to copy">${phoneJoinUrl}</div>
+            </div>` : ''}
+            <div class="lobby-code-hint" id="lobby-code-hint">Room Code</div>
+            <div class="lobby-code-row">
+              <div class="lobby-code-display" onclick="copyGameCode()" title="Click to copy">${gameCode}</div>
+              <span class="lobby-code-copy-label" onclick="copyGameCode()">Click to copy</span>
+            </div>
+          </div>
+          <div class="lobby-main-right">
+            <div class="lobby-teams" id="lobby-teams">
+              <div class="lobby-team team-red">
+                <div class="lobby-team-header" id="lobby-team-header-0" data-team="0"><span class="lobby-team-name-text">Red Team</span><span class="lobby-team-edit-icon" id="lobby-team-edit-0">&#9998;</span></div>
+                <ul class="lobby-player-list" id="lobby-red-players"></ul>
+                ${isHubDisplay ? '' : '<button class="lobby-join-team-btn red-join" onclick="joinTeam(0)">Join Red</button>'}
+              </div>
+              <div class="lobby-team team-unassigned">
+                <div class="lobby-team-header">Unassigned</div>
+                <ul class="lobby-player-list" id="lobby-unassigned-players"></ul>
+                ${isHubDisplay ? '' : '<button class="lobby-join-team-btn unassigned-join" onclick="joinTeam(null)">Undecided</button>'}
+              </div>
+              <div class="lobby-team team-blue">
+                <div class="lobby-team-header" id="lobby-team-header-1" data-team="1"><span class="lobby-team-name-text">Blue Team</span><span class="lobby-team-edit-icon" id="lobby-team-edit-1">&#9998;</span></div>
+                <ul class="lobby-player-list" id="lobby-blue-players"></ul>
+                ${isHubDisplay ? '' : '<button class="lobby-join-team-btn blue-join" onclick="joinTeam(1)">Join Blue</button>'}
+              </div>
+            </div>
+            <div class="lobby-settings" id="lobby-settings"></div>
+            ${isHost
+              ? '<button class="lobby-start-btn" id="lobby-start-btn" onclick="lobbyStartGame()" disabled>Waiting for players...</button>'
+              : '<div class="lobby-waiting">Waiting for host to start the game...</div>'}
+          </div>
         </div>
-        <div class="lobby-code-hint" id="lobby-code-hint">Share this code with your friends</div>
-        ${isHubDisplay ? `
-        <div class="lobby-phone-url-row" onclick="copyPhoneJoinUrl()" title="Click to copy">
-          <div class="lobby-phone-url-label">Players: open this URL on your phone</div>
-          <div class="lobby-phone-url" id="lobby-phone-url">${phoneJoinUrl}</div>
-        </div>` : ''}
-        <div class="lobby-teams" id="lobby-teams">
-          <div class="lobby-team team-red">
-            <div class="lobby-team-header" id="lobby-team-header-0" data-team="0"><span class="lobby-team-name-text">Red Team</span><span class="lobby-team-edit-icon" id="lobby-team-edit-0">&#9998;</span></div>
-            <ul class="lobby-player-list" id="lobby-red-players"></ul>
-            ${isHubDisplay ? '' : '<button class="lobby-join-team-btn red-join" onclick="joinTeam(0)">Join Red</button>'}
-          </div>
-          <div class="lobby-team team-unassigned">
-            <div class="lobby-team-header">Unassigned</div>
-            <ul class="lobby-player-list" id="lobby-unassigned-players"></ul>
-            ${isHubDisplay ? '' : '<button class="lobby-join-team-btn unassigned-join" onclick="joinTeam(null)">Undecided</button>'}
-          </div>
-          <div class="lobby-team team-blue">
-            <div class="lobby-team-header" id="lobby-team-header-1" data-team="1"><span class="lobby-team-name-text">Blue Team</span><span class="lobby-team-edit-icon" id="lobby-team-edit-1">&#9998;</span></div>
-            <ul class="lobby-player-list" id="lobby-blue-players"></ul>
-            ${isHubDisplay ? '' : '<button class="lobby-join-team-btn blue-join" onclick="joinTeam(1)">Join Blue</button>'}
-          </div>
-        </div>
-        <div class="lobby-settings" id="lobby-settings"></div>
-        ${isHost
-          ? '<button class="lobby-start-btn" id="lobby-start-btn" onclick="lobbyStartGame()" disabled>Waiting for players...</button>'
-          : '<div class="lobby-waiting">Waiting for host to start the game...</div>'}
-        <button class="mode-back-btn lobby-back-btn" onclick="leaveLobby()">&#9664; Back</button>
+        <button class="mode-back-btn lobby-back-btn" onclick="confirmLeaveLobby()">&#9664; Back</button>
       `;
+      if (isHubDisplay) renderPhoneJoinQr(phoneJoinUrl);
+    }
+
+    function renderPhoneJoinQr(url) {
+      const host = document.getElementById('lobby-phone-qr');
+      if (!host || typeof qrcode !== 'function') return;
+      try {
+        const qr = qrcode(0, 'M');
+        qr.addData(url);
+        qr.make();
+        host.innerHTML = qr.createSvgTag({ scalable: true, margin: 0 });
+      } catch (e) {
+        host.style.display = 'none';
+      }
     }
 
     function renderLobbyFromData(data) {
@@ -32873,8 +33020,17 @@ document.addEventListener('keydown', e => {
       });
     }
 
-    async function leaveLobby() {
+    async function confirmLeaveLobby() {
       playTap(1);
+      const msg = isHost
+        ? "Leaving the lobby will end the game for everyone. Are you sure?"
+        : "Are you sure you want to leave the lobby?";
+      if (await showConfirm(msg, { title: 'Leave Lobby', confirmText: 'Leave', cancelText: 'Stay' })) {
+        leaveLobby();
+      }
+    }
+
+    async function leaveLobby() {
       // Unsubscribe from real-time listener
       if (unsubGameSnap) { unsubGameSnap(); unsubGameSnap = null; }
 
@@ -33261,8 +33417,8 @@ document.addEventListener('keydown', e => {
       }, { once: true });
     })();
 
-    // Set default round selection (button "2" starts depressed/selected)
-    selectRounds(2, document.querySelector('.rounds-svg'));
+    // Set default round selection (DEFAULT_MAX_ROUNDS button starts depressed/selected)
+    selectRounds(DEFAULT_MAX_ROUNDS, document.querySelector(`.rounds-svg[onclick*="selectRounds(${DEFAULT_MAX_ROUNDS},"]`) || document.querySelector('.rounds-svg'));
     // Initialize speed stepper + settings slider
     syncSpeedStepper();
     buildSpeedSlider();

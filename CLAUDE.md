@@ -316,7 +316,7 @@ Decomposes into roughly four chunks, in dependency order:
 
    The "complete" modules are functionally feature-complete on phone but each may still surface text-sizing / touch-target tweaks during real-device playtesting. High Five + Poll Position share the `#phone-h5-stage` (cat-select cards on H5 entry; unified frosted-glass board panel for both; `.ph5-rows` vertical marquee arms when the answer track overflows the available height — needed for 7-row Poll Position boards on tighter viewports). Polish for Scribble, and Face-off + endgame flow, are queued for future sessions.
 
-4. **QR code + URL auto-join.** Trivial once 1+2 land. QR library on the lobby screen renders the join URL. ~half session.
+4. **QR code + URL auto-join.** ✅ Shipped (2026-04-28). `qrcode-generator@1.4.4` (~5kb) loaded via CDN in `<head>`. `renderPhoneJoinQr(url)` helper called at the tail of `renderLobby()` when `isHubDisplay`; produces a scalable SVG inside `#lobby-phone-qr` (white-padded card, 150×150). The full join URL still renders below the QR as a click-to-copy fallback (label: "Or join with room code at:"). On a real phone, native camera scan opens the URL directly — no manual code entry.
 
 **Total estimated effort:** ~10–15 sessions of focused work across multiple branches if useful (e.g. one branch per chunk).
 
@@ -782,6 +782,7 @@ A single master switch at the top of the main `<script>` block (near `let devMod
 - **Music volume slider jumps to 0 on first start-screen click** via `_applyTestModeFirstClick()`. Dev mode (`activateDevMode()`) still mutes unconditionally regardless of `TEST_MODE`, since it's a strict solo-dev entry.
 - **App-feel suppressions disabled.** `#game-root.app-feel` class (text-selection block + native focus-outline kill) is NOT added, and the `contextmenu` listener is NOT wired. Result: native highlight + DevTools right-click are available for inspecting elements during dev. Production (`TEST_MODE === false`) gets the suppressions for an app-like feel.
 - **Submit-button flicker MutationObserver armed.** `_watchSubmitBtnFlicker()` logs every `disabled` change on `#turn-body .dome-button` with a stack trace. `window._refreshFlickerWatch()` re-anchors after rebuilds. Useful for diagnosing flicker-class bugs.
+- **Default round count = 2** via `DEFAULT_MAX_ROUNDS = TEST_MODE ? 2 : 4` (declared next to `TEST_MODE`). Production default is 4 rounds. Used by the local-setup hidden input default, the rounds-svg pre-selection at script load + after dev-mode dismiss, the local-mode `roundsInput` fallback, and both Firestore game-doc creation sites (hub mode + online create).
 
 **Ship workflow — flip `TEST_MODE` off for the ship, then back on after.**
 
@@ -981,7 +982,18 @@ This prevents stale fields from a previous game (especially `faceoffState.comple
 - **Name truncation**: `.lobby-player-name` uses `text-overflow: ellipsis; overflow: hidden; white-space: nowrap` — badges stay full-size while long names truncate
 - **Badges**: HOST (gray), CAPTAIN (gold), MAKE CAPTAIN (gold border button) — all with `data-tip-placement="below"` and full-word labels
 - **Game code**: limited to characters `1`, `2`, `3` for dev testing (restore full charset before shipping). 1-character length (restore to 4-5 for production).
-- **Default rounds**: online games default to 2 rounds (`maxRounds: 2` in `submitCreateGame`)
+- **Default rounds**: governed by `DEFAULT_MAX_ROUNDS` constant — see TEST_MODE section. Production = 4, test mode = 2.
+
+### Lobby Redesign (2026-04-28 — pre-playtest pass)
+
+Visual + structural cleanup of the lobby for groups gathering around a hub. Changes apply equally to standard online lobbies and hub-mode lobbies (the QR/URL block is the only hub-mode-only addition):
+
+- **Two-column layout** below the centered "GAME LOBBY" header: `.lobby-main-row` is `display: flex; align-items: center` with a `.lobby-main-left` (30%) and `.lobby-main-right` (70%) column, separated by a 1px `rgba(255,255,255,0.18)` vertical rule (border-left on right column with symmetric `padding: 0 20px` so children center cleanly within the column).
+- **Left column** stacks (top → bottom): hub-only `lobby-phone-url-row` (with QR + alt label + URL fallback), then `lobby-code-hint`, then `lobby-code-row`. `lobby-code-row` is now `flex-direction: column` so the room code centers under the hint and "Click to copy" sits below it on its own line — eliminates the off-center horizontal layout.
+- **Right column** holds `lobby-teams` at the top, then `lobby-settings` and `lobby-start-btn` (or `lobby-waiting`) underneath. Settings row is now centered within the right column (was previously full-width below both columns). The back button is the only element that lives outside the two-column row.
+- **Hub-mode QR card** (`.lobby-phone-url-row`): the row container itself no longer has hover/copy click — only the URL element inside is clickable (`copyPhoneJoinUrl()`). New `.lobby-phone-url-altlabel` sits between the QR and the URL with the text "Or join with room code at:" so the URL reads as a clear secondary path.
+- **Back button** routes through `confirmLeaveLobby()` instead of calling `leaveLobby()` directly. Wraps the existing `leaveLobby()` in `showConfirm()` with host-aware messaging — "Leaving the lobby will end the game for everyone. Are you sure?" for the host, "Are you sure you want to leave the lobby?" for non-hosts. Confirm button text is "Leave"; cancel is "Stay".
+- **Phone-side team switching** (hub mode parity): the phone lobby placeholder (`#pp-lobby-stage`) now exposes a three-button row — Red / Undecided / Blue — that calls the existing global `joinTeam(0|null|1)`. New `_phoneRefreshLobbyView(data)` helper runs on every `onSnapshot` tick to update the status text + toggle the `.active` class on the matching button, so taps mirror to all clients within Firestore RTT. Captain transfer logic is reused from the desktop path — no new server-side code.
 
 ### Tooltip Positioning Improvements
 

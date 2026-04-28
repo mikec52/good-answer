@@ -1271,7 +1271,11 @@
          keeps tablet rows readable but not absurd. */
       min-height: clamp(38px, 10.35cqw, 64px);
       display: grid;
-      grid-template-columns: 28px 1fr 56px;
+      /* Number + points columns scale with the stage container so
+         tablet rows aren't dwarfed by the 1fr middle. SE baselines
+         28px / 56px / 367 wrap = 7.63cqw / 15.26cqw. Ceilings (48px /
+         96px) match the 1.68× row-height ratio at the tablet clamp. */
+      grid-template-columns: clamp(28px, 7.63cqw, 48px) 1fr clamp(56px, 15.26cqw, 96px);
       gap: 4px;
       align-items: stretch;
       background: #111;
@@ -12051,7 +12055,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.47</div>
+  <div id="version-tag">v0.48</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">

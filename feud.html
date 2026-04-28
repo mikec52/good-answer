@@ -255,6 +255,20 @@
     body.phone-mode #player-inventory { display: none; }
     /* #endRound is the legacy feud mid-round button — never used on phone. */
     body.phone-mode #endRound { display: none; }
+    /* Suppress iOS Safari's double-tap-to-zoom on every interactive
+       control. Default behavior reserves a ~300ms window after a single
+       tap to detect a zoom gesture, which makes rapid-tap controls
+       (CT stepper most visibly) feel laggy and occasionally trigger an
+       unintended zoom. `touch-action: manipulation` keeps pan + pinch
+       (so users can still zoom the page intentionally with two fingers)
+       but disables double-tap-to-zoom + the tap delay on these elements.
+       Scoped to phone-mode so desktop is untouched. */
+    body.phone-mode button,
+    body.phone-mode [role="button"],
+    body.phone-mode .ct-card-front,
+    body.phone-mode .ct-card-back {
+      touch-action: manipulation;
+    }
     /* Phone default: input-area is a compact header-only guidance band.
        Hide the input/button row by default; modules that need keyboard
        input ('guess'), an action button ('action'), or the CT clue
@@ -1062,6 +1076,12 @@
         margin: 0 auto;
         width: 100%;
       }
+
+      /* High Five / Poll Position tablet override lives in a second
+         @media block AFTER the phone H5 rules, since those rules are
+         defined further down in the file and would otherwise win on
+         source order at the same specificity. See the block following
+         .ph5-roundend-body. */
     }
 
     /* ──────────────────────────────────────────────────────────
@@ -1078,6 +1098,9 @@
       min-height: 0;
       padding: 12px 12px 8px;
       gap: 10px;
+      /* Containerize so row/qbar internals can use cqw against stage
+         width (matches CT/input-area pattern). */
+      container-type: inline-size;
     }
 
     /* Cat-select mode: vertical stack of flat plastic cards. Survey
@@ -1190,7 +1213,8 @@
     }
     body.phone-mode .ph5-qbar-cat {
       font-family: "Bitcount Single", monospace;
-      font-size: 0.9rem;
+      /* SE baseline 0.9rem (14.4px) / 367 wrap = 3.92cqw. */
+      font-size: clamp(0.9rem, 3.92cqw, 1.5rem);
       letter-spacing: 0.06em;
       color: #fff;
       text-transform: uppercase;
@@ -1206,12 +1230,15 @@
       padding: 8px 10px;
       font-family: "futura-100", sans-serif;
       font-weight: 700;
-      font-size: 0.95rem;
+      /* SE baseline 0.95rem (15.2px) / 367 wrap = 4.14cqw. */
+      font-size: clamp(0.95rem, 4.14cqw, 1.6rem);
       color: #fff;
       line-height: 1.25;
       min-height: 2.4em;
       display: flex;
       align-items: center;
+      justify-content: center;
+      text-align: center;
     }
     /* .ph5-rows is the clipping container (fixed-height, overflow:hidden);
        .ph5-rows-track is what translates during the marquee. For ≤6 rows
@@ -1240,7 +1267,9 @@
     }
     body.phone-mode .ph5-row {
       flex: 0 0 auto;
-      min-height: 38px;
+      /* SE baseline 38px / 367 wrap = 10.35cqw. Clamp ceiling at 64px
+         keeps tablet rows readable but not absurd. */
+      min-height: clamp(38px, 10.35cqw, 64px);
       display: grid;
       grid-template-columns: 28px 1fr 56px;
       gap: 4px;
@@ -1255,7 +1284,8 @@
       place-items: center;
       font-family: "Bitcount Single", monospace;
       font-weight: 300;
-      font-size: 1.1rem;
+      /* SE baseline 1.1rem (17.6px) / 367 = 4.8cqw. */
+      font-size: clamp(1.1rem, 4.8cqw, 1.8rem);
       color: #fff;
       background: #1f1f1f;
       padding-left: 0.1em;
@@ -1266,7 +1296,8 @@
       padding: 0 8px;
       font-family: "Bitcount Single", monospace;
       font-weight: 300;
-      font-size: 1rem;
+      /* SE baseline 1rem (16px) / 367 = 4.36cqw. */
+      font-size: clamp(1rem, 4.36cqw, 1.6rem);
       color: rgba(255,255,255,0.45);
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -1279,7 +1310,8 @@
       place-items: center;
       font-family: "Bitcount Single", monospace;
       font-weight: 300;
-      font-size: 1.1rem;
+      /* Same baseline as .ph5-row-num. */
+      font-size: clamp(1.1rem, 4.8cqw, 1.8rem);
       color: rgba(255,255,255,0.45);
       background: #1f1f1f;
       padding-left: 0.1em;
@@ -1333,6 +1365,30 @@
       color: #ccc;
       line-height: 1.4;
       letter-spacing: 0.02em;
+    }
+
+    /* ──────────────────────────────────────────────────────────
+       Tablet block (continued) for H5/PP — placed AFTER the phone
+       H5 rules so cascade order favors the override at ≥700px width.
+       The earlier tablet block (near the CT rules) ran into a source-
+       order conflict because the phone .ph5-board rule comes later
+       than that block; rules with the same specificity win by source
+       order regardless of media-query gating, so the override has to
+       live downstream of the phone rules.
+       ────────────────────────────────────────────────────────── */
+    @media (min-width: 700px) {
+      /* Phone uses flex: 1 1 auto so the rows clip stays bounded —
+         important for the marquee on 7-row Survey questions. On
+         tablet, stage height grows dramatically and a flex-grow
+         board produces a panel with rows clustered at the top and
+         a sea of empty space below them (reads as bottom-heavy /
+         "lost"). flex: 0 0 auto sizes the panel to its content
+         (qbar + rows). Stage still grows to fill, so the panel sits
+         at the top of the stage with empty space falling below the
+         panel before the input-area, not inside it. */
+      body.phone-mode #phone-h5-stage .ph5-board {
+        flex: 0 0 auto;
+      }
     }
 
     /* ──────────────────────────────────────────────────────────
@@ -11995,7 +12051,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.46</div>
+  <div id="version-tag">v0.47</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">

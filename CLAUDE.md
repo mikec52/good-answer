@@ -45,6 +45,7 @@ Because the game is still in rapid structural flux, the snapshot branches (`offl
 - **Never reference local font names** (e.g. `"Futura"`, `"Dazzle Unicase"`). macOS has fonts installed locally that mask loading failures on other platforms.
 - **Always use the Typekit/Google Fonts identifier** — check the hosted CSS for the exact `font-family` string. Current Typekit kit: `lps4irc`.
 - Key mappings: `"futura-100"` (not `"Futura"`), `"dazzle-unicase"` (not `"Dazzle Unicase"`), `"embarcadero-mvb-pro-condense"`, `"video"`.
+- **Explicit font preload via `document.fonts.load()` is required** — `document.fonts.ready` alone only waits for fonts the browser has already started downloading. Webfonts are lazy-loaded; if no rendered element uses a font at the moment the gate checks, the font isn't in the waitlist and it'll fetch lazily on first use → fallback flash (FOUT). The fix lives at the bottom of the main `<script>` block: explicit `document.fonts.load('1em "<family>"')` for each critical webfont, then await `document.fonts.ready` as a backstop, then flip `#game-root` opacity to 1. When adding a new webfont that's used by a module not visible at page load (logos, cinematics, modal-only content), add it to the `_criticalFonts` list there.
 
 ---
 
@@ -435,6 +436,127 @@ CT was a layout move, not new role logic — `ctRenderBoard`'s existing `amICtAn
 - Module orchestration (each module is already self-contained behind a clean interface): see "Module Orchestration Layer."
 - Input-area home base (already evergreen-only post-refactor — central to phone view): see "Input-Area Home Base."
 - Pre-Blaze refactor (cleared the way for this): see "Pre-Blaze Cleanup Refactor — Strategy."
+
+---
+
+## Tablet support inside phone-mode
+
+Phone-mode (`?phone=1`) is calibrated against iPhone SE in DevTools. On iPhone 15 Pro Max it works but underutilizes the extra width; on tablets (iPad portrait/landscape, Galaxy Tab) it functionally runs but feels cramped — small fonts in big cards, lots of empty space inside containers. Tablet support is achieved by extending phone-mode CSS rather than introducing a separate viewport — the layout model is the same, elements just scale up.
+
+**Mike's physical test device:** Samsung **Galaxy S7** tablet (~712×1138 portrait CSS px). DevTools emulates iPad Pro 12.9" portrait (1024×1366) and iPhone SE (375×667) for development; real-device verification on S7 + iPhone 15 Pro Max is the final word.
+
+### Breakpoint
+
+```css
+@media (min-width: 700px) {
+  body.phone-mode <selector> { ... }
+}
+```
+
+700px catches every tablet in portrait (iPad mini 768, iPad portrait 820, iPad Pro portrait 1024, Galaxy Tab S7 ~712) without triggering on any current phone in portrait. **Phone-landscape would also trigger this breakpoint** — that's intentional, since landscape phones share more layout DNA with tablet portrait than with phone portrait.
+
+### Unit choice — `rem`, `cqw`, `clamp`
+
+| Tool | When | Why |
+|---|---|---|
+| **`rem`** | Genuine readable copy (round-end body text, status messages), tap-target controls (stepper buttons), absolute-size needs | Pinned to 16px regardless of device — predictable, accessibility-friendly, but doesn't scale with device size |
+| **`cqw`** + `clamp()` | UI labels, value displays, card text, anything where size should feel proportional to its container | Scales with the container fluidly across phone-SE → Pro Max → iPad in a single rule, no media query per element |
+| **`vw` / `vh`** | Avoid in phone-mode-scoped rules unless deliberate | Couples sizing to viewport regardless of where the element sits — usually wrong for module-internal sizing |
+
+**The cqw + clamp pattern.** Calibrate the floor to the existing iPhone-SE baseline so phone behavior is unchanged and any `fitByCharCount` thresholds stay valid; pick a tablet-feeling ceiling:
+
+```css
+font-size: clamp(<phone-SE baseline>, <Xcqw>, <tablet ceiling>);
+```
+
+The cqw value = (SE baseline px) / (SE container width px). E.g. CT card word: 16px / 367px wrap = 4.36% → use `clamp(1rem, 4.4cqw, 2.6rem)`.
+
+`fitByCharCount` composes via multiplication (`calc(var(--fit-base) * var(--fit-scale, 1))`) — unit-agnostic, works with rem, cqw, or clamp expressions in `--fit-base`.
+
+### Containerizing for cqw
+
+`cqw` resolves against the nearest containerized ancestor (`container-type: size` or `inline-size`). Phone-mode stages need explicit containerization so cqw inside their content resolves predictably:
+
+- `#phone-ct-stage.active { container-type: inline-size }` — for CT banner internals + clue labels
+- `#phone-h5-stage.active { container-type: inline-size }` — for H5/PP qbar + rows
+- `.pct-board-wrap { container-type: size }` — for CT card text/values (closer container wins over the stage)
+- `#input-area { container-type: inline-size }` — for turn-header + turn-subtext
+
+**`container-type: inline-size`** is layout-neutral — adding it doesn't shift anything visible, just enables cqw queries inside. Safe to add even on existing stable layouts.
+
+### Pixel-cap audit pattern
+
+The systemic offender on tablet is **pixel `max-width` / `max-height` caps inside fluid layouts**. They were defensive defaults from when iPhone SE was the only target — mostly inert there because cqw/cqh sizing produces values under the cap anyway — but they actively clip on Pro Max and tablets.
+
+When adding tablet support to any module, audit:
+1. Find every pixel `max-width` / `max-height` on the module's phone CSS
+2. Decide: defensive (pathological-viewport guard) or accidentally tight (clipping the device tier above the dev-target)
+3. If accidental, lift to a generous defensive value, OR drop entirely and let cqmin do its work
+4. Stage/wrapper *padding* is the smaller-but-real second offender — every 6px of horizontal padding on a parent costs 12px of board width on a small screen
+
+Caps that have been audited and adjusted:
+- CT board: 360 → 500 (phone), 560 → **750** (tablet, tuned by gut)
+- GL tile: 64 → **80** (covers Pro Max; tablet-portrait gets ~80)
+- CT stage horizontal padding: 6 → 4
+
+### Cascade order gotcha — tablet override placement
+
+CSS rules with the same specificity inside `@media` blocks **still resolve by source order**. Media-query gating doesn't grant any cascade priority. So a tablet override at line 1000 against a phone rule at line 1200 will *lose* even when the media query fires.
+
+**Rule of thumb:** tablet override blocks must appear AFTER the phone rules they override in source order. The H5/PP tablet override (`.ph5-board { flex: 0 0 auto }`) had to live in a second `@media (min-width: 700px)` block placed after the H5 phone CSS, not in the main tablet block placed alongside CT overrides (which ran into this exact bug).
+
+If a tablet override seems to have no effect, this is the first thing to check — `getComputedStyle` on a real element at tablet width and look for cascade-order conflicts.
+
+### Layout philosophy: top-anchor on tall canvases
+
+Phone-mode modules typically use `flex: 1 1 auto` on their main container (board, stage, etc.) to fill available space — important for behaviors like the H5/PP rows-clip overflowing for marquee. On tablets the canvas is much taller, and `flex: 1 1 auto` produces a panel with content clustered at the top and a sea of empty space below it (reads as "lost"). The fix:
+
+- Keep phone behavior with `flex: 1 1 auto` (preserves marquee, etc.)
+- Tablet override: `flex: 0 0 auto` so the panel sizes to content, sits at top of stage, empty space falls below the panel before the input-area instead of inside it
+
+### Form-element max-width centering
+
+Full-width input fields and dome buttons feel cumbersome at tablet widths (~1000px wide button is awkward). Cap form contents at 640px and center:
+
+```css
+@media (min-width: 700px) {
+  body.phone-mode #turn-body {
+    max-width: 640px; margin: 0 auto; width: 100%;
+  }
+}
+```
+
+Frosted-glass `#input-area` chrome stays full-bleed (visual anchor at the bottom); only the content rows inside center. Phone is unaffected.
+
+### iOS double-tap-to-zoom suppression
+
+Real-device testing surfaced an iOS-specific UX issue: rapid taps on the CT count stepper triggered Safari's double-tap-to-zoom gesture. Fix is `touch-action: manipulation` on every interactive control in phone-mode:
+
+```css
+body.phone-mode button,
+body.phone-mode [role="button"],
+body.phone-mode .ct-card-front,
+body.phone-mode .ct-card-back {
+  touch-action: manipulation;
+}
+```
+
+Disables the tap delay + double-tap-to-zoom on these elements while preserving pan + pinch-to-zoom elsewhere on the page (so users can still zoom intentionally with two fingers).
+
+### Adding tablet support to a new module
+
+When converting an existing phone module for tablet:
+
+1. Add `container-type: inline-size` to the stage element (or whichever parent makes sense as the cqw ancestor)
+2. Convert UI-label and value font-sizes from `<rem>` to `clamp(<rem floor>, <cqw>, <rem ceiling>)`. Calibrate floor against iPhone-SE baseline (preserves phone behavior + any fitByCharCount calibration). Calibrate cqw against `<phone-SE baseline px> / <SE container width px>`.
+3. Audit pixel max-widths and stage paddings for accidentally-tight defaults.
+4. If the module's main panel uses `flex: 1 1 auto`, decide whether tablet wants `flex: 0 0 auto` (top-anchor with empty space below) or to keep the grow behavior (rare for tablet).
+5. Place tablet override `@media` blocks AFTER the module's phone rules in source order (cascade gotcha above).
+6. Verify computed styles at SE / Pro Max / iPad Pro via `preview_eval` before assuming the rule applies.
+
+### Desktop is different — don't apply this pattern there
+
+Desktop game uses `transform: scale()` on `#game-root` to fit a canonical 1280×720 to the actual window. CLAUDE.md "Viewport Redesign" section captures the rules: rem/px/% only, no vw/vh (double-scaling). Tablet support is a phone-mode extension — desktop CSS should never use cqw or media-query-based scaling because the transform handles responsiveness uniformly.
 
 ---
 

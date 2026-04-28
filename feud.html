@@ -510,6 +510,12 @@
        --dome-color is set per-instance via the .mod-* class on the row. */
     body.phone-mode .prtp-btn {
       --dome-color: var(--mod-color, #d62020);
+      /* Tablet cap — at iPad widths the parent's align-items:stretch
+         would otherwise produce ~900px-wide caps that read as cartoonish.
+         600px keeps the dome a comfortable tap-target proportion. */
+      width: 100%;
+      max-width: 600px;
+      align-self: center;
       /* Lightened cap shade ramp — pulled the dark stops up toward the
          dome color so the bottom-radial isn't pure-black at 0%. */
       --_deep:   color-mix(in oklab, var(--dome-color) 60%, #000);
@@ -607,6 +613,9 @@
       min-height: 0;
       padding: 12px 12px 8px;
       gap: 10px;
+      /* Containerize so child cqw resolves against the stage width (matches
+         CT/H5 pattern). Calibration baseline = iPhone SE ~367px stage width. */
+      container-type: inline-size;
     }
     body.phone-mode .pnic-qbar {
       flex: 0 0 auto;
@@ -624,7 +633,7 @@
       align-items: center;
       justify-content: space-between;
       font-family: "futura-100", sans-serif;
-      font-size: 0.8rem;
+      font-size: clamp(0.8rem, 3.5cqw, 1.4rem);
       letter-spacing: 0.08em;
       color: #aaa;
       text-transform: uppercase;
@@ -635,7 +644,7 @@
     }
     body.phone-mode .pnic-timer {
       font-family: "Bitcount Single", monospace;
-      font-size: 1.1rem;
+      font-size: clamp(1.1rem, 4.8cqw, 1.9rem);
       color: #fff;
       letter-spacing: 0.04em;
       padding-left: 0.1em;
@@ -649,7 +658,7 @@
       padding: 10px 12px;
       font-family: "futura-100", sans-serif;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: clamp(1rem, 4.4cqw, 1.7rem);
       color: #fff;
       line-height: 1.25;
       min-height: 2.5em;
@@ -683,8 +692,10 @@
       border-radius: 6px;
       font-family: "dazzle-unicase", "futura-100", sans-serif;
       /* fit-shrink for names > 8 chars — fitByCharCount sets --fit-scale
-         in JS after render. Replaces the previous ellipsis truncation. */
-      --fit-base: 0.95rem;
+         in JS after render. Replaces the previous ellipsis truncation.
+         --fit-base scales with container; SE baseline 0.95rem,
+         tablet ceiling 1.6rem. */
+      --fit-base: clamp(0.95rem, 4.1cqw, 1.6rem);
       font-size: calc(var(--fit-base) * var(--fit-scale, 1));
       letter-spacing: 0.04em;
       color: #fff;
@@ -719,7 +730,7 @@
     body.phone-mode .pnic-guess-main { justify-self: center; }
     body.phone-mode .pnic-guess-main {
       font-family: "Bitcount Single", monospace;
-      font-size: 1.5rem;
+      font-size: clamp(1.5rem, 6.5cqw, 2.6rem);
       color: #ffb84d;
       text-shadow:
         0 0 6px rgba(255,184,77,0.6),
@@ -741,13 +752,13 @@
       line-height: 1;
     }
     body.phone-mode .pnic-guess-pct {
-      font-size: 0.65rem;
+      font-size: clamp(0.65rem, 2.8cqw, 1.1rem);
       letter-spacing: 0.06em;
       color: #aaa;
       text-transform: uppercase;
     }
     body.phone-mode .pnic-guess-pts {
-      font-size: 0.75rem;
+      font-size: clamp(0.75rem, 3.3cqw, 1.3rem);
       font-weight: 700;
       letter-spacing: 0.04em;
     }
@@ -755,7 +766,7 @@
     body.phone-mode .pnic-guess-pts.neg  { color: #ff5555; }
     body.phone-mode .pnic-guess-pts.zero { color: #888; }
     body.phone-mode .pnic-guess-order {
-      font-size: 0.6rem;
+      font-size: clamp(0.6rem, 2.6cqw, 1rem);
       letter-spacing: 0.06em;
       color: #c9a64a;
       text-transform: uppercase;
@@ -776,14 +787,14 @@
     }
     body.phone-mode .pnic-roundend-title {
       font-family: "dazzle-unicase", "futura-100", sans-serif;
-      font-size: 1.2rem;
+      font-size: clamp(1.2rem, 5.2cqw, 2rem);
       letter-spacing: 0.1em;
       color: #fba300;
       text-transform: uppercase;
     }
     body.phone-mode .pnic-roundend-body {
       font-family: "futura-100", sans-serif;
-      font-size: 1rem;
+      font-size: clamp(1rem, 4.4cqw, 1.7rem);
       color: #ccc;
       line-height: 1.4;
       letter-spacing: 0.02em;
@@ -1082,6 +1093,33 @@
          defined further down in the file and would otherwise win on
          source order at the same specificity. See the block following
          .ph5-roundend-body. */
+
+      /* NIC: cap player-row height. Phone uses flex: 1 1 0 so rows share
+         available height — fine on phone where stage height is tight,
+         but on tablet (~1000px tall canvas) 4 rows would each be ~200px
+         tall and read as cartoonish. flex: 0 0 auto + min-height keeps
+         rows at a comfortable readable size; .pnic-rows' justify-content
+         flex-start lets empty space fall below them. */
+      body.phone-mode .pnic-rows {
+        justify-content: flex-start;
+      }
+      body.phone-mode .pnic-row {
+        flex: 0 0 auto;
+        min-height: 80px;
+        max-height: 110px;
+      }
+
+      /* Scribble word-select cards on tablet — cap width like the round-
+         picker dome buttons (.prtp-btn). Without this they go full-bleed
+         (~1000px) which reads as cartoonish on iPad. The .pss-ws-cards
+         parent uses justify-content: center, so capped cards stay
+         vertically centered. align-self: center centers each card on the
+         cross axis. */
+      body.phone-mode .pss-ws-card {
+        width: 100%;
+        max-width: 600px;
+        align-self: center;
+      }
     }
 
     /* ──────────────────────────────────────────────────────────
@@ -1194,7 +1232,15 @@
     body.phone-mode #phone-h5-stage .ph5-board {
       display: flex;
       flex-direction: column;
-      flex: 1 1 auto;
+      /* flex: 0 1 auto so the panel sizes to its content (qbar + rows)
+         instead of stretching to fill the stage. With flex: 1 1 auto the
+         frosted-glass panel was extending all the way down to the input-
+         area on questions with few answers, leaving a sea of empty pad-
+         ding inside the panel. With flex-shrink:1, the panel still
+         contracts when rows + qbar exceed the available stage height,
+         which is exactly the case where .ph5-rows clips and the marquee
+         arms. */
+      flex: 0 1 auto;
       min-height: 0;
       gap: 6px;
       align-self: stretch;
@@ -9036,6 +9082,20 @@
     .h5-board-recap #board-wrapper,
     .h5-board-recap .board-wrapper {
       margin: 0;
+      /* The clone's id was stripped (showH5Summary), so the
+         #board-wrapper { display: flex } rule no longer applies — the
+         clone falls back to display: block. That breaks the flex chain
+         needed for .h5-recap-answers' min-height: 0 + flex: 1 1 auto to
+         constrain the answers list to the parent's available space.
+         Without this constraint, .h5-recap-answers sizes to its own
+         content (= the track), making track.scrollHeight ≈
+         answers.clientHeight, so the marquee never arms for 6/7-row
+         Surveys. Restore the flex column on the cloned class. */
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 0;
     }
     /* Shrink answer rows — at 1rem text the 40px default is wasteful.
        Keep the row gap and tile padding untouched. */
@@ -12055,7 +12115,7 @@
   </svg>
 
   <!-- Version tag — see #version-tag CSS for sed-replace contract -->
-  <div id="version-tag">v0.48</div>
+  <div id="version-tag">v0.49</div>
 
   <!-- Start screen -->
   <div id="start-screen" class="crt-start-screen">
@@ -17209,6 +17269,20 @@ document.addEventListener('keydown', e => {
         catCount[cat] = (catCount[cat] || 0) + 1;
         if (catCount[cat] <= 10) devModeAllowedQuestions.add(i);
       }
+      // While _DEBUG_PP_LONGEST_ONLY is on, ensure Survey questions
+      // matching the target answer count survive the dev-mode trim — the
+      // first 10 Surveys may not include any 7-answer ones, which would
+      // make PP fall back to the category-pick UI on localhost.
+      if (_DEBUG_PP_LONGEST_ONLY) {
+        for (let i = 0; i < questions.length; i++) {
+          const q = questions[i];
+          if (q.category === 'Survey'
+              && Array.isArray(q.answers)
+              && q.answers.length === _DEBUG_PP_TARGET_ANSWERS) {
+            devModeAllowedQuestions.add(i);
+          }
+        }
+      }
     }
 
     // Test-mode first-click side effects. Runs once per start-screen click
@@ -17702,21 +17776,25 @@ document.addEventListener('keydown', e => {
           {
             const gi = document.getElementById('guess');
             const sb = inputRow.querySelector('button.dome-button');
-            // Local mode: setInputAreaMode is the sole authority for the
-            // disabled state (no updateRoleUI runs in single-device play).
-            // Multiplayer: updateRoleUI runs immediately after this from
-            // updateTurn() and will set the correct disabled state based
-            // on isActive + _scoringInProgress. Touching disabled here
-            // would briefly enable the button between non-host's submit
-            // and the reconcile, causing a single-frame red flicker.
+            // We're on the !skipInputRowRebuild path — i.e. a real mode
+            // transition INTO 'guess' from disabled/action/compose-clue.
+            // The post-submit flicker scenario (guess→guess) is already
+            // guarded by skipInputRowRebuild's early-break above, so it's
+            // safe to enable here unconditionally. Without this, leftover
+            // disabled=true from a prior 'disabled' mode (e.g. scribble
+            // drawer state) persists into H5/PP because
+            // restoreCanonicalInputRow only rebuilds when #guess is
+            // missing — the existing input element keeps its disabled
+            // attribute. updateRoleUI runs after this and will re-disable
+            // for spectators based on isActive + _scoringInProgress.
             if (gi) {
               gi.value = '';
               gi.placeholder = inputPlaceholder;
-              if (!isMultiplayer) gi.disabled = false;
+              gi.disabled = false;
             }
             if (sb) {
               sb.style.display = '';
-              if (!isMultiplayer) sb.disabled = false;
+              sb.disabled = false;
             }
           }
           break;
@@ -18087,6 +18165,37 @@ document.addEventListener('keydown', e => {
       // Phone-controller H5 / Poll Position stage — full teardown so the
       // next module enters with a blank middle space on phone. Idempotent.
       _phoneH5Hide();
+
+      // ─── Module state reset (orchestration-boundary contract) ─────────
+      // Each module's `.active` flag (scribbleState.active, etc.) is the
+      // gate updateRoleUI uses to decide whether to delegate to the
+      // module's own role-UI handler (e.g. updateScribbleRoleUI) instead
+      // of running normal turn logic. These flags are normally cleared
+      // inside resetXxxState() called from mod.reset() during
+      // handleModuleComplete — but that path only fires reliably when
+      // the module's flow runs to completion on every client. On non-
+      // host clients, missed snapshots / async races can stall the
+      // flow and leave `.active=true` carried into the next round.
+      // The next round's updateRoleUI then early-returns into the WRONG
+      // module's handler, which clobbers the new module's input-area
+      // (stepper hidden via the 260ms timer, input disabled,
+      // compose-clue forms wiped, etc.).
+      //
+      // Fix: reset every module's state at the orchestration boundary,
+      // not (just) inside each module's own teardown. resetModuleCanvas
+      // runs at every round transition (advanceRound + non-host phase
+      // handlers), so this is the canonical between-rounds boundary.
+      // The next module's enter() function explicitly sets its own
+      // .active=true after these resets. Idempotent — safe even if
+      // mod.reset() already ran.
+      //
+      // GL + NIC are handled below via resetGridLockState /
+      // resetNicState; scribble + CT are added here. CT's reset
+      // includes _phoneCtUnmount (reparents stepper / banner / board
+      // back to their original homes), so no separate phone-stage
+      // call is needed.
+      if (typeof resetScribbleState === "function") resetScribbleState({ keepUsedWords: true });
+      if (typeof resetCommonThreadState === "function") resetCommonThreadState();
 
       // Hide last-guess pill if still showing from a previous round.
       hideLastGuessPill();
@@ -19006,8 +19115,14 @@ document.addEventListener('keydown', e => {
       const rowsHost = document.querySelector("#phone-h5-stage .ph5-rows");
       const track = rowsHost?.querySelector(".ph5-rows-track");
       if (!rowsHost || !track) return;
-      // Defer to next frame so the freshly-rendered track has measured height.
-      requestAnimationFrame(() => {
+      // Defer past layout settling. A single rAF can fire before the
+      // grandparent flex chain has finished resolving — especially on
+      // a fresh phone-stage activation where #phone-h5-stage just got
+      // its .active class and the parent input-area / sidebar layout
+      // is still settling. Mirrors the NIC summary marquee fix (see
+      // CLAUDE.md "What Was Fixed (April 26 session)").
+      const speed = (typeof gameSpeed === 'number' && gameSpeed > 0) ? gameSpeed : 1;
+      setTimeout(() => {
         const overflow = track.scrollHeight - rowsHost.clientHeight;
         if (overflow > 4) {
           // Slow loop scaled with overflow distance — minimum 14s, ~1s per
@@ -19021,7 +19136,7 @@ document.addEventListener('keydown', e => {
           rowsHost.style.removeProperty("--ph5-marquee-distance");
           rowsHost.style.removeProperty("--ph5-marquee-dur");
         }
-      });
+      }, 500 / speed);
     }
 
     function _phoneH5FlipTile(idx, type) {
